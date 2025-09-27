@@ -1,28 +1,18 @@
-﻿import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+﻿import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import HomePage from './pages/HomePage';
+import RoomPage from './pages/RoomPage';
+import GamePage from './pages/GamePage';
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Welcome to Your App</CardTitle>
-          <CardDescription>
-            Vite + React + TypeScript + Tailwind + shadcn/ui
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="Enter your email" />
-          </div>
-          <Button className="w-full">Get Started</Button>
-        </CardContent>
-      </Card>
-    </div>
-  )
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/room/:roomId" element={<RoomPage />} />
+        <Route path="/game" element={<GamePage />} />
+      </Routes>
+    </Router>
+  );
 }
 
 export default App
