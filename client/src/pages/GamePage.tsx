@@ -47,12 +47,12 @@ export default function GamePage() {
   // Initialize game data
   useEffect(() => {
     const name = location.state?.playerName || 'Player';
-    const roomPlayers = location.state?.players || [];
+    const roomPlayers: Player[] = location.state?.players || [];
     
     setPlayerName(name);
     
     // Initialize players with card counts
-    const gamePlayers = roomPlayers.map((player: any, index: number) => ({
+    const gamePlayers = roomPlayers.map((player: Player, index: number) => ({
       id: player.id,
       name: player.name,
       cardCount: Math.floor(108 / roomPlayers.length) + (index < 108 % roomPlayers.length ? 1 : 0),
