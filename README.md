@@ -1,5 +1,98 @@
 # 🃏 Tunisian Online Card Game
 
+🃏 Tunisian Online Card Game
+🎯 Goal
+
+Play smart, bluff well, and be the first to get rid of all your cards. The last player holding cards loses.
+
+🏗️ Setup
+
+Deck: 108 cards → standard 104-card double deck + 4 Jokers.
+
+Players: 3–10 players (works best with 4–6).
+
+Distribution: Cards are shuffled and spread out as evenly as possible to all players. Small differences (like +1 or +2 cards) are fine.
+
+🎮 Game Flow
+
+Starting the Game
+
+A random player is chosen to start.
+
+That player picks any number of cards from their hand (could be 1, 2, 3… etc.).
+
+They place them face-down on the table.
+
+They announce a rank (e.g., “These are three Aces”).
+
+Whether they’re telling the truth or lying is up to them.
+
+The Bluff Mechanic
+
+After the announcement, any player can shout “Liar!” (or click the “Lie” button in the online version).
+
+If challenged:
+
+Cards are revealed.
+
+If the announcer lied, they must take back the pile.
+
+If the announcer told the truth, the challenger must take the pile, and the announcer plays again.
+
+If no one challenges, play passes to the next player clockwise.
+
+Following the Lead
+
+Each new player places cards face-down, but they must claim the same rank as the previous announcement (even if they don’t have it).
+
+Example: First player says “3 Aces.” Next players must also play “Aces,” whether lying or not.
+
+Special Rule: Four of a Kind
+
+If at any point a player collects all 4 cards of the same rank (e.g., all four Kings of different suits), those cards are permanently removed from the game.
+
+This speeds up the game and reduces bluff opportunities.
+
+Winning & Losing
+
+First player to empty their hand → Winner.
+
+Game continues until all but one player have emptied their hands.
+
+Last player stuck with cards → Loser.
+
+💬 Communication Rules (for Online Version)
+
+Voice chat: Players can talk to bluff, banter, or call out lies.
+
+Text chat: For quick reactions and messages.
+
+Fun factor: The game thrives on psychology — convincing others you’re telling the truth, or daring them to challenge.
+
+🧩 Example Round
+
+Player A: puts 2 cards face-down → “These are 2 Queens.”
+
+Player B: suspicious, calls “Liar!” → Cards revealed → They were actually 7s.
+
+Player A takes the pile.
+
+Player B plays next.
+
+Next round, Player B: puts 1 card face-down → “This is a Queen.”
+
+Player C: doesn’t call → accepts. Play continues.
+
+🔥 Key Features That Make It Fun
+
+Bluffing is central — you don’t need the announced cards, just courage.
+
+Group psychology: who challenges whom, when to risk it.
+
+Voice chat makes it feel like a real table game.
+
+Quick, casual rounds that scale from 3 to 10 players.
+
 ## 📖 Project Overview
 
 A real-time multiplayer card game platform that brings the classic Tunisian bluffing card game online. Players can create rooms, invite friends via room codes, and enjoy voice chat while playing this exciting game of deception and strategy.
