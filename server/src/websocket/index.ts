@@ -72,6 +72,7 @@ function handleMessage(ws: WebSocket, message: WSMessage): void {
       handleRoomMessages(ws, clients, message);
       break;
 
+    case 'GET_GAME_STATE':
     case 'PLAY_CARDS':
     case 'CHALLENGE':
       handleGameMessages(ws, clients, message);

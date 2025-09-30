@@ -41,7 +41,7 @@ export default function RoomPage() {
     // Register WebSocket message handlers
     const unregisterRoomCreated = registerHandler("room-created", (message) => {
       if (message.type === "ROOM_CREATED") {
-        const { room, playerId: pid } = message.payload;
+        const { room } = message.payload;
         setRoomCode(room.code);
         setIsHost(true);
         setPlayers(room.players);
@@ -52,10 +52,10 @@ export default function RoomPage() {
 
     const unregisterRoomJoined = registerHandler("room-joined", (message) => {
       if (message.type === "ROOM_JOINED") {
-        const { room, playerId: pid } = message.payload;
+        const { room } = message.payload;
         setRoomCode(room.code);
         setPlayers(room.players);
-        setIsHost(room.hostId === pid);
+        setIsHost(room.hostId === playerId);
       }
     });
 
