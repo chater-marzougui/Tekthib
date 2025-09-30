@@ -47,7 +47,7 @@ export default function GamePage() {
 
   // Request initial game state when component mounts
   useEffect(() => {
-    if (isConnected && roomId) {
+    if (isConnected && roomId && playerId) {
       // Request current game state from server
       sendMessage({
         type: 'GET_GAME_STATE',
@@ -56,6 +56,11 @@ export default function GamePage() {
           playerId
         }
       });
+    } else if (isConnected && roomId && !playerId) {
+      // If no playerId, user probably navigated directly without going through room
+      console.error('No player ID found. Please rejoin from home page.');
+      setError('Session expired. Please return to home and rejoin the game.');
+      setIsLoading(false);
     }
   }, [isConnected, roomId, playerId, sendMessage]);
 
