@@ -220,7 +220,7 @@ export default function GamePage() {
           <div className="lg:col-span-3 space-y-6">
             <GameBoard 
               lastPlay={lastPlay}
-              currentPlayer={gameState?.currentPlayerId || ''}
+              currentPlayer={players.find((p) => p.id === gameState?.currentPlayerId)?.name || ''}
               canChallenge={canChallenge}
               onChallenge={handleChallenge}
             />

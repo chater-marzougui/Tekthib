@@ -14,31 +14,38 @@ interface GameBoardProps {
   onChallenge: () => void;
 }
 
-export default function GameBoard({ lastPlay, currentPlayer, canChallenge, onChallenge }: GameBoardProps) {
+export default function GameBoard({
+  lastPlay,
+  currentPlayer,
+  canChallenge,
+  onChallenge,
+}: Readonly<GameBoardProps>) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>Current Play</CardTitle>
         <p className="text-sm text-gray-600">
-          {currentPlayer ? `${currentPlayer}'s turn` : 'Waiting for game to start...'}
+          {currentPlayer
+            ? `${currentPlayer}'s turn`
+            : "Waiting for game to start..."}
         </p>
       </CardHeader>
       <CardContent>
         {lastPlay ? (
           <div className="text-center space-y-4">
             <div className="text-lg">
-              <span className="font-semibold">{lastPlay.player}</span> played{' '}
+              <span className="font-semibold">{lastPlay.player}</span> played{" "}
               <span className="font-bold text-blue-600">
                 {lastPlay.cardCount} {lastPlay.claimedRank}
-                {lastPlay.cardCount > 1 ? 's' : ''}
+                {lastPlay.cardCount > 1 ? "s" : ""}
               </span>
             </div>
-            
+
             {/* Visual representation of played cards */}
             <div className="flex justify-center">
               {Array.from({ length: lastPlay.cardCount }).map((_, i) => (
-                <div 
-                  key={i} 
+                <div
+                  key={i}
                   className="w-16 h-24 bg-blue-600 rounded-lg border-2 border-white mr-2 shadow-lg flex items-center justify-center text-white font-bold"
                   style={{ zIndex: lastPlay.cardCount - i }}
                 >
@@ -46,11 +53,11 @@ export default function GameBoard({ lastPlay, currentPlayer, canChallenge, onCha
                 </div>
               ))}
             </div>
-            
+
             {/* Challenge button */}
             {canChallenge && (
               <div className="space-y-2">
-                <Button 
+                <Button
                   onClick={onChallenge}
                   variant="destructive"
                   size="lg"
@@ -68,7 +75,9 @@ export default function GameBoard({ lastPlay, currentPlayer, canChallenge, onCha
           <div className="text-center text-gray-500 py-8">
             <div className="text-4xl mb-2">🃏</div>
             <div>Waiting for first play...</div>
-            <div className="text-sm mt-2">The game will begin once someone plays their first cards</div>
+            <div className="text-sm mt-2">
+              The game will begin once someone plays their first cards
+            </div>
           </div>
         )}
       </CardContent>

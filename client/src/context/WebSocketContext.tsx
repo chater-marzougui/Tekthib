@@ -12,7 +12,7 @@ interface WebSocketContextType {
 
 const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined);
 
-export function WebSocketProvider({ children }: { children: ReactNode }) {
+export function WebSocketProvider({ children }: Readonly<{ children: ReactNode }>) {
   const websocket = useWebSocket();
 
   return (

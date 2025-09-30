@@ -48,6 +48,8 @@ export interface GameState {
 // WebSocket message types
 export type WSMessageType = 
   | 'JOIN_ROOM'
+  | 'CONNECT'
+  | 'CONNECTED'
   | 'LEAVE_ROOM'
   | 'CREATE_ROOM'
   | 'ROOM_CREATED'

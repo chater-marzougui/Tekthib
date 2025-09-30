@@ -68,7 +68,9 @@ export type WSMessageType =
   | 'ERROR'
   | 'RTC_OFFER'
   | 'RTC_ANSWER'
-  | 'RTC_ICE_CANDIDATE';
+  | 'RTC_ICE_CANDIDATE'
+  | 'CONNECT'
+  | 'CONNECTED';
 
 export interface WSMessage {
   type: WSMessageType;

@@ -18,20 +18,7 @@ export function setupWebSocket(server: Server): WebSocketServer {
   const wss = new WebSocketServer({ server });
 
   wss.on('connection', (ws: WebSocket) => {
-    const clientId = `client_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
-    
-    clients.set(ws, {
-      id: clientId
-    });
-
-    console.log(`Client connected: ${clientId}`);
-
-    // Send welcome message
-    sendToClient(ws, {
-      type: 'ROOM_JOINED',
-      payload: { clientId }
-    });
-
+    handleConnect(ws, { type: 'CONNECT', payload: {} });
     ws.on('message', (data: string) => {
       try {
         const message: WSMessage = JSON.parse(data.toString());
@@ -40,7 +27,7 @@ export function setupWebSocket(server: Server): WebSocketServer {
         console.error('Error parsing message:', error);
         sendToClient(ws, {
           type: 'ERROR',
-          payload: { message: 'Invalid message format' }
+          payload: { message: 'Invalid message format' },
         });
       }
     });
@@ -48,14 +35,14 @@ export function setupWebSocket(server: Server): WebSocketServer {
     ws.on('close', () => {
       const clientInfo = clients.get(ws);
       console.log(`Client disconnected: ${clientInfo?.id}`);
-      
+
       if (clientInfo?.roomId) {
         handleRoomMessages(ws, clients, {
           type: 'LEAVE_ROOM',
-          payload: { roomId: clientInfo.roomId, playerId: clientInfo.id }
+          payload: { roomId: clientInfo.roomId, playerId: clientInfo.id },
         });
       }
-      
+
       clients.delete(ws);
     });
 
@@ -70,8 +57,11 @@ export function setupWebSocket(server: Server): WebSocketServer {
 
 function handleMessage(ws: WebSocket, message: WSMessage): void {
   const clientInfo = clients.get(ws);
+  if (message.type === 'CONNECT') {
+    handleConnect(ws, message);
+    return;
+  }
   if (!clientInfo) return;
-
   // Route message to appropriate handler
   switch (message.type) {
     case 'CREATE_ROOM':
@@ -100,17 +90,19 @@ function handleMessage(ws: WebSocket, message: WSMessage): void {
     default:
       sendToClient(ws, {
         type: 'ERROR',
-        payload: { message: 'Unknown message type' }
+        payload: { message: 'Unknown message type' },
       });
   }
 }
 
 export function sendToClient(ws: WebSocket, message: WSMessage): void {
   if (ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({
-      ...message,
-      timestamp: Date.now()
-    }));
+    ws.send(
+      JSON.stringify({
+        ...message,
+        timestamp: Date.now(),
+      }),
+    );
   }
 }
 
@@ -118,7 +110,7 @@ export function broadcastToRoom(
   clients: Map<WebSocket, ClientInfo>,
   roomId: string,
   message: WSMessage,
-  excludeClientId?: string
+  excludeClientId?: string,
 ): void {
   clients.forEach((clientInfo, ws) => {
     if (clientInfo.roomId === roomId && clientInfo.id !== excludeClientId) {
@@ -130,11 +122,33 @@ export function broadcastToRoom(
 export function sendToPlayer(
   clients: Map<WebSocket, ClientInfo>,
   playerId: string,
-  message: WSMessage
+  message: WSMessage,
 ): void {
   clients.forEach((clientInfo, ws) => {
     if (clientInfo.id === playerId) {
       sendToClient(ws, message);
     }
+  });
+}
+
+function handleConnect(ws: WebSocket, message: WSMessage): void {
+  const payload = message.payload as { clientId?: string };
+  const clientInfo = clients.get(ws);
+  let clientId = payload.clientId;
+  console.log("Handling CONNECT for clientId:", clientId);
+  if (!clientId) {
+    
+    clientId = `client_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+    clients.set(ws, { id: clientId });
+    console.log(`Client connected with ID: ${clientId}`);
+  } else {
+    clients.set(ws, { ...clientInfo, id: clientId });
+    console.log(`Client reconnected with ID: ${clientId}`);
+  }
+    
+  // Optionally, re-send state to restore room/game
+  sendToClient(ws, {
+    type: 'CONNECTED',
+    payload: { clientId },
   });
 }

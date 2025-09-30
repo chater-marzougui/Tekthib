@@ -6,19 +6,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function HomePage() {
-  const [playerName, setPlayerName] = useState('');
+  const [playerName, setPlayerName] = useState(localStorage.getItem('playerName') || '');
   const [roomCode, setRoomCode] = useState('');
   const navigate = useNavigate();
 
   const handleCreateRoom = () => {
     if (!playerName.trim()) return;
     // For now, navigate to room page with create mode
+    localStorage.setItem('playerName', playerName);
     navigate('/room/create', { state: { playerName } });
   };
 
   const handleJoinRoom = () => {
     if (!playerName.trim() || !roomCode.trim()) return;
     // For now, navigate to room page with join mode
+    localStorage.setItem('playerName', playerName);
     navigate(`/room/${roomCode}`, { state: { playerName } });
   };
 
