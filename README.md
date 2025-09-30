@@ -1,7 +1,152 @@
-# 🃏 Tunisian Online Card Game
+# 🃏 Tunisian Online Card Game - Tekthib
 
-🃏 Tunisian Online Card Game
-🎯 Goal
+## 📊 Current Implementation Status
+
+### ✅ Fully Implemented Features
+
+#### Core Infrastructure
+- ✅ React + TypeScript + Vite frontend with Tailwind CSS
+- ✅ Node.js + Express backend with TypeScript
+- ✅ WebSocket server for real-time communication
+- ✅ Full routing system (HomePage, RoomPage, GamePage)
+- ✅ WebSocket context provider for global state management
+
+#### Room Management
+- ✅ Create room with unique 6-character code
+- ✅ Join room by code
+- ✅ Real-time player list updates
+- ✅ Ready/Not Ready status tracking
+- ✅ Host-based game start controls
+- ✅ Player leave/disconnect handling
+- ✅ Automatic host transfer when original host leaves
+
+#### Game Engine
+- ✅ Complete server-side game logic
+- ✅ Card deck (108 cards: 2 standard decks + 4 Jokers)
+- ✅ Card distribution to 3-10 players
+- ✅ Turn-based gameplay
+- ✅ Bluffing mechanic (claim any rank)
+- ✅ Challenge system with verification
+- ✅ Four-of-a-kind auto-removal
+- ✅ Winner/loser detection
+- ✅ Real-time game state synchronization
+
+#### User Interface
+- ✅ Responsive design with Tailwind CSS
+- ✅ Shadcn UI components (button, card, input, label)
+- ✅ Player hand visualization with card selection
+- ✅ Game board showing last play
+- ✅ Player list with turn indicators
+- ✅ Challenge button with animations
+- ✅ Error handling and loading states
+
+#### Communication
+- ✅ Text chat in both lobby and game
+- ✅ Real-time message broadcasting
+- ✅ XSS protection for chat messages
+- ✅ Auto-scroll to latest messages
+
+### 🚧 Not Yet Implemented
+
+#### Optional Features
+- ⏳ WebRTC voice chat (planned but optional)
+- ⏳ Player avatars/customization
+- ⏳ Spectator mode
+- ⏳ Game replay/history
+- ⏳ Statistics tracking
+- ⏳ Sound effects and animations
+- ⏳ Mobile app version
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+ and npm
+- Git
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/chater-marzougui/Tekthib.git
+cd Tekthib
+```
+
+### 2. Backend Setup
+```bash
+cd server
+npm install
+
+# Create environment file
+cp .env.example .env
+# Edit .env if needed (default PORT=3001)
+
+# Development mode
+npm run dev
+
+# Production build and start
+npm run build
+npm start
+```
+
+### 3. Frontend Setup
+Open a new terminal:
+```bash
+cd client
+npm install
+
+# Create environment file
+cp .env.example .env
+# Edit .env if needed (default WS_URL=ws://localhost:3001)
+
+# Development mode
+npm run dev
+
+# Production build
+npm run build
+npm run preview
+```
+
+### 4. Access the Application
+- Frontend: http://localhost:5173
+- Backend: http://localhost:3001
+- WebSocket: ws://localhost:3001
+
+## 📦 Required Shadcn Components
+
+The project uses the following Shadcn UI components (already installed):
+- `button` - Buttons throughout the app
+- `card` - Card containers for UI sections
+- `input` - Text input fields
+- `label` - Form labels
+
+If you need to add more Shadcn components, use:
+```bash
+cd client
+npx shadcn@latest add [component-name]
+```
+
+## 🎮 How to Play
+
+### Creating a Game
+1. Open the app in your browser
+2. Enter your name on the home page
+3. Click "Create New Room"
+4. Share the room code with friends
+5. Wait for at least 3 players to join
+6. All players mark themselves as ready
+7. Host clicks "Start Game"
+
+### During the Game
+1. **Your Turn**: Select cards from your hand and claim a rank
+2. **Bluffing**: You can claim any rank, even if you don't have those cards
+3. **Other Players' Turns**: Watch what they play, decide if you trust them
+4. **Challenge**: Click "Challenge (Call Liar!)" if you think someone is bluffing
+5. **Winning**: First player to empty their hand wins
+6. **Special Rule**: If you collect all 4 cards of the same rank, they're removed
+
+### Chat
+- Use the chat box to communicate with other players
+- Banter, strategize, or bluff through messages!
+
+## 🏗️ Technical Architecture
 
 Play smart, bluff well, and be the first to get rid of all your cards. The last player holding cards loses.
 
@@ -537,6 +682,8 @@ heroku logs --tail  # Monitor deployment
 - [ ] Implement spectator mode
 - [ ] Add game replay functionality
 - [ ] Create tournament bracket system
+- [ ] Add sound effects for game actions
+- [ ] Implement WebRTC voice chat for better communication
 
 ### Scaling Considerations
 - [ ] Redis for multi-dyno room synchronization
@@ -549,6 +696,49 @@ heroku logs --tail  # Monitor deployment
 - [ ] Advertisement integration
 - [ ] Tournament entry fees
 - [ ] Cosmetic customizations
+
+## 🚀 Deployment to Heroku (Future)
+
+The project is structured to support Heroku deployment. When ready to deploy:
+
+1. **Prepare Heroku App**
+```bash
+heroku create your-app-name
+```
+
+2. **Configure Environment**
+```bash
+heroku config:set NODE_ENV=production
+heroku config:set PORT=443
+```
+
+3. **Deploy**
+```bash
+git push heroku main
+heroku logs --tail
+```
+
+## 📝 Development Notes
+
+### Project Structure
+- `/client` - React frontend application
+- `/server` - Node.js backend application
+- Both use TypeScript for type safety
+- WebSocket for real-time communication
+- In-memory data storage (ephemeral rooms)
+
+### Testing Locally
+1. Start the backend server first
+2. Start the frontend dev server
+3. Open multiple browser tabs/windows to simulate multiple players
+4. Test room creation, joining, and gameplay
+5. Test chat functionality
+
+### Known Limitations
+- Rooms are ephemeral (lost on server restart)
+- No persistent user accounts
+- WebRTC voice chat not yet implemented
+- Mobile responsiveness could be improved
 
 ## 🤝 Contributing
 
