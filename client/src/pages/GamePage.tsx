@@ -2,9 +2,12 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useWebSocketContext } from '@/context/WebSocketContext';
 import GameBoard from '../components/game/GameBoard';
 import PlayerHand from '../components/game/PlayerHand';
 import PlayerList from '../components/game/PlayerList';
+import ChatBox from '../components/chat/ChatBox';
+import type { Card as GameCard, GameState as ServerGameState, Rank } from '@/types';
 
 interface Player {
   id: string;
@@ -13,76 +16,137 @@ interface Player {
   isCurrentTurn: boolean;
 }
 
-interface GameCard {
-  id: string;
-  suit: 'hearts' | 'diamonds' | 'clubs' | 'spades';
-  rank: string;
+interface DisplayGameCard extends GameCard {
   selected: boolean;
 }
 
-interface GameState {
-  currentPlayer: string;
-  lastPlay: {
-    player: string;
-    cardCount: number;
-    claimedRank: string;
-  } | null;
-  phase: 'playing' | 'challenging' | 'game_over';
+interface LastPlay {
+  player: string;
+  cardCount: number;
+  claimedRank: string;
 }
 
 export default function GamePage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { sendMessage, registerHandler, isConnected } = useWebSocketContext();
   
   const [players, setPlayers] = useState<Player[]>([]);
-  const [playerHand, setPlayerHand] = useState<GameCard[]>([]);
-  const [gameState, setGameState] = useState<GameState>({
-    currentPlayer: '',
-    lastPlay: null,
-    phase: 'playing'
-  });
+  const [playerHand, setPlayerHand] = useState<DisplayGameCard[]>([]);
+  const [gameState, setGameState] = useState<ServerGameState | null>(null);
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [playerName, setPlayerName] = useState('');
+  const [playerId, setPlayerId] = useState('');
+  const [lastPlay, setLastPlay] = useState<LastPlay | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // Initialize game data
+  // Initialize game data and setup WebSocket handlers
   useEffect(() => {
     const name = location.state?.playerName || 'Player';
-    const roomPlayers: Player[] = location.state?.players || [];
+    const pid = location.state?.playerId || '';
+    const initialGameState = location.state?.gameState as ServerGameState;
     
     setPlayerName(name);
+    setPlayerId(pid);
     
-    // Initialize players with card counts
-    const gamePlayers = roomPlayers.map((player: Player, index: number) => ({
-      id: player.id,
-      name: player.name,
-      cardCount: Math.floor(108 / roomPlayers.length) + (index < 108 % roomPlayers.length ? 1 : 0),
-      isCurrentTurn: index === 0
+    if (initialGameState) {
+      setGameState(initialGameState);
+    }
+
+    // Register WebSocket handlers
+    const unregisterGameStateUpdate = registerHandler('game-state-update', (message) => {
+      if (message.type === 'GAME_STATE_UPDATE') {
+        const { hand, gameState: newGameState } = message.payload;
+        
+        if (hand) {
+          setPlayerHand(hand.map((card: GameCard) => ({ ...card, selected: false })));
+        }
+        
+        if (newGameState) {
+          setGameState(newGameState);
+        }
+      }
+    });
+
+    const unregisterCardsPlayed = registerHandler('cards-played', (message) => {
+      if (message.type === 'CARDS_PLAYED') {
+        const { playerName: pName, cardCount, claimedRank, gameState: newGameState } = message.payload;
+        
+        setLastPlay({
+          player: pName,
+          cardCount,
+          claimedRank
+        });
+        
+        if (newGameState) {
+          setGameState(newGameState);
+        }
+      }
+    });
+
+    const unregisterChallengeResult = registerHandler('challenge-result', (message) => {
+      if (message.type === 'CHALLENGE_RESULT') {
+        const { challengerName, wasLying, liarName, revealedCards, gameState: newGameState } = message.payload;
+        
+        const resultMessage = wasLying 
+          ? `${challengerName} was right! ${liarName} was lying. Cards were: ${revealedCards.map((c: GameCard) => c.rank).join(', ')}`
+          : `${challengerName} was wrong! ${liarName} was telling the truth. ${challengerName} takes the pile.`;
+        
+        alert(resultMessage);
+        
+        setLastPlay(null);
+        
+        if (newGameState) {
+          setGameState(newGameState);
+        }
+      }
+    });
+
+    const unregisterGameEnded = registerHandler('game-ended', (message) => {
+      if (message.type === 'GAME_ENDED') {
+        const { winners, loser } = message.payload;
+        
+        const winnerNames = winners.map((id: string) => 
+          players.find(p => p.id === id)?.name || 'Unknown'
+        ).join(', ');
+        
+        const loserName = players.find(p => p.id === loser)?.name || 'Unknown';
+        
+        alert(`Game Over! Winners: ${winnerNames}. Loser: ${loserName}`);
+        
+        setTimeout(() => navigate('/'), 3000);
+      }
+    });
+
+    const unregisterError = registerHandler('error', (message) => {
+      if (message.type === 'ERROR') {
+        setError(message.payload.message);
+        setTimeout(() => setError(null), 3000);
+      }
+    });
+
+    return () => {
+      unregisterGameStateUpdate();
+      unregisterCardsPlayed();
+      unregisterChallengeResult();
+      unregisterGameEnded();
+      unregisterError();
+    };
+  }, [location.state, registerHandler, navigate, players]);
+
+  // Update players list when game state changes
+  useEffect(() => {
+    if (!gameState) return;
+    
+    const updatedPlayers: Player[] = gameState.playerOrder.map((id) => ({
+      id,
+      name: id, // In real implementation, we'd map this from a player name mapping
+      cardCount: gameState.playerHandCounts[id] || 0,
+      isCurrentTurn: id === gameState.currentPlayerId
     }));
     
-    setPlayers(gamePlayers);
-    setGameState(prev => ({ ...prev, currentPlayer: gamePlayers[0]?.name || '' }));
-    
-    // Generate initial hand for current player
-    const initialHand = generateInitialHand(gamePlayers[0]?.cardCount || 18);
-    setPlayerHand(initialHand);
-  }, [location.state]);
-
-  const generateInitialHand = (cardCount: number): GameCard[] => {
-    const suits: GameCard['suit'][] = ['hearts', 'diamonds', 'clubs', 'spades'];
-    const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-    const hand: GameCard[] = [];
-    
-    for (let i = 0; i < cardCount; i++) {
-      hand.push({
-        id: `card-${i}`,
-        suit: suits[Math.floor(Math.random() * suits.length)],
-        rank: ranks[Math.floor(Math.random() * ranks.length)],
-        selected: false
-      });
-    }
-    
-    return hand.sort((a, b) => ranks.indexOf(a.rank) - ranks.indexOf(b.rank));
-  };
+    setPlayers(updatedPlayers);
+  }, [gameState]);
 
   const handleCardSelect = (cardId: string) => {
     setPlayerHand(prev => prev.map(card => 
@@ -101,53 +165,33 @@ export default function GamePage() {
   const handlePlayCards = (selectedCardIds: string[], claimedRank: string) => {
     if (selectedCardIds.length === 0 || !claimedRank) return;
     
-    // Remove played cards from hand
-    setPlayerHand(prev => prev.filter(card => !selectedCardIds.includes(card.id)));
-    
-    // Update game state
-    setGameState(prev => ({
-      ...prev,
-      lastPlay: {
-        player: playerName,
-        cardCount: selectedCardIds.length,
-        claimedRank
-      },
-      phase: 'challenging'
-    }));
+    sendMessage({
+      type: 'PLAY_CARDS',
+      payload: {
+        cardIds: selectedCardIds,
+        claimedRank: claimedRank as Rank
+      }
+    });
     
     // Clear selection
     setSelectedCards([]);
-    
-    // Advance turn (simplified)
-    setTimeout(() => {
-      const currentIndex = players.findIndex(p => p.name === playerName);
-      const nextIndex = (currentIndex + 1) % players.length;
-      setGameState(prev => ({
-        ...prev,
-        currentPlayer: players[nextIndex]?.name || '',
-        phase: 'playing'
-      }));
-    }, 2000);
   };
 
   const handleChallenge = () => {
-    // Simulate challenge result (in real game, server would determine this)
-    const isBluff = Math.random() > 0.5;
-    alert(isBluff ? 'Challenge successful! Player was bluffing.' : 'Challenge failed! Player was telling the truth.');
-    
-    setGameState(prev => ({
-      ...prev,
-      phase: 'playing',
-      lastPlay: null
-    }));
+    sendMessage({
+      type: 'CHALLENGE',
+      payload: {
+        challengerId: playerId
+      }
+    });
   };
 
   const handleLeaveGame = () => {
     navigate('/');
   };
 
-  const isMyTurn = gameState.currentPlayer === playerName;
-  const canChallenge = gameState.phase === 'challenging' && gameState.lastPlay?.player !== playerName;
+  const isMyTurn = gameState?.currentPlayerId === playerId;
+  const canChallenge = lastPlay !== null && lastPlay.player !== playerName;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 p-4">
@@ -157,8 +201,14 @@ export default function GamePage() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">🃏 Tekthib Game</h1>
             <p className="text-gray-600">
-              {isMyTurn ? "Your turn!" : `${gameState.currentPlayer}'s turn`}
+              {isMyTurn ? "Your turn!" : "Waiting for other players..."}
             </p>
+            {error && (
+              <p className="text-red-600 text-sm mt-1">{error}</p>
+            )}
+            {!isConnected && (
+              <p className="text-yellow-600 text-sm mt-1">Connecting to server...</p>
+            )}
           </div>
           <Button variant="outline" onClick={handleLeaveGame}>
             Leave Game
@@ -169,8 +219,8 @@ export default function GamePage() {
           {/* Game Board - Center Area */}
           <div className="lg:col-span-3 space-y-6">
             <GameBoard 
-              lastPlay={gameState.lastPlay}
-              currentPlayer={gameState.currentPlayer}
+              lastPlay={lastPlay}
+              currentPlayer={gameState?.currentPlayerId || ''}
               canChallenge={canChallenge}
               onChallenge={handleChallenge}
             />
@@ -190,6 +240,11 @@ export default function GamePage() {
               players={players}
               currentPlayerName={playerName}
             />
+
+            {/* Chat Box */}
+            {playerId && playerName && (
+              <ChatBox playerName={playerName} playerId={playerId} />
+            )}
 
             {/* Game Rules Quick Reference */}
             <Card>
