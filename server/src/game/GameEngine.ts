@@ -1,0 +1,250 @@
+import { Card, GameState, Player, Rank } from '../types';
+import { Deck } from './Deck';
+
+export class GameEngine {
+  private gameState: GameState;
+  private players: Map<string, Player>;
+
+  constructor(players: Map<string, Player>) {
+    this.players = players;
+    this.gameState = this.initializeGame();
+  }
+
+  private initializeGame(): GameState {
+    const playerOrder = Array.from(this.players.keys());
+    
+    // Shuffle player order
+    for (let i = playerOrder.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [playerOrder[i], playerOrder[j]] = [playerOrder[j], playerOrder[i]];
+    }
+
+    // Distribute cards
+    const deck = new Deck();
+    const hands = deck.distributeCards(this.players.size);
+    
+    playerOrder.forEach((playerId, index) => {
+      const player = this.players.get(playerId);
+      if (player) {
+        player.hand = hands[index];
+      }
+    });
+
+    return {
+      phase: 'playing',
+      currentPlayerIndex: 0,
+      currentRank: null,
+      pile: [],
+      lastPlayedCards: [],
+      lastPlayerId: null,
+      playerOrder,
+      winners: [],
+      loser: null,
+      consecutivePasses: 0
+    };
+  }
+
+  getGameState(): GameState {
+    return { ...this.gameState };
+  }
+
+  getCurrentPlayer(): Player | undefined {
+    const currentPlayerId = this.gameState.playerOrder[this.gameState.currentPlayerIndex];
+    return this.players.get(currentPlayerId);
+  }
+
+  playCards(playerId: string, cardIds: string[], claimedRank: Rank): {
+    success: boolean;
+    error?: string;
+    newRank?: Rank;
+  } {
+    // Verify it's the player's turn
+    const currentPlayerId = this.gameState.playerOrder[this.gameState.currentPlayerIndex];
+    if (playerId !== currentPlayerId) {
+      return { success: false, error: 'Not your turn' };
+    }
+
+    const player = this.players.get(playerId);
+    if (!player) {
+      return { success: false, error: 'Player not found' };
+    }
+
+    // Verify player has these cards
+    const playerCardIds = player.hand.map(c => c.id);
+    const allCardsValid = cardIds.every(id => playerCardIds.includes(id));
+    if (!allCardsValid) {
+      return { success: false, error: 'Invalid cards' };
+    }
+
+    // If there's a current rank, must claim the same rank
+    if (this.gameState.currentRank && claimedRank !== this.gameState.currentRank) {
+      return { success: false, error: `Must claim ${this.gameState.currentRank}` };
+    }
+
+    // Remove cards from player's hand
+    const playedCards = player.hand.filter(c => cardIds.includes(c.id));
+    player.hand = player.hand.filter(c => !cardIds.includes(c.id));
+
+    // Add to pile
+    this.gameState.pile.push(...playedCards);
+    this.gameState.lastPlayedCards = playedCards;
+    this.gameState.lastPlayerId = playerId;
+    this.gameState.currentRank = claimedRank;
+
+    // Check for four of a kind
+    this.checkAndRemoveFourOfKind(player);
+
+    // Check if player won (empty hand)
+    if (player.hand.length === 0) {
+      this.gameState.winners.push(playerId);
+      
+      // Check if game is over
+      const remainingPlayers = this.gameState.playerOrder.filter(
+        id => !this.gameState.winners.includes(id)
+      );
+      
+      if (remainingPlayers.length === 1) {
+        this.gameState.loser = remainingPlayers[0];
+        this.gameState.phase = 'ended';
+        return { success: true, newRank: claimedRank };
+      }
+    }
+
+    // Move to next player (skip winners)
+    this.advanceTurn();
+
+    return { success: true, newRank: claimedRank };
+  }
+
+  challenge(challengerId: string): {
+    success: boolean;
+    wasLying: boolean;
+    liarId: string;
+    revealedCards: Card[];
+    error?: string;
+  } {
+    if (!this.gameState.lastPlayerId) {
+      return {
+        success: false,
+        wasLying: false,
+        liarId: '',
+        revealedCards: [],
+        error: 'No cards to challenge'
+      };
+    }
+
+    const lastPlayer = this.players.get(this.gameState.lastPlayerId);
+    const challenger = this.players.get(challengerId);
+
+    if (!lastPlayer || !challenger) {
+      return {
+        success: false,
+        wasLying: false,
+        liarId: '',
+        revealedCards: [],
+        error: 'Player not found'
+      };
+    }
+
+    // Check if last played cards match claimed rank
+    const claimedRank = this.gameState.currentRank!;
+    const allMatch = this.gameState.lastPlayedCards.every(
+      card => card.rank === claimedRank || card.rank === 'Joker' // Jokers are wild
+    );
+
+    const wasLying = !allMatch;
+    const liarId = wasLying ? this.gameState.lastPlayerId : challengerId;
+    const liar = this.players.get(liarId)!;
+
+    // Liar takes the pile
+    liar.hand.push(...this.gameState.pile);
+    
+    // Check for four of a kind after taking pile
+    this.checkAndRemoveFourOfKind(liar);
+
+    // Reset pile and rank
+    const revealedCards = [...this.gameState.lastPlayedCards];
+    this.gameState.pile = [];
+    this.gameState.currentRank = null;
+    this.gameState.lastPlayedCards = [];
+    this.gameState.lastPlayerId = null;
+
+    // If liar was the last player, they play again; otherwise challenger plays
+    if (wasLying) {
+      // Keep current turn (last player plays again)
+    } else {
+      // Challenger plays next
+      const challengerIndex = this.gameState.playerOrder.indexOf(challengerId);
+      this.gameState.currentPlayerIndex = challengerIndex;
+    }
+
+    return {
+      success: true,
+      wasLying,
+      liarId,
+      revealedCards
+    };
+  }
+
+  private checkAndRemoveFourOfKind(player: Player): void {
+    const rankCounts = new Map<Rank, Card[]>();
+
+    // Count cards by rank
+    player.hand.forEach(card => {
+      if (card.rank !== 'Joker') {
+        if (!rankCounts.has(card.rank)) {
+          rankCounts.set(card.rank, []);
+        }
+        rankCounts.get(card.rank)!.push(card);
+      }
+    });
+
+    // Remove sets of 4
+    rankCounts.forEach((cards, rank) => {
+      if (cards.length === 4) {
+        player.hand = player.hand.filter(c => c.rank !== rank);
+      }
+    });
+  }
+
+  private advanceTurn(): void {
+    const startIndex = this.gameState.currentPlayerIndex;
+    let nextIndex = (startIndex + 1) % this.gameState.playerOrder.length;
+
+    // Skip winners
+    while (this.gameState.winners.includes(this.gameState.playerOrder[nextIndex])) {
+      nextIndex = (nextIndex + 1) % this.gameState.playerOrder.length;
+      
+      // Prevent infinite loop
+      if (nextIndex === startIndex) break;
+    }
+
+    this.gameState.currentPlayerIndex = nextIndex;
+  }
+
+  getPlayerHand(playerId: string): Card[] {
+    const player = this.players.get(playerId);
+    return player ? [...player.hand] : [];
+  }
+
+  getPublicGameState(): any {
+    return {
+      phase: this.gameState.phase,
+      currentPlayerIndex: this.gameState.currentPlayerIndex,
+      currentPlayerId: this.gameState.playerOrder[this.gameState.currentPlayerIndex],
+      currentRank: this.gameState.currentRank,
+      pileCount: this.gameState.pile.length,
+      lastPlayedCount: this.gameState.lastPlayedCards.length,
+      lastPlayerId: this.gameState.lastPlayerId,
+      playerOrder: this.gameState.playerOrder,
+      winners: this.gameState.winners,
+      loser: this.gameState.loser,
+      playerHandCounts: Object.fromEntries(
+        this.gameState.playerOrder.map(id => [
+          id,
+          this.players.get(id)?.hand.length || 0
+        ])
+      )
+    };
+  }
+}

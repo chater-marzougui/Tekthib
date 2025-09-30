@@ -1,0 +1,22 @@
+{
+  "name": "takthib",
+  "version": "1.0.0",
+  "description": "🃏 Tunisian Online Card Game\r 🎯 Goal",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "frontend": "cd client && npm run dev",
+    "backend": "cd server && npm run dev",
+    "start": "concurrently \"npm run backend\" \"npm run frontend\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chater-marzougui/Tekthib.git"
+  },
+  "author": "Chater Marzougui",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/chater-marzougui/Tekthib/issues"
+  },
+  "homepage": "https://github.com/chater-marzougui/Tekthib#readme"
+}
