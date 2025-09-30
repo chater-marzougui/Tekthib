@@ -28,10 +28,10 @@ export default function RoomPage() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [isHost, setIsHost] = useState(false);
   const [roomCode, setRoomCode] = useState("");
-  const [playerName, setPlayerName] = useState<string | null>(localStorage.getItem("playerName") || "");
-  const [playerId, setPlayerId] = useState<string | null>(localStorage.getItem("clientId") || "");
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const playerName = localStorage.getItem("playerName") || "Unknown";
+  const playerId = localStorage.getItem("clientId") || "";
 
   useEffect(() => {
     if (!isConnected) {
@@ -44,7 +44,6 @@ export default function RoomPage() {
         const { room, playerId: pid } = message.payload;
         setRoomCode(room.code);
         setIsHost(true);
-        setPlayerId(pid);
         setPlayers(room.players);
         // Update URL to reflect actual room code
         window.history.replaceState(null, "", `/room/${room.code}`);
@@ -55,7 +54,6 @@ export default function RoomPage() {
       if (message.type === "ROOM_JOINED") {
         const { room, playerId: pid } = message.payload;
         setRoomCode(room.code);
-        setPlayerId(pid);
         setPlayers(room.players);
         setIsHost(room.hostId === pid);
       }
@@ -117,12 +115,12 @@ export default function RoomPage() {
     if (roomId === "create") {
       sendMessage({
         type: "CREATE_ROOM",
-        payload: { playerName: name, maxPlayers: 10 },
+        payload: { playerName, maxPlayers: 10 },
       });
     } else {
       sendMessage({
         type: "JOIN_ROOM",
-        payload: { roomCode: roomId || "", playerName: name },
+        payload: { roomCode: roomId || "", playerName },
       });
     }
 
