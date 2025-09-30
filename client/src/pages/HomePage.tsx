@@ -12,16 +12,14 @@ export default function HomePage() {
 
   const handleCreateRoom = () => {
     if (!playerName.trim()) return;
-    // For now, navigate to room page with create mode
     localStorage.setItem('playerName', playerName);
-    navigate('/room/create', { state: { playerName } });
+    navigate('/room/create');
   };
 
   const handleJoinRoom = () => {
     if (!playerName.trim() || !roomCode.trim()) return;
-    // For now, navigate to room page with join mode
     localStorage.setItem('playerName', playerName);
-    navigate(`/room/${roomCode}`, { state: { playerName } });
+    navigate(`/room/${roomCode}`);
   };
 
   return (

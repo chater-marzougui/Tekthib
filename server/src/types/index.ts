@@ -59,6 +59,8 @@ export type WSMessageType =
   | 'PLAYER_LEFT'
   | 'READY'
   | 'START_GAME'
+  | 'GET_GAME_STATE'
+  | 'INITIAL_GAME_STATE'
   | 'GAME_STARTED'
   | 'PLAY_CARDS'
   | 'CARDS_PLAYED'

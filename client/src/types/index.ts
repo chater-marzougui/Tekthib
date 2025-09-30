@@ -58,6 +58,8 @@ export type WSMessageType =
   | 'READY'
   | 'START_GAME'
   | 'GAME_STARTED'
+  | 'GET_GAME_STATE'
+  | 'INITIAL_GAME_STATE'
   | 'PLAY_CARDS'
   | 'CARDS_PLAYED'
   | 'CHALLENGE'

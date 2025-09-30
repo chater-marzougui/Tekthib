@@ -6,6 +6,7 @@ const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:3001";
 export function useWebSocket() {
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<WSMessage | null>(null);
+  const [storedId, setStoredId] = useState<string | null>(localStorage.getItem("clientId") || null);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | undefined>(undefined);
   const messageHandlersRef = useRef<Map<string, (message: WSMessage) => void>>(
@@ -20,8 +21,7 @@ export function useWebSocket() {
     const ws = new WebSocket(WS_URL);
 
     ws.onopen = () => {
-      console.log("WebSocket connected");
-      const storedId = localStorage.getItem("clientId");
+      console.log("Stored ID:", storedId);
       if (storedId) {
         // Tell server "hey, it's me again"
         ws.send(
@@ -31,7 +31,6 @@ export function useWebSocket() {
           })
         );
       }
-      setIsConnected(true);
     };
 
     ws.onmessage = (event) => {
@@ -39,9 +38,12 @@ export function useWebSocket() {
         const message: WSMessage = JSON.parse(event.data);
         setLastMessage(message);
 
-        if ((message.type === "ROOM_JOINED" || message.type === "CONNECTED") && message.payload?.clientId) {
+        if ((message.type === "ROOM_JOINED" || message.type === "CONNECTED") && message.payload?.clientId && !storedId) {
           localStorage.setItem("clientId", message.payload.clientId);
+          setStoredId(message.payload.clientId);
         }
+        setIsConnected(true);
+        console.log("Connected");
 
         // Call registered handlers
         messageHandlersRef.current.forEach((handler) => {
@@ -55,10 +57,12 @@ export function useWebSocket() {
     ws.onclose = () => {
       console.log("WebSocket disconnected");
       setIsConnected(false);
+      if (reconnectTimeoutRef.current) return;
 
       // Attempt to reconnect after 3 seconds
-      reconnectTimeoutRef.current = setTimeout(() => {
+      reconnectTimeoutRef.current = window.setTimeout(() => {
         console.log("Attempting to reconnect...");
+        reconnectTimeoutRef.current = undefined;
         connect();
       }, 3000);
     };

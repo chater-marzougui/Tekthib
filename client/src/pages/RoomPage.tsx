@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,15 +22,14 @@ function isDuplicatePlayer(
 
 export default function RoomPage() {
   const { roomId } = useParams();
-  const location = useLocation();
   const navigate = useNavigate();
   const { sendMessage, registerHandler, isConnected } = useWebSocketContext();
 
   const [players, setPlayers] = useState<Player[]>([]);
   const [isHost, setIsHost] = useState(false);
   const [roomCode, setRoomCode] = useState("");
-  const [playerName, setPlayerName] = useState("");
-  const [playerId, setPlayerId] = useState("");
+  const [playerName, setPlayerName] = useState<string | null>(localStorage.getItem("playerName") || "");
+  const [playerId, setPlayerId] = useState<string | null>(localStorage.getItem("clientId") || "");
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,13 +37,6 @@ export default function RoomPage() {
     if (!isConnected) {
       return;
     }
-
-    const name =
-      location.state?.playerName ||
-      localStorage.getItem("playerName") ||
-      "Anonymous-" + Math.floor(Math.random() * 100000);
-    setPlayerName(name);
-    localStorage.setItem("playerName", name);
 
     // Register WebSocket message handlers
     const unregisterRoomCreated = registerHandler("room-created", (message) => {
@@ -111,15 +103,7 @@ export default function RoomPage() {
 
     const unregisterGameStarted = registerHandler("game-started", (message) => {
       if (message.type === "GAME_STARTED") {
-        navigate("/game", {
-          state: {
-            roomCode,
-            players,
-            playerName,
-            playerId,
-            gameState: message.payload.gameState,
-          },
-        });
+        navigate(`/game/${roomCode}`);
       }
     });
 
@@ -153,7 +137,6 @@ export default function RoomPage() {
     };
   }, [
     roomId,
-    location.state,
     isConnected,
     sendMessage,
     registerHandler,

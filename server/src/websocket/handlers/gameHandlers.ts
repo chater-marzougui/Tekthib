@@ -9,12 +9,21 @@ interface ClientInfo {
   name?: string;
 }
 
+interface GetGameStatePayload {
+  roomId: string;
+  playerId: string;
+}
+
 export function handleGameMessages(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
   message: WSMessage
 ): void {
   switch (message.type) {
+    case 'GET_GAME_STATE':
+      handleGetGameState(ws, clients, message.payload as GetGameStatePayload);
+      break;
+
     case 'PLAY_CARDS':
       handlePlayCards(ws, clients, message.payload as PlayCardsPayload);
       break;
@@ -23,6 +32,44 @@ export function handleGameMessages(
       handleChallenge(ws, clients, message.payload as ChallengePayload);
       break;
   }
+}
+
+
+function handleGetGameState(
+  ws: WebSocket,
+  clients: Map<WebSocket, ClientInfo>,
+  payload: GetGameStatePayload
+): void {
+  const { roomId, playerId } = payload;
+  
+  const room = roomManager.getRoom(roomId);
+  if (!room) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: { message: 'Room not found' }
+    });
+    return;
+  }
+
+  const gameEngine = roomManager.getGameEngine(roomId);
+  if (!gameEngine) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: { message: 'Game not started' }
+    });
+    return;
+  }
+
+  const publicGameState = gameEngine.getPublicGameState();
+  const playerHand = gameEngine.getPlayerHand(playerId);
+
+  sendToClient(ws, {
+    type: 'INITIAL_GAME_STATE',
+    payload: {
+      hand: playerHand,
+      gameState: publicGameState
+    }
+  });
 }
 
 function handlePlayCards(
