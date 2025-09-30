@@ -2,74 +2,146 @@ import { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-
-interface Player {
-  id: string;
-  name: string;
-  isReady: boolean;
-}
+import { useWebSocketContext } from '@/context/WebSocketContext';
+import type { Player } from '@/types';
 
 export default function RoomPage() {
   const { roomId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const { sendMessage, registerHandler, isConnected } = useWebSocketContext();
+  
   const [players, setPlayers] = useState<Player[]>([]);
   const [isHost, setIsHost] = useState(false);
   const [roomCode, setRoomCode] = useState('');
   const [playerName, setPlayerName] = useState('');
+  const [playerId, setPlayerId] = useState('');
   const [isReady, setIsReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Get player name from navigation state
+    if (!isConnected) {
+      return;
+    }
+
     const name = location.state?.playerName || 'Anonymous';
     setPlayerName(name);
 
-    // Simulate room creation or joining
-    if (roomId === 'create') {
-      // Creating a new room
-      const newRoomCode = generateRoomCode();
-      setRoomCode(newRoomCode);
-      setIsHost(true);
-      // Add the current player as host
-      setPlayers([{ id: '1', name, isReady: false }]);
-    } else {
-      // Joining existing room
-      setRoomCode(roomId || '');
-      setIsHost(false);
-      // Simulate existing players (in real app, this would come from WebSocket)
-      setPlayers([
-        { id: '1', name: 'Host Player', isReady: true },
-        { id: '2', name, isReady: false }
-      ]);
-    }
-  }, [roomId, location.state]);
+    // Register WebSocket message handlers
+    const unregisterRoomCreated = registerHandler('room-created', (message) => {
+      if (message.type === 'ROOM_CREATED') {
+        const { room, playerId: pid } = message.payload;
+        setRoomCode(room.code);
+        setIsHost(true);
+        setPlayerId(pid);
+        setPlayers(room.players);
+        // Update URL to reflect actual room code
+        window.history.replaceState(null, '', `/room/${room.code}`);
+      }
+    });
 
-  const generateRoomCode = (): string => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < 8; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    const unregisterRoomJoined = registerHandler('room-joined', (message) => {
+      if (message.type === 'ROOM_JOINED') {
+        const { room, playerId: pid } = message.payload;
+        setRoomCode(room.code);
+        setPlayerId(pid);
+        setPlayers(room.players);
+        setIsHost(room.hostId === pid);
+      }
+    });
+
+    const unregisterPlayerJoined = registerHandler('player-joined', (message) => {
+      if (message.type === 'PLAYER_JOINED') {
+        const { player } = message.payload;
+        setPlayers(prev => [...prev, player]);
+      }
+    });
+
+    const unregisterPlayerLeft = registerHandler('player-left', (message) => {
+      if (message.type === 'PLAYER_LEFT') {
+        const { playerId: leftPlayerId, newHostId } = message.payload;
+        setPlayers(prev => prev.filter(p => p.id !== leftPlayerId));
+        if (newHostId && newHostId === playerId) {
+          setIsHost(true);
+        }
+      }
+    });
+
+    const unregisterGameStateUpdate = registerHandler('game-state-update', (message) => {
+      if (message.type === 'GAME_STATE_UPDATE') {
+        const { playerId: updatedPlayerId, isReady: updatedReady } = message.payload;
+        setPlayers(prev => prev.map(p => 
+          p.id === updatedPlayerId ? { ...p, isReady: updatedReady } : p
+        ));
+      }
+    });
+
+    const unregisterGameStarted = registerHandler('game-started', (message) => {
+      if (message.type === 'GAME_STARTED') {
+        navigate('/game', { 
+          state: { 
+            roomCode, 
+            playerName, 
+            playerId,
+            gameState: message.payload.gameState 
+          } 
+        });
+      }
+    });
+
+    const unregisterError = registerHandler('error', (message) => {
+      if (message.type === 'ERROR') {
+        setError(message.payload.message);
+      }
+    });
+
+    // Create or join room based on roomId parameter
+    if (roomId === 'create') {
+      sendMessage({
+        type: 'CREATE_ROOM',
+        payload: { playerName: name, maxPlayers: 10 }
+      });
+    } else {
+      sendMessage({
+        type: 'JOIN_ROOM',
+        payload: { roomCode: roomId || '', playerName: name }
+      });
     }
-    return result;
-  };
+
+    return () => {
+      unregisterRoomCreated();
+      unregisterRoomJoined();
+      unregisterPlayerJoined();
+      unregisterPlayerLeft();
+      unregisterGameStateUpdate();
+      unregisterGameStarted();
+      unregisterError();
+    };
+  }, [roomId, location.state, isConnected, sendMessage, registerHandler, navigate, playerId]);
 
   const handleReadyToggle = () => {
-    setIsReady(!isReady);
-    // Update player ready status
-    setPlayers(prev => prev.map(player => 
-      player.name === playerName 
-        ? { ...player, isReady: !isReady }
-        : player
-    ));
+    const newReadyState = !isReady;
+    setIsReady(newReadyState);
+    sendMessage({
+      type: 'READY',
+      payload: { ready: newReadyState }
+    });
   };
 
   const handleStartGame = () => {
-    if (isHost && players.every(p => p.isReady)) {
-      navigate('/game', { state: { roomCode, playerName, players } });
+    if (isHost && canStartGame) {
+      sendMessage({
+        type: 'START_GAME',
+        payload: {}
+      });
     }
   };
 
   const handleLeaveRoom = () => {
+    sendMessage({
+      type: 'LEAVE_ROOM',
+      payload: { roomId: roomCode, playerId }
+    });
     navigate('/');
   };
 
@@ -77,7 +149,7 @@ export default function RoomPage() {
     navigator.clipboard.writeText(roomCode);
   };
 
-  const canStartGame = isHost && players.length >= 1 && players.every(p => p.isReady); // Temporarily allow 1 player for testing
+  const canStartGame = isHost && players.length >= 3 && players.every(p => p.isReady);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 p-4">
@@ -85,6 +157,16 @@ export default function RoomPage() {
         {/* Header */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold text-gray-900">🎮 Game Lobby</h1>
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+              {error}
+            </div>
+          )}
+          {!isConnected && (
+            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative">
+              Connecting to server...
+            </div>
+          )}
           <div className="flex items-center justify-center gap-4">
             <div className="flex items-center gap-2">
               <span className="text-lg font-semibold">Room Code:</span>
@@ -92,8 +174,9 @@ export default function RoomPage() {
                 variant="outline" 
                 onClick={copyRoomCode}
                 className="font-mono text-lg px-4"
+                disabled={!roomCode}
               >
-                {roomCode}
+                {roomCode || 'Loading...'}
               </Button>
             </div>
           </div>
@@ -111,7 +194,7 @@ export default function RoomPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {players.map((player, index) => (
+                  {players.map((player) => (
                     <div 
                       key={player.id} 
                       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
@@ -121,8 +204,11 @@ export default function RoomPage() {
                           {player.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <div className="font-medium">{player.name}</div>
-                          {index === 0 && <div className="text-xs text-gray-500">Host</div>}
+                          <div className="font-medium">
+                            {player.name}
+                            {player.id === playerId && ' (You)'}
+                          </div>
+                          {player.id === players[0]?.id && <div className="text-xs text-gray-500">Host</div>}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
