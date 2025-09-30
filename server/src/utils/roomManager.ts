@@ -2,8 +2,8 @@ import { Room, Player } from '../types';
 import { GameEngine } from '../game/GameEngine';
 
 class RoomManager {
-  private rooms: Map<string, Room> = new Map();
-  private gameEngines: Map<string, GameEngine> = new Map();
+  private readonly rooms: Map<string, Room> = new Map();
+  private readonly gameEngines: Map<string, GameEngine> = new Map();
 
   generateRoomCode(): string {
     // Generate 6-character alphanumeric code
@@ -22,7 +22,7 @@ class RoomManager {
   }
 
   createRoom(hostId: string, hostName: string, maxPlayers: number = 10): Room {
-    const roomId = `room_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const roomId = `room_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const code = this.generateRoomCode();
 
     const host: Player = {

@@ -114,6 +114,7 @@ export default function RoomPage() {
         navigate("/game", {
           state: {
             roomCode,
+            players,
             playerName,
             playerId,
             gameState: message.payload.gameState,

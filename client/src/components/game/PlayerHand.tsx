@@ -23,7 +23,7 @@ export default function PlayerHand({
   onPlayCards, 
   isMyTurn, 
   selectedCards 
-}: PlayerHandProps) {
+}: Readonly<PlayerHandProps>) {
   const [claimedRank, setClaimedRank] = useState('');
 
   const getCardSymbol = (suit: GameCard['suit']) => {
@@ -59,28 +59,34 @@ export default function PlayerHand({
         )}
       </CardHeader>
       <CardContent>
-        {/* Cards Display */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {cards.map((card) => (
-            <div
-              key={card.id}
-              onClick={() => isMyTurn && onCardSelect(card.id)}
-              className={`
-                w-16 h-24 bg-white rounded-lg border-2 shadow-md cursor-pointer transition-all
-                flex flex-col items-center justify-center text-sm font-bold
-                ${card.selected ? 'border-blue-500 -translate-y-2 shadow-lg' : 'border-gray-300'}
-                ${!isMyTurn ? 'cursor-not-allowed opacity-50' : 'hover:shadow-lg'}
-                ${getCardColor(card.suit)}
-              `}
-            >
-              <div>{getCardSymbol(card.suit)}</div>
-              <div>{card.rank}</div>
-            </div>
-          ))}
-        </div>
+        {/* Cards Display - Show cards or empty message */}
+        {cards.length > 0 ? (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {cards.map((card) => (
+              <Card
+                key={card.id}
+                onClick={() => isMyTurn && onCardSelect(card.id)}
+                className={`
+                  w-16 h-24 bg-white rounded-lg border-2 shadow-md cursor-pointer transition-all
+                  flex flex-col items-center justify-center text-sm font-bold
+                  ${selectedCards.includes(card.id) ? 'border-blue-500 -translate-y-2 shadow-lg' : 'border-gray-300'}
+                  ${!isMyTurn ? 'cursor-not-allowed opacity-50' : 'hover:shadow-lg'}
+                  ${getCardColor(card.suit)}
+                `}
+              >
+                <div className="text-2xl">{getCardSymbol(card.suit)}</div>
+                <div>{card.rank}</div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-gray-500 py-8 text-center">
+            No cards in hand
+          </div>
+        )}
 
         {/* Play Controls */}
-        {isMyTurn && (
+        {isMyTurn && cards.length > 0 && (
           <div className="flex gap-4 items-center">
             <select
               value={claimedRank}

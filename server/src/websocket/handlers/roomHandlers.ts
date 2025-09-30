@@ -259,6 +259,7 @@ function handleStartGame(
   clients.forEach((client, clientWs) => {
     if (client.roomId === clientInfo.roomId) {
       const hand = gameEngine.getPlayerHand(client.id);
+      console.log("Sending hand:", hand, "To", client.id, client.name)
       sendToClient(clientWs, {
         type: 'GAME_STATE_UPDATE',
         payload: {

@@ -52,8 +52,6 @@
 - ⏳ WebRTC voice chat (planned but optional)
 - ⏳ Player avatars/customization
 - ⏳ Spectator mode
-- ⏳ Game replay/history
-- ⏳ Statistics tracking
 - ⏳ Sound effects and animations
 - ⏳ Mobile app version
 

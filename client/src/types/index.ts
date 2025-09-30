@@ -35,6 +35,7 @@ export interface GameState {
   currentPlayerIndex: number;
   currentPlayerId: string;
   currentRank: Rank | null;
+  players: Player[];
   pileCount: number;
   lastPlayedCount: number;
   lastPlayerId: string | null;

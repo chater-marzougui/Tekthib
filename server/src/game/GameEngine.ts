@@ -2,8 +2,8 @@ import { Card, GameState, Player, Rank } from '../types';
 import { Deck } from './Deck';
 
 export class GameEngine {
-  private gameState: GameState;
-  private players: Map<string, Player>;
+  private readonly gameState: GameState;
+  private readonly players: Map<string, Player>;
 
   constructor(players: Map<string, Player>) {
     this.players = players;
@@ -232,6 +232,7 @@ export class GameEngine {
       phase: this.gameState.phase,
       currentPlayerIndex: this.gameState.currentPlayerIndex,
       currentPlayerId: this.gameState.playerOrder[this.gameState.currentPlayerIndex],
+      players: Array.from(this.players.values()),
       currentRank: this.gameState.currentRank,
       pileCount: this.gameState.pile.length,
       lastPlayedCount: this.gameState.lastPlayedCards.length,

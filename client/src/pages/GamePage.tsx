@@ -7,9 +7,9 @@ import GameBoard from '../components/game/GameBoard';
 import PlayerHand from '../components/game/PlayerHand';
 import PlayerList from '../components/game/PlayerList';
 import ChatBox from '../components/chat/ChatBox';
-import type { Card as GameCard, GameState as ServerGameState, Rank } from '@/types';
+import type { Card as GameCard, GameState as ServerGameState, Rank, Player } from '@/types';
 
-interface Player {
+interface GamePlayer {
   id: string;
   name: string;
   cardCount: number;
@@ -31,23 +31,21 @@ export default function GamePage() {
   const navigate = useNavigate();
   const { sendMessage, registerHandler, isConnected } = useWebSocketContext();
   
-  const [players, setPlayers] = useState<Player[]>([]);
+  const [players, setPlayers] = useState<GamePlayer[]>([]);
   const [playerHand, setPlayerHand] = useState<DisplayGameCard[]>([]);
   const [gameState, setGameState] = useState<ServerGameState | null>(null);
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
-  const [playerName, setPlayerName] = useState('');
-  const [playerId, setPlayerId] = useState('');
+  const playerName = localStorage.getItem('playerName') || 'Anonymous';
+  const playerId = localStorage.getItem('playerId') || 'Anonymous-'+Math.floor(Math.random()*10000);
   const [lastPlay, setLastPlay] = useState<LastPlay | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Initialize game data and setup WebSocket handlers
   useEffect(() => {
-    const name = location.state?.playerName || 'Player';
-    const pid = location.state?.playerId || '';
     const initialGameState = location.state?.gameState as ServerGameState;
     
-    setPlayerName(name);
-    setPlayerId(pid);
+    const initialPlayersData = initialGameState.players || [];
+    
     
     if (initialGameState) {
       setGameState(initialGameState);
@@ -60,6 +58,9 @@ export default function GamePage() {
         
         if (hand) {
           setPlayerHand(hand.map((card: GameCard) => ({ ...card, selected: false })));
+          console.log('Updated player hand:', hand);
+        } else {
+          console.warn('Received GAME_STATE_UPDATE without hand data');
         }
         
         if (newGameState) {
@@ -107,11 +108,11 @@ export default function GamePage() {
         const { winners, loser } = message.payload;
         
         const winnerNames = winners.map((id: string) => 
-          players.find(p => p.id === id)?.name || 'Unknown'
+          initialPlayersData.find(p => p.id === id)?.name || 'Unknown'
         ).join(', ');
-        
-        const loserName = players.find(p => p.id === loser)?.name || 'Unknown';
-        
+
+        const loserName = initialPlayersData.find(p => p.id === loser)?.name || 'Unknown';
+
         alert(`Game Over! Winners: ${winnerNames}. Loser: ${loserName}`);
         
         setTimeout(() => navigate('/'), 3000);
@@ -138,9 +139,9 @@ export default function GamePage() {
   useEffect(() => {
     if (!gameState) return;
     
-    const updatedPlayers: Player[] = gameState.playerOrder.map((id) => ({
+    const updatedPlayers: GamePlayer[] = gameState.playerOrder.map((id) => ({
       id,
-      name: id, // In real implementation, we'd map this from a player name mapping
+      name: gameState.players.find(p => p.id === id)?.name || 'Unknown',
       cardCount: gameState.playerHandCounts[id] || 0,
       isCurrentTurn: id === gameState.currentPlayerId
     }));
@@ -220,7 +221,7 @@ export default function GamePage() {
           <div className="lg:col-span-3 space-y-6">
             <GameBoard 
               lastPlay={lastPlay}
-              currentPlayer={players.find((p) => p.id === gameState?.currentPlayerId)?.name || ''}
+              currentPlayer={players.find(p => p.isCurrentTurn)?.name || ''}
               canChallenge={canChallenge}
               onChallenge={handleChallenge}
             />

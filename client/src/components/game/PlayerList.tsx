@@ -12,7 +12,7 @@ interface PlayerListProps {
   currentPlayerName: string;
 }
 
-export default function PlayerList({ players, currentPlayerName }: PlayerListProps) {
+export default function PlayerList({ players, currentPlayerName }: Readonly<PlayerListProps>) {
   return (
     <Card>
       <CardHeader>
