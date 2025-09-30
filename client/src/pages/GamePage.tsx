@@ -38,7 +38,7 @@ export default function GamePage() {
   const [isLoading, setIsLoading] = useState(true);
   
   const playerName = localStorage.getItem('playerName') || 'Anonymous';
-  const playerId = localStorage.getItem('playerId') || 'Anonymous-'+Math.floor(Math.random()*10000);
+  const playerId = localStorage.getItem('clientId') || '';
   
   const [lastPlay, setLastPlay] = useState<LastPlay | null>(null);
   const [error, setError] = useState<string | null>(null);

@@ -6,12 +6,13 @@ const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:3001";
 export function useWebSocket() {
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<WSMessage | null>(null);
-  const [storedId, setStoredId] = useState<string | null>(localStorage.getItem("clientId") || null);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | undefined>(undefined);
   const messageHandlersRef = useRef<Map<string, (message: WSMessage) => void>>(
     new Map()
   );
+  // Use ref to avoid stale closure issues
+  const storedIdRef = useRef<string | null>(localStorage.getItem("clientId") || null);
 
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -21,13 +22,14 @@ export function useWebSocket() {
     const ws = new WebSocket(WS_URL);
 
     ws.onopen = () => {
-      console.log("Stored ID:", storedId);
-      if (storedId) {
+      const currentStoredId = storedIdRef.current;
+      console.log("Stored ID:", currentStoredId);
+      if (currentStoredId) {
         // Tell server "hey, it's me again"
         ws.send(
           JSON.stringify({
             type: "CONNECT",
-            payload: { clientId: storedId },
+            payload: { clientId: currentStoredId },
           })
         );
       }
@@ -38,9 +40,9 @@ export function useWebSocket() {
         const message: WSMessage = JSON.parse(event.data);
         setLastMessage(message);
 
-        if ((message.type === "ROOM_JOINED" || message.type === "CONNECTED") && message.payload?.clientId && !storedId) {
+        if ((message.type === "ROOM_JOINED" || message.type === "CONNECTED") && message.payload?.clientId && !storedIdRef.current) {
           localStorage.setItem("clientId", message.payload.clientId);
-          setStoredId(message.payload.clientId);
+          storedIdRef.current = message.payload.clientId;
         }
         setIsConnected(true);
         console.log("Connected");
