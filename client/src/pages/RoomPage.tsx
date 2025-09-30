@@ -3,6 +3,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useWebSocketContext } from '@/context/WebSocketContext';
+import ChatBox from '@/components/chat/ChatBox';
 import type { Player } from '@/types';
 
 export default function RoomPage() {
@@ -184,7 +185,7 @@ export default function RoomPage() {
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Players List */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Players ({players.length}/10)</CardTitle>
@@ -237,6 +238,11 @@ export default function RoomPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Chat Box */}
+            {playerId && playerName && (
+              <ChatBox playerName={playerName} playerId={playerId} />
+            )}
           </div>
 
           {/* Game Controls */}

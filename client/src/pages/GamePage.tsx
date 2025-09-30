@@ -6,6 +6,7 @@ import { useWebSocketContext } from '@/context/WebSocketContext';
 import GameBoard from '../components/game/GameBoard';
 import PlayerHand from '../components/game/PlayerHand';
 import PlayerList from '../components/game/PlayerList';
+import ChatBox from '../components/chat/ChatBox';
 import type { Card as GameCard, GameState as ServerGameState, Rank } from '@/types';
 
 interface Player {
@@ -239,6 +240,11 @@ export default function GamePage() {
               players={players}
               currentPlayerName={playerName}
             />
+
+            {/* Chat Box */}
+            {playerId && playerName && (
+              <ChatBox playerName={playerName} playerId={playerId} />
+            )}
 
             {/* Game Rules Quick Reference */}
             <Card>
