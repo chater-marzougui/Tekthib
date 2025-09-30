@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface GameCard {
   id: string;
-  suit: 'hearts' | 'diamonds' | 'clubs' | 'spades';
+  suit: 'hearts' | 'diamonds' | 'clubs' | 'spades' | 'joker';
   rank: string;
   selected: boolean;
 }
@@ -32,10 +32,12 @@ export default function PlayerHand({
       case 'diamonds': return '♦️';
       case 'clubs': return '♣️';
       case 'spades': return '♠️';
+      case 'joker': return '🃏';
     }
   };
 
   const getCardColor = (suit: GameCard['suit']) => {
+    if (suit === 'joker') return 'text-purple-600';
     return suit === 'hearts' || suit === 'diamonds' ? 'text-red-600' : 'text-black';
   };
 
@@ -86,7 +88,7 @@ export default function PlayerHand({
               className="px-3 py-2 border rounded-lg"
             >
               <option value="">Choose rank to claim...</option>
-              {['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'].map(rank => (
+              {['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'Joker'].map(rank => (
                 <option key={rank} value={rank}>{rank}</option>
               ))}
             </select>
