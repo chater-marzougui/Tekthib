@@ -10,18 +10,13 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route
-          path="/room/:roomId"
+          path="/*"
           element={
             <WebSocketProvider>
-              <RoomPage />
-            </WebSocketProvider>
-          }
-        />
-        <Route
-          path="/game"
-          element={
-            <WebSocketProvider>
-              <GamePage />
+              <Routes>
+                <Route path="/room/:roomId" element={<RoomPage />} />
+                <Route path="/game/:roomId" element={<GamePage />} />
+              </Routes>
             </WebSocketProvider>
           }
         />

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,6 +32,11 @@ export default function RoomPage() {
   const [error, setError] = useState<string | null>(null);
   const playerName = localStorage.getItem("playerName") || "Unknown";
   const playerId = localStorage.getItem("clientId") || "";
+  const roomCodeRef = useRef(roomCode);
+
+  useEffect(() => {
+    roomCodeRef.current = roomCode;
+  }, [roomCode]);
 
   useEffect(() => {
     if (!isConnected) {
@@ -101,7 +106,9 @@ export default function RoomPage() {
 
     const unregisterGameStarted = registerHandler("game-started", (message) => {
       if (message.type === "GAME_STARTED") {
-        navigate(`/game/${roomCode}`);
+
+        const currentRoomCode = roomCodeRef.current || roomId;
+        navigate(`/game/${currentRoomCode}`);
       }
     });
 

@@ -10,7 +10,7 @@ interface ClientInfo {
 }
 
 interface GetGameStatePayload {
-  roomId: string;
+  roomCode: string;
   playerId: string;
 }
 
@@ -40,29 +40,31 @@ function handleGetGameState(
   clients: Map<WebSocket, ClientInfo>,
   payload: GetGameStatePayload
 ): void {
-  const { roomId, playerId } = payload;
+  const { roomCode, playerId } = payload;
   
-  const room = roomManager.getRoom(roomId);
+  const room = roomManager.getRoomByCode(roomCode);
   if (!room) {
     sendToClient(ws, {
       type: 'ERROR',
       payload: { message: 'Room not found' }
     });
+    
+    console.log('Engine not found:', roomCode);
     return;
   }
 
-  const gameEngine = roomManager.getGameEngine(roomId);
+  const gameEngine = roomManager.getGameEngine(room.id);
   if (!gameEngine) {
     sendToClient(ws, {
       type: 'ERROR',
       payload: { message: 'Game not started' }
     });
+    console.log('Engine not found:', room.id);
     return;
   }
 
   const publicGameState = gameEngine.getPublicGameState();
   const playerHand = gameEngine.getPlayerHand(playerId);
-
   sendToClient(ws, {
     type: 'INITIAL_GAME_STATE',
     payload: {

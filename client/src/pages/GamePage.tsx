@@ -47,12 +47,14 @@ export default function GamePage() {
 
   // Request initial game state when component mounts
   useEffect(() => {
+    console.log(roomId, playerId);
     if (isConnected && roomId && playerId) {
       // Request current game state from server
+      console.log('Requesting initial game state for room:', roomId);
       sendMessage({
         type: 'GET_GAME_STATE',
         payload: {
-          roomId,
+          roomCode: roomId,
           playerId
         }
       });
@@ -69,6 +71,7 @@ export default function GamePage() {
     // Register handler for initial game state response
     const unregisterInitialState = registerHandler('initial-game-state', (message) => {
       if (message.type === 'INITIAL_GAME_STATE') {
+        console.log('Received initial game state:', message.payload);
         const { hand, gameState: initialGameState } = message.payload;
         
         if (initialGameState) {
@@ -96,7 +99,6 @@ export default function GamePage() {
         if (newGameState) {
           setGameState(newGameState);
           setIsMyTurn(newGameState.currentPlayerId === playerId);
-          setCanChallenge(lastPlay !== null && lastPlay.player !== playerName);
         }
       }
     });
@@ -113,6 +115,8 @@ export default function GamePage() {
         
         if (newGameState) {
           setGameState(newGameState);
+          setIsMyTurn(newGameState.currentPlayerId === playerId);
+          setCanChallenge(pName !== playerName);
         }
       }
     });
@@ -128,9 +132,11 @@ export default function GamePage() {
         alert(resultMessage);
         
         setLastPlay(null);
+        setCanChallenge(false);
         
         if (newGameState) {
           setGameState(newGameState);
+          setIsMyTurn(newGameState.currentPlayerId === playerId);
         }
       }
     });
@@ -277,6 +283,7 @@ export default function GamePage() {
             
             <PlayerHand 
               cards={playerHand}
+              lastPlay={lastPlay}
               onCardSelect={handleCardSelect}
               onPlayCards={handlePlayCards}
               isMyTurn={isMyTurn}

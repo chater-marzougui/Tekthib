@@ -136,17 +136,14 @@ function handleConnect(ws: WebSocket, message: WSMessage): void {
   const payload = message.payload as { clientId?: string };
   const clientInfo = clients.get(ws);
   let clientId = payload.clientId;
-  console.log("Handling CONNECT for clientId:", clientId);
   if (!clientId) {
-    
     clientId = `client_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
     clients.set(ws, { id: clientId });
-    console.log(`Client connected with ID: ${clientId}`);
   } else {
     clients.set(ws, { ...clientInfo, id: clientId });
-    console.log(`Client reconnected with ID: ${clientId}`);
   }
-    
+  console.log(`Client connected with ID: ${clientId}`);
+
   // Optionally, re-send state to restore room/game
   sendToClient(ws, {
     type: 'CONNECTED',
