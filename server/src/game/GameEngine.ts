@@ -1,4 +1,4 @@
-import { Card, GameState, Player, Rank } from '../types';
+import { Card, GameState, Player, Rank, Suit } from '../types';
 import { Deck } from './Deck';
 
 export class GameEngine {
@@ -105,7 +105,10 @@ export class GameEngine {
     this.gameState.currentRank = claimedRank;
 
     // Check for four of a kind
-    this.checkAndRemoveFourOfKind(player);
+    for (const player of this.players.values()) {
+      if (player.hand.length === 0) continue;
+      this.checkAndRemoveFourOfKind(player);
+    }
 
     for (const player of this.players.values()) {
       if (
@@ -177,7 +180,9 @@ export class GameEngine {
     );
 
     const wasLying = !allMatch;
-    const getsThePile = this.players.get(wasLying ? this.gameState.lastPlayerId : challengerId)!;
+    const getsThePile = this.players.get(
+      wasLying ? this.gameState.lastPlayerId : challengerId,
+    )!;
 
     // Liar takes the pile
     getsThePile.hand.push(...this.gameState.pile);
@@ -186,10 +191,14 @@ export class GameEngine {
 
     // If last player was not lying he plays again, else challenger plays next
     let nextPlayerId: string;
-    if(wasLying) {
+    if (wasLying) {
       nextPlayerId = challengerId;
     } else if (lastPlayer.hand.length === 0) {
-      nextPlayerId = this.gameState.playerOrder[(this.gameState.currentPlayerIndex + 1) % this.gameState.playerOrder.length];
+      nextPlayerId =
+        this.gameState.playerOrder[
+          (this.gameState.currentPlayerIndex + 1) %
+            this.gameState.playerOrder.length
+        ];
     } else {
       nextPlayerId = this.gameState.lastPlayerId;
     }
@@ -203,6 +212,10 @@ export class GameEngine {
     this.gameState.lastPlayedCards = [];
     this.gameState.lastPlayerId = null;
 
+    for (const player of this.players.values()) {
+      this.checkAndRemoveFourOfKind(player);
+    }
+
     return {
       success: true,
       wasLying,
@@ -213,22 +226,61 @@ export class GameEngine {
   }
 
   private checkAndRemoveFourOfKind(player: Player): void {
-    const rankCounts = new Map<Rank, Card[]>();
+    const rankGroups = new Map<Rank, Card[]>();
 
-    // Count cards by rank
+    // Group cards by rank (excluding Jokers)
     player.hand.forEach((card) => {
       if (card.rank !== 'Joker') {
-        if (!rankCounts.has(card.rank)) {
-          rankCounts.set(card.rank, []);
+        if (!rankGroups.has(card.rank)) {
+          rankGroups.set(card.rank, []);
         }
-        rankCounts.get(card.rank)!.push(card);
+        rankGroups.get(card.rank)!.push(card);
       }
     });
 
-    // Remove sets of 4
-    rankCounts.forEach((cards, rank) => {
-      if (cards.length === 4) {
-        player.hand = player.hand.filter((c) => c.rank !== rank);
+    // Check each rank group for suit-complete four-of-a-kind or eight-of-a-kind
+    rankGroups.forEach((cards, rank) => {
+      if (cards.length >= 4) {
+        // Count cards by suit
+        const suitCounts = new Map<Suit, Card[]>();
+        cards.forEach((card) => {
+          if (card.suit !== 'joker') {
+            if (!suitCounts.has(card.suit)) {
+              suitCounts.set(card.suit, []);
+            }
+            suitCounts.get(card.suit)!.push(card);
+          }
+        });
+
+        const requiredSuits: Suit[] = ['hearts', 'diamonds', 'clubs', 'spades'];
+        const hasAllSuits = requiredSuits.every((suit) => suitCounts.has(suit));
+
+        if (hasAllSuits) {
+          // Check if we can remove 8 cards (2 of each suit)
+          const canRemoveEight = requiredSuits.every(
+            (suit) => (suitCounts.get(suit)?.length || 0) >= 2,
+          );
+
+          const cardsToRemove = new Set<string>();
+
+          if (canRemoveEight) {
+            // Remove 2 cards of each suit (8 total)
+            requiredSuits.forEach((suit) => {
+              const cardsOfSuit = suitCounts.get(suit)!;
+              cardsToRemove.add(cardsOfSuit[0].id);
+              cardsToRemove.add(cardsOfSuit[1].id);
+            });
+          } else {
+            // Remove 1 card of each suit (4 total)
+            requiredSuits.forEach((suit) => {
+              const cardOfSuit = suitCounts.get(suit)![0];
+              cardsToRemove.add(cardOfSuit.id);
+            });
+          }
+
+          // Remove the cards
+          player.hand = player.hand.filter((c) => !cardsToRemove.has(c.id));
+        }
       }
     });
   }

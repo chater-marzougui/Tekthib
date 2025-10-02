@@ -56,15 +56,4 @@ function handleChatMessage(
       timestamp: Date.now()
     }
   });
-
-  // Also send to the sender
-  sendToClient(ws, {
-    type: 'CHAT_MESSAGE',
-    payload: {
-      playerId: clientInfo.id,
-      playerName: clientInfo.name || 'Unknown',
-      message: sanitizedMessage,
-      timestamp: Date.now()
-    }
-  });
 }
