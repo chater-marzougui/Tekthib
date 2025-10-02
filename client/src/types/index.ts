@@ -65,6 +65,8 @@ export type WSMessageType =
   | 'CARDS_PLAYED'
   | 'CHALLENGE'
   | 'CHALLENGE_RESULT'
+  | 'ADD_BOTS'
+  | 'BOTS_ADDED'
   | 'GAME_STATE_UPDATE'
   | 'TURN_CHANGED'
   | 'GAME_ENDED'

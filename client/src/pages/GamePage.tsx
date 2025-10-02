@@ -16,6 +16,7 @@ interface GamePlayer {
   name: string;
   cardCount: number;
   isCurrentTurn: boolean;
+  isBot?: boolean;
 }
 
 interface DisplayGameCard extends GameCard {
@@ -244,12 +245,16 @@ export default function GamePage() {
   useEffect(() => {
     if (!gameState) return;
     
-    const updatedPlayers: GamePlayer[] = gameState.playerOrder.map((id) => ({
-      id,
-      name: gameState.players.find(p => p.id === id)?.name || 'Unknown',
-      cardCount: gameState.playerHandCounts[id] || 0,
-      isCurrentTurn: id === gameState.currentPlayerId
-    }));
+    const updatedPlayers: GamePlayer[] = gameState.playerOrder.map((id) => {
+      const playerData = gameState.players.find(p => p.id === id);
+      return {
+        id,
+        name: playerData?.name || 'Unknown',
+        cardCount: gameState.playerHandCounts[id] || 0,
+        isCurrentTurn: id === gameState.currentPlayerId,
+        isBot: playerData?.isBot
+      };
+    });
     
     setPlayers(updatedPlayers);
   }, [gameState]);
