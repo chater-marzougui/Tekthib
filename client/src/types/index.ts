@@ -16,6 +16,7 @@ export interface Player {
   isReady: boolean;
   isConnected: boolean;
   handCount?: number;
+  isBot?: boolean;
 }
 
 // Room types

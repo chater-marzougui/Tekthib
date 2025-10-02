@@ -1,7 +1,8 @@
 import { WebSocket } from 'ws';
-import { WSMessage, CreateRoomPayload, JoinRoomPayload } from '../../types';
+import { WSMessage, CreateRoomPayload, JoinRoomPayload, AddBotsPayload } from '../../types';
 import { roomManager } from '../../utils/roomManager';
 import { sendToClient, broadcastToRoom } from '../index';
+import { triggerBotTurn } from './gameHandlers';
 
 interface ClientInfo {
   id: string;
@@ -32,6 +33,10 @@ export function handleRoomMessages(
 
     case 'READY':
       handlePlayerReady(ws, clients, message.payload);
+      break;
+
+    case 'ADD_BOTS':
+      handleAddBots(ws, clients, message.payload as AddBotsPayload);
       break;
 
     case 'START_GAME':
@@ -206,6 +211,58 @@ function handlePlayerReady(
   }
 }
 
+function handleAddBots(
+  ws: WebSocket,
+  clients: Map<WebSocket, ClientInfo>,
+  payload: AddBotsPayload
+): void {
+  const clientInfo = clients.get(ws)!;
+  
+  if (!clientInfo.roomId) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: { message: 'Not in a room' }
+    });
+    return;
+  }
+
+  const room = roomManager.getRoom(clientInfo.roomId);
+  if (!room || room.hostId !== clientInfo.id) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: { message: 'Only host can add bots' }
+    });
+    return;
+  }
+
+  const result = roomManager.addBotsToRoom(clientInfo.roomId, payload.count);
+  
+  if (!result.success) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: { message: result.error }
+    });
+    return;
+  }
+
+  // Notify all players about the new bots
+  const updatedRoom = roomManager.getRoom(clientInfo.roomId);
+  if (updatedRoom) {
+    broadcastToRoom(clients, clientInfo.roomId, {
+      type: 'BOTS_ADDED',
+      payload: {
+        players: Array.from(updatedRoom.players.values()).map(p => ({
+          id: p.id,
+          name: p.name,
+          isReady: p.isReady,
+          isConnected: p.isConnected,
+          isBot: p.isBot
+        }))
+      }
+    });
+  }
+}
+
 function handleStartGame(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>
@@ -268,4 +325,7 @@ function handleStartGame(
       });
     }
   });
+
+  // Trigger bot turn if first player is a bot
+  triggerBotTurn(clients, clientInfo.roomId);
 }
