@@ -1,6 +1,7 @@
 ﻿import express, { Express } from 'express';
 import cors from 'cors';
 import { roomManager } from './utils/roomManager';
+import adminRoutes from './routes/adminRoutes';
 
 const app: Express = express();
 
@@ -36,6 +37,9 @@ app.get('/api/rooms/:code', (req, res) => {
     inProgress: room.gameState?.phase === 'playing'
   });
 });
+
+// Admin routes
+app.use('/api/admin', adminRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
