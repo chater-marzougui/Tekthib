@@ -55,7 +55,7 @@ class RoomManager {
     return this.rooms.get(roomId);
   }
 
-  addPlayerToRoom(roomId: string, playerId: string, playerName: string): {
+  addPlayerToRoom(roomId: string, playerId: string, playerName: string, isBot: boolean = false): {
     success: boolean;
     error?: string;
     room?: Room;
@@ -70,7 +70,7 @@ class RoomManager {
       return { success: false, error: 'Room is full' };
     }
 
-    if (room.gameState?.phase === 'playing') {
+    if (room.gameState?.phase === 'playing' && !isBot) {
       return { success: false, error: 'Game already in progress' };
     }
 
@@ -79,11 +79,42 @@ class RoomManager {
       name: playerName,
       hand: [],
       isConnected: true,
-      isReady: false
+      isReady: isBot, // Bots are always ready
+      isBot
     };
 
     room.players.set(playerId, player);
     return { success: true, room };
+  }
+
+  addBotsToRoom(roomId: string, count: number): {
+    success: boolean;
+    error?: string;
+    botIds?: string[];
+  } {
+    const room = this.rooms.get(roomId);
+    
+    if (!room) {
+      return { success: false, error: 'Room not found' };
+    }
+
+    const availableSlots = room.maxPlayers - room.players.size;
+    if (count > availableSlots) {
+      return { success: false, error: `Only ${availableSlots} slots available` };
+    }
+
+    const botIds: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const botId = `bot_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      const botName = `Bot ${room.players.size + 1}`;
+      
+      const result = this.addPlayerToRoom(roomId, botId, botName, true);
+      if (result.success) {
+        botIds.push(botId);
+      }
+    }
+
+    return { success: true, botIds };
   }
 
   removePlayerFromRoom(roomId: string, playerId: string): {

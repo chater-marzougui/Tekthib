@@ -119,6 +119,14 @@ export default function RoomPage() {
       }
     });
 
+    const unregisterBotsAdded = registerHandler("bots-added", (message) => {
+      if (message.type === "BOTS_ADDED") {
+        const { players: updatedPlayers } = message.payload;
+        setPlayers(updatedPlayers);
+        toast.success("Bots added successfully!");
+      }
+    });
+
     // Create or join room based on roomId parameter
     if (roomId === "create") {
       sendMessage({
@@ -140,6 +148,7 @@ export default function RoomPage() {
       unregisterGameStateUpdate();
       unregisterGameStarted();
       unregisterError();
+      unregisterBotsAdded();
     };
   }, [
     roomId,
@@ -179,6 +188,15 @@ export default function RoomPage() {
   const copyRoomCode = () => {
     navigator.clipboard.writeText(roomCode);
     toast.success("Room code copied to clipboard!");
+  };
+
+  const handleAddBots = (count: number) => {
+    if (isHost) {
+      sendMessage({
+        type: "ADD_BOTS",
+        payload: { count },
+      });
+    }
   };
 
   const canStartGame =
@@ -233,13 +251,14 @@ export default function RoomPage() {
                       className="flex items-center justify-between p-3 bg-background rounded-lg"
                     >
                       <div className="flex items-center gap-3">
-                        <Badge className={`w-8 h-8 ${player.id === playerId ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'} flex items-center justify-center rounded-full text-lg font-bold`}>
-                          {player.name.charAt(0).toUpperCase()}
+                        <Badge className={`w-8 h-8 ${player.id === playerId ? 'bg-blue-500 text-white' : player.isBot ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-800'} flex items-center justify-center rounded-full text-lg font-bold`}>
+                          {player.isBot ? '🤖' : player.name.charAt(0).toUpperCase()}
                         </Badge>
                         <div>
                           <div className="font-medium">
                             {player.name}
                             {player.id === playerId && " (You)"}
+                            {player.isBot && " 🤖"}
                           </div>
                           {player.id === players[0]?.id && (
                             <div className="text-xs text-gray-500">Host</div>
@@ -319,14 +338,49 @@ export default function RoomPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {isHost && (
-                  <Button
-                    onClick={handleStartGame}
-                    disabled={!canStartGame}
-                    className="w-full"
-                    size="lg"
-                  >
-                    {canStartGame ? "🚀 Start Game" : "Waiting for players..."}
-                  </Button>
+                  <>
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium text-gray-700">Add Bot Players</div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleAddBots(1)}
+                          disabled={players.length >= 10}
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                        >
+                          +1 Bot
+                        </Button>
+                        <Button
+                          onClick={() => handleAddBots(2)}
+                          disabled={players.length >= 9}
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                        >
+                          +2 Bots
+                        </Button>
+                        <Button
+                          onClick={() => handleAddBots(3)}
+                          disabled={players.length >= 8}
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                        >
+                          +3 Bots
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <Button
+                      onClick={handleStartGame}
+                      disabled={!canStartGame}
+                      className="w-full"
+                      size="lg"
+                    >
+                      {canStartGame ? "🚀 Start Game" : "Waiting for players..."}
+                    </Button>
+                  </>
                 )}
 
                 <Button

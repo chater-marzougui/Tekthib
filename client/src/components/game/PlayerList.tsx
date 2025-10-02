@@ -5,6 +5,7 @@ interface Player {
   name: string;
   cardCount: number;
   isCurrentTurn: boolean;
+  isBot?: boolean;
 }
 
 interface PlayerListProps {
@@ -33,13 +34,14 @@ export default function PlayerList({ players, currentPlayerName }: Readonly<Play
                 <div className="flex items-center gap-3">
                   <div className={`
                     w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm
-                    ${player.name === currentPlayerName ? 'bg-green-500' : 'bg-blue-500'}
+                    ${player.isBot ? 'bg-purple-500' : player.name === currentPlayerName ? 'bg-green-500' : 'bg-blue-500'}
                   `}>
-                    {player.name.charAt(0).toUpperCase()}
+                    {player.isBot ? '🤖' : player.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
                     <div className="font-medium">
                       {player.name}
+                      {player.isBot && ' 🤖'}
                       {player.name === currentPlayerName && (
                         <span className="text-xs text-green-600 ml-2">(You)</span>
                       )}

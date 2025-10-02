@@ -1,13 +1,22 @@
 import { Card, GameState, Player, Rank, Suit } from '../types';
 import { Deck } from './Deck';
+import { BotPlayer } from './BotPlayer';
 
 export class GameEngine {
   private readonly gameState: GameState;
   private readonly players: Map<string, Player>;
+  private readonly botPlayers: Map<string, BotPlayer> = new Map();
 
   constructor(players: Map<string, Player>) {
     this.players = players;
     this.gameState = this.initializeGame();
+    
+    // Initialize bot players
+    players.forEach((player, playerId) => {
+      if (player.isBot) {
+        this.botPlayers.set(playerId, new BotPlayer(this, playerId));
+      }
+    });
   }
 
   private initializeGame(): GameState {
@@ -328,5 +337,60 @@ export class GameEngine {
         ]),
       ),
     };
+  }
+
+  /**
+   * Checks if any bot wants to challenge the current play
+   * Returns the bot ID that will challenge, or null if none challenge
+   */
+  getBotChallenger(): string | null {
+    if (!this.gameState.lastPlayerId) {
+      return null;
+    }
+
+    // Check each bot (except the one who just played)
+    for (const [botId, bot] of this.botPlayers.entries()) {
+      if (botId === this.gameState.lastPlayerId) {
+        continue;
+      }
+
+      const botPlayer = this.players.get(botId);
+      if (!botPlayer || this.gameState.winners.includes(botId)) {
+        continue;
+      }
+
+      const isCurrentPlayer = 
+        botId === this.gameState.playerOrder[this.gameState.currentPlayerIndex];
+      
+      if (bot.shouldChallenge(isCurrentPlayer)) {
+        return botId;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Gets the bot's play decision
+   */
+  getBotPlay(botId: string): { cardIds: string[]; claimedRank: Rank } | null {
+    const bot = this.botPlayers.get(botId);
+    const botPlayer = this.players.get(botId);
+    
+    if (!bot || !botPlayer) {
+      return null;
+    }
+
+    return bot.decidePlay(botPlayer, this.gameState.currentRank);
+  }
+
+  /**
+   * Check if the current player is a bot
+   */
+  isCurrentPlayerBot(): boolean {
+    const currentPlayerId = 
+      this.gameState.playerOrder[this.gameState.currentPlayerIndex];
+    const player = this.players.get(currentPlayerId);
+    return player?.isBot === true;
   }
 }

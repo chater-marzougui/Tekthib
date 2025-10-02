@@ -16,6 +16,7 @@ export interface Player {
   hand: Card[];
   isConnected: boolean;
   isReady: boolean;
+  isBot?: boolean;
 }
 
 // Room types
@@ -59,6 +60,8 @@ export type WSMessageType =
   | 'PLAYER_LEFT'
   | 'READY'
   | 'START_GAME'
+  | 'ADD_BOTS'
+  | 'BOTS_ADDED'
   | 'GET_GAME_STATE'
   | 'INITIAL_GAME_STATE'
   | 'GAME_STARTED'
@@ -110,4 +113,8 @@ export interface ChatMessagePayload {
 export interface RTCSignalPayload {
   targetPlayerId: string;
   signal: any; // RTCSessionDescription or RTCIceCandidate
+}
+
+export interface AddBotsPayload {
+  count: number;
 }

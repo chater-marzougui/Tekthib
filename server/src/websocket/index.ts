@@ -5,6 +5,7 @@ import { handleGameMessages } from './handlers/gameHandlers';
 import { handleWebRTCMessages } from './handlers/webrtcHandlers';
 import { handleRoomMessages } from './handlers/roomHandlers';
 import { handleChatMessages } from './handlers/chatHandlers';
+import { roomManager } from '../utils/roomManager';
 
 interface ClientInfo {
   id: string;
@@ -37,10 +38,23 @@ export function setupWebSocket(server: Server): WebSocketServer {
       console.log(`Client disconnected: ${clientInfo?.id}`);
 
       if (clientInfo?.roomId) {
-        handleRoomMessages(ws, clients, {
-          type: 'LEAVE_ROOM',
-          payload: { roomId: clientInfo.roomId, playerId: clientInfo.id },
-        });
+        // Mark player as disconnected instead of removing them
+        const room = roomManager.getRoom(clientInfo.roomId);
+        if (room) {
+          const player = room.players.get(clientInfo.id);
+          if (player) {
+            player.isConnected = false;
+            
+            // Notify other players
+            broadcastToRoom(clients, clientInfo.roomId, {
+              type: 'GAME_STATE_UPDATE',
+              payload: {
+                playerId: clientInfo.id,
+                isConnected: false
+              }
+            });
+          }
+        }
       }
 
       clients.delete(ws);
@@ -68,6 +82,7 @@ function handleMessage(ws: WebSocket, message: WSMessage): void {
     case 'JOIN_ROOM':
     case 'LEAVE_ROOM':
     case 'READY':
+    case 'ADD_BOTS':
     case 'START_GAME':
       handleRoomMessages(ws, clients, message);
       break;
@@ -136,15 +151,37 @@ function handleConnect(ws: WebSocket, message: WSMessage): void {
   const payload = message.payload as { clientId?: string };
   const clientInfo = clients.get(ws);
   let clientId = payload.clientId;
+  
   if (!clientId) {
+    // New client
     clientId = `client_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
     clients.set(ws, { id: clientId });
   } else {
-    clients.set(ws, { ...clientInfo, id: clientId });
+    // Reconnecting client - check if they were in a room
+    let existingRoom: string | undefined;
+    let existingName: string | undefined;
+    
+    // Find if this client was in a room
+    for (const room of roomManager.getAllRooms()) {
+      const player = room.players.get(clientId);
+      if (player) {
+        existingRoom = room.id;
+        existingName = player.name;
+        // Mark player as reconnected
+        player.isConnected = true;
+        break;
+      }
+    }
+    
+    clients.set(ws, { 
+      id: clientId,
+      roomId: existingRoom,
+      name: existingName
+    });
   }
+  
   console.log(`Client connected with ID: ${clientId}`);
 
-  // Optionally, re-send state to restore room/game
   sendToClient(ws, {
     type: 'CONNECTED',
     payload: { clientId },
