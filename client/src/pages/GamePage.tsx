@@ -276,6 +276,7 @@ export default function GamePage() {
           <div className="lg:col-span-3 space-y-6">
             <GameBoard 
               lastPlay={lastPlay}
+              pileCount={gameState.pileCount}
               currentPlayer={players.find(p => p.isCurrentTurn)?.name || ''}
               canChallenge={canChallenge}
               onChallenge={handleChallenge}

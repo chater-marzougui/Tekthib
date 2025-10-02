@@ -10,6 +10,7 @@ interface LastPlay {
 interface GameBoardProps {
   lastPlay: LastPlay | null;
   currentPlayer: string;
+  pileCount: number;
   canChallenge: boolean;
   onChallenge: () => void;
 }
@@ -17,6 +18,7 @@ interface GameBoardProps {
 export default function GameBoard({
   lastPlay,
   currentPlayer,
+  pileCount,
   canChallenge,
   onChallenge,
 }: Readonly<GameBoardProps>) {
@@ -41,17 +43,38 @@ export default function GameBoard({
               </span>
             </div>
 
-            {/* Visual representation of played cards */}
-            <div className="flex justify-center">
-              {Array.from({ length: lastPlay.cardCount }).map((_, i) => (
-                <div
-                  key={i}
-                  className="w-16 h-24 bg-blue-600 rounded-lg border-2 border-white mr-2 shadow-lg flex items-center justify-center text-white font-bold"
-                  style={{ zIndex: lastPlay.cardCount - i }}
-                >
-                  ?
+            {/* Scattered realistic pile */}
+            <div className="relative h-36 w-28 mx-auto">
+              {Array.from({ length: Math.min(pileCount, 6) }).map((_, i) => {
+                const rotation = Math.sin(i) * 15 - 7.5;
+                const offsetX = Math.cos(i * 1.5) * 8;
+
+                return (
+                  <div
+                    key={i}
+                    className="absolute w-20 h-28 bg-white rounded-lg border-2 border-gray-300 shadow-xl"
+                    style={{
+                      top: `${i * 3}px`,
+                      left: `calc(50% + ${offsetX}px)`,
+                      transform: `translateX(-50%) rotate(${rotation}deg)`,
+                      zIndex: i,
+                      background:
+                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    }}
+                  >
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="text-white font-bold text-3xl opacity-50">
+                        ?
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              {pileCount > 4 && (
+                <div className="absolute top-0 right-0 bg-amber-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold border-2 border-white shadow-lg z-20">
+                  {pileCount}
                 </div>
-              ))}
+              )}
             </div>
 
             {/* Challenge button */}

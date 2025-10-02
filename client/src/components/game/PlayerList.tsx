@@ -63,23 +63,6 @@ export default function PlayerList({ players, currentPlayerName }: Readonly<Play
                   )}
                 </div>
               </div>
-              
-              {/* Card count visualization */}
-              <div className="mt-2">
-                <div className="flex gap-1">
-                  {Array.from({ length: Math.min(player.cardCount, 10) }).map((_, i) => (
-                    <div 
-                      key={i} 
-                      className="w-3 h-4 bg-gray-400 rounded-sm"
-                    />
-                  ))}
-                  {player.cardCount > 10 && (
-                    <div className="text-xs text-gray-500 ml-1">
-                      +{player.cardCount - 10} more
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
           ))}
         </div>

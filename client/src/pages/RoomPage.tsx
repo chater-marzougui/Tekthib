@@ -12,6 +12,7 @@ import { useWebSocketContext } from "@/context/WebSocketContext";
 import ChatBox from "@/components/chat/ChatBox";
 import type { Player } from "@/types";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 function isDuplicatePlayer(
   players: Player[],
@@ -177,6 +178,7 @@ export default function RoomPage() {
 
   const copyRoomCode = () => {
     navigator.clipboard.writeText(roomCode);
+    toast.success("Room code copied to clipboard!");
   };
 
   const canStartGame =

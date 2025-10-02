@@ -3,10 +3,12 @@ import { WebSocketProvider } from "./context/WebSocketContext";
 import HomePage from "./pages/HomePage";
 import RoomPage from "./pages/RoomPage";
 import GamePage from "./pages/GamePage";
+import { Toaster } from "sonner";
 
 function App() {
   return (
     <Router>
+      <Toaster richColors duration={3000} position="top-right" />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route
