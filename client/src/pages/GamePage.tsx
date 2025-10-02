@@ -144,12 +144,23 @@ export default function GamePage() {
 
     const unregisterChallengeResult = registerHandler('challenge-result', (message) => {
       if (message.type === 'CHALLENGE_RESULT') {
-        const { challengerName, wasLying, liarName, gameState: newGameState } = message.payload;
+        const { challengerName, wasLying, playerName: lastPlayerName, gameState: newGameState } = message.payload;
         
         // Don't reveal cards, just show who was right/wrong
-        const resultMessage = wasLying 
-          ? `${challengerName} was right! ${liarName} was lying.`
-          : `${challengerName} was wrong! ${liarName} was telling the truth.`;
+        let resultMessage = '';
+        if (wasLying && lastPlayerName === playerName) {
+          resultMessage = `You were caught lying! Learn to play!.`;
+        } else if (wasLying && challengerName === playerName) {
+          resultMessage = `You were right! ${lastPlayerName} was lying.`;
+        } else if (!wasLying && lastPlayerName === playerName) {
+          resultMessage = `You were telling the truth! Well played, ${challengerName} was wrong.`;
+        } else if (!wasLying && challengerName === playerName) {
+          resultMessage = `You were wrong! ${lastPlayerName} was telling the truth.`;
+        } else {
+          resultMessage = wasLying
+            ? `${challengerName} was right! ${lastPlayerName} was lying.`
+            : `${challengerName} was wrong! ${lastPlayerName} was telling the truth.`;
+        }
         
         // Show toast notification
         if (wasLying) {
@@ -160,7 +171,7 @@ export default function GamePage() {
 
         // Add system message to chat
         const systemMessage: SystemMessage = {
-          id: `system-${Date.now()}`,
+          id: `system-${Date.now()}${Math.random()}`,
           playerId: 'system',
           playerName: 'System',
           message: resultMessage,

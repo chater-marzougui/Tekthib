@@ -140,7 +140,8 @@ export class GameEngine {
   challenge(challengerId: string): {
     success: boolean;
     wasLying: boolean;
-    liarId: string;
+    playerId: string;
+    challengerId: string;
     revealedCards: Card[];
     error?: string;
   } {
@@ -148,7 +149,8 @@ export class GameEngine {
       return {
         success: false,
         wasLying: false,
-        liarId: '',
+        playerId: '',
+        challengerId: '',
         revealedCards: [],
         error: 'No cards to challenge',
       };
@@ -161,7 +163,8 @@ export class GameEngine {
       return {
         success: false,
         wasLying: false,
-        liarId: '',
+        playerId: '',
+        challengerId: '',
         revealedCards: [],
         error: 'Player not found',
       };
@@ -203,7 +206,8 @@ export class GameEngine {
     return {
       success: true,
       wasLying,
-      liarId: wasLying ? lastPlayer.id : challengerId,
+      playerId: lastPlayer.id,
+      challengerId: challenger.id,
       revealedCards,
     };
   }

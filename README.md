@@ -44,7 +44,6 @@
 - ✅ Text chat in both lobby and game
 - ✅ Real-time message broadcasting
 - ✅ XSS protection for chat messages
-- ✅ Auto-scroll to latest messages
 
 ### 🚧 Not Yet Implemented
 

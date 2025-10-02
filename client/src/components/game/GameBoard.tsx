@@ -38,8 +38,8 @@ export default function GameBoard({
             <div className="text-lg">
               <span className="font-semibold">{lastPlay.player}</span> played{" "}
               <span className="font-bold text-blue-600">
-                {lastPlay.cardCount} {lastPlay.claimedRank}
-                {lastPlay.cardCount > 1 ? "s" : ""}
+                {lastPlay.cardCount} ({lastPlay.claimedRank}
+                {lastPlay.cardCount > 1 ? "s" : ""})
               </span>
             </div>
 

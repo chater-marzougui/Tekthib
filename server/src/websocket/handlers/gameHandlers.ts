@@ -186,14 +186,14 @@ function handleChallenge(
 
   // Get challenger and liar names
   let challengerName = '';
-  let liarName = '';
+  let playerName = '';
   
   clients.forEach((client) => {
     if (client.id === payload.challengerId) {
       challengerName = client.name || 'Unknown';
     }
-    if (client.id === result.liarId) {
-      liarName = client.name || 'Unknown';
+    if (client.id === result.playerId) {
+      playerName = client.name || 'Unknown';
     }
   });
 
@@ -204,8 +204,8 @@ function handleChallenge(
       challengerId: payload.challengerId,
       challengerName,
       wasLying: result.wasLying,
-      liarId: result.liarId,
-      liarName,
+      playerId: result.playerId,
+      playerName,
       revealedCards: result.revealedCards,
       gameState: publicGameState
     }

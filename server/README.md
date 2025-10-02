@@ -22,34 +22,29 @@ A Node.js backend API built with Express, TypeScript, and modern development too
 ### Installation
 
 1. Navigate to the project directory:
-   \\\ash
+   ```bash
    cd server
-   \\\
+   ```
 
 2. Install dependencies:
-   \\\ash
+   ```bash
    npm install
-   \\\
+   ```
 
 3. Start the development server:
-   \\\ash
+   ```bash
    npm run dev
-   \\\
+   ```
 
 The server will start on http://localhost:3000
 
 ## Available Scripts
 
-- \
-pm run dev\ - Start development server with hot reload
-- \
-pm run build\ - Build the project for production
-- \
-pm start\ - Start the production server
-- \
-pm run lint\ - Run ESLint
-- \
-pm run format\ - Format code with Prettier
+- npm run dev - Start development server with hot reload
+- npm run build - Build the project for production
+- npm start - Start the production server
+- npm run lint - Run ESLint
+- npm run format - Format code with Prettier
 
 ## API Endpoints
 
@@ -63,7 +58,7 @@ pm run format\ - Format code with Prettier
 
 ### Example Usage
 
-\\\ash
+```bash
 # Get all items
 curl http://localhost:3000/api/items
 
@@ -82,11 +77,11 @@ curl -X PUT http://localhost:3000/api/items/1 \
 
 # Delete item
 curl -X DELETE http://localhost:3000/api/items/1
-\\\
+```
 
 ## Project Structure
 
-\\\
+```
 server/
 ├── src/
 │   ├── config/
@@ -106,16 +101,16 @@ server/
 ├── .prettierrc             # Prettier configuration
 ├── tsconfig.json           # TypeScript configuration
 └── package.json            # Dependencies and scripts
-\\\
+```
 
 ## Environment Variables
 
 Create a \.env\ file in the root directory:
 
-\\\env
+```env
 PORT=3000
 NODE_ENV=development
-\\\
+```
 
 ## Contributing
 

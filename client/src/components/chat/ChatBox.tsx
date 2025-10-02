@@ -79,10 +79,6 @@ export default function ChatBox({
     return unregister;
   }, [registerHandler]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, systemMessages]);
-
   const handleSendMessage = () => {
     if (!inputMessage.trim()) return;
 
