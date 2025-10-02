@@ -146,17 +146,22 @@ export default function GamePage() {
     const unregisterChallengeResult = registerHandler('challenge-result', (message) => {
       if (message.type === 'CHALLENGE_RESULT') {
         const { challengerName, wasLying, playerName: lastPlayerName, gameState: newGameState } = message.payload;
+        let toastType = 'info';
         
         // Don't reveal cards, just show who was right/wrong
         let resultMessage = '';
         if (wasLying && lastPlayerName === playerName) {
           resultMessage = `You were caught lying! Learn to play!.`;
+          toastType = 'error';
         } else if (wasLying && challengerName === playerName) {
           resultMessage = `You were right! ${lastPlayerName} was lying.`;
+          toastType = 'success';
         } else if (!wasLying && lastPlayerName === playerName) {
           resultMessage = `You were telling the truth! Well played, ${challengerName} was wrong.`;
+          toastType = 'success';
         } else if (!wasLying && challengerName === playerName) {
           resultMessage = `You were wrong! ${lastPlayerName} was telling the truth.`;
+          toastType = 'error';
         } else {
           resultMessage = wasLying
             ? `${challengerName} was right! ${lastPlayerName} was lying.`
@@ -164,10 +169,12 @@ export default function GamePage() {
         }
         
         // Show toast notification
-        if (wasLying) {
+        if (toastType === 'error') {
           toast.error(resultMessage);
-        } else {
+        } else if (toastType === 'success') {
           toast.success(resultMessage);
+        } else {
+          toast(resultMessage);
         }
 
         // Add system message to chat

@@ -1,10 +1,123 @@
-import { Card, CardContent } from "../ui/card";
+import type { JSX } from "react";
+
 interface GameCard {
   id: string;
   suit: "hearts" | "diamonds" | "clubs" | "spades" | "joker";
   rank: string;
   selected: boolean;
 }
+
+/**
+ * Renders the suit symbols in a pattern based on the card's rank.
+ * This function creates the classic playing card look.
+ * @param {string} rank - The card's rank (e.g., 'A', '2', 'K').
+ * @param {string} suitSymbol - The character for the suit (e.g., '♥').
+ * @param {string} colorClass - The Tailwind CSS color class for the suit.
+ * @returns {JSX.Element[]} An array of positioned JSX elements for the symbols.
+ */
+const renderSuitPatterns = (
+  rank: string,
+  suitSymbol: string,
+  colorClass: string
+) : JSX.Element[] => {
+  const symbol = (className: string, key: number, isRotated = false) => (
+    <div
+      key={key}
+      className={`absolute text-3xl ${colorClass} ${className} ${
+        isRotated ? "rotate-180" : ""
+      }`}
+    >
+      {suitSymbol}
+    </div>
+  );
+
+  // Reusable position classes for columns
+  const positions = {
+    topCenter: "top-5 left-1/2 -translate-x-1/2",
+    midTopCenter: "top-1/4 left-1/2 -translate-x-1/2",
+    center: "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
+    midBottomCenter: "bottom-1/4 left-1/2 -translate-x-1/2",
+    bottomCenter: "bottom-5 left-1/2 -translate-x-1/2",
+    topLeft: "top-5 left-4",
+    topRight: "top-5 right-4",
+    midTopLeft: "top-1/4 left-4",
+    midTopRight: "top-1/4 right-4",
+    bottomLeft: "bottom-5 left-4",
+    bottomRight: "bottom-5 right-4",
+  };
+
+  switch (rank) {
+    case "A":
+      return [symbol(positions.center, 1)];
+    case "2":
+      return [symbol(positions.topCenter, 1), symbol(positions.bottomCenter, 2, true)];
+    case "3":
+      return [
+        symbol(positions.topCenter, 1),
+        symbol(positions.center, 2),
+        symbol(positions.bottomCenter, 3, true),
+      ];
+    case "4":
+      return [
+        symbol(positions.topLeft, 1),
+        symbol(positions.topRight, 2),
+        symbol(positions.bottomLeft, 3, true),
+        symbol(positions.bottomRight, 4, true),
+      ];
+    case "5":
+      return [
+        symbol(positions.topLeft, 1),
+        symbol(positions.topRight, 2),
+        symbol(positions.center, 3),
+        symbol(positions.bottomLeft, 4, true),
+        symbol(positions.bottomRight, 5, true),
+      ];
+    case "6":
+      return [
+        symbol(positions.topLeft, 1),
+        symbol(positions.topRight, 2),
+        symbol(positions.center.replace("top-1/2", "top-1/2 -mt-8"), 3),
+        symbol(positions.center.replace("top-1/2", "top-1/2 mt-8"), 4, true),
+        symbol(positions.bottomLeft, 5, true),
+        symbol(positions.bottomRight, 6, true),
+      ];
+    case "7":
+      return [
+        ...renderSuitPatterns("6", suitSymbol, colorClass),
+        symbol(positions.midTopCenter, 7),
+      ];
+    case "8":
+      return [
+        ...renderSuitPatterns("7", suitSymbol, colorClass),
+        symbol(positions.midBottomCenter, 8, true),
+      ];
+    case "9":
+      return [
+        symbol(positions.topLeft, 1),
+        symbol(positions.topRight, 2),
+        symbol(positions.midTopLeft, 3),
+        symbol(positions.midTopRight, 4),
+        symbol(positions.center, 5),
+        symbol(positions.bottomLeft, 6, true),
+        symbol(positions.bottomRight, 7, true),
+        symbol("bottom-1/4 left-4", 8, true),
+        symbol("bottom-1/4 right-4", 9, true),
+      ];
+    case "10":
+      return [
+        ...renderSuitPatterns("8", suitSymbol, colorClass),
+        symbol(positions.topLeft, 9),
+        symbol(positions.bottomRight, 10, true),
+      ];
+    case "J":
+    case "Q":
+    case "K":
+        // For face cards, you might want an image, but a large symbol works as a placeholder.
+        return [symbol(`${positions.center} text-7xl`, 1)];
+    default:
+      return []; // Return nothing for ranks that don't have patterns
+  }
+};
 
 const RenderCard = (
   card: GameCard,
@@ -15,16 +128,11 @@ const RenderCard = (
 ) => {
   const getCardSymbol = (suit: GameCard["suit"]) => {
     switch (suit) {
-      case "hearts":
-        return "♥";
-      case "diamonds":
-        return "♦";
-      case "clubs":
-        return "♣";
-      case "spades":
-        return "♠";
-      case "joker":
-        return "🃏";
+      case "hearts": return "♥";
+      case "diamonds": return "♦";
+      case "clubs": return "♣";
+      case "spades": return "♠";
+      case "joker": return "🃏";
     }
   };
 
@@ -37,86 +145,64 @@ const RenderCard = (
 
   // Calculate overlap offset for stacking
   const overlapOffset = positionInHand * 35; // 35px overlap between cards
+  const suitSymbol = getCardSymbol(card.suit);
+  const colorClass = getCardColor(card.suit);
 
   return (
-    <Card
+    <div
       key={card.id}
       onClick={() => isMyTurn && onCardSelect(card.id)}
-      className={`absolute z-10 
-        ${isMyTurn ? "cursor-pointer hover:z-50" : "cursor-not-allowed"}
+      // Removed absolute positioning from here to place it on the CardContent
+      className={`transition-transform duration-300
+        ${isMyTurn ? "cursor-pointer" : "cursor-not-allowed"}
+        ${isSelected ? "z-0" : "z-10"}
       `}
       style={{
+        position: "absolute",
         left: `${overlapOffset}px`,
         transform: isSelected ? "translateY(-40px)" : "translateY(0px)",
       }}
     >
-      {/* Selected glow effect */}
-      {isSelected && (
-        <div className="absolute inset-0 bg-blue-400 rounded-lg blur-md opacity-50" />
-      )}
-
-      {/* The actual card */}
-      <CardContent
+      <div
         className={`
-          relative w-24 h-36 rounded-lg shadow-lg
-          bg-white border-2 transition-all duration-300
+          relative w-24 h-36 rounded-lg shadow-md
+          bg-slate-50 border transition-all duration-300
           ${
             isSelected
-              ? "border-blue-500 shadow-blue-500/50"
-              : "border-gray-300"
+              ? "border-blue-500 shadow-blue-400/50"
+              : "border-gray-400"
           }
           overflow-hidden
         `}
       >
-        {/* Selected indicator */}
-        {isSelected && (
-          <div className="absolute top-2 right-2 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center shadow-lg z-10">
-            <svg
-              className="w-3 h-3 text-white"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-        )}
-
         {/* Top left corner */}
-        <div className="absolute top-2 left-2 flex flex-col items-center leading-none">
-          <div className={`text-lg font-bold ${getCardColor(card.suit)}`}>
+        <div className="absolute top-1 left-2 flex flex-col items-center leading-none">
+          <div className={`text-xl font-bold ${colorClass}`}>
             {card.rank}
           </div>
-          <div className={`text-xl ${getCardColor(card.suit)}`}>
-            {getCardSymbol(card.suit)}
+          <div className={`text-2xl ${colorClass}`}>
+            {suitSymbol}
           </div>
         </div>
 
-        {/* Center symbol */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className={`text-6xl ${getCardColor(card.suit)}`}>
-            {getCardSymbol(card.suit)}
-          </div>
-        </div>
+        {/* The new suit patterns rendered in the center */}
+        {renderSuitPatterns(card.rank, suitSymbol, colorClass)}
 
         {/* Bottom right corner (rotated) */}
-        <div className="absolute bottom-2 right-2 flex flex-col items-center leading-none rotate-180">
-          <div className={`text-lg font-bold ${getCardColor(card.suit)}`}>
+        <div className="absolute bottom-1 right-2 flex flex-col items-center leading-none rotate-180">
+          <div className={`text-xl font-bold ${colorClass}`}>
             {card.rank}
           </div>
-          <div className={`text-xl ${getCardColor(card.suit)}`}>
-            {getCardSymbol(card.suit)}
+          <div className={`text-2xl ${colorClass}`}>
+            {suitSymbol}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
-const RenderHand = (
+const RenderOneHand = (
   cards: GameCard[],
   startIndex: number,
   isMyTurn: boolean,
@@ -128,6 +214,7 @@ const RenderHand = (
 
   return (
     <div
+      key={startIndex}
       className="relative mb-4"
       style={{
         height: "180px",
@@ -143,4 +230,4 @@ const RenderHand = (
   );
 };
 
-export default RenderHand;
+export default RenderOneHand;

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import RenderHand from "./RenderCard";
+import RenderOneHand from "./RenderCard";
 
 interface GameCard {
   id: string;
@@ -127,7 +127,7 @@ export default function PlayerHand({
             <div className="relative py-4">
               <div className="flex flex-col items-center gap-2">
                 {Array.from({ length: numberOfHands }, (_, handIndex) =>
-                  RenderHand(
+                  RenderOneHand(
                     sortedCards,
                     handIndex * 14,
                     isMyTurn,

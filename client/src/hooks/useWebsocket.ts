@@ -4,7 +4,6 @@ import type { WSMessage } from "../types";
 const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:3001";
 
 export function useWebSocket() {
-  const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<WSMessage | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | undefined>(undefined);
@@ -13,6 +12,7 @@ export function useWebSocket() {
   );
   // Use ref to avoid stale closure issues
   const storedIdRef = useRef<string | null>(localStorage.getItem("clientId") || null);
+  const isConnectedRef = useRef<boolean>(false);
 
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -44,7 +44,7 @@ export function useWebSocket() {
           localStorage.setItem("clientId", message.payload.clientId);
           storedIdRef.current = message.payload.clientId;
         }
-        setIsConnected(true);
+        isConnectedRef.current = true;
         console.log("Connected");
 
         // Call registered handlers
@@ -58,12 +58,16 @@ export function useWebSocket() {
 
     ws.onclose = () => {
       console.log("WebSocket disconnected");
-      setIsConnected(false);
+      isConnectedRef.current = false;
       if (reconnectTimeoutRef.current) return;
 
       // Attempt to reconnect after 3 seconds
       reconnectTimeoutRef.current = window.setTimeout(() => {
         console.log("Attempting to reconnect...");
+        if (isConnectedRef.current) {
+          console.log("Already reconnected, aborting reconnect attempt");
+          return;
+        }
         reconnectTimeoutRef.current = undefined;
         connect();
       }, 3000);
@@ -86,7 +90,7 @@ export function useWebSocket() {
       wsRef.current = null;
     }
 
-    setIsConnected(false);
+    isConnectedRef.current = false;
   }, []);
 
   const sendMessage = useCallback((message: WSMessage) => {
@@ -117,7 +121,7 @@ export function useWebSocket() {
   }, [connect, disconnect]);
 
   return {
-    isConnected,
+    isConnected: isConnectedRef.current,
     lastMessage,
     sendMessage,
     registerHandler,
