@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useWebSocketContext } from '@/context/WebSocketContext';
 import GameBoard from '../components/game/GameBoard';
 import PlayerHand from '../components/game/PlayerHand';
 import PlayerList from '../components/game/PlayerList';
 import ChatBox from '../components/chat/ChatBox';
+import { toast } from 'sonner';
 import type { Card as GameCard, GameState as ServerGameState, Rank } from '@/types';
 
 interface GamePlayer {
@@ -26,6 +28,15 @@ interface LastPlay {
   claimedRank: string;
 }
 
+interface SystemMessage {
+  id: string;
+  playerId: string;
+  playerName: string;
+  message: string;
+  timestamp: number;
+  isSystem: boolean;
+}
+
 export default function GamePage() {
   const navigate = useNavigate();
   const { roomId } = useParams<{ roomId: string }>();
@@ -36,6 +47,7 @@ export default function GamePage() {
   const [gameState, setGameState] = useState<ServerGameState | null>(null);
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [systemMessages, setSystemMessages] = useState<SystemMessage[]>([]);
   
   const playerName = localStorage.getItem('playerName') || 'Anonymous';
   const playerId = localStorage.getItem('clientId') || '';
@@ -44,6 +56,15 @@ export default function GamePage() {
   const [error, setError] = useState<string | null>(null);
   const [isMyTurn, setIsMyTurn] = useState(false);
   const [canChallenge, setCanChallenge] = useState(false);
+  const [gameEndedDialog, setGameEndedDialog] = useState<{
+    open: boolean;
+    winners: string[];
+    loser: string;
+  }>({
+    open: false,
+    winners: [],
+    loser: '',
+  });
 
   // Request initial game state when component mounts
   useEffect(() => {
@@ -123,13 +144,30 @@ export default function GamePage() {
 
     const unregisterChallengeResult = registerHandler('challenge-result', (message) => {
       if (message.type === 'CHALLENGE_RESULT') {
-        const { challengerName, wasLying, liarName, revealedCards, gameState: newGameState } = message.payload;
+        const { challengerName, wasLying, liarName, gameState: newGameState } = message.payload;
         
+        // Don't reveal cards, just show who was right/wrong
         const resultMessage = wasLying 
-          ? `${challengerName} was right! ${liarName} was lying. Cards were: ${revealedCards.map((c: GameCard) => c.rank).join(', ')}`
-          : `${challengerName} was wrong! ${liarName} was telling the truth. ${challengerName} takes the pile.`;
+          ? `${challengerName} was right! ${liarName} was lying.`
+          : `${challengerName} was wrong! ${liarName} was telling the truth.`;
         
-        alert(resultMessage);
+        // Show toast notification
+        if (wasLying) {
+          toast.error(resultMessage);
+        } else {
+          toast.success(resultMessage);
+        }
+
+        // Add system message to chat
+        const systemMessage: SystemMessage = {
+          id: `system-${Date.now()}`,
+          playerId: 'system',
+          playerName: 'System',
+          message: resultMessage,
+          timestamp: Date.now(),
+          isSystem: true,
+        };
+        setSystemMessages((prev) => [...prev, systemMessage]);
         
         setLastPlay(null);
         setCanChallenge(false);
@@ -151,9 +189,26 @@ export default function GamePage() {
 
         const loserName = finalState?.players?.find((p: any) => p.id === loser)?.name || 'Unknown';
 
-        alert(`Game Over! Winners: ${winnerNames}. Loser: ${loserName}`);
+        // Show dialog instead of alert
+        setGameEndedDialog({
+          open: true,
+          winners: winnerNames.split(', '),
+          loser: loserName,
+        });
+
+        // Also show toast
+        toast.success(`Game Over! Winners: ${winnerNames}`);
         
-        setTimeout(() => navigate('/'), 3000);
+        // Add system message to chat
+        const systemMessage: SystemMessage = {
+          id: `system-${Date.now()}`,
+          playerId: 'system',
+          playerName: 'System',
+          message: `Game Over! Winners: ${winnerNames}. Loser: ${loserName}`,
+          timestamp: Date.now(),
+          isSystem: true,
+        };
+        setSystemMessages((prev) => [...prev, systemMessage]);
       }
     });
 
@@ -301,7 +356,11 @@ export default function GamePage() {
 
             {/* Chat Box */}
             {playerId && playerName && (
-              <ChatBox playerName={playerName} playerId={playerId} />
+              <ChatBox 
+                playerName={playerName} 
+                playerId={playerId}
+                systemMessages={systemMessages}
+              />
             )}
 
             {/* Game Rules Quick Reference */}
@@ -320,6 +379,45 @@ export default function GamePage() {
           </div>
         </div>
       </div>
+
+      {/* Game Ended Dialog */}
+      <Dialog open={gameEndedDialog.open} onOpenChange={(open) => {
+        setGameEndedDialog({ ...gameEndedDialog, open });
+        if (!open) {
+          navigate('/');
+        }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>🎉 Game Over!</DialogTitle>
+            <DialogDescription>
+              The game has ended. Here are the results:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <h3 className="font-semibold text-green-600 mb-2">🏆 Winners:</h3>
+              <ul className="list-disc list-inside space-y-1">
+                {gameEndedDialog.winners.map((winner, idx) => (
+                  <li key={idx} className="text-lg">{winner}</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold text-red-600 mb-2">😢 Loser:</h3>
+              <p className="text-lg">{gameEndedDialog.loser}</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => {
+              setGameEndedDialog({ ...gameEndedDialog, open: false });
+              navigate('/');
+            }}>
+              Return to Home
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

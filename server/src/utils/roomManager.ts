@@ -184,6 +184,44 @@ class RoomManager {
       }
     }
   }
+
+  getSystemState() {
+    const rooms = Array.from(this.rooms.values()).map(room => {
+      const players = Array.from(room.players.values());
+      const gameEngine = this.gameEngines.get(room.id);
+      
+      return {
+        id: room.id,
+        code: room.code,
+        hostId: room.hostId,
+        maxPlayers: room.maxPlayers,
+        createdAt: room.createdAt,
+        playerCount: players.length,
+        players: players.map(p => ({
+          id: p.id,
+          name: p.name,
+          isReady: p.isReady,
+          isConnected: p.isConnected,
+          handCount: p.hand.length,
+        })),
+        gameState: gameEngine ? {
+          phase: gameEngine.getGameState().phase,
+          currentPlayerIndex: gameEngine.getGameState().currentPlayerIndex,
+          pileCount: gameEngine.getGameState().pile.length,
+          currentRank: gameEngine.getGameState().currentRank,
+        } : null,
+      };
+    });
+
+    return {
+      totalRooms: this.rooms.size,
+      totalPlayers: Array.from(this.rooms.values()).reduce(
+        (sum, room) => sum + room.players.size,
+        0
+      ),
+      rooms,
+    };
+  }
 }
 
 export const roomManager = new RoomManager();
