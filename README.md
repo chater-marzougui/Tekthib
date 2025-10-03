@@ -1,5 +1,74 @@
 # 🃏 Tunisian Online Card Game - Tekthib
 
+## 📖 Project Overview
+
+A real-time multiplayer card game platform that brings the classic Tunisian bluffing card game online. Players can create rooms, invite friends via room codes, and enjoy voice chat while playing this exciting game of deception and strategy.
+
+### 🎯 The Game: Quick Rules
+- **Goal**: Be the first to get rid of all your cards. Last player with cards loses.
+- **Core Mechanic**: Players place cards face-down and announce a rank (truthfully or lying)
+- **Bluffing**: Other players can challenge by calling "Liar!" 
+- **Consequences**: Wrong challengers or caught liars take the pile
+- **Special Rule**: Collect all 4 cards of same rank = permanently removed
+- **Social Element**: Voice chat for bluffing, banter, and psychology
+
+Play smart, bluff well, and be the first to get rid of all your cards. The last player holding cards loses.
+
+## 🏗️ Setup
+
+- **Deck**: 108 cards → standard 104-card double deck + 4 Jokers
+- **Players**: 3–10 players (works best with 4–6)
+- **Distribution**: Cards are shuffled and spread out as evenly as possible to all players. Small differences (like +1 or +2 cards) are fine.
+
+## 🎮 Game Flow
+
+### Starting the Game
+- A random player is chosen to start
+- That player picks any number of cards from their hand (could be 1, 2, 3... etc.)
+- They place them face-down on the table
+- They announce a rank (e.g., "These are three Aces")
+- Whether they're telling the truth or lying is up to them
+
+### The Bluff Mechanic
+- After the announcement, any player can shout "Liar!" (or click the "Lie" button in the online version)
+- If challenged:
+  - Cards are revealed
+  - If the announcer lied, they must take back the pile
+  - If the announcer told the truth, the challenger must take the pile, and the announcer plays again
+- If no one challenges, play passes to the next player clockwise
+
+### Following the Lead
+- Each new player places cards face-down, but they must claim the same rank as the previous announcement (even if they don't have it)
+- **Example**: First player says "3 Aces." Next players must also play "Aces," whether lying or not
+
+### Special Rule: Four of a Kind
+- If at any point a player collects all 4 cards of the same rank (e.g., all four Kings of different suits), those cards are permanently removed from the game
+- This speeds up the game and reduces bluff opportunities
+
+## 🏆 Winning & Losing
+- **First player to empty their hand** → Winner
+- Game continues until all but one player have emptied their hands
+- **Last player stuck with cards** → Loser
+
+## 💬 Communication Rules (for Online Version)
+- **Voice chat**: Players can talk to bluff, banter, or call out lies
+- **Text chat**: For quick reactions and messages
+- **Fun factor**: The game thrives on psychology — convincing others you're telling the truth, or daring them to challenge
+
+## 🧩 Example Round
+1. **Player A**: puts 2 cards face-down → "These are 2 Queens."
+2. **Player B**: suspicious, calls "Liar!" → Cards revealed → They were actually 7s
+3. **Player A** takes the pile
+4. **Player B** plays next
+5. Next round, **Player B**: puts 1 card face-down → "This is a Queen."
+6. **Player C**: doesn't call → accepts. Play continues
+
+## 🔥 Key Features That Make It Fun
+- **Bluffing is central** — you don't need the announced cards, just courage
+- **Group psychology**: who challenges whom, when to risk it
+- **Voice chat** makes it feel like a real table game
+- **Quick, casual rounds** that scale from 3 to 10 players
+
 ## 📊 Current Implementation Status
 
 ### ✅ Fully Implemented Features
@@ -164,110 +233,6 @@ npx shadcn@latest add [component-name]
 
 ## 🏗️ Technical Architecture
 
-Play smart, bluff well, and be the first to get rid of all your cards. The last player holding cards loses.
-
-🏗️ Setup
-
-Deck: 108 cards → standard 104-card double deck + 4 Jokers.
-
-Players: 3–10 players (works best with 4–6).
-
-Distribution: Cards are shuffled and spread out as evenly as possible to all players. Small differences (like +1 or +2 cards) are fine.
-
-🎮 Game Flow
-
-Starting the Game
-
-A random player is chosen to start.
-
-That player picks any number of cards from their hand (could be 1, 2, 3… etc.).
-
-They place them face-down on the table.
-
-They announce a rank (e.g., “These are three Aces”).
-
-Whether they’re telling the truth or lying is up to them.
-
-The Bluff Mechanic
-
-After the announcement, any player can shout “Liar!” (or click the “Lie” button in the online version).
-
-If challenged:
-
-Cards are revealed.
-
-If the announcer lied, they must take back the pile.
-
-If the announcer told the truth, the challenger must take the pile, and the announcer plays again.
-
-If no one challenges, play passes to the next player clockwise.
-
-Following the Lead
-
-Each new player places cards face-down, but they must claim the same rank as the previous announcement (even if they don’t have it).
-
-Example: First player says “3 Aces.” Next players must also play “Aces,” whether lying or not.
-
-Special Rule: Four of a Kind
-
-If at any point a player collects all 4 cards of the same rank (e.g., all four Kings of different suits), those cards are permanently removed from the game.
-
-This speeds up the game and reduces bluff opportunities.
-
-Winning & Losing
-
-First player to empty their hand → Winner.
-
-Game continues until all but one player have emptied their hands.
-
-Last player stuck with cards → Loser.
-
-💬 Communication Rules (for Online Version)
-
-Voice chat: Players can talk to bluff, banter, or call out lies.
-
-Text chat: For quick reactions and messages.
-
-Fun factor: The game thrives on psychology — convincing others you’re telling the truth, or daring them to challenge.
-
-🧩 Example Round
-
-Player A: puts 2 cards face-down → “These are 2 Queens.”
-
-Player B: suspicious, calls “Liar!” → Cards revealed → They were actually 7s.
-
-Player A takes the pile.
-
-Player B plays next.
-
-Next round, Player B: puts 1 card face-down → “This is a Queen.”
-
-Player C: doesn’t call → accepts. Play continues.
-
-🔥 Key Features That Make It Fun
-
-Bluffing is central — you don’t need the announced cards, just courage.
-
-Group psychology: who challenges whom, when to risk it.
-
-Voice chat makes it feel like a real table game.
-
-Quick, casual rounds that scale from 3 to 10 players.
-
-## 📖 Project Overview
-
-A real-time multiplayer card game platform that brings the classic Tunisian bluffing card game online. Players can create rooms, invite friends via room codes, and enjoy voice chat while playing this exciting game of deception and strategy.
-
-### 🎯 The Game: Quick Rules
-- **Goal**: Be the first to get rid of all your cards. Last player with cards loses.
-- **Core Mechanic**: Players place cards face-down and announce a rank (truthfully or lying)
-- **Bluffing**: Other players can challenge by calling "Liar!" 
-- **Consequences**: Wrong challengers or caught liars take the pile
-- **Special Rule**: Collect all 4 cards of same rank = permanently removed
-- **Social Element**: Voice chat for bluffing, banter, and psychology
-
-## 🏗️ Technical Architecture
-
 ### Frontend: React + TypeScript + Tailwind
 - **Real-time Communication**: WebSocket for chat + signaling
 - **Voice Chat**: WebRTC for peer-to-peer audio
@@ -296,136 +261,124 @@ A real-time multiplayer card game platform that brings the classic Tunisian bluf
 ```
 
 ## 📁 Project Structure
-
 ```
-tunisian-card-game/
+Tekthib/
 ├── README.md
+├── SETUP.md                     # New setup instructions
 ├── package.json
 ├── .gitignore
 ├── .env.example
 │
-├── client/                          # Frontend React App
+├── client/                      # Frontend React App (Vite)
 │   ├── package.json
 │   ├── tsconfig.json
 │   ├── tailwind.config.js
 │   ├── vite.config.ts
 │   ├── index.html
 │   │
-│   ├── src/
-│   │   ├── main.tsx                 # App entry point
-│   │   ├── App.tsx                  # Main app component
-│   │   ├── index.css                # Global styles + Tailwind
-│   │   │
-│   │   ├── components/              # Reusable UI components
-│   │   │   ├── ui/                  # Shadcn UI components
-│   │   │   │   ├── button.tsx
-│   │   │   │   ├── input.tsx
-│   │   │   │   ├── card.tsx
-│   │   │   │   └── dialog.tsx
-│   │   │   │
-│   │   │   ├── layout/              # Layout components
-│   │   │   │   ├── Header.tsx
-│   │   │   │   └── Footer.tsx
-│   │   │   │
-│   │   │   ├── game/                # Game-specific components
-│   │   │   │   ├── GameBoard.tsx    # Main game interface
-│   │   │   │   ├── PlayerHand.tsx   # Player's cards
-│   │   │   │   ├── GamePile.tsx     # Center pile of cards
-│   │   │   │   ├── PlayerList.tsx   # Connected players
-│   │   │   │   └── GameControls.tsx # Play/challenge buttons
-│   │   │   │
-│   │   │   ├── room/                # Room management
-│   │   │   │   ├── RoomCreator.tsx  # Create new room
-│   │   │   │   ├── RoomJoiner.tsx   # Join existing room
-│   │   │   │   └── RoomLobby.tsx    # Pre-game lobby
-│   │   │   │
-│   │   │   └── chat/                # Communication components
-│   │   │       ├── ChatBox.tsx      # Text chat interface
-│   │   │       ├── VoiceControls.tsx # Mic controls
-│   │   │       └── PlayerAudio.tsx  # Audio components
-│   │   │
-│   │   ├── pages/                   # Main page components
-│   │   │   ├── HomePage.tsx         # Landing page
-│   │   │   ├── GamePage.tsx         # Active game page
-│   │   │   └── RoomPage.tsx         # Room lobby page
-│   │   │
-│   │   ├── hooks/                   # Custom React hooks
-│   │   │   ├── useWebSocket.ts      # WebSocket connection
-│   │   │   ├── useWebRTC.ts         # WebRTC audio handling
-│   │   │   ├── useGameState.ts      # Game state management
-│   │   │   └── useLocalStorage.ts   # Browser storage
-│   │   │
-│   │   ├── context/                 # React Context providers
-│   │   │   ├── GameContext.tsx      # Game state context
-│   │   │   ├── RoomContext.tsx      # Room state context
-│   │   │   └── AudioContext.tsx     # Audio state context
-│   │   │
-│   │   ├── types/                   # TypeScript definitions
-│   │   │   ├── game.ts              # Game-related types
-│   │   │   ├── room.ts              # Room-related types
-│   │   │   ├── websocket.ts         # WebSocket message types
-│   │   │   └── player.ts            # Player-related types
-│   │   │
-│   │   ├── utils/                   # Utility functions
-│   │   │   ├── cardUtils.ts         # Card manipulation logic
-│   │   │   ├── gameLogic.ts         # Game rules implementation
-│   │   │   ├── webrtcUtils.ts       # WebRTC helper functions
-│   │   │   └── constants.ts         # App constants
-│   │   │
-│   │   └── lib/                     # External lib configurations
-│   │       └── utils.ts             # Shadcn utils (cn function)
+│   ├── public/                  # Static assets
+│   │   ├── images/              # Image assets
+│   │   └── favicon.ico
 │   │
-│   └── public/                      # Static assets
-│       ├── favicon.ico
-│       └── card-images/             # Card graphics (optional)
+│   └── src/
+│       ├── main.tsx             # App entry point
+│       ├── App.tsx              # Main app component
+│       ├── index.css            # Global styles + Tailwind
+│       │
+│       ├── components/          # Reusable UI components
+│       │   ├── ui/              # Shadcn UI components
+│       │   │   ├── button.tsx
+│       │   │   ├── input.tsx
+│       │   │   ├── card.tsx
+│       │   │   ├── dialog.tsx
+│       │   │   └── ... (other UI elements)
+│       │   │
+│       │   ├── game/            # Game-specific components
+│       │   │   ├── GameBoard.tsx    # Main game interface
+│       │   │   ├── PlayerHand.tsx   # Player's cards
+│       │   │   ├── PlayerList.tsx   # Connected players
+│       │   │   └── RenderCard.tsx   # Component for a single card
+│       │   │
+│       │   ├── chat/            # Communication components
+│       │   │   ├── ChatBox.tsx      # Text chat interface
+│       │   │   └── VoiceChat.tsx    # Voice chat UI and logic
+│       │   │
+│       │   └── SEO.tsx          # SEO meta tags component
+│       │
+│       ├── pages/               # Main page components
+│       │   ├── HomePage.tsx       # Landing page
+│       │   ├── GamePage.tsx       # Active game page
+│       │   ├── RoomPage.tsx       # Room lobby page
+│       │   └── AdminPage.tsx      # New admin dashboard page
+│       │
+│       ├── hooks/               # Custom React hooks
+│       │   ├── useWebsocket.ts    # WebSocket connection management
+│       │   └── useVoiceChat.ts    # WebRTC voice chat logic
+│       │
+│       ├── context/             # React Context providers
+│       │   ├── WebSocketContext.tsx # WebSocket state context
+│       │   └── VoiceChatContext.tsx # Voice chat state context
+│       │
+│       ├── types/               # Local client-side types
+│       │   └── index.ts         # Type definitions (often re-exporting from shared)
+│       │
+│       └── lib/                 # External lib configurations
+│           └── utils.ts         # Shadcn utils (cn function)
 │
-├── server/                          # Backend Node.js App
+├── server/                      # Backend Node.js App
 │   ├── package.json
 │   ├── tsconfig.json
-│   ├── Procfile                     # Heroku deployment
+│   ├── Procfile                 # Heroku deployment
+│   ├── .prettierrc              # Code formatter config
 │   │
 │   ├── src/
-│   │   ├── index.ts                 # Server entry point
-│   │   ├── app.ts                   # Express app setup
+│   │   ├── server.ts            # Server entry point (starts server)
+│   │   ├── app.ts               # Express app setup
 │   │   │
-│   │   ├── routes/                  # HTTP API routes
-│   │   │   ├── rooms.ts             # Room management endpoints
-│   │   │   └── health.ts            # Health check endpoint
+│   │   ├── config/              # Configuration files
+│   │   │   └── config.ts        # Environment variables, etc.
 │   │   │
-│   │   ├── websocket/               # WebSocket handling
-│   │   │   ├── index.ts             # WebSocket server setup
-│   │   │   ├── handlers/            # Message handlers
-│   │   │   │   ├── roomHandlers.ts  # Room join/leave/create
-│   │   │   │   ├── gameHandlers.ts  # Game action handlers
-│   │   │   │   ├── chatHandlers.ts  # Chat message handlers
-│   │   │   │   └── webrtcHandlers.ts # WebRTC signaling
-│   │   │   └── middleware/          # WebSocket middleware
-│   │   │       └── auth.ts          # Basic connection auth
+│   │   ├── game/                # Game logic (server-side)
+│   │   │   ├── GameEngine.ts    # Core game logic
+│   │   │   ├── Deck.ts          # Card deck management
+│   │   │   └── BotPlayer.ts     # AI player logic
 │   │   │
-│   │   ├── game/                    # Game logic (server-side)
-│   │   │   ├── GameEngine.ts        # Core game logic
-│   │   │   ├── Deck.ts              # Card deck management
-│   │   │   ├── Player.ts            # Player state management
-│   │   │   └── Room.ts              # Room state management
+│   │   ├── routes/              # HTTP API routes
+│   │   │   ├── adminRoutes.ts   # Routes for the admin dashboard
+│   │   │   └── itemRoutes.ts    # Example/generic routes
 │   │   │
-│   │   ├── types/                   # Shared TypeScript types
-│   │   │   ├── game.ts              # Game state types
-│   │   │   ├── websocket.ts         # WebSocket message types
-│   │   │   ├── room.ts              # Room types
-│   │   │   └── player.ts            # Player types
+│   │   ├── controllers/         # Route handlers (MVC pattern)
+│   │   │   └── itemController.ts  # Logic for itemRoutes
 │   │   │
-│   │   └── utils/                   # Server utilities
-│   │       ├── roomManager.ts       # In-memory room storage
-│   │       ├── idGenerator.ts       # Room/player ID generation
-│   │       └── logger.ts            # Logging utility
+│   │   ├── middlewares/         # Express middleware
+│   │   │   └── errorHandler.ts  # Central error handling
+│   │   │
+│   │   ├── models/              # Database models/schemas
+│   │   │   └── item.ts          # Example DB model
+│   │   │
+│   │   ├── websocket/           # WebSocket handling
+│   │   │   ├── index.ts         # WebSocket server setup
+│   │   │   └── handlers/        # Message handlers
+│   │   │       ├── roomHandlers.ts    # Room join/leave/create
+│   │   │       ├── gameHandlers.ts    # Game action handlers
+│   │   │       ├── chatHandlers.ts    # Chat message handlers
+│   │   │       └── webrtcHandlers.ts  # WebRTC signaling
+│   │   │
+│   │   └── utils/               # Server utilities
+│   │       └── roomManager.ts   # In-memory room storage
 │   │
-│   └── dist/                        # Compiled JavaScript (gitignored)
+│   └── dist/                    # Compiled JavaScript (gitignored)
 │
-└── docs/                            # Documentation
-    ├── GAME_RULES.md                # Detailed game rules
-    ├── API_DOCS.md                  # WebSocket API documentation
-    ├── DEPLOYMENT.md                # Deployment instructions
-    └── CONTRIBUTING.md              # Development guidelines
+├── shared/                      # Code shared between client and server
+│   └── src/
+│       └── types/               # Shared TypeScript definitions
+│           └── index.ts         # Game, Player, Room, WebSocket types
+│
+└── docs/                        # Documentation
+    ├── GAME_RULES.md            # Detailed game rules
+    ├── API_DOCS.md              # WebSocket API documentation
+    ├── DEPLOYMENT.md            # Deployment instructions
+    └── CONTRIBUTING.md          # Development guidelines
 ```
 
 ## 🚀 Getting Started
@@ -699,7 +652,7 @@ heroku logs --tail  # Monitor deployment
 - [ ] Add game replay functionality
 - [ ] Create tournament bracket system
 - [ ] Add sound effects for game actions
-- [ ] Implement WebRTC voice chat for better communication
+- [x] Implement WebRTC voice chat for better communication
 
 ### Scaling Considerations
 - [ ] Redis for multi-dyno room synchronization
@@ -708,7 +661,6 @@ heroku logs --tail  # Monitor deployment
 - [ ] Load balancing for WebSocket connections
 
 ### Monetization Options
-- [ ] Premium room features (custom themes, longer games)
 - [ ] Advertisement integration
 - [ ] Tournament entry fees
 - [ ] Cosmetic customizations
