@@ -6,6 +6,7 @@ import {
   AddBotsPayload,
   KickPlayerPayload,
   MutePlayerPayload,
+  RemoveBotPayload,
 } from 'shared';
 import { roomManager } from '../../utils/roomManager';
 import { sendToClient, broadcastToRoom, sendToPlayer } from '../index';
@@ -44,6 +45,10 @@ export function handleRoomMessages(
 
     case 'ADD_BOTS':
       handleAddBots(ws, clients, message.payload as AddBotsPayload);
+      break;
+
+    case 'REMOVE_BOT':
+      handleRemoveBot(ws, clients, message.payload as RemoveBotPayload);
       break;
 
     case 'START_GAME':
@@ -277,6 +282,59 @@ function handleAddBots(
   if (updatedRoom) {
     broadcastToRoom(clients, clientInfo.roomId, {
       type: 'BOTS_ADDED',
+      payload: {
+        players: Array.from(updatedRoom.players.values()).map((p) => ({
+          id: p.id,
+          name: p.name,
+          isReady: p.isReady,
+          isConnected: p.isConnected,
+          isBot: p.isBot,
+        })),
+      },
+    });
+  }
+}
+
+
+function handleRemoveBot(
+  ws: WebSocket,
+  clients: Map<WebSocket, ClientInfo>,
+  payload: RemoveBotPayload,
+): void {
+  const clientInfo = clients.get(ws)!;
+
+  if (!clientInfo.roomId) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: { message: 'Not in a room' },
+    });
+    return;
+  }
+
+  const room = roomManager.getRoom(clientInfo.roomId);
+  if (!room || room.hostId !== clientInfo.id) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: { message: 'Only host can remove bots' },
+    });
+    return;
+  }
+
+  const result = roomManager.removeBotFromRoom(clientInfo.roomId, payload.botId);
+
+  if (!result.success) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: { message: result.error },
+    });
+    return;
+  }
+
+  // Notify all players about the new bots
+  const updatedRoom = roomManager.getRoom(clientInfo.roomId);
+  if (updatedRoom) {
+    broadcastToRoom(clients, clientInfo.roomId, {
+      type: 'BOT_REMOVED',
       payload: {
         players: Array.from(updatedRoom.players.values()).map((p) => ({
           id: p.id,

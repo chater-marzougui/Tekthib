@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { VoiceChatProvider } from "@/context/VoiceChatContext";
 import VoiceChat from "@/components/chat/VoiceChat";
+import { Trash } from "lucide-react";
 
 function isDuplicatePlayer(players: Player[], newPlayer: Player): boolean {
   return players.some((p) => p.id === newPlayer.id);
@@ -76,7 +77,7 @@ export default function RoomPage() {
             return prev;
           });
         }
-      },
+      }
     );
 
     const unregisterPlayerLeft = registerHandler("player-left", (message) => {
@@ -97,11 +98,11 @@ export default function RoomPage() {
             message.payload;
           setPlayers((prev) =>
             prev.map((p) =>
-              p.id === updatedPlayerId ? { ...p, isReady: updatedReady } : p,
-            ),
+              p.id === updatedPlayerId ? { ...p, isReady: updatedReady } : p
+            )
           );
         }
-      },
+      }
     );
 
     const unregisterGameStarted = registerHandler("game-started", (message) => {
@@ -131,6 +132,14 @@ export default function RoomPage() {
       }
     });
 
+    const unregisterBotRemoved = registerHandler("bot-removed", (message) => {
+      if (message.type === "BOT_REMOVED") {
+        const { players: updatedPlayers } = message.payload;
+        setPlayers(updatedPlayers);
+        toast.success("Bot removed successfully!");
+      }
+    });
+
     // Create or join room based on roomId parameter
     if (roomId === "create") {
       sendMessage({
@@ -153,6 +162,7 @@ export default function RoomPage() {
       unregisterGameStarted();
       unregisterError();
       unregisterBotsAdded();
+      unregisterBotRemoved();
     };
   }, [
     roomId,
@@ -200,6 +210,16 @@ export default function RoomPage() {
       sendMessage({
         type: "ADD_BOTS",
         payload: { count },
+      });
+    }
+  };
+
+  const handleRemovePlayer = (Id: string, isBot: boolean) => {
+    console.log("Removing player or bot:", Id, isBot);
+    if (isHost) {
+      sendMessage({
+        type: isBot ? "REMOVE_BOT" : "KICK_PLAYER",
+        payload: isBot ? { botId: Id } : { playerId: Id },
       });
     }
   };
@@ -281,22 +301,39 @@ export default function RoomPage() {
                           )}
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        className="flex items-center gap-2 cursor-pointer"
-                        onClick={handleReadyToggle}
-                        disabled={player.id !== playerId}
-                      >
-                        {player.isReady ? (
-                          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                            Ready ✓
-                          </span>
-                        ) : (
-                          <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
-                            Not Ready
-                          </span>
+                      <div className="flex items-center">
+                        {isHost && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 cursor-pointer"
+                            onClick={() =>
+                              handleRemovePlayer(
+                                player.id,
+                                player.isBot || false
+                              )
+                            }
+                          >
+                            <Trash className="w-4 h-4" />
+                          </Button>
                         )}
-                      </Button>
+                        <Button
+                          variant="ghost"
+                          className="flex items-center gap-2 cursor-pointer"
+                          onClick={handleReadyToggle}
+                          disabled={player.id !== playerId}
+                        >
+                          {player.isReady ? (
+                            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                              Ready ✓
+                            </span>
+                          ) : (
+                            <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
+                              Not Ready
+                            </span>
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   ))}
 
@@ -311,7 +348,7 @@ export default function RoomPage() {
                           Waiting for player...
                         </div>
                       </div>
-                    ),
+                    )
                   )}
                 </div>
               </CardContent>

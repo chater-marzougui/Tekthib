@@ -129,6 +129,46 @@ class RoomManager {
     return { success: true, botIds };
   }
 
+  removeBotFromRoom(
+    roomId: string,
+    botId: string,
+  ): {
+    success: boolean;
+    error?: string;
+  } {
+    const room = this.rooms.get(roomId);
+
+    if (!room) {
+      return { success: false, error: 'Room not found' };
+    }
+
+    const bot = room.players.get(botId);
+
+    if (!bot) {
+      return { success: false, error: 'Bot not found in room' };
+    }
+
+    if (!bot.isBot) {
+      return { success: false, error: 'Player is not a bot' };
+    }
+
+    // Check if game is in progress
+    if (room.gameState?.phase === 'playing') {
+      return { success: false, error: 'Cannot remove bot during active game' };
+    }
+
+    // Remove the bot from the room
+    room.players.delete(botId);
+
+    // If the bot was the host, assign new host
+    if (botId === room.hostId) {
+      const newHostId = Array.from(room.players.keys())[0];
+      room.hostId = newHostId;
+    }
+
+    return { success: true };
+  }
+
   removePlayerFromRoom(
     roomId: string,
     playerId: string,

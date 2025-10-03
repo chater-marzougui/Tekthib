@@ -83,6 +83,7 @@ function handleMessage(ws: WebSocket, message: WSMessage): void {
     case 'LEAVE_ROOM':
     case 'READY':
     case 'ADD_BOTS':
+    case 'REMOVE_BOT':
     case 'START_GAME':
     case 'KICK_PLAYER':
     case 'SWITCH_PLAYER_MIC':

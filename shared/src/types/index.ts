@@ -52,6 +52,8 @@ export type WSMessageType =
   | 'INITIAL_GAME_STATE'
   | 'ADD_BOTS'
   | 'BOTS_ADDED'
+  | 'REMOVE_BOT'
+  | 'BOT_REMOVED'
   | 'PLAY_CARDS'
   | 'CARDS_PLAYED'
   | 'CHALLENGE'
@@ -122,4 +124,8 @@ export interface ChatMessagePayload {
 
 export interface AddBotsPayload {
   count: number;
+}
+
+export interface RemoveBotPayload {
+  botId: string;
 }
