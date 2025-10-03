@@ -44,15 +44,28 @@
 - ✅ Text chat in both lobby and game
 - ✅ Real-time message broadcasting
 - ✅ XSS protection for chat messages
+- ✅ WebRTC voice chat with peer-to-peer audio
+- ✅ Voice chat persists seamlessly from lobby to game
+- ✅ Host controls: kick players and mute player microphones
+- ✅ Per-player mute: mute specific players locally without affecting others
 
-### 🚧 Not Yet Implemented
+### 🚧 Future Work
 
-#### Optional Features
-- ⏳ WebRTC voice chat (planned but optional)
-- ⏳ Player avatars/customization
-- ⏳ Spectator mode
-- ⏳ Sound effects and animations
-- ⏳ Mobile app version
+#### Planned Enhancements
+- ⏳ **AI Integration**: Lightweight AI model for detecting keywords like "LIAR" or "BLUFF" in voice/text chat and triggering appropriate game actions or animations
+- ⏳ **Avatar Customization**: Player profile pictures, custom avatars, and cosmetic items
+- ⏳ **Enhanced Voice Features**: 
+  - Spatial audio positioning based on player order
+  - Voice activity indicators (speaking animations)
+  - Voice recording and playback for highlights
+- ⏳ **Spectator Mode**: Allow users to watch ongoing games
+- ⏳ **Game Statistics**: Track wins, losses, successful bluffs, and challenges
+- ⏳ **Tournament System**: Organized tournaments with brackets and leaderboards
+- ⏳ **Advanced Bot AI**: Smarter bots with different personality types (aggressive, conservative, random)
+- ⏳ **Sound Effects & Animations**: Card flip sounds, challenge animations, celebration effects
+- ⏳ **Mobile Optimization**: Responsive design improvements and native mobile app
+- ⏳ **Replay System**: Record and replay games for analysis or entertainment
+- ⏳ **Custom Game Modes**: Variations on rules, speed rounds, team play
 
 ## 🚀 Getting Started
 
@@ -139,9 +152,15 @@ npx shadcn@latest add [component-name]
 5. **Winning**: First player to empty their hand wins
 6. **Special Rule**: If you collect all 4 cards of the same rank, they're removed
 
-### Chat
+### Chat & Voice
 - Use the chat box to communicate with other players
-- Banter, strategize, or bluff through messages!
+- Join voice chat to talk in real-time with other players
+- **Host Controls**: If you're the host, you can:
+  - Kick players from the room
+  - Mute players' microphones (they can't unmute until the game ends)
+- **Personal Mute**: Mute any player's audio for yourself without affecting others
+- Voice chat continues seamlessly when the game starts
+- Banter, strategize, or bluff through messages and voice!
 
 ## 🏗️ Technical Architecture
 

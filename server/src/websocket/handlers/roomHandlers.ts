@@ -1,7 +1,7 @@
 import { WebSocket } from 'ws';
-import { WSMessage, CreateRoomPayload, JoinRoomPayload, AddBotsPayload } from '../../types';
+import { WSMessage, CreateRoomPayload, JoinRoomPayload, AddBotsPayload, KickPlayerPayload, MutePlayerPayload } from '../../types';
 import { roomManager } from '../../utils/roomManager';
-import { sendToClient, broadcastToRoom } from '../index';
+import { sendToClient, broadcastToRoom, sendToPlayer } from '../index';
 import { triggerBotTurn } from './gameHandlers';
 
 interface ClientInfo {
@@ -41,6 +41,14 @@ export function handleRoomMessages(
 
     case 'START_GAME':
       handleStartGame(ws, clients);
+      break;
+
+    case 'KICK_PLAYER':
+      handleKickPlayer(ws, clients, message.payload as KickPlayerPayload);
+      break;
+
+    case 'MUTE_PLAYER':
+      handleMutePlayer(ws, clients, message.payload as MutePlayerPayload);
       break;
   }
 }
@@ -328,4 +336,157 @@ function handleStartGame(
 
   // Trigger bot turn if first player is a bot
   triggerBotTurn(clients, clientInfo.roomId);
+}
+
+function handleKickPlayer(
+  ws: WebSocket,
+  clients: Map<WebSocket, ClientInfo>,
+  payload: KickPlayerPayload
+): void {
+  const clientInfo = clients.get(ws)!;
+  
+  if (!clientInfo.roomId) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: { message: 'Not in a room' }
+    });
+    return;
+  }
+
+  const room = roomManager.getRoom(clientInfo.roomId);
+  if (!room || room.hostId !== clientInfo.id) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: { message: 'Only host can kick players' }
+    });
+    return;
+  }
+
+  // Don't allow kicking yourself
+  if (payload.playerId === clientInfo.id) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: { message: 'Cannot kick yourself' }
+    });
+    return;
+  }
+
+  // Don't allow kicking bots (they can be removed differently if needed)
+  const playerToKick = room.players.get(payload.playerId);
+  if (!playerToKick) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: { message: 'Player not found' }
+    });
+    return;
+  }
+
+  if (playerToKick.isBot) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: { message: 'Cannot kick bots' }
+    });
+    return;
+  }
+
+  // Notify the kicked player
+  sendToPlayer(clients, payload.playerId, {
+    type: 'PLAYER_KICKED',
+    payload: { 
+      message: 'You have been kicked from the room by the host',
+      playerId: payload.playerId
+    }
+  });
+
+  // Remove player from room
+  const result = roomManager.removePlayerFromRoom(clientInfo.roomId, payload.playerId);
+
+  // Notify others that player was kicked
+  if (!result.roomDeleted) {
+    broadcastToRoom(clients, clientInfo.roomId, {
+      type: 'PLAYER_LEFT',
+      payload: {
+        playerId: payload.playerId,
+        playerName: playerToKick.name,
+        kicked: true
+      }
+    });
+  }
+
+  // Clear the kicked player's room info
+  clients.forEach((client, clientWs) => {
+    if (client.id === payload.playerId) {
+      client.roomId = undefined;
+      client.name = undefined;
+    }
+  });
+}
+
+function handleMutePlayer(
+  ws: WebSocket,
+  clients: Map<WebSocket, ClientInfo>,
+  payload: MutePlayerPayload
+): void {
+  const clientInfo = clients.get(ws)!;
+  
+  if (!clientInfo.roomId) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: { message: 'Not in a room' }
+    });
+    return;
+  }
+
+  const room = roomManager.getRoom(clientInfo.roomId);
+  if (!room || room.hostId !== clientInfo.id) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: { message: 'Only host can mute players' }
+    });
+    return;
+  }
+
+  // Don't allow muting yourself
+  if (payload.playerId === clientInfo.id) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: { message: 'Cannot mute yourself' }
+    });
+    return;
+  }
+
+  const playerToMute = room.players.get(payload.playerId);
+  if (!playerToMute) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: { message: 'Player not found' }
+    });
+    return;
+  }
+
+  if (playerToMute.isBot) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: { message: 'Bots have no microphone' }
+    });
+    return;
+  }
+
+  // Notify the muted player to disable their microphone
+  sendToPlayer(clients, payload.playerId, {
+    type: 'PLAYER_MUTED',
+    payload: { 
+      message: 'Your microphone has been disabled by the host',
+      playerId: payload.playerId
+    }
+  });
+
+  // Also notify all other players for UI updates
+  broadcastToRoom(clients, clientInfo.roomId, {
+    type: 'PLAYER_MUTED',
+    payload: {
+      playerId: payload.playerId,
+      playerName: playerToMute.name
+    }
+  });
 }
