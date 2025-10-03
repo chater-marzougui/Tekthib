@@ -308,7 +308,7 @@ export default function GamePage() {
         name: playerData?.name || "Unknown",
         cardCount: gameState.playerHandCounts[id] || 0,
         isCurrentTurn: id === gameState.currentPlayerId,
-        isBot: playerData?.isBot,
+        isBot: playerData?.isBot || false,
         isConnected: playerData?.isConnected || false,
         isReady: playerData?.isReady || false,
       };

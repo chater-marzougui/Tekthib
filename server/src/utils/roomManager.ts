@@ -32,6 +32,7 @@ class RoomManager {
       hand: [],
       isConnected: true,
       isReady: false,
+      isBot: false,
     };
 
     const room: Room = {

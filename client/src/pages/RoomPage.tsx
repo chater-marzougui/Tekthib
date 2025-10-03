@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { VoiceChatProvider } from "@/context/VoiceChatContext";
 import VoiceChat from "@/components/chat/VoiceChat";
 import { Trash } from "lucide-react";
+import { PlayerBadge } from "@/components/PlayerBadge";
 
 function isDuplicatePlayer(players: Player[], newPlayer: Player): boolean {
   return players.some((p) => p.id === newPlayer.id);
@@ -277,19 +278,7 @@ export default function RoomPage() {
                       className="flex items-center justify-between p-3 bg-background rounded-lg"
                     >
                       <div className="flex items-center gap-3">
-                        <Badge
-                          className={`w-8 h-8 ${
-                            player.id === playerId
-                              ? "bg-blue-500 text-white"
-                              : player.isBot
-                                ? "bg-purple-500 text-white"
-                                : "bg-gray-200 text-gray-800"
-                          } flex items-center justify-center rounded-full text-lg font-bold`}
-                        >
-                          {player.isBot
-                            ? "🤖"
-                            : player.name.charAt(0).toUpperCase()}
-                        </Badge>
+                        <PlayerBadge player={player} playerId={playerId} />
                         <div>
                           <div className="font-medium">
                             {player.name}

@@ -27,7 +27,7 @@ export interface Player {
   handCount?: number;
   isConnected: boolean;
   isReady: boolean;
-  isBot?: boolean;
+  isBot: boolean;
 }
 
 export interface PlayerWithHand extends Player {
