@@ -3,6 +3,16 @@ import { Deck } from './Deck';
 import { BotPlayer } from './BotPlayer';
 import { GameState } from '../types';
 
+interface ReturnGameState extends Omit<GameState, 'pile' | 'lastPlayedCards'> {
+  currentPlayerId: string;
+  players: Player[];
+  pileCount: number;
+  lastPlayedCount: number;
+  playerHandCounts: {
+    [k: string]: number;
+  };
+}
+
 export class GameEngine {
   private readonly gameState: GameState;
   private readonly players: Map<string, PlayerWithHand>;
@@ -117,17 +127,21 @@ export class GameEngine {
     }
 
     // If there was a previous play that wasn't challenged, update stats for successful bluff
-    if (this.gameState.lastPlayerId && this.gameState.lastPlayedCards.length > 0) {
+    if (
+      this.gameState.lastPlayerId &&
+      this.gameState.lastPlayedCards.length > 0
+    ) {
       const previousPlayerId = this.gameState.lastPlayerId;
       const previousClaimedRank = this.gameState.currentRank;
       const previousCards = this.gameState.lastPlayedCards;
-      
+
       // Check if previous play was a bluff (and got away with it)
       const wasBluff = !previousCards.every(
-        (card) => card.rank === previousClaimedRank || card.rank === 'Joker'
+        (card) => card.rank === previousClaimedRank || card.rank === 'Joker',
       );
-      
-      const previousPlayerStats = this.gameState.playerStats.get(previousPlayerId);
+
+      const previousPlayerStats =
+        this.gameState.playerStats.get(previousPlayerId);
       if (previousPlayerStats) {
         if (wasBluff) {
           previousPlayerStats.timesBluffedSuccessfully++;
@@ -228,9 +242,11 @@ export class GameEngine {
     )!;
 
     // Update player statistics
-    const lastPlayerStats = this.gameState.playerStats.get(this.gameState.lastPlayerId);
+    const lastPlayerStats = this.gameState.playerStats.get(
+      this.gameState.lastPlayerId,
+    );
     const challengerStats = this.gameState.playerStats.get(challengerId);
-    
+
     if (wasLying) {
       // Last player was lying - caught bluffing
       if (lastPlayerStats) lastPlayerStats.timesCaughtBluffing++;
@@ -341,29 +357,30 @@ export class GameEngine {
     });
   }
 
-  private advanceTurn(): void { 
-    const startIndex = this.gameState.currentPlayerIndex; 
-    let nextIndex = (startIndex + 1) % this.gameState.playerOrder.length; 
+  private advanceTurn(): void {
+    const startIndex = this.gameState.currentPlayerIndex;
+    let nextIndex = (startIndex + 1) % this.gameState.playerOrder.length;
     let skippedCount = 0;
 
-    // Skip winners 
-    while ( 
-      this.gameState.winners.includes(this.gameState.playerOrder[nextIndex]) 
-    ) { 
-      nextIndex = (nextIndex + 1) % this.gameState.playerOrder.length; 
+    // Skip winners
+    while (
+      this.gameState.winners.includes(this.gameState.playerOrder[nextIndex])
+    ) {
+      nextIndex = (nextIndex + 1) % this.gameState.playerOrder.length;
       skippedCount++;
 
       // If we've looped through all players and they're all winners except one
-      if (skippedCount >= this.gameState.playerOrder.length) { 
+      if (skippedCount >= this.gameState.playerOrder.length) {
         this.gameState.phase = 'ended';
-        this.gameState.loser = this.gameState.playerOrder.find(
-          (id) => !this.gameState.winners.includes(id)
-        ) || null;
+        this.gameState.loser =
+          this.gameState.playerOrder.find(
+            (id) => !this.gameState.winners.includes(id),
+          ) || null;
         return;
-      } 
-    } 
+      }
+    }
 
-    this.gameState.currentPlayerIndex = nextIndex; 
+    this.gameState.currentPlayerIndex = nextIndex;
   }
 
   getPlayerHand(playerId: string): Card[] {
@@ -371,7 +388,7 @@ export class GameEngine {
     return player ? [...player.hand] : [];
   }
 
-  getPublicGameState(): any {
+  getPublicGameState(): ReturnGameState {
     return {
       phase: this.gameState.phase,
       currentPlayerIndex: this.gameState.currentPlayerIndex,
@@ -391,7 +408,8 @@ export class GameEngine {
           this.players.get(id)?.hand.length || 0,
         ]),
       ),
-      playerStats: Object.fromEntries(this.gameState.playerStats),
+      consecutivePasses: this.gameState.consecutivePasses,
+      playerStats: this.gameState.playerStats,
     };
   }
 

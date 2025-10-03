@@ -255,14 +255,15 @@ function handleChallenge(
   let challengerName = '';
   let playerName = '';
 
-  clients.forEach((client) => {
-    if (client.id === payload.challengerId) {
-      challengerName = client.name || 'Unknown';
+  publicGameState.players.forEach((p) => {
+    if (p.id === payload.challengerId) {
+      challengerName = p.name || 'Unknown';
     }
-    if (client.id === result.playerId) {
-      playerName = client.name || 'Unknown';
+    if (p.id === result.playerId) {
+      playerName = p.name || 'Unknown';
     }
   });
+
 
   // Broadcast challenge result to all players
   broadcastToRoom(clients, clientInfo.roomId, {

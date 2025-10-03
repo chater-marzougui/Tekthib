@@ -169,8 +169,8 @@ export default function GamePage() {
           // Don't reveal cards, just show who was right/wrong
           let resultMessage = "";
           if (wasLying && lastPlayerName === playerName) {
-            resultMessage = `You were caught lying! Learn to play!.`;
-            toastType = "error";
+            resultMessage = `You were caught lying by ${challengerName}! Learn to play!`;
+            toastType = "error";  
           } else if (wasLying && challengerName === playerName) {
             resultMessage = `You were right! ${lastPlayerName} was lying.`;
             toastType = "success";

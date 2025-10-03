@@ -14,7 +14,7 @@ import type { Player } from "shared";
 import { toast } from "sonner";
 import { VoiceChatProvider } from "@/context/VoiceChatContext";
 import VoiceChat from "@/components/chat/VoiceChat";
-import { Trash, QrCode } from "lucide-react";
+import { Trash } from "lucide-react";
 import { PlayerBadge } from "@/components/PlayerBadge";
 import { QRCodeCard } from "@/components/QRCodeDialog";
 
