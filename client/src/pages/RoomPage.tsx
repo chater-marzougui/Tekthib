@@ -144,6 +144,17 @@ export default function RoomPage() {
       }
     });
 
+    const unregisterGameReset = registerHandler("game-reset", (message) => {
+      if (message.type === "GAME_RESET") {
+        const { room } = message.payload;
+        setRoomCode(room.code);
+        setPlayers(room.players);
+        setIsHost(room.hostId === playerId);
+        setIsReady(false);
+        toast.success("Game has been reset! Get ready to play again.");
+      }
+    });
+
     // Create or join room based on roomId parameter
     if (roomId === "create") {
       sendMessage({
@@ -167,6 +178,7 @@ export default function RoomPage() {
       unregisterError();
       unregisterBotsAdded();
       unregisterBotRemoved();
+      unregisterGameReset();
     };
   }, [
     roomId,

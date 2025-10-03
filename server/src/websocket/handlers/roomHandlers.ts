@@ -612,24 +612,10 @@ function handlePlayAgain(
     return;
   }
 
-  // First player to click becomes the host
-  if (room.players.size === 1 || room.hostId === payload.playerId) {
-    // This player is (or will be) the host
-    const result = roomManager.resetGame(room.id);
-
-    if (!result.success) {
-      sendToClient(ws, {
-        type: 'ERROR',
-        payload: { message: result.error || 'Failed to reset game' },
-      });
-      return;
-    }
-
-    // Set this player as the host
-    room.hostId = payload.playerId;
-
-    // Broadcast to all players that game has been reset
-    broadcastToRoom(clients, room.id, {
+  // Check if game has already been reset (gameState is null means already in waiting phase)
+  if (!room.gameState || room.gameState.phase !== 'ended') {
+    // Game already reset or not ended, just navigate the player to room
+    sendToClient(ws, {
       type: 'GAME_RESET',
       payload: {
         room: {
@@ -647,5 +633,40 @@ function handlePlayAgain(
         },
       },
     });
+    return;
   }
+
+  // First player to click becomes the host and resets the game
+  const result = roomManager.resetGame(room.id);
+
+  if (!result.success) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: { message: result.error || 'Failed to reset game' },
+    });
+    return;
+  }
+
+  // Set this player as the new host
+  room.hostId = payload.playerId;
+
+  // Broadcast to all players that game has been reset
+  broadcastToRoom(clients, room.id, {
+    type: 'GAME_RESET',
+    payload: {
+      room: {
+        id: room.id,
+        code: room.code,
+        hostId: room.hostId,
+        maxPlayers: room.maxPlayers,
+        players: Array.from(room.players.values()).map((p) => ({
+          id: p.id,
+          name: p.name,
+          isReady: p.isReady,
+          isConnected: p.isConnected,
+          isBot: p.isBot,
+        })),
+      },
+    },
+  });
 }
