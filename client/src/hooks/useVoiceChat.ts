@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useWebSocketContext } from "../context/WebSocketContext";
-import type { Player } from "../types";
+import type { Player } from "shared";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -35,13 +35,15 @@ export function useVoiceChat({
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
   const [audioError, setAudioError] = useState<string | null>(null);
   const [mutedPlayers, setMutedPlayers] = useState<Set<string>>(new Set());
-  const [hostMutedPlayers, setHostMutedPlayers] = useState<Set<string>>(new Set());
+  const [hostMutedPlayers, setHostMutedPlayers] = useState<Set<string>>(
+    new Set(),
+  );
   const [hostMuted, setHostMuted] = useState(false);
 
   const localStreamRef = useRef<MediaStream | null>(null);
   const peerConnectionsRef = useRef<Map<string, PeerConnection>>(new Map());
   const pendingCandidatesRef = useRef<Map<string, RTCIceCandidate[]>>(
-    new Map()
+    new Map(),
   );
   const navigate = useNavigate();
 
@@ -123,7 +125,7 @@ export function useVoiceChat({
       // Handle connection state changes
       pc.onconnectionstatechange = () => {
         console.log(
-          `Connection state with ${remotePlayerId}: ${pc.connectionState}`
+          `Connection state with ${remotePlayerId}: ${pc.connectionState}`,
         );
 
         if (
@@ -142,7 +144,7 @@ export function useVoiceChat({
       peerConnectionsRef.current.set(remotePlayerId, { connection: pc });
       return pc;
     },
-    [sendMessage, mutedPlayers]
+    [sendMessage, mutedPlayers],
   );
 
   // Create and send offer to a remote player
@@ -167,7 +169,7 @@ export function useVoiceChat({
         console.error("Error creating offer:", error);
       }
     },
-    [createPeerConnection, sendMessage]
+    [createPeerConnection, sendMessage],
   );
 
   // Handle incoming offer
@@ -203,7 +205,7 @@ export function useVoiceChat({
         console.error("Error handling offer:", error);
       }
     },
-    [createPeerConnection, sendMessage]
+    [createPeerConnection, sendMessage],
   );
 
   // Handle incoming answer
@@ -214,7 +216,7 @@ export function useVoiceChat({
 
       try {
         await peerConn.connection.setRemoteDescription(
-          new RTCSessionDescription(answer)
+          new RTCSessionDescription(answer),
         );
 
         // Add any pending ICE candidates
@@ -228,7 +230,7 @@ export function useVoiceChat({
         console.error("Error handling answer:", error);
       }
     },
-    []
+    [],
   );
 
   // Handle incoming ICE candidate
@@ -247,7 +249,7 @@ export function useVoiceChat({
       try {
         if (peerConn.connection.remoteDescription) {
           await peerConn.connection.addIceCandidate(
-            new RTCIceCandidate(candidate)
+            new RTCIceCandidate(candidate),
           );
         } else {
           // Store for later if remote description isn't set yet
@@ -259,7 +261,7 @@ export function useVoiceChat({
         console.error("Error adding ICE candidate:", error);
       }
     },
-    []
+    [],
   );
 
   // Enable voice chat
@@ -273,7 +275,7 @@ export function useVoiceChat({
 
     // Create connections to all other players (except bots)
     const otherPlayers = players.filter(
-      (p) => p.id !== localPlayerId && !p.isBot && p.isConnected
+      (p) => p.id !== localPlayerId && !p.isBot && p.isConnected,
     );
 
     for (const player of otherPlayers) {
@@ -345,7 +347,7 @@ export function useVoiceChat({
         payload: { playerId },
       });
     },
-    [isHost, sendMessage]
+    [isHost, sendMessage],
   );
 
   // Host mutes a player's microphone (server-side enforcement)
@@ -357,7 +359,7 @@ export function useVoiceChat({
         type: "SWITCH_PLAYER_MIC",
         payload: { playerId, mute },
       });
-      
+
       // Optimistically update UI - server will confirm
       setHostMutedPlayers((prev) => {
         const newSet = new Set(prev);
@@ -369,7 +371,7 @@ export function useVoiceChat({
         return newSet;
       });
     },
-    [isHost, sendMessage]
+    [isHost, sendMessage],
   );
 
   // Register WebSocket handlers for WebRTC signaling
@@ -421,7 +423,7 @@ export function useVoiceChat({
             if (audioTrack) {
               audioTrack.enabled = !mute; // Disable track if muted by host
               setIsMuted(mute);
-              
+
               // Show toast notification
               if (mute) {
                 toast.warning("Host has muted your microphone");
@@ -446,7 +448,7 @@ export function useVoiceChat({
             navigate("/");
           }
         }
-      }
+      },
     );
 
     return () => {
@@ -473,7 +475,7 @@ export function useVoiceChat({
 
     const currentPeerIds = new Set(peerConnectionsRef.current.keys());
     const activePlayers = players.filter(
-      (p) => p.id !== localPlayerId && !p.isBot && p.isConnected
+      (p) => p.id !== localPlayerId && !p.isBot && p.isConnected,
     );
 
     // Create connections for new players

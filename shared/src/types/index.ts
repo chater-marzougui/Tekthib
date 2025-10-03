@@ -17,14 +17,21 @@ export interface Card {
   deckNumber: 1 | 2; // For tracking double deck
 }
 
+export interface DisplayGameCard extends Card {
+  selected: boolean;
+}
+
 export interface Player {
   id: string;
   name: string;
-  hand: Card[];
-  handCount?: string;
+  handCount?: number;
   isConnected: boolean;
   isReady: boolean;
   isBot?: boolean;
+}
+
+export interface PlayerWithHand extends Player {
+  hand: Card[];
 }
 
 

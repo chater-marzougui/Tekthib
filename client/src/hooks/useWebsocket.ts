@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import type { WSMessage } from "../types";
+import type { WSMessage } from "shared";
 
 const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:3001";
 
@@ -8,10 +8,12 @@ export function useWebSocket() {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | undefined>(undefined);
   const messageHandlersRef = useRef<Map<string, (message: WSMessage) => void>>(
-    new Map()
+    new Map(),
   );
   // Use ref to avoid stale closure issues
-  const storedIdRef = useRef<string | null>(localStorage.getItem("clientId") || null);
+  const storedIdRef = useRef<string | null>(
+    localStorage.getItem("clientId") || null,
+  );
   const isConnectedRef = useRef<boolean>(false);
 
   const connect = useCallback(() => {
@@ -30,7 +32,7 @@ export function useWebSocket() {
           JSON.stringify({
             type: "CONNECT",
             payload: { clientId: currentStoredId },
-          })
+          }),
         );
       }
     };
@@ -40,7 +42,11 @@ export function useWebSocket() {
         const message: WSMessage = JSON.parse(event.data);
         setLastMessage(message);
 
-        if ((message.type === "ROOM_JOINED" || message.type === "CONNECTED") && message.payload?.clientId && !storedIdRef.current) {
+        if (
+          (message.type === "ROOM_JOINED" || message.type === "CONNECTED") &&
+          message.payload?.clientId &&
+          !storedIdRef.current
+        ) {
           localStorage.setItem("clientId", message.payload.clientId);
           storedIdRef.current = message.payload.clientId;
         }
@@ -109,7 +115,7 @@ export function useWebSocket() {
         messageHandlersRef.current.delete(id);
       };
     },
-    []
+    [],
   );
 
   useEffect(() => {

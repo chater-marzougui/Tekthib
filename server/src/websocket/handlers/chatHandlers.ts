@@ -1,5 +1,5 @@
 import { WebSocket } from 'ws';
-import { WSMessage, ChatMessagePayload } from '../../types';
+import { WSMessage, ChatMessagePayload } from 'shared';
 import { broadcastToRoom, sendToClient } from '../index';
 
 interface ClientInfo {
@@ -11,7 +11,7 @@ interface ClientInfo {
 export function handleChatMessages(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
-  message: WSMessage
+  message: WSMessage,
 ): void {
   const clientInfo = clients.get(ws);
   if (!clientInfo) return;
@@ -24,14 +24,14 @@ export function handleChatMessages(
 function handleChatMessage(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
-  payload: ChatMessagePayload
+  payload: ChatMessagePayload,
 ): void {
   const clientInfo = clients.get(ws)!;
-  
+
   if (!clientInfo.roomId) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Not in a room' }
+      payload: { message: 'Not in a room' },
     });
     return;
   }
@@ -53,7 +53,7 @@ function handleChatMessage(
       playerId: clientInfo.id,
       playerName: clientInfo.name || 'Unknown',
       message: sanitizedMessage,
-      timestamp: Date.now()
-    }
+      timestamp: Date.now(),
+    },
   });
 }

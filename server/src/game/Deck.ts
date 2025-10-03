@@ -18,7 +18,7 @@ export class Deck {
             id: `${suit}-${rank}-${deckNum}`,
             suit,
             rank,
-            deckNumber: deckNum as 1 | 2
+            deckNumber: deckNum as 1 | 2,
           });
         }
       }
@@ -30,7 +30,7 @@ export class Deck {
         id: `joker-${i}`,
         suit: 'joker',
         rank: 'Joker',
-        deckNumber: i <= 2 ? 1 : 2
+        deckNumber: i <= 2 ? 1 : 2,
       });
     }
 
@@ -48,7 +48,7 @@ export class Deck {
   distributeCards(numPlayers: number): Card[][] {
     this.shuffle();
     const hands: Card[][] = Array.from({ length: numPlayers }, () => []);
-    
+
     // Distribute cards evenly
     this.cards.forEach((card, index) => {
       hands[index % numPlayers].push(card);

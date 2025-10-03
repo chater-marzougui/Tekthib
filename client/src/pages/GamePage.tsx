@@ -1,28 +1,28 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useWebSocketContext } from '@/context/WebSocketContext';
-import { VoiceChatProvider } from '@/context/VoiceChatContext';
-import GameBoard from '../components/game/GameBoard';
-import PlayerHand from '../components/game/PlayerHand';
-import PlayerList from '../components/game/PlayerList';
-import ChatBox from '../components/chat/ChatBox';
-import { toast } from 'sonner';
-import type { Card as GameCard, GameState as ServerGameState, Rank, Player } from '@/types';
-import VoiceChat from '@/components/chat/VoiceChat';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useWebSocketContext } from "@/context/WebSocketContext";
+import { VoiceChatProvider } from "@/context/VoiceChatContext";
+import GameBoard from "../components/game/GameBoard";
+import PlayerHand from "../components/game/PlayerHand";
+import PlayerList from "../components/game/PlayerList";
+import ChatBox from "../components/chat/ChatBox";
+import { toast } from "sonner";
+import type { Card as GameCard, Rank, Player, DisplayGameCard } from "shared";
+import type { GameState as ServerGameState } from "./../types";
+import VoiceChat from "@/components/chat/VoiceChat";
 
-interface GamePlayer {
-  id: string;
-  name: string;
-  cardCount: number;
+interface GamePlayer extends Player {
   isCurrentTurn: boolean;
-  isBot?: boolean;
-}
-
-interface DisplayGameCard extends GameCard {
-  selected: boolean;
 }
 
 interface LastPlay {
@@ -44,17 +44,17 @@ export default function GamePage() {
   const navigate = useNavigate();
   const { roomId } = useParams<{ roomId: string }>();
   const { sendMessage, registerHandler, isConnected } = useWebSocketContext();
-  
+
   const [players, setPlayers] = useState<GamePlayer[]>([]);
   const [playerHand, setPlayerHand] = useState<DisplayGameCard[]>([]);
   const [gameState, setGameState] = useState<ServerGameState | null>(null);
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [systemMessages, setSystemMessages] = useState<SystemMessage[]>([]);
-  
-  const playerName = localStorage.getItem('playerName') || 'Anonymous';
-  const playerId = localStorage.getItem('clientId') || '';
-  
+
+  const playerName = localStorage.getItem("playerName") || "Anonymous";
+  const playerId = localStorage.getItem("clientId") || "";
+
   const [lastPlay, setLastPlay] = useState<LastPlay | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isMyTurn, setIsMyTurn] = useState(false);
@@ -66,7 +66,7 @@ export default function GamePage() {
   }>({
     open: false,
     winners: [],
-    loser: '',
+    loser: "",
   });
 
   // Request initial game state when component mounts
@@ -74,18 +74,18 @@ export default function GamePage() {
     console.log(roomId, playerId);
     if (isConnected && roomId && playerId) {
       // Request current game state from server
-      console.log('Requesting initial game state for room:', roomId);
+      console.log("Requesting initial game state for room:", roomId);
       sendMessage({
-        type: 'GET_GAME_STATE',
+        type: "GET_GAME_STATE",
         payload: {
           roomCode: roomId,
-          playerId
-        }
+          playerId,
+        },
       });
     } else if (isConnected && roomId && !playerId) {
       // If no playerId, user probably navigated directly without going through room
-      console.error('No player ID found. Please rejoin from home page.');
-      setError('Session expired. Please return to home and rejoin the game.');
+      console.error("No player ID found. Please rejoin from home page.");
+      setError("Session expired. Please return to home and rejoin the game.");
       setIsLoading(false);
     }
   }, [isConnected, roomId, playerId, sendMessage]);
@@ -93,50 +93,65 @@ export default function GamePage() {
   // Initialize game data and setup WebSocket handlers
   useEffect(() => {
     // Register handler for initial game state response
-    const unregisterInitialState = registerHandler('initial-game-state', (message) => {
-      if (message.type === 'INITIAL_GAME_STATE') {
-        console.log('Received initial game state:', message.payload);
-        const { hand, gameState: initialGameState } = message.payload;
-        
-        if (initialGameState) {
-          setGameState(initialGameState);
-          setIsMyTurn(initialGameState.currentPlayerId === playerId);
+    const unregisterInitialState = registerHandler(
+      "initial-game-state",
+      (message) => {
+        if (message.type === "INITIAL_GAME_STATE") {
+          console.log("Received initial game state:", message.payload);
+          const { hand, gameState: initialGameState } = message.payload;
+
+          if (initialGameState) {
+            setGameState(initialGameState);
+            setIsMyTurn(initialGameState.currentPlayerId === playerId);
+          }
+
+          if (hand) {
+            setPlayerHand(
+              hand.map((card: GameCard) => ({ ...card, selected: false })),
+            );
+          }
+
+          setIsLoading(false);
         }
-        
-        if (hand) {
-          setPlayerHand(hand.map((card: GameCard) => ({ ...card, selected: false })));
-        }
-        
-        setIsLoading(false);
-      }
-    });
+      },
+    );
 
     // Register WebSocket handlers
-    const unregisterGameStateUpdate = registerHandler('game-state-update', (message) => {
-      if (message.type === 'GAME_STATE_UPDATE') {
-        const { hand, gameState: newGameState } = message.payload;
-        
-        if (hand) {
-          setPlayerHand(hand.map((card: GameCard) => ({ ...card, selected: false })));
-        }
-        
-        if (newGameState) {
-          setGameState(newGameState);
-          setIsMyTurn(newGameState.currentPlayerId === playerId);
-        }
-      }
-    });
+    const unregisterGameStateUpdate = registerHandler(
+      "game-state-update",
+      (message) => {
+        if (message.type === "GAME_STATE_UPDATE") {
+          const { hand, gameState: newGameState } = message.payload;
 
-    const unregisterCardsPlayed = registerHandler('cards-played', (message) => {
-      if (message.type === 'CARDS_PLAYED') {
-        const { playerName: pName, cardCount, claimedRank, gameState: newGameState } = message.payload;
-        
+          if (hand) {
+            setPlayerHand(
+              hand.map((card: GameCard) => ({ ...card, selected: false })),
+            );
+          }
+
+          if (newGameState) {
+            setGameState(newGameState);
+            setIsMyTurn(newGameState.currentPlayerId === playerId);
+          }
+        }
+      },
+    );
+
+    const unregisterCardsPlayed = registerHandler("cards-played", (message) => {
+      if (message.type === "CARDS_PLAYED") {
+        const {
+          playerName: pName,
+          cardCount,
+          claimedRank,
+          gameState: newGameState,
+        } = message.payload;
+
         setLastPlay({
           player: pName,
           cardCount,
-          claimedRank
+          claimedRank,
         });
-        
+
         if (newGameState) {
           setGameState(newGameState);
           setIsMyTurn(newGameState.currentPlayerId === playerId);
@@ -145,86 +160,100 @@ export default function GamePage() {
       }
     });
 
-    const unregisterChallengeResult = registerHandler('challenge-result', (message) => {
-      if (message.type === 'CHALLENGE_RESULT') {
-        const { challengerName, wasLying, playerName: lastPlayerName, gameState: newGameState } = message.payload;
-        let toastType = 'info';
-        
-        // Don't reveal cards, just show who was right/wrong
-        let resultMessage = '';
-        if (wasLying && lastPlayerName === playerName) {
-          resultMessage = `You were caught lying! Learn to play!.`;
-          toastType = 'error';
-        } else if (wasLying && challengerName === playerName) {
-          resultMessage = `You were right! ${lastPlayerName} was lying.`;
-          toastType = 'success';
-        } else if (!wasLying && lastPlayerName === playerName) {
-          resultMessage = `You were telling the truth! Well played, ${challengerName} was wrong.`;
-          toastType = 'success';
-        } else if (!wasLying && challengerName === playerName) {
-          resultMessage = `You were wrong! ${lastPlayerName} was telling the truth.`;
-          toastType = 'error';
-        } else {
-          resultMessage = wasLying
-            ? `${challengerName} was right! ${lastPlayerName} was lying.`
-            : `${challengerName} was wrong! ${lastPlayerName} was telling the truth.`;
-        }
-        
-        // Show toast notification
-        if (toastType === 'error') {
-          toast.error(resultMessage);
-        } else if (toastType === 'success') {
-          toast.success(resultMessage);
-        } else {
-          toast(resultMessage);
-        }
+    const unregisterChallengeResult = registerHandler(
+      "challenge-result",
+      (message) => {
+        if (message.type === "CHALLENGE_RESULT") {
+          const {
+            challengerName,
+            wasLying,
+            playerName: lastPlayerName,
+            gameState: newGameState,
+          } = message.payload;
+          let toastType = "info";
 
-        // Add system message to chat
-        const systemMessage: SystemMessage = {
-          id: `system-${Date.now()}${Math.random()}`,
-          playerId: 'system',
-          playerName: 'System',
-          message: resultMessage,
-          timestamp: Date.now(),
-          isSystem: true,
-        };
-        setSystemMessages((prev) => [...prev, systemMessage]);
-        
-        setLastPlay(null);
-        setCanChallenge(false);
-        
-        if (newGameState) {
-          setGameState(newGameState);
-          setIsMyTurn(newGameState.currentPlayerId === playerId);
-        }
-      }
-    });
+          // Don't reveal cards, just show who was right/wrong
+          let resultMessage = "";
+          if (wasLying && lastPlayerName === playerName) {
+            resultMessage = `You were caught lying! Learn to play!.`;
+            toastType = "error";
+          } else if (wasLying && challengerName === playerName) {
+            resultMessage = `You were right! ${lastPlayerName} was lying.`;
+            toastType = "success";
+          } else if (!wasLying && lastPlayerName === playerName) {
+            resultMessage = `You were telling the truth! Well played, ${challengerName} was wrong.`;
+            toastType = "success";
+          } else if (!wasLying && challengerName === playerName) {
+            resultMessage = `You were wrong! ${lastPlayerName} was telling the truth.`;
+            toastType = "error";
+          } else {
+            resultMessage = wasLying
+              ? `${challengerName} was right! ${lastPlayerName} was lying.`
+              : `${challengerName} was wrong! ${lastPlayerName} was telling the truth.`;
+          }
 
-    const unregisterGameEnded = registerHandler('game-ended', (message) => {
-      if (message.type === 'GAME_ENDED') {
+          // Show toast notification
+          if (toastType === "error") {
+            toast.error(resultMessage);
+          } else if (toastType === "success") {
+            toast.success(resultMessage);
+          } else {
+            toast(resultMessage);
+          }
+
+          // Add system message to chat
+          const systemMessage: SystemMessage = {
+            id: `system-${Date.now()}${Math.random()}`,
+            playerId: "system",
+            playerName: "System",
+            message: resultMessage,
+            timestamp: Date.now(),
+            isSystem: true,
+          };
+          setSystemMessages((prev) => [...prev, systemMessage]);
+
+          setLastPlay(null);
+          setCanChallenge(false);
+
+          if (newGameState) {
+            setGameState(newGameState);
+            setIsMyTurn(newGameState.currentPlayerId === playerId);
+          }
+        }
+      },
+    );
+
+    const unregisterGameEnded = registerHandler("game-ended", (message) => {
+      if (message.type === "GAME_ENDED") {
         const { winners, loser, gameState: finalState } = message.payload;
-        
-        const winnerNames = winners.map((id: string) => 
-          finalState?.players?.find((p: any) => p.id === id)?.name || 'Unknown'
-        ).join(', ');
 
-        const loserName = finalState?.players?.find((p: any) => p.id === loser)?.name || 'Unknown';
+        const winnerNames = winners
+          .map(
+            (id: string) =>
+              finalState?.players?.find((p: Player) => p.id === id)?.name ||
+              "Unknown",
+          )
+          .join(", ");
+
+        const loserName =
+          finalState?.players?.find((p: Player) => p.id === loser)?.name ||
+          "Unknown";
 
         // Show dialog instead of alert
         setGameEndedDialog({
           open: true,
-          winners: winnerNames.split(', '),
+          winners: winnerNames.split(", "),
           loser: loserName,
         });
 
         // Also show toast
         toast.success(`Game Over! Winners: ${winnerNames}`);
-        
+
         // Add system message to chat
         const systemMessage: SystemMessage = {
           id: `system-${Date.now()}`,
-          playerId: 'system',
-          playerName: 'System',
+          playerId: "system",
+          playerName: "System",
           message: `Game Over! Winners: ${winnerNames}. Loser: ${loserName}`,
           timestamp: Date.now(),
           isSystem: true,
@@ -233,8 +262,8 @@ export default function GamePage() {
       }
     });
 
-    const unregisterError = registerHandler('error', (message) => {
-      if (message.type === 'ERROR') {
+    const unregisterError = registerHandler("error", (message) => {
+      if (message.type === "ERROR") {
         setError(message.payload.message);
         setTimeout(() => setError(null), 3000);
       }
@@ -262,66 +291,72 @@ export default function GamePage() {
     : [];
 
   // Determine if current player is host (first player in the list)
-  const isHost = !!(gameState && gameState.players.length > 0 && gameState.players[0].id === playerId);
+  const isHost = !!(
+    gameState &&
+    gameState.players.length > 0 &&
+    gameState.players[0].id === playerId
+  );
 
   // Update players list when game state changes
   useEffect(() => {
     if (!gameState) return;
-    
+
     const updatedPlayers: GamePlayer[] = gameState.playerOrder.map((id) => {
-      const playerData = gameState.players.find(p => p.id === id);
+      const playerData = gameState.players.find((p) => p.id === id);
       return {
         id,
-        name: playerData?.name || 'Unknown',
+        name: playerData?.name || "Unknown",
         cardCount: gameState.playerHandCounts[id] || 0,
         isCurrentTurn: id === gameState.currentPlayerId,
-        isBot: playerData?.isBot
+        isBot: playerData?.isBot,
+        isConnected: playerData?.isConnected || false,
+        isReady: playerData?.isReady || false,
       };
     });
-    
+
     setPlayers(updatedPlayers);
   }, [gameState]);
 
   const handleCardSelect = (cardId: string) => {
-    setPlayerHand(prev => prev.map(card => 
-      card.id === cardId 
-        ? { ...card, selected: !card.selected }
-        : card
-    ));
-    
-    setSelectedCards(prev => 
-      prev.includes(cardId) 
-        ? prev.filter(id => id !== cardId)
-        : [...prev, cardId]
+    setPlayerHand((prev) =>
+      prev.map((card) =>
+        card.id === cardId ? { ...card, selected: !card.selected } : card,
+      ),
+    );
+
+    setSelectedCards((prev) =>
+      prev.includes(cardId)
+        ? prev.filter((id) => id !== cardId)
+        : [...prev, cardId],
     );
   };
 
   const handlePlayCards = (selectedCardIds: string[], claimedRank: string) => {
     if (selectedCardIds.length === 0 || !claimedRank) return;
-    
+
     sendMessage({
-      type: 'PLAY_CARDS',
+      type: "PLAY_CARDS",
       payload: {
         cardIds: selectedCardIds,
-        claimedRank: claimedRank as Rank
-      }
+        claimedRank: claimedRank as Rank,
+      },
     });
-    
+
     // Clear selection
     setSelectedCards([]);
   };
 
   const handleChallenge = () => {
     sendMessage({
-      type: 'CHALLENGE',
+      type: "CHALLENGE",
       payload: {
-        challengerId: playerId
-      }
+        challengerId: playerId,
+      },
     });
   };
 
   const handleLeaveGame = () => {
-    navigate('/');
+    navigate("/");
   };
 
   // Show loading state while fetching game data
@@ -334,7 +369,9 @@ export default function GamePage() {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
               <p className="text-gray-600">Loading game...</p>
               {!isConnected && (
-                <p className="text-yellow-600 text-sm">Connecting to server...</p>
+                <p className="text-yellow-600 text-sm">
+                  Connecting to server...
+                </p>
               )}
             </div>
           </CardContent>
@@ -349,15 +386,17 @@ export default function GamePage() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">🃏 Tekthib Game</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              🃏 Tekthib Game
+            </h1>
             <p className="text-gray-600">
               {isMyTurn ? "Your turn!" : "Waiting for other players..."}
             </p>
-            {error && (
-              <p className="text-red-600 text-sm mt-1">{error}</p>
-            )}
+            {error && <p className="text-red-600 text-sm mt-1">{error}</p>}
             {!isConnected && (
-              <p className="text-yellow-600 text-sm mt-1">Connecting to server...</p>
+              <p className="text-yellow-600 text-sm mt-1">
+                Connecting to server...
+              </p>
             )}
           </div>
           <Button variant="outline" onClick={handleLeaveGame}>
@@ -368,15 +407,15 @@ export default function GamePage() {
         <div className="grid lg:grid-cols-4 gap-6">
           {/* Game Board - Center Area */}
           <div className="lg:col-span-3 space-y-6">
-            <GameBoard 
+            <GameBoard
               lastPlay={lastPlay}
               pileCount={gameState.pileCount}
-              currentPlayer={players.find(p => p.isCurrentTurn)?.name || ''}
+              currentPlayer={players.find((p) => p.isCurrentTurn)?.name || ""}
               canChallenge={canChallenge}
               onChallenge={handleChallenge}
             />
-            
-            <PlayerHand 
+
+            <PlayerHand
               cards={playerHand}
               lastPlay={lastPlay}
               onCardSelect={handleCardSelect}
@@ -388,23 +427,17 @@ export default function GamePage() {
 
           {/* Players List and Game Info */}
           <div className="space-y-4">
-            <PlayerList 
-              players={players}
-              currentPlayerName={playerName}
-            />
+            <PlayerList players={players} currentPlayerName={playerName} />
 
             {/* Voice Chat */}
             {roomId && playerId && (
-              <VoiceChat
-                players={playersForVoice}
-                localPlayerId={playerId}
-              />
+              <VoiceChat players={playersForVoice} localPlayerId={playerId} />
             )}
 
             {/* Chat Box */}
             {playerId && playerName && (
-              <ChatBox 
-                playerName={playerName} 
+              <ChatBox
+                playerName={playerName}
                 playerId={playerId}
                 systemMessages={systemMessages}
               />
@@ -428,12 +461,15 @@ export default function GamePage() {
       </div>
 
       {/* Game Ended Dialog */}
-      <Dialog open={gameEndedDialog.open} onOpenChange={(open) => {
-        setGameEndedDialog({ ...gameEndedDialog, open });
-        if (!open) {
-          navigate('/');
-        }
-      }}>
+      <Dialog
+        open={gameEndedDialog.open}
+        onOpenChange={(open) => {
+          setGameEndedDialog({ ...gameEndedDialog, open });
+          if (!open) {
+            navigate("/");
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>🎉 Game Over!</DialogTitle>
@@ -446,7 +482,9 @@ export default function GamePage() {
               <h3 className="font-semibold text-green-600 mb-2">🏆 Winners:</h3>
               <ul className="list-disc list-inside space-y-1">
                 {gameEndedDialog.winners.map((winner, idx) => (
-                  <li key={idx} className="text-lg">{winner}</li>
+                  <li key={idx} className="text-lg">
+                    {winner}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -456,10 +494,12 @@ export default function GamePage() {
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={() => {
-              setGameEndedDialog({ ...gameEndedDialog, open: false });
-              navigate('/');
-            }}>
+            <Button
+              onClick={() => {
+                setGameEndedDialog({ ...gameEndedDialog, open: false });
+                navigate("/");
+              }}
+            >
               Return to Home
             </Button>
           </DialogFooter>

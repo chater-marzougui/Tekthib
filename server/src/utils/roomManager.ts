@@ -1,4 +1,5 @@
-import { Room, Player } from '../types';
+import { Room } from '../types';
+import { PlayerWithHand } from 'shared';
 import { GameEngine } from '../game/GameEngine';
 
 class RoomManager {
@@ -12,12 +13,12 @@ class RoomManager {
     for (let i = 0; i < 6; i++) {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    
+
     // Ensure uniqueness
     if (this.getRoomByCode(code)) {
       return this.generateRoomCode();
     }
-    
+
     return code;
   }
 
@@ -25,12 +26,12 @@ class RoomManager {
     const roomId = `room_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const code = this.generateRoomCode();
 
-    const host: Player = {
+    const host: PlayerWithHand = {
       id: hostId,
       name: hostName,
       hand: [],
       isConnected: true,
-      isReady: false
+      isReady: false,
     };
 
     const room: Room = {
@@ -40,7 +41,7 @@ class RoomManager {
       players: new Map([[hostId, host]]),
       gameState: null,
       createdAt: new Date(),
-      maxPlayers
+      maxPlayers,
     };
 
     this.rooms.set(roomId, room);
@@ -48,20 +49,25 @@ class RoomManager {
   }
 
   getRoomByCode(code: string): Room | undefined {
-    return Array.from(this.rooms.values()).find(room => room.code === code);
+    return Array.from(this.rooms.values()).find((room) => room.code === code);
   }
 
   getRoom(roomId: string): Room | undefined {
     return this.rooms.get(roomId);
   }
 
-  addPlayerToRoom(roomId: string, playerId: string, playerName: string, isBot: boolean = false): {
+  addPlayerToRoom(
+    roomId: string,
+    playerId: string,
+    playerName: string,
+    isBot: boolean = false,
+  ): {
     success: boolean;
     error?: string;
     room?: Room;
   } {
     const room = this.rooms.get(roomId);
-    
+
     if (!room) {
       return { success: false, error: 'Room not found' };
     }
@@ -74,40 +80,46 @@ class RoomManager {
       return { success: false, error: 'Game already in progress' };
     }
 
-    const player: Player = {
+    const player: PlayerWithHand = {
       id: playerId,
       name: playerName,
       hand: [],
       isConnected: true,
       isReady: isBot, // Bots are always ready
-      isBot
+      isBot,
     };
 
     room.players.set(playerId, player);
     return { success: true, room };
   }
 
-  addBotsToRoom(roomId: string, count: number): {
+  addBotsToRoom(
+    roomId: string,
+    count: number,
+  ): {
     success: boolean;
     error?: string;
     botIds?: string[];
   } {
     const room = this.rooms.get(roomId);
-    
+
     if (!room) {
       return { success: false, error: 'Room not found' };
     }
 
     const availableSlots = room.maxPlayers - room.players.size;
     if (count > availableSlots) {
-      return { success: false, error: `Only ${availableSlots} slots available` };
+      return {
+        success: false,
+        error: `Only ${availableSlots} slots available`,
+      };
     }
 
     const botIds: string[] = [];
     for (let i = 0; i < count; i++) {
       const botId = `bot_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       const botName = `Bot ${room.players.size + 1}`;
-      
+
       const result = this.addPlayerToRoom(roomId, botId, botName, true);
       if (result.success) {
         botIds.push(botId);
@@ -117,12 +129,15 @@ class RoomManager {
     return { success: true, botIds };
   }
 
-  removePlayerFromRoom(roomId: string, playerId: string): {
+  removePlayerFromRoom(
+    roomId: string,
+    playerId: string,
+  ): {
     success: boolean;
     roomDeleted: boolean;
   } {
     const room = this.rooms.get(roomId);
-    
+
     if (!room) {
       return { success: false, roomDeleted: false };
     }
@@ -161,7 +176,7 @@ class RoomManager {
     reason?: string;
   } {
     const room = this.rooms.get(roomId);
-    
+
     if (!room) {
       return { canStart: false, reason: 'Room not found' };
     }
@@ -170,7 +185,7 @@ class RoomManager {
       return { canStart: false, reason: 'Need at least 3 players' };
     }
 
-    const allReady = Array.from(room.players.values()).every(p => p.isReady);
+    const allReady = Array.from(room.players.values()).every((p) => p.isReady);
     if (!allReady) {
       return { canStart: false, reason: 'Not all players are ready' };
     }
@@ -207,7 +222,7 @@ class RoomManager {
 
     for (const [roomId, room] of this.rooms.entries()) {
       const age = now - room.createdAt.getTime();
-      
+
       // Delete old inactive rooms
       if (age > maxAge) {
         this.rooms.delete(roomId);
@@ -217,10 +232,10 @@ class RoomManager {
   }
 
   getSystemState() {
-    const rooms = Array.from(this.rooms.values()).map(room => {
+    const rooms = Array.from(this.rooms.values()).map((room) => {
       const players = Array.from(room.players.values());
       const gameEngine = this.gameEngines.get(room.id);
-      
+
       return {
         id: room.id,
         code: room.code,
@@ -228,19 +243,21 @@ class RoomManager {
         maxPlayers: room.maxPlayers,
         createdAt: room.createdAt,
         playerCount: players.length,
-        players: players.map(p => ({
+        players: players.map((p) => ({
           id: p.id,
           name: p.name,
           isReady: p.isReady,
           isConnected: p.isConnected,
           handCount: p.hand.length,
         })),
-        gameState: gameEngine ? {
-          phase: gameEngine.getGameState().phase,
-          currentPlayerIndex: gameEngine.getGameState().currentPlayerIndex,
-          pileCount: gameEngine.getGameState().pile.length,
-          currentRank: gameEngine.getGameState().currentRank,
-        } : null,
+        gameState: gameEngine
+          ? {
+              phase: gameEngine.getGameState().phase,
+              currentPlayerIndex: gameEngine.getGameState().currentPlayerIndex,
+              pileCount: gameEngine.getGameState().pile.length,
+              currentRank: gameEngine.getGameState().currentRank,
+            }
+          : null,
       };
     });
 
@@ -248,7 +265,7 @@ class RoomManager {
       totalRooms: this.rooms.size,
       totalPlayers: Array.from(this.rooms.values()).reduce(
         (sum, room) => sum + room.players.size,
-        0
+        0,
       ),
       rooms,
     };
@@ -258,6 +275,9 @@ class RoomManager {
 export const roomManager = new RoomManager();
 
 // Cleanup every 30 minutes
-setInterval(() => {
-  roomManager.cleanup();
-}, 30 * 60 * 1000);
+setInterval(
+  () => {
+    roomManager.cleanup();
+  },
+  30 * 60 * 1000,
+);

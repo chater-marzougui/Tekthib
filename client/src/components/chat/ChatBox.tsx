@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useWebSocketContext } from "@/context/WebSocketContext";
-import type { WSMessage } from "@/types";
+import type { WSMessage } from "shared";
 import { SendHorizonal } from "lucide-react";
 
 interface ChatMessage {
@@ -24,9 +24,17 @@ interface ChatBoxProps {
 
 function isDuplicateMessage(
   messages: ChatMessage[],
-  newMessage: ChatMessage
+  newMessage: ChatMessage,
 ): boolean {
-  return messages.some((msg) => msg.id === newMessage.id) || messages.some((msg) => msg.timestamp === newMessage.timestamp && msg.playerId === newMessage.playerId && msg.message === newMessage.message);
+  return (
+    messages.some((msg) => msg.id === newMessage.id) ||
+    messages.some(
+      (msg) =>
+        msg.timestamp === newMessage.timestamp &&
+        msg.playerId === newMessage.playerId &&
+        msg.message === newMessage.message,
+    )
+  );
 }
 
 export default function ChatBox({
@@ -41,7 +49,7 @@ export default function ChatBox({
 
   // Merge chat messages and system messages
   const allMessages = [...messages, ...systemMessages].sort(
-    (a, b) => a.timestamp - b.timestamp
+    (a, b) => a.timestamp - b.timestamp,
   );
 
   const messageHandlerRef = useRef<(message: WSMessage) => void>(null);
@@ -62,11 +70,8 @@ export default function ChatBox({
           if (isDuplicate) {
             return prev;
           }
-          console.log("Received chat message:", chatMessage);
-          console.log("Total messages:", messages); // +1 because state update is async
           return [...prev, chatMessage];
         });
-
       }
     };
   }, []);

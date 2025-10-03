@@ -1,4 +1,4 @@
-import { Card, playableRanks, Player, Rank } from 'shared';
+import { Card, playableRanks, Player, PlayerWithHand, Rank } from 'shared';
 import { GameEngine } from './GameEngine';
 
 export class BotPlayer {
@@ -51,7 +51,7 @@ export class BotPlayer {
    * @returns object with cardIds to play and claimed rank
    */
   decidePlay(
-    botPlayer: Player,
+    botPlayer: PlayerWithHand,
     currentRank: Rank | null,
   ): {
     cardIds: string[];
@@ -162,7 +162,10 @@ export class BotPlayer {
       const jokers = hand.filter((c) => c.rank === 'Joker');
       const shouldUseJokers = Math.random() < 0.3;
       const allCardsToPlay = shouldUseJokers
-        ? [...cardsOfBestRank, ...jokers.slice(0, Math.floor(Math.random() * jokers.length) + 1)]
+        ? [
+            ...cardsOfBestRank,
+            ...jokers.slice(0, Math.floor(Math.random() * jokers.length) + 1),
+          ]
         : cardsOfBestRank;
 
       // If no cards to play, must play at least something

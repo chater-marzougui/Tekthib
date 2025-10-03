@@ -1,9 +1,10 @@
-import { Card, Rank, Player, GamePhase } from 'shared';
+import { PlayerWithHand, Card, Rank, GamePhase } from 'shared';
+
 export interface Room {
   id: string;
   code: string;
   hostId: string;
-  players: Map<string, Player>;
+  players: Map<string, PlayerWithHand>;
   gameState: GameState | null;
   createdAt: Date;
   maxPlayers: number;

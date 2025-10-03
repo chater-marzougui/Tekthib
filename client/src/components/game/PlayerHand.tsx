@@ -2,16 +2,15 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import RenderOneHand from "./RenderCard";
-
-interface GameCard {
-  id: string;
-  suit: "hearts" | "diamonds" | "clubs" | "spades" | "joker";
-  rank: string;
-  selected: boolean;
-}
+import {
+  RankTypes,
+  playableRanks,
+  type Rank,
+  type DisplayGameCard,
+} from "shared";
 
 interface PlayerHandProps {
-  cards: GameCard[];
+  cards: DisplayGameCard[];
   onCardSelect: (cardId: string) => void;
   onPlayCards: (selectedCards: string[], claimedRank: string) => void;
   isMyTurn: boolean;
@@ -19,7 +18,7 @@ interface PlayerHandProps {
   selectedCards: string[];
 }
 interface PlayerHandProps {
-  cards: GameCard[];
+  cards: DisplayGameCard[];
   onCardSelect: (cardId: string) => void;
   onPlayCards: (selectedCards: string[], claimedRank: string) => void;
   isMyTurn: boolean;
@@ -36,7 +35,7 @@ export default function PlayerHand({
   selectedCards,
 }: Readonly<PlayerHandProps>) {
   const [claimedRank, setClaimedRank] = useState(
-    lastPlay ? lastPlay.claimedRank : ""
+    lastPlay ? lastPlay.claimedRank : "",
   );
 
   const handlePlayCards = () => {
@@ -46,26 +45,9 @@ export default function PlayerHand({
     }
   };
 
-  const selectableRanks = [
-    "A",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "J",
-    "Q",
-    "K",
-  ];
-
-  const rankOrder = [...selectableRanks, "Joker"];
   const sortedCards = [...cards].sort((a, b) => {
-    const aIndex = rankOrder.indexOf(a.rank);
-    const bIndex = rankOrder.indexOf(b.rank);
+    const aIndex = RankTypes.indexOf(a.rank as Rank);
+    const bIndex = RankTypes.indexOf(b.rank as Rank);
     return aIndex - bIndex;
   });
 
@@ -132,8 +114,8 @@ export default function PlayerHand({
                     handIndex * 14,
                     isMyTurn,
                     onCardSelect,
-                    selectedCards
-                  )
+                    selectedCards,
+                  ),
                 )}
               </div>
             </div>
@@ -153,7 +135,7 @@ export default function PlayerHand({
                     Claim this rank:
                   </label>
                   <div className="grid grid-cols-13 gap-2">
-                    {selectableRanks.map((rank) => (
+                    {playableRanks.map((rank) => (
                       <button
                         key={rank}
                         onClick={() => setClaimedRank(rank)}
@@ -231,5 +213,3 @@ export default function PlayerHand({
     </div>
   );
 }
-
-// Demo component was here - removed to fix build warnings

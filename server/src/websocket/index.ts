@@ -1,6 +1,6 @@
 import { Server } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
-import { WSMessage } from '../types';
+import { WSMessage } from 'shared';
 import { handleGameMessages } from './handlers/gameHandlers';
 import { handleWebRTCMessages } from './handlers/webrtcHandlers';
 import { handleRoomMessages } from './handlers/roomHandlers';
@@ -44,14 +44,14 @@ export function setupWebSocket(server: Server): WebSocketServer {
           const player = room.players.get(clientInfo.id);
           if (player) {
             player.isConnected = false;
-            
+
             // Notify other players
             broadcastToRoom(clients, clientInfo.roomId, {
               type: 'GAME_STATE_UPDATE',
               payload: {
                 playerId: clientInfo.id,
-                isConnected: false
-              }
+                isConnected: false,
+              },
             });
           }
         }
@@ -151,9 +151,8 @@ export function sendToPlayer(
 
 function handleConnect(ws: WebSocket, message: WSMessage): void {
   const payload = message.payload as { clientId?: string };
-  const clientInfo = clients.get(ws);
   let clientId = payload.clientId;
-  
+
   if (!clientId) {
     // New client
     clientId = `client_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
@@ -162,7 +161,7 @@ function handleConnect(ws: WebSocket, message: WSMessage): void {
     // Reconnecting client - check if they were in a room
     let existingRoom: string | undefined;
     let existingName: string | undefined;
-    
+
     // Find if this client was in a room
     for (const room of roomManager.getAllRooms()) {
       const player = room.players.get(clientId);
@@ -174,14 +173,14 @@ function handleConnect(ws: WebSocket, message: WSMessage): void {
         break;
       }
     }
-    
-    clients.set(ws, { 
+
+    clients.set(ws, {
       id: clientId,
       roomId: existingRoom,
-      name: existingName
+      name: existingName,
     });
   }
-  
+
   console.log(`Client connected with ID: ${clientId}`);
 
   sendToClient(ws, {

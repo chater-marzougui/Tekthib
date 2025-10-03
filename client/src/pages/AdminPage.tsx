@@ -1,35 +1,22 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from 'sonner';
+import { toast } from "sonner";
+import type { Room as BaseRoom, GameState } from "@/types";
 
-interface Player {
-  id: string;
-  name: string;
-  isReady: boolean;
-  isConnected: boolean;
-  handCount: number;
-}
-
-interface GameState {
-  phase: string;
-  currentPlayerIndex: number;
-  pileCount: number;
-  currentRank: string | null;
-}
-
-interface Room {
-  id: string;
-  code: string;
-  hostId: string;
-  maxPlayers: number;
-  createdAt: string;
-  playerCount: number;
-  players: Player[];
+interface Room extends BaseRoom {
   gameState: GameState | null;
+  playerCount: number;
+  createdAt: string;
 }
 
 interface SystemState {
@@ -40,7 +27,7 @@ interface SystemState {
 
 export default function AdminPage() {
   const navigate = useNavigate();
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [systemState, setSystemState] = useState<SystemState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,25 +37,25 @@ export default function AdminPage() {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/admin/system-state?password=${encodeURIComponent(pwd)}`
+        `${import.meta.env.VITE_API_URL}/api/admin/system-state?password=${encodeURIComponent(pwd)}`,
       );
-      
+
       if (response.status === 401) {
-        toast.error('Invalid admin password');
+        toast.error("Invalid admin password");
         setIsAuthenticated(false);
         return;
       }
 
       if (!response.ok) {
-        throw new Error('Failed to fetch system state');
+        throw new Error("Failed to fetch system state");
       }
 
       const data = await response.json();
       setSystemState(data);
       setIsAuthenticated(true);
     } catch (error) {
-      console.error('Error fetching system state:', error);
-      toast.error('Failed to fetch system state');
+      console.error("Error fetching system state:", error);
+      toast.error("Failed to fetch system state");
     } finally {
       setIsLoading(false);
     }
@@ -87,7 +74,7 @@ export default function AdminPage() {
       const interval = setInterval(() => {
         fetchSystemState(password);
       }, 5000);
-      
+
       return () => clearInterval(interval);
     }
   }, [isAuthenticated, autoRefresh, password]);
@@ -99,7 +86,9 @@ export default function AdminPage() {
         <Card className="w-96">
           <CardHeader>
             <CardTitle>🔐 Admin Login</CardTitle>
-            <CardDescription>Enter admin password to view system state</CardDescription>
+            <CardDescription>
+              Enter admin password to view system state
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -116,9 +105,13 @@ export default function AdminPage() {
               </div>
               <div className="flex gap-2">
                 <Button type="submit" className="flex-1" disabled={isLoading}>
-                  {isLoading ? 'Checking...' : 'Login'}
+                  {isLoading ? "Checking..." : "Login"}
                 </Button>
-                <Button type="button" variant="outline" onClick={() => navigate('/')}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate("/")}
+                >
                   Back
                 </Button>
               </div>
@@ -136,29 +129,31 @@ export default function AdminPage() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">🎮 System Admin Dashboard</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              🎮 System Admin Dashboard
+            </h1>
             <p className="text-gray-600">Real-time system state monitoring</p>
           </div>
           <div className="flex gap-2 items-center">
             <Button
               variant="outline"
               onClick={() => setAutoRefresh(!autoRefresh)}
-              className={autoRefresh ? 'bg-green-100' : ''}
+              className={autoRefresh ? "bg-green-100" : ""}
             >
-              {autoRefresh ? '🔄 Auto-refresh ON' : '⏸️ Auto-refresh OFF'}
+              {autoRefresh ? "🔄 Auto-refresh ON" : "⏸️ Auto-refresh OFF"}
             </Button>
             <Button
               onClick={() => fetchSystemState(password)}
               disabled={isLoading}
             >
-              {isLoading ? 'Refreshing...' : '🔄 Refresh'}
+              {isLoading ? "Refreshing..." : "🔄 Refresh"}
             </Button>
             <Button
               variant="outline"
               onClick={() => {
                 setIsAuthenticated(false);
-                setPassword('');
-                navigate('/');
+                setPassword("");
+                navigate("/");
               }}
             >
               Logout
@@ -195,14 +190,16 @@ export default function AdminPage() {
           <CardHeader>
             <CardTitle>Active Rooms</CardTitle>
             <CardDescription>
-              {systemState?.rooms.length === 0 
-                ? 'No active rooms' 
+              {systemState?.rooms.length === 0
+                ? "No active rooms"
                 : `${systemState?.rooms.length} room(s) active`}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {systemState?.rooms.length === 0 ? (
-              <p className="text-center text-gray-500 py-8">No rooms currently active</p>
+              <p className="text-center text-gray-500 py-8">
+                No rooms currently active
+              </p>
             ) : (
               <div className="space-y-4">
                 {systemState?.rooms.map((room) => (
@@ -210,7 +207,9 @@ export default function AdminPage() {
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div>
-                          <CardTitle className="text-lg">Room Code: {room.code}</CardTitle>
+                          <CardTitle className="text-lg">
+                            Room Code: {room.code}
+                          </CardTitle>
                           <CardDescription>
                             Created: {new Date(room.createdAt).toLocaleString()}
                           </CardDescription>
@@ -233,10 +232,30 @@ export default function AdminPage() {
                         <div className="bg-white p-3 rounded border">
                           <h4 className="font-semibold mb-2">Game State</h4>
                           <div className="grid grid-cols-2 gap-2 text-sm">
-                            <div>Phase: <span className="font-medium">{room.gameState.phase}</span></div>
-                            <div>Current Player: <span className="font-medium">Player {room.gameState.currentPlayerIndex + 1}</span></div>
-                            <div>Pile Count: <span className="font-medium">{room.gameState.pileCount}</span></div>
-                            <div>Current Rank: <span className="font-medium">{room.gameState.currentRank || 'None'}</span></div>
+                            <div>
+                              Phase:{" "}
+                              <span className="font-medium">
+                                {room.gameState.phase}
+                              </span>
+                            </div>
+                            <div>
+                              Current Player:{" "}
+                              <span className="font-medium">
+                                Player {room.gameState.currentPlayerIndex + 1}
+                              </span>
+                            </div>
+                            <div>
+                              Pile Count:{" "}
+                              <span className="font-medium">
+                                {room.gameState.pileCount}
+                              </span>
+                            </div>
+                            <div>
+                              Current Rank:{" "}
+                              <span className="font-medium">
+                                {room.gameState.currentRank || "None"}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -260,11 +279,25 @@ export default function AdminPage() {
                                 )}
                               </div>
                               <div className="flex items-center gap-2 text-xs">
-                                <span className={player.isConnected ? 'text-green-600' : 'text-red-600'}>
-                                  {player.isConnected ? '🟢 Online' : '🔴 Offline'}
+                                <span
+                                  className={
+                                    player.isConnected
+                                      ? "text-green-600"
+                                      : "text-red-600"
+                                  }
+                                >
+                                  {player.isConnected
+                                    ? "🟢 Online"
+                                    : "🔴 Offline"}
                                 </span>
-                                <span className={player.isReady ? 'text-green-600' : 'text-gray-500'}>
-                                  {player.isReady ? '✓ Ready' : '⏳ Not Ready'}
+                                <span
+                                  className={
+                                    player.isReady
+                                      ? "text-green-600"
+                                      : "text-gray-500"
+                                  }
+                                >
+                                  {player.isReady ? "✓ Ready" : "⏳ Not Ready"}
                                 </span>
                                 {room.gameState && (
                                   <span className="text-blue-600">

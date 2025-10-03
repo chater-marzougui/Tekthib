@@ -1,5 +1,5 @@
 import { WebSocket } from 'ws';
-import { WSMessage, RTCSignalPayload } from '../../types';
+import { WSMessage, RTCSignalPayload } from 'shared';
 import { sendToPlayer, sendToClient } from '../index';
 
 interface ClientInfo {
@@ -11,7 +11,7 @@ interface ClientInfo {
 export function handleWebRTCMessages(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
-  message: WSMessage
+  message: WSMessage,
 ): void {
   const clientInfo = clients.get(ws);
   if (!clientInfo) return;
@@ -34,14 +34,14 @@ export function handleWebRTCMessages(
 function handleRTCOffer(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
-  payload: RTCSignalPayload
+  payload: RTCSignalPayload,
 ): void {
   const clientInfo = clients.get(ws)!;
-  
+
   if (!clientInfo.roomId) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Not in a room' }
+      payload: { message: 'Not in a room' },
     });
     return;
   }
@@ -51,22 +51,22 @@ function handleRTCOffer(
     type: 'RTC_OFFER',
     payload: {
       fromPlayerId: clientInfo.id,
-      signal: payload.signal
-    }
+      signal: payload.signal,
+    },
   });
 }
 
 function handleRTCAnswer(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
-  payload: RTCSignalPayload
+  payload: RTCSignalPayload,
 ): void {
   const clientInfo = clients.get(ws)!;
-  
+
   if (!clientInfo.roomId) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Not in a room' }
+      payload: { message: 'Not in a room' },
     });
     return;
   }
@@ -76,22 +76,22 @@ function handleRTCAnswer(
     type: 'RTC_ANSWER',
     payload: {
       fromPlayerId: clientInfo.id,
-      signal: payload.signal
-    }
+      signal: payload.signal,
+    },
   });
 }
 
 function handleRTCIceCandidate(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
-  payload: RTCSignalPayload
+  payload: RTCSignalPayload,
 ): void {
   const clientInfo = clients.get(ws)!;
-  
+
   if (!clientInfo.roomId) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Not in a room' }
+      payload: { message: 'Not in a room' },
     });
     return;
   }
@@ -101,7 +101,7 @@ function handleRTCIceCandidate(
     type: 'RTC_ICE_CANDIDATE',
     payload: {
       fromPlayerId: clientInfo.id,
-      signal: payload.signal
-    }
+      signal: payload.signal,
+    },
   });
 }

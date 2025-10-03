@@ -17,7 +17,7 @@ const SERVER_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 export default function HomePage() {
   const [playerName, setPlayerName] = useState(
-    localStorage.getItem("playerName") || ""
+    localStorage.getItem("playerName") || "",
   );
   const [roomCode, setRoomCode] = useState("");
   const navigate = useNavigate();

@@ -1,7 +1,7 @@
-import { createContext, useContext } from 'react';
-import type { ReactNode } from 'react';
-import type { Player } from '../types';
-import { useVoiceChat } from '@/hooks/useVoiceChat';
+import { createContext, useContext } from "react";
+import type { ReactNode } from "react";
+import type { Player } from "shared";
+import { useVoiceChat } from "@/hooks/useVoiceChat";
 
 interface VoiceChatContextType {
   isVoiceEnabled: boolean;
@@ -29,12 +29,12 @@ interface VoiceChatProviderProps {
   isHost?: boolean;
 }
 
-export function VoiceChatProvider({ 
-  children, 
-  roomId, 
-  localPlayerId, 
-  players, 
-  isHost = false 
+export function VoiceChatProvider({
+  children,
+  roomId,
+  localPlayerId,
+  players,
+  isHost = false,
 }: Readonly<VoiceChatProviderProps>) {
   const voiceChat = useVoiceChat({ roomId, localPlayerId, players, isHost });
 
@@ -48,7 +48,9 @@ export function VoiceChatProvider({
 export function useVoiceChatContext() {
   const context = useContext(VoiceChatContext);
   if (!context) {
-    throw new Error('useVoiceChatContext must be used within a VoiceChatProvider');
+    throw new Error(
+      "useVoiceChatContext must be used within a VoiceChatProvider",
+    );
   }
   return context;
 }

@@ -1,4 +1,4 @@
-import type { Rank, Player, GamePhase } from 'shared';
+import type { Rank, Player, GamePhase } from "shared";
 // Room types
 export interface Room {
   id: string;

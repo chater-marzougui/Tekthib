@@ -1,7 +1,8 @@
 import { WebSocket } from 'ws';
-import { WSMessage, PlayCardsPayload, ChallengePayload } from '../../types';
+import { WSMessage, PlayCardsPayload, ChallengePayload } from 'shared';
 import { roomManager } from '../../utils/roomManager';
 import { sendToClient, broadcastToRoom } from '../index';
+import { GameEngine } from '../../game/GameEngine';
 
 interface ClientInfo {
   id: string;
@@ -17,7 +18,7 @@ interface GetGameStatePayload {
 export function handleGameMessages(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
-  message: WSMessage
+  message: WSMessage,
 ): void {
   switch (message.type) {
     case 'GET_GAME_STATE':
@@ -39,7 +40,7 @@ export function handleGameMessages(
  */
 export function triggerBotTurn(
   clients: Map<WebSocket, ClientInfo>,
-  roomId: string
+  roomId: string,
 ): void {
   const gameEngine = roomManager.getGameEngine(roomId);
   if (gameEngine) {
@@ -49,21 +50,20 @@ export function triggerBotTurn(
   }
 }
 
-
 function handleGetGameState(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
-  payload: GetGameStatePayload
+  payload: GetGameStatePayload,
 ): void {
   const { roomCode, playerId } = payload;
-  
+
   const room = roomManager.getRoomByCode(roomCode);
   if (!room) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Room not found' }
+      payload: { message: 'Room not found' },
     });
-    
+
     console.log('Room not found:', roomCode);
     return;
   }
@@ -73,7 +73,7 @@ function handleGetGameState(
   if (!player) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Player not in room' }
+      payload: { message: 'Player not in room' },
     });
     return;
   }
@@ -96,16 +96,16 @@ function handleGetGameState(
           code: room.code,
           hostId: room.hostId,
           maxPlayers: room.maxPlayers,
-          players: Array.from(room.players.values()).map(p => ({
+          players: Array.from(room.players.values()).map((p) => ({
             id: p.id,
             name: p.name,
             isReady: p.isReady,
             isConnected: p.isConnected,
-            isBot: p.isBot
-          }))
+            isBot: p.isBot,
+          })),
         },
-        playerId
-      }
+        playerId,
+      },
     });
     return;
   }
@@ -123,29 +123,29 @@ function handleGetGameState(
         code: room.code,
         hostId: room.hostId,
         maxPlayers: room.maxPlayers,
-        players: Array.from(room.players.values()).map(p => ({
+        players: Array.from(room.players.values()).map((p) => ({
           id: p.id,
           name: p.name,
           isReady: p.isReady,
           isConnected: p.isConnected,
-          isBot: p.isBot
-        }))
-      }
-    }
+          isBot: p.isBot,
+        })),
+      },
+    },
   });
 }
 
 function handlePlayCards(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
-  payload: PlayCardsPayload
+  payload: PlayCardsPayload,
 ): void {
   const clientInfo = clients.get(ws)!;
-  
+
   if (!clientInfo.roomId) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Not in a room' }
+      payload: { message: 'Not in a room' },
     });
     return;
   }
@@ -154,7 +154,7 @@ function handlePlayCards(
   if (!gameEngine) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Game not started' }
+      payload: { message: 'Game not started' },
     });
     return;
   }
@@ -162,13 +162,13 @@ function handlePlayCards(
   const result = gameEngine.playCards(
     clientInfo.id,
     payload.cardIds,
-    payload.claimedRank
+    payload.claimedRank,
   );
 
   if (!result.success) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: result.error }
+      payload: { message: result.error },
     });
     return;
   }
@@ -183,8 +183,8 @@ function handlePlayCards(
       playerName: clientInfo.name,
       cardCount: payload.cardIds.length,
       claimedRank: payload.claimedRank,
-      gameState: publicGameState
-    }
+      gameState: publicGameState,
+    },
   });
 
   // Send updated hand to the player who just played
@@ -192,8 +192,8 @@ function handlePlayCards(
     type: 'GAME_STATE_UPDATE',
     payload: {
       hand: gameEngine.getPlayerHand(clientInfo.id),
-      gameState: publicGameState
-    }
+      gameState: publicGameState,
+    },
   });
 
   // Check if game ended
@@ -203,8 +203,8 @@ function handlePlayCards(
       payload: {
         winners: publicGameState.winners,
         loser: publicGameState.loser,
-        gameState: publicGameState
-      }
+        gameState: publicGameState,
+      },
     });
     return;
   }
@@ -212,20 +212,20 @@ function handlePlayCards(
   // After a human plays, check if any bot wants to challenge
   setTimeout(() => {
     processBotChallenge(clients, clientInfo.roomId!, gameEngine);
-  }, 1000); // 1 second delay for realism
+  }, 2000); // 1 second delay for realism
 }
 
 function handleChallenge(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
-  payload: ChallengePayload
+  payload: ChallengePayload,
 ): void {
   const clientInfo = clients.get(ws)!;
-  
+
   if (!clientInfo.roomId) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Not in a room' }
+      payload: { message: 'Not in a room' },
     });
     return;
   }
@@ -234,7 +234,7 @@ function handleChallenge(
   if (!gameEngine) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Game not started' }
+      payload: { message: 'Game not started' },
     });
     return;
   }
@@ -244,7 +244,7 @@ function handleChallenge(
   if (!result.success) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: result.error }
+      payload: { message: result.error },
     });
     return;
   }
@@ -254,7 +254,7 @@ function handleChallenge(
   // Get challenger and liar names
   let challengerName = '';
   let playerName = '';
-  
+
   clients.forEach((client) => {
     if (client.id === payload.challengerId) {
       challengerName = client.name || 'Unknown';
@@ -274,8 +274,8 @@ function handleChallenge(
       playerId: result.playerId,
       playerName,
       revealedCards: result.revealedCards,
-      gameState: publicGameState
-    }
+      gameState: publicGameState,
+    },
   });
 
   // Send updated hands to affected players
@@ -285,8 +285,8 @@ function handleChallenge(
         type: 'GAME_STATE_UPDATE',
         payload: {
           hand: gameEngine.getPlayerHand(client.id),
-          gameState: publicGameState
-        }
+          gameState: publicGameState,
+        },
       });
     }
   });
@@ -303,24 +303,24 @@ function handleChallenge(
 function processBotChallenge(
   clients: Map<WebSocket, ClientInfo>,
   roomId: string,
-  gameEngine: any
+  gameEngine: GameEngine,
 ): void {
   if (!gameEngine) return;
 
   const botChallengerId = gameEngine.getBotChallenger();
-  
+
   if (botChallengerId) {
     // Bot challenges!
     const result = gameEngine.challenge(botChallengerId);
-    
+
     if (result.success) {
       const publicGameState = gameEngine.getPublicGameState();
-      
+
       // Get challenger and player names
       const room = roomManager.getRoom(roomId);
       const challengerPlayer = room?.players.get(botChallengerId);
       const lastPlayer = room?.players.get(result.playerId);
-      
+
       // Broadcast challenge result
       broadcastToRoom(clients, roomId, {
         type: 'CHALLENGE_RESULT',
@@ -331,10 +331,10 @@ function processBotChallenge(
           playerId: result.playerId,
           playerName: lastPlayer?.name || 'Unknown',
           revealedCards: result.revealedCards,
-          gameState: publicGameState
-        }
+          gameState: publicGameState,
+        },
       });
-      
+
       // Send updated hands
       clients.forEach((client, clientWs) => {
         if (client.roomId === roomId) {
@@ -342,12 +342,12 @@ function processBotChallenge(
             type: 'GAME_STATE_UPDATE',
             payload: {
               hand: gameEngine.getPlayerHand(client.id),
-              gameState: publicGameState
-            }
+              gameState: publicGameState,
+            },
           });
         }
       });
-      
+
       // After challenge, trigger next bot turn if needed
       setTimeout(() => {
         processBotTurn(clients, roomId, gameEngine);
@@ -367,12 +367,12 @@ function processBotChallenge(
 function processBotTurn(
   clients: Map<WebSocket, ClientInfo>,
   roomId: string,
-  gameEngine: any
+  gameEngine: GameEngine,
 ): void {
   if (!gameEngine) return;
-  
+
   const publicGameState = gameEngine.getPublicGameState();
-  
+
   // Check if game ended
   if (publicGameState.phase === 'ended') {
     broadcastToRoom(clients, roomId, {
@@ -380,34 +380,34 @@ function processBotTurn(
       payload: {
         winners: publicGameState.winners,
         loser: publicGameState.loser,
-        gameState: publicGameState
-      }
+        gameState: publicGameState,
+      },
     });
     return;
   }
-  
+
   if (!gameEngine.isCurrentPlayerBot()) {
     // Current player is human, nothing to do
     return;
   }
-  
+
   const currentPlayerId = publicGameState.currentPlayerId;
   const botPlay = gameEngine.getBotPlay(currentPlayerId);
-  
+
   if (!botPlay) return;
-  
+
   // Execute bot play
   const result = gameEngine.playCards(
     currentPlayerId,
     botPlay.cardIds,
-    botPlay.claimedRank
+    botPlay.claimedRank,
   );
-  
+
   if (result.success) {
     const updatedGameState = gameEngine.getPublicGameState();
     const room = roomManager.getRoom(roomId);
     const botPlayer = room?.players.get(currentPlayerId);
-    
+
     // Broadcast bot's play
     broadcastToRoom(clients, roomId, {
       type: 'CARDS_PLAYED',
@@ -416,10 +416,10 @@ function processBotTurn(
         playerName: botPlayer?.name || 'Bot',
         cardCount: botPlay.cardIds.length,
         claimedRank: botPlay.claimedRank,
-        gameState: updatedGameState
-      }
+        gameState: updatedGameState,
+      },
     });
-    
+
     // Send updated hands
     clients.forEach((client, clientWs) => {
       if (client.roomId === roomId) {
@@ -427,12 +427,12 @@ function processBotTurn(
           type: 'GAME_STATE_UPDATE',
           payload: {
             hand: gameEngine.getPlayerHand(client.id),
-            gameState: updatedGameState
-          }
+            gameState: updatedGameState,
+          },
         });
       }
     });
-    
+
     // Check if game ended
     if (updatedGameState.phase === 'ended') {
       broadcastToRoom(clients, roomId, {
@@ -440,15 +440,15 @@ function processBotTurn(
         payload: {
           winners: updatedGameState.winners,
           loser: updatedGameState.loser,
-          gameState: updatedGameState
-        }
+          gameState: updatedGameState,
+        },
       });
       return;
     }
-    
+
     // After bot plays, check if any bot wants to challenge
     setTimeout(() => {
       processBotChallenge(clients, roomId, gameEngine);
-    }, 1000);
+    }, 2000);
   }
 }

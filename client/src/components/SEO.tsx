@@ -64,6 +64,6 @@ const Seo = ({
   }, [title, description, keywords, image, url, type]);
 
   return null;
-};  
+};
 
 export default Seo;

@@ -1,11 +1,5 @@
 import type { JSX } from "react";
-
-interface GameCard {
-  id: string;
-  suit: "hearts" | "diamonds" | "clubs" | "spades" | "joker";
-  rank: string;
-  selected: boolean;
-}
+import type { DisplayGameCard, Rank } from "shared";
 
 /**
  * Renders the suit symbols in a pattern based on the card's rank.
@@ -16,10 +10,10 @@ interface GameCard {
  * @returns {JSX.Element[]} An array of positioned JSX elements for the symbols.
  */
 const renderSuitPatterns = (
-  rank: string,
+  rank: Rank,
   suitSymbol: string,
-  colorClass: string
-) : JSX.Element[] => {
+  colorClass: string,
+): JSX.Element[] => {
   const symbol = (className: string, key: number, isRotated = false) => (
     <div
       key={key}
@@ -50,7 +44,10 @@ const renderSuitPatterns = (
     case "A":
       return [symbol(positions.center, 1)];
     case "2":
-      return [symbol(positions.topCenter, 1), symbol(positions.bottomCenter, 2, true)];
+      return [
+        symbol(positions.topCenter, 1),
+        symbol(positions.bottomCenter, 2, true),
+      ];
     case "3":
       return [
         symbol(positions.topCenter, 1),
@@ -112,31 +109,36 @@ const renderSuitPatterns = (
     case "J":
     case "Q":
     case "K":
-        // For face cards, you might want an image, but a large symbol works as a placeholder.
-        return [symbol(`${positions.center} text-7xl`, 1)];
+      // For face cards, you might want an image, but a large symbol works as a placeholder.
+      return [symbol(`${positions.center} text-7xl`, 1)];
     default:
       return []; // Return nothing for ranks that don't have patterns
   }
 };
 
 const RenderCard = (
-  card: GameCard,
+  card: DisplayGameCard,
   isMyTurn: boolean,
   onCardSelect: (id: string) => void,
   isSelected: boolean,
-  positionInHand: number
+  positionInHand: number,
 ) => {
-  const getCardSymbol = (suit: GameCard["suit"]) => {
+  const getCardSymbol = (suit: DisplayGameCard["suit"]) => {
     switch (suit) {
-      case "hearts": return "♥";
-      case "diamonds": return "♦";
-      case "clubs": return "♣";
-      case "spades": return "♠";
-      case "joker": return "🃏";
+      case "hearts":
+        return "♥";
+      case "diamonds":
+        return "♦";
+      case "clubs":
+        return "♣";
+      case "spades":
+        return "♠";
+      case "joker":
+        return "🃏";
     }
   };
 
-  const getCardColor = (suit: GameCard["suit"]) => {
+  const getCardColor = (suit: DisplayGameCard["suit"]) => {
     if (suit === "joker") return "text-purple-600";
     return suit === "hearts" || suit === "diamonds"
       ? "text-red-600"
@@ -177,12 +179,8 @@ const RenderCard = (
       >
         {/* Top left corner */}
         <div className="absolute top-1 left-2 flex flex-col items-center leading-none">
-          <div className={`text-xl font-bold ${colorClass}`}>
-            {card.rank}
-          </div>
-          <div className={`text-2xl ${colorClass}`}>
-            {suitSymbol}
-          </div>
+          <div className={`text-xl font-bold ${colorClass}`}>{card.rank}</div>
+          <div className={`text-2xl ${colorClass}`}>{suitSymbol}</div>
         </div>
 
         {/* The new suit patterns rendered in the center */}
@@ -190,12 +188,8 @@ const RenderCard = (
 
         {/* Bottom right corner (rotated) */}
         <div className="absolute bottom-1 right-2 flex flex-col items-center leading-none rotate-180">
-          <div className={`text-xl font-bold ${colorClass}`}>
-            {card.rank}
-          </div>
-          <div className={`text-2xl ${colorClass}`}>
-            {suitSymbol}
-          </div>
+          <div className={`text-xl font-bold ${colorClass}`}>{card.rank}</div>
+          <div className={`text-2xl ${colorClass}`}>{suitSymbol}</div>
         </div>
       </div>
     </div>
@@ -203,11 +197,11 @@ const RenderCard = (
 };
 
 const RenderOneHand = (
-  cards: GameCard[],
+  cards: DisplayGameCard[],
   startIndex: number,
   isMyTurn: boolean,
   onCardSelect: (id: string) => void,
-  selectedCards: string[]
+  selectedCards: string[],
 ) => {
   const handCards = cards.slice(startIndex, startIndex + 14);
   const handWidth = handCards.length * 35 + 89; // overlap * count + card width

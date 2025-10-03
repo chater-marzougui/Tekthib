@@ -1,5 +1,12 @@
 import { WebSocket } from 'ws';
-import { WSMessage, CreateRoomPayload, JoinRoomPayload, AddBotsPayload, KickPlayerPayload, MutePlayerPayload } from '../../types';
+import {
+  WSMessage,
+  CreateRoomPayload,
+  JoinRoomPayload,
+  AddBotsPayload,
+  KickPlayerPayload,
+  MutePlayerPayload,
+} from 'shared';
 import { roomManager } from '../../utils/roomManager';
 import { sendToClient, broadcastToRoom, sendToPlayer } from '../index';
 import { triggerBotTurn } from './gameHandlers';
@@ -13,7 +20,7 @@ interface ClientInfo {
 export function handleRoomMessages(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
-  message: WSMessage
+  message: WSMessage,
 ): void {
   const clientInfo = clients.get(ws);
   if (!clientInfo) return;
@@ -56,14 +63,14 @@ export function handleRoomMessages(
 function handleCreateRoom(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
-  payload: CreateRoomPayload
+  payload: CreateRoomPayload,
 ): void {
   const clientInfo = clients.get(ws)!;
-  
+
   const room = roomManager.createRoom(
     clientInfo.id,
     payload.playerName,
-    payload.maxPlayers || 10
+    payload.maxPlayers || 10,
   );
 
   clientInfo.roomId = room.id;
@@ -77,41 +84,45 @@ function handleCreateRoom(
         code: room.code,
         hostId: room.hostId,
         maxPlayers: room.maxPlayers,
-        players: Array.from(room.players.values()).map(p => ({
+        players: Array.from(room.players.values()).map((p) => ({
           id: p.id,
           name: p.name,
           isReady: p.isReady,
-          isConnected: p.isConnected
-        }))
+          isConnected: p.isConnected,
+        })),
       },
-      playerId: clientInfo.id
-    }
+      playerId: clientInfo.id,
+    },
   });
 }
 
 function handleJoinRoom(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
-  payload: JoinRoomPayload
+  payload: JoinRoomPayload,
 ): void {
   const clientInfo = clients.get(ws)!;
-  
+
   const room = roomManager.getRoomByCode(payload.roomCode);
-  
+
   if (!room) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Room not found', code: 'ROOM_NOT_FOUND' }
+      payload: { message: 'Room not found', code: 'ROOM_NOT_FOUND' },
     });
     return;
   }
 
-  const result = roomManager.addPlayerToRoom(room.id, clientInfo.id, payload.playerName);
-  
+  const result = roomManager.addPlayerToRoom(
+    room.id,
+    clientInfo.id,
+    payload.playerName,
+  );
+
   if (!result.success) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: result.error }
+      payload: { message: result.error },
     });
     return;
   }
@@ -128,43 +139,51 @@ function handleJoinRoom(
         code: room.code,
         hostId: room.hostId,
         maxPlayers: room.maxPlayers,
-        players: Array.from(room.players.values()).map(p => ({
+        players: Array.from(room.players.values()).map((p) => ({
           id: p.id,
           name: p.name,
           isReady: p.isReady,
-          isConnected: p.isConnected
-        }))
+          isConnected: p.isConnected,
+        })),
       },
-      playerId: clientInfo.id
-    }
+      playerId: clientInfo.id,
+    },
   });
 
   // Notify other players in room
-  broadcastToRoom(clients, room.id, {
-    type: 'PLAYER_JOINED',
-    payload: {
-      player: {
-        id: clientInfo.id,
-        name: payload.playerName,
-        isReady: false,
-        isConnected: true
-      }
-    }
-  }, clientInfo.id);
+  broadcastToRoom(
+    clients,
+    room.id,
+    {
+      type: 'PLAYER_JOINED',
+      payload: {
+        player: {
+          id: clientInfo.id,
+          name: payload.playerName,
+          isReady: false,
+          isConnected: true,
+        },
+      },
+    },
+    clientInfo.id,
+  );
 }
 
 function handleLeaveRoom(
   ws: WebSocket,
-  clients: Map<WebSocket, ClientInfo>
+  clients: Map<WebSocket, ClientInfo>,
 ): void {
   const clientInfo = clients.get(ws)!;
-  
+
   if (!clientInfo.roomId) return;
 
   const room = roomManager.getRoom(clientInfo.roomId);
   if (!room) return;
 
-  const result = roomManager.removePlayerFromRoom(clientInfo.roomId, clientInfo.id);
+  const result = roomManager.removePlayerFromRoom(
+    clientInfo.roomId,
+    clientInfo.id,
+  );
 
   // Notify others that player left
   if (!result.roomDeleted) {
@@ -173,14 +192,14 @@ function handleLeaveRoom(
       payload: {
         playerId: clientInfo.id,
         playerName: clientInfo.name,
-        newHostId: room.hostId
-      }
+        newHostId: room.hostId,
+      },
     });
   }
 
   sendToClient(ws, {
     type: 'ROOM_LEFT',
-    payload: { success: true }
+    payload: { success: true },
   });
 
   clientInfo.roomId = undefined;
@@ -190,14 +209,14 @@ function handleLeaveRoom(
 function handlePlayerReady(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
-  payload: { ready: boolean }
+  payload: { ready: boolean },
 ): void {
   const clientInfo = clients.get(ws)!;
-  
+
   if (!clientInfo.roomId) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Not in a room' }
+      payload: { message: 'Not in a room' },
     });
     return;
   }
@@ -205,7 +224,7 @@ function handlePlayerReady(
   const success = roomManager.setPlayerReady(
     clientInfo.roomId,
     clientInfo.id,
-    payload.ready
+    payload.ready,
   );
 
   if (success) {
@@ -213,8 +232,8 @@ function handlePlayerReady(
       type: 'GAME_STATE_UPDATE',
       payload: {
         playerId: clientInfo.id,
-        isReady: payload.ready
-      }
+        isReady: payload.ready,
+      },
     });
   }
 }
@@ -222,14 +241,14 @@ function handlePlayerReady(
 function handleAddBots(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
-  payload: AddBotsPayload
+  payload: AddBotsPayload,
 ): void {
   const clientInfo = clients.get(ws)!;
-  
+
   if (!clientInfo.roomId) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Not in a room' }
+      payload: { message: 'Not in a room' },
     });
     return;
   }
@@ -238,17 +257,17 @@ function handleAddBots(
   if (!room || room.hostId !== clientInfo.id) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Only host can add bots' }
+      payload: { message: 'Only host can add bots' },
     });
     return;
   }
 
   const result = roomManager.addBotsToRoom(clientInfo.roomId, payload.count);
-  
+
   if (!result.success) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: result.error }
+      payload: { message: result.error },
     });
     return;
   }
@@ -259,28 +278,28 @@ function handleAddBots(
     broadcastToRoom(clients, clientInfo.roomId, {
       type: 'BOTS_ADDED',
       payload: {
-        players: Array.from(updatedRoom.players.values()).map(p => ({
+        players: Array.from(updatedRoom.players.values()).map((p) => ({
           id: p.id,
           name: p.name,
           isReady: p.isReady,
           isConnected: p.isConnected,
-          isBot: p.isBot
-        }))
-      }
+          isBot: p.isBot,
+        })),
+      },
     });
   }
 }
 
 function handleStartGame(
   ws: WebSocket,
-  clients: Map<WebSocket, ClientInfo>
+  clients: Map<WebSocket, ClientInfo>,
 ): void {
   const clientInfo = clients.get(ws)!;
-  
+
   if (!clientInfo.roomId) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Not in a room' }
+      payload: { message: 'Not in a room' },
     });
     return;
   }
@@ -289,7 +308,7 @@ function handleStartGame(
   if (!room || room.hostId !== clientInfo.id) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Only host can start game' }
+      payload: { message: 'Only host can start game' },
     });
     return;
   }
@@ -298,7 +317,7 @@ function handleStartGame(
   if (!canStart.canStart) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: canStart.reason }
+      payload: { message: canStart.reason },
     });
     return;
   }
@@ -307,17 +326,17 @@ function handleStartGame(
   if (!gameEngine) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Failed to start game' }
+      payload: { message: 'Failed to start game' },
     });
     return;
   }
 
   // Send game started event to all players
   const publicGameState = gameEngine.getPublicGameState();
-  
+
   broadcastToRoom(clients, clientInfo.roomId, {
     type: 'GAME_STARTED',
-    payload: { gameState: publicGameState }
+    payload: { gameState: publicGameState },
   });
 
   // Send each player their hand privately
@@ -328,8 +347,8 @@ function handleStartGame(
         type: 'GAME_STATE_UPDATE',
         payload: {
           hand,
-          gameState: publicGameState
-        }
+          gameState: publicGameState,
+        },
       });
     }
   });
@@ -341,14 +360,14 @@ function handleStartGame(
 function handleKickPlayer(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
-  payload: KickPlayerPayload
+  payload: KickPlayerPayload,
 ): void {
   const clientInfo = clients.get(ws)!;
-  
+
   if (!clientInfo.roomId) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Not in a room' }
+      payload: { message: 'Not in a room' },
     });
     return;
   }
@@ -357,7 +376,7 @@ function handleKickPlayer(
   if (!room || room.hostId !== clientInfo.id) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Only host can kick players' }
+      payload: { message: 'Only host can kick players' },
     });
     return;
   }
@@ -366,7 +385,7 @@ function handleKickPlayer(
   if (payload.playerId === clientInfo.id) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Cannot kick yourself' }
+      payload: { message: 'Cannot kick yourself' },
     });
     return;
   }
@@ -376,7 +395,7 @@ function handleKickPlayer(
   if (!playerToKick) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Player not found' }
+      payload: { message: 'Player not found' },
     });
     return;
   }
@@ -384,7 +403,7 @@ function handleKickPlayer(
   if (playerToKick.isBot) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Cannot kick bots' }
+      payload: { message: 'Cannot kick bots' },
     });
     return;
   }
@@ -392,14 +411,17 @@ function handleKickPlayer(
   // Notify the kicked player
   sendToPlayer(clients, payload.playerId, {
     type: 'PLAYER_KICKED',
-    payload: { 
+    payload: {
       message: 'You have been kicked from the room by the host',
-      playerId: payload.playerId
-    }
+      playerId: payload.playerId,
+    },
   });
 
   // Remove player from room
-  const result = roomManager.removePlayerFromRoom(clientInfo.roomId, payload.playerId);
+  const result = roomManager.removePlayerFromRoom(
+    clientInfo.roomId,
+    payload.playerId,
+  );
 
   // Notify others that player was kicked
   if (!result.roomDeleted) {
@@ -408,13 +430,13 @@ function handleKickPlayer(
       payload: {
         playerId: payload.playerId,
         playerName: playerToKick.name,
-        kicked: true
-      }
+        kicked: true,
+      },
     });
   }
 
   // Clear the kicked player's room info
-  clients.forEach((client, clientWs) => {
+  clients.forEach((client, _) => {
     if (client.id === payload.playerId) {
       client.roomId = undefined;
       client.name = undefined;
@@ -425,14 +447,14 @@ function handleKickPlayer(
 function handleMutePlayer(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
-  payload: MutePlayerPayload
+  payload: MutePlayerPayload,
 ): void {
   const clientInfo = clients.get(ws)!;
-  
+
   if (!clientInfo.roomId) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Not in a room' }
+      payload: { message: 'Not in a room' },
     });
     return;
   }
@@ -441,7 +463,7 @@ function handleMutePlayer(
   if (!room || room.hostId !== clientInfo.id) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Only host can mute players' }
+      payload: { message: 'Only host can mute players' },
     });
     return;
   }
@@ -450,7 +472,7 @@ function handleMutePlayer(
   if (payload.playerId === clientInfo.id) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Cannot mute yourself' }
+      payload: { message: 'Cannot mute yourself' },
     });
     return;
   }
@@ -459,7 +481,7 @@ function handleMutePlayer(
   if (!playerToMute) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Player not found' }
+      payload: { message: 'Player not found' },
     });
     return;
   }
@@ -467,7 +489,7 @@ function handleMutePlayer(
   if (playerToMute.isBot) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Bots have no microphone' }
+      payload: { message: 'Bots have no microphone' },
     });
     return;
   }
@@ -475,11 +497,11 @@ function handleMutePlayer(
   // Notify the muted player to disable their microphone
   sendToPlayer(clients, payload.playerId, {
     type: 'PLAYER_MIC_SWITCHED',
-    payload: { 
+    payload: {
       message: 'Your microphone has been disabled by the host',
       playerId: payload.playerId,
-      mute: payload.mute
-    }
+      mute: payload.mute,
+    },
   });
 
   // Also notify all other players for UI updates
@@ -488,7 +510,7 @@ function handleMutePlayer(
     payload: {
       playerId: payload.playerId,
       playerName: playerToMute.name,
-      mute: payload.mute
-    }
+      mute: payload.mute,
+    },
   });
 }

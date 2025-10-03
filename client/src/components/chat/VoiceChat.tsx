@@ -1,15 +1,26 @@
-import { Mic, MicOff, Phone, PhoneOff, Volume2, VolumeX, UserX } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useVoiceChatContext } from '@/context/VoiceChatContext';
-import type { Player } from '@/types';
+import {
+  Mic,
+  MicOff,
+  Phone,
+  PhoneOff,
+  Volume2,
+  VolumeX,
+  UserX,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useVoiceChatContext } from "@/context/VoiceChatContext";
+import type { Player } from "shared";
 
 interface VoiceChatProps {
   players: Player[];
   localPlayerId: string;
 }
 
-export default function VoiceChat({ players, localPlayerId }: Readonly<VoiceChatProps>) {
+export default function VoiceChat({
+  players,
+  localPlayerId,
+}: Readonly<VoiceChatProps>) {
   const {
     isVoiceEnabled,
     isMuted,
@@ -36,7 +47,7 @@ export default function VoiceChat({ players, localPlayerId }: Readonly<VoiceChat
 
   // Get other players (not self, not bots)
   const otherPlayers = players.filter(
-    (p) => p.id !== localPlayerId && !p.isBot && p.isConnected
+    (p) => p.id !== localPlayerId && !p.isBot && p.isConnected,
   );
 
   return (
@@ -59,8 +70,8 @@ export default function VoiceChat({ players, localPlayerId }: Readonly<VoiceChat
             onClick={handleToggleVoice}
             className={`w-full ${
               isVoiceEnabled
-                ? 'bg-green-600 hover:bg-green-700'
-                : 'bg-blue-600 hover:bg-blue-700'
+                ? "bg-green-600 hover:bg-green-700"
+                : "bg-blue-600 hover:bg-blue-700"
             }`}
             size="lg"
           >
@@ -81,14 +92,14 @@ export default function VoiceChat({ players, localPlayerId }: Readonly<VoiceChat
             <Button
               onClick={toggleMute}
               variant="outline"
-              className={`w-full ${isMuted ? 'bg-red-50 border-red-300' : ''}`}
+              className={`w-full ${isMuted ? "bg-red-50 border-red-300" : ""}`}
               size="lg"
               disabled={hostMuted}
             >
               {isMuted ? (
                 <>
                   <MicOff className="w-4 h-4 mr-2" />
-                  {hostMuted ? 'Muted by Host' : 'Unmute'}
+                  {hostMuted ? "Muted by Host" : "Unmute"}
                 </>
               ) : (
                 <>
@@ -137,8 +148,12 @@ export default function VoiceChat({ players, localPlayerId }: Readonly<VoiceChat
                     className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm"
                   >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <div className={`w-2 h-2 rounded-full ${player.isConnected ? 'bg-green-500' : 'bg-gray-400'}`} />
-                      <span className="truncate font-medium">{player.name}</span>
+                      <div
+                        className={`w-2 h-2 rounded-full ${player.isConnected ? "bg-green-500" : "bg-gray-400"}`}
+                      />
+                      <span className="truncate font-medium">
+                        {player.name}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1">
                       {/* Personal mute toggle */}
@@ -147,7 +162,11 @@ export default function VoiceChat({ players, localPlayerId }: Readonly<VoiceChat
                         variant="ghost"
                         className="h-7 w-7 p-0"
                         onClick={() => togglePlayerMute(player.id)}
-                        title={isPlayerMuted ? `Unmute ${player.name}` : `Mute ${player.name}`}
+                        title={
+                          isPlayerMuted
+                            ? `Unmute ${player.name}`
+                            : `Mute ${player.name}`
+                        }
                       >
                         {isPlayerMuted ? (
                           <VolumeX className="w-4 h-4 text-red-600" />
@@ -163,7 +182,9 @@ export default function VoiceChat({ players, localPlayerId }: Readonly<VoiceChat
                             size="sm"
                             variant="ghost"
                             className="h-7 w-7 p-0"
-                            onClick={() => mutePlayerMic(player.id, !isPlayerHostMuted)}
+                            onClick={() =>
+                              mutePlayerMic(player.id, !isPlayerHostMuted)
+                            }
                             title={`Mute ${player.name}'s microphone`}
                           >
                             {isPlayerHostMuted ? (
@@ -194,7 +215,7 @@ export default function VoiceChat({ players, localPlayerId }: Readonly<VoiceChat
         <div className="text-xs text-gray-500 pt-2 border-t">
           {isVoiceEnabled
             ? `Connected to ${otherPlayers.length} player(s)`
-            : 'Join to talk with other players'}
+            : "Join to talk with other players"}
         </div>
 
         {isHost && isVoiceEnabled && (

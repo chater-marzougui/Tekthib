@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { useWebSocketContext } from "@/context/WebSocketContext";
 import ChatBox from "@/components/chat/ChatBox";
-import type { Player } from "@/types";
+import type { Player } from "shared";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { VoiceChatProvider } from "@/context/VoiceChatContext";
@@ -76,7 +76,7 @@ export default function RoomPage() {
             return prev;
           });
         }
-      }
+      },
     );
 
     const unregisterPlayerLeft = registerHandler("player-left", (message) => {
@@ -97,11 +97,11 @@ export default function RoomPage() {
             message.payload;
           setPlayers((prev) =>
             prev.map((p) =>
-              p.id === updatedPlayerId ? { ...p, isReady: updatedReady } : p
-            )
+              p.id === updatedPlayerId ? { ...p, isReady: updatedReady } : p,
+            ),
           );
         }
-      }
+      },
     );
 
     const unregisterGameStarted = registerHandler("game-started", (message) => {
@@ -154,7 +154,15 @@ export default function RoomPage() {
       unregisterError();
       unregisterBotsAdded();
     };
-  }, [roomId, isConnected, sendMessage, registerHandler, navigate, playerId]);
+  }, [
+    roomId,
+    isConnected,
+    sendMessage,
+    registerHandler,
+    navigate,
+    playerId,
+    playerName,
+  ]);
 
   const handleReadyToggle = () => {
     const newReadyState = !isReady;
@@ -254,8 +262,8 @@ export default function RoomPage() {
                             player.id === playerId
                               ? "bg-blue-500 text-white"
                               : player.isBot
-                              ? "bg-purple-500 text-white"
-                              : "bg-gray-200 text-gray-800"
+                                ? "bg-purple-500 text-white"
+                                : "bg-gray-200 text-gray-800"
                           } flex items-center justify-center rounded-full text-lg font-bold`}
                         >
                           {player.isBot
@@ -303,7 +311,7 @@ export default function RoomPage() {
                           Waiting for player...
                         </div>
                       </div>
-                    )
+                    ),
                   )}
                 </div>
               </CardContent>
@@ -340,10 +348,7 @@ export default function RoomPage() {
             </Card>
 
             {roomCode && playerId && (
-              <VoiceChat
-                players={players}
-                localPlayerId={playerId}
-              />
+              <VoiceChat players={players} localPlayerId={playerId} />
             )}
 
             {/* Game Controls */}

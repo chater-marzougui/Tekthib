@@ -1,17 +1,17 @@
-import  { Card, Player, Rank, Suit, SuitTypes } from 'shared';
+import { Card, Player, PlayerWithHand, Rank, Suit, SuitTypes } from 'shared';
 import { Deck } from './Deck';
 import { BotPlayer } from './BotPlayer';
 import { GameState } from '../types';
 
 export class GameEngine {
   private readonly gameState: GameState;
-  private readonly players: Map<string, Player>;
+  private readonly players: Map<string, PlayerWithHand>;
   private readonly botPlayers: Map<string, BotPlayer> = new Map();
 
-  constructor(players: Map<string, Player>) {
+  constructor(players: Map<string, PlayerWithHand>) {
     this.players = players;
     this.gameState = this.initializeGame();
-    
+
     // Initialize bot players
     players.forEach((player, playerId) => {
       if (player.isBot) {
@@ -235,7 +235,7 @@ export class GameEngine {
     };
   }
 
-  private checkAndRemoveFourOfKind(player: Player): void {
+  private checkAndRemoveFourOfKind(player: PlayerWithHand): void {
     const rankGroups = new Map<Rank, Card[]>();
 
     // Group cards by rank (excluding Jokers)
@@ -249,7 +249,7 @@ export class GameEngine {
     });
 
     // Check each rank group for suit-complete four-of-a-kind or eight-of-a-kind
-    rankGroups.forEach((cards, rank) => {
+    rankGroups.forEach((cards, _) => {
       if (cards.length >= 4) {
         // Count cards by suit
         const suitCounts = new Map<Suit, Card[]>();
@@ -359,9 +359,9 @@ export class GameEngine {
         continue;
       }
 
-      const isCurrentPlayer = 
+      const isCurrentPlayer =
         botId === this.gameState.playerOrder[this.gameState.currentPlayerIndex];
-      
+
       if (bot.shouldChallenge(isCurrentPlayer)) {
         return botId;
       }
@@ -376,7 +376,7 @@ export class GameEngine {
   getBotPlay(botId: string): { cardIds: string[]; claimedRank: Rank } | null {
     const bot = this.botPlayers.get(botId);
     const botPlayer = this.players.get(botId);
-    
+
     if (!bot || !botPlayer) {
       return null;
     }
@@ -388,7 +388,7 @@ export class GameEngine {
    * Check if the current player is a bot
    */
   isCurrentPlayerBot(): boolean {
-    const currentPlayerId = 
+    const currentPlayerId =
       this.gameState.playerOrder[this.gameState.currentPlayerIndex];
     const player = this.players.get(currentPlayerId);
     return player?.isBot === true;

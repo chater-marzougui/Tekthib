@@ -1,18 +1,25 @@
-import { createContext, useContext } from 'react';
-import type { ReactNode } from 'react';
-import { useWebSocket } from '../hooks/useWebsocket';
-import type { WSMessage } from '../types';
+import { createContext, useContext } from "react";
+import type { ReactNode } from "react";
+import { useWebSocket } from "../hooks/useWebsocket";
+import type { WSMessage } from "shared";
 
 interface WebSocketContextType {
   isConnected: boolean;
   lastMessage: WSMessage | null;
   sendMessage: (message: WSMessage) => void;
-  registerHandler: (id: string, handler: (message: WSMessage) => void) => () => void;
+  registerHandler: (
+    id: string,
+    handler: (message: WSMessage) => void,
+  ) => () => void;
 }
 
-const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined);
+const WebSocketContext = createContext<WebSocketContextType | undefined>(
+  undefined,
+);
 
-export function WebSocketProvider({ children }: Readonly<{ children: ReactNode }>) {
+export function WebSocketProvider({
+  children,
+}: Readonly<{ children: ReactNode }>) {
   const websocket = useWebSocket();
 
   return (
@@ -25,7 +32,9 @@ export function WebSocketProvider({ children }: Readonly<{ children: ReactNode }
 export function useWebSocketContext() {
   const context = useContext(WebSocketContext);
   if (!context) {
-    throw new Error('useWebSocketContext must be used within a WebSocketProvider');
+    throw new Error(
+      "useWebSocketContext must be used within a WebSocketProvider",
+    );
   }
   return context;
 }

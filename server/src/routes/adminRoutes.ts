@@ -8,11 +8,11 @@ const router = Router();
 router.get('/system-state', (req: Request, res: Response) => {
   // Check password from query param or header
   const password = req.query.password || req.headers['x-admin-password'];
-  
+
   if (password !== config.adminPassword) {
     return res.status(401).json({
       error: 'Unauthorized',
-      message: 'Invalid admin password'
+      message: 'Invalid admin password',
     });
   }
 
