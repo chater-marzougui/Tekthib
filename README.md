@@ -1,5 +1,9 @@
 # 🃏 Tunisian Online Card Game - Tekthib
 
+<p align="center">
+   <img src="./shared/public/logo_for_readme.png" alt="Tekthib Logo" width="70%">
+</p>
+
 ## 📖 Project Overview
 
 A real-time multiplayer card game platform that brings the classic Tunisian bluffing card game online. Players can create rooms, invite friends via room codes, and enjoy voice chat while playing this exciting game of deception and strategy.

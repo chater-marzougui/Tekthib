@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Player as BasePlayer } from "shared";
+import { PlayerBadge } from "../PlayerBadge";
 
 interface Player extends BasePlayer {
   isCurrentTurn: boolean;
@@ -7,12 +8,12 @@ interface Player extends BasePlayer {
 
 interface PlayerListProps {
   players: Player[];
-  currentPlayerName: string;
+  currentPlayerId: string;
 }
 
 export default function PlayerList({
   players,
-  currentPlayerName,
+  currentPlayerId,
 }: Readonly<PlayerListProps>) {
   return (
     <Card>
@@ -27,31 +28,24 @@ export default function PlayerList({
               className={`
                 p-3 rounded-lg border-2 transition-all
                 ${player.isCurrentTurn ? "border-blue-500 bg-blue-50 shadow-md" : "border-gray-200 bg-gray-50"}
-                ${player.name === currentPlayerName ? "ring-2 ring-green-300" : ""}
+                ${player.id === currentPlayerId ? "ring-2 ring-green-300" : ""}
               `}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div
-                    className={`
-                    w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm
-                    ${player.isBot ? "bg-purple-500" : player.name === currentPlayerName ? "bg-green-500" : "bg-blue-500"}
-                  `}
-                  >
-                    {player.isBot ? "🤖" : player.name.charAt(0).toUpperCase()}
-                  </div>
+                  <PlayerBadge player={player} playerId={player.id} />
                   <div>
                     <div className="font-medium">
                       {player.name}
                       {player.isBot && " 🤖"}
-                      {player.name === currentPlayerName && (
+                      {player.id === currentPlayerId && (
                         <span className="text-xs text-green-600 ml-2">
                           (You)
                         </span>
                       )}
                     </div>
                     <div className="text-sm text-gray-600">
-                      {player.handCount} card{player.handCount !== 1 ? "s" : ""}
+                      {player.cardCount} card{player.cardCount !== 1 ? "s" : ""}
                     </div>
                   </div>
                 </div>
@@ -62,7 +56,7 @@ export default function PlayerList({
                       Current Turn
                     </div>
                   )}
-                  {player.handCount === 0 && (
+                  {player.cardCount === 0 && (
                     <div className="text-green-600 font-semibold text-sm">
                       🏆 Winner!
                     </div>

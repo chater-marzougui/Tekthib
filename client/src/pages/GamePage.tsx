@@ -427,7 +427,7 @@ export default function GamePage() {
 
           {/* Players List and Game Info */}
           <div className="space-y-4">
-            <PlayerList players={players} currentPlayerName={playerName} />
+            <PlayerList players={players} currentPlayerId={playerId} />
 
             {/* Voice Chat */}
             {roomId && playerId && (

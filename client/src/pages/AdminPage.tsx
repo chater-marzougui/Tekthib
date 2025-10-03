@@ -301,7 +301,7 @@ export default function AdminPage() {
                                 </span>
                                 {room.gameState && (
                                   <span className="text-blue-600">
-                                    🃏 {player.handCount} cards
+                                    🃏 {player.cardCount} cards
                                   </span>
                                 )}
                               </div>

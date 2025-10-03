@@ -289,7 +289,7 @@ class RoomManager {
           name: p.name,
           isReady: p.isReady,
           isConnected: p.isConnected,
-          handCount: p.hand.length,
+          cardCount: p.hand.length,
         })),
         gameState: gameEngine
           ? {

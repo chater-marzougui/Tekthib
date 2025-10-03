@@ -24,7 +24,7 @@ export interface DisplayGameCard extends Card {
 export interface Player {
   id: string;
   name: string;
-  handCount?: number;
+  cardCount?: number;
   isConnected: boolean;
   isReady: boolean;
   isBot: boolean;
