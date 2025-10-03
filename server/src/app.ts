@@ -57,6 +57,23 @@ app.get('/api/rooms/:code', (req, res) => {
   });
 });
 
+// Get all rooms (public and private)
+app.get('/api/rooms', (req, res) => {
+  const allRooms = roomManager.getAllRooms();
+  
+  const roomList = allRooms.map(room => ({
+    id: room.id,
+    hostName: room.hostName,
+    playerCount: room.players.size,
+    maxPlayers: room.maxPlayers,
+    isPublic: room.isPublic,
+    inProgress: room.gameState?.phase === 'playing' || room.gameState?.phase === 'ended',
+    code: room.isPublic ? room.code : undefined, // Only expose code for public rooms
+  }));
+
+  res.json(roomList);
+});
+
 // Admin routes
 app.use('/api/admin', adminRoutes);
 

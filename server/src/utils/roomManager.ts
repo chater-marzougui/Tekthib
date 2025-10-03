@@ -22,7 +22,7 @@ class RoomManager {
     return code;
   }
 
-  createRoom(hostId: string, hostName: string, maxPlayers: number = 10): Room {
+  createRoom(hostId: string, hostName: string, maxPlayers: number = 10, isPublic: boolean = true): Room {
     const roomId = `room_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const code = this.generateRoomCode();
 
@@ -43,6 +43,8 @@ class RoomManager {
       gameState: null,
       createdAt: new Date(),
       maxPlayers,
+      isPublic,
+      hostName,
     };
 
     this.rooms.set(roomId, room);
@@ -251,6 +253,10 @@ class RoomManager {
 
   getAllRooms(): Room[] {
     return Array.from(this.rooms.values());
+  }
+
+  getPublicRooms(): Room[] {
+    return Array.from(this.rooms.values()).filter(room => room.isPublic);
   }
 
   getRoomCount(): number {

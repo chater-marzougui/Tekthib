@@ -63,6 +63,7 @@ export default function GamePage() {
     open: boolean;
     winners: string[];
     loser: string;
+    playerStats?: Record<string, import("shared").PlayerStats>;
   }>({
     open: false,
     winners: [],
@@ -244,6 +245,7 @@ export default function GamePage() {
           open: true,
           winners: winnerNames.split(", "),
           loser: loserName,
+          playerStats: finalState?.playerStats,
         });
 
         // Also show toast
@@ -470,7 +472,7 @@ export default function GamePage() {
           }
         }}
       >
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>🎉 Game Over!</DialogTitle>
             <DialogDescription>
@@ -492,6 +494,43 @@ export default function GamePage() {
               <h3 className="font-semibold text-red-600 mb-2">😢 Loser:</h3>
               <p className="text-lg">{gameEndedDialog.loser}</p>
             </div>
+            
+            {/* Player Statistics */}
+            {gameEndedDialog.playerStats && gameState && (
+              <div className="mt-6">
+                <h3 className="font-semibold text-blue-600 mb-3">📊 Player Statistics</h3>
+                <div className="space-y-3">
+                  {gameState.players.map((player) => {
+                    const stats = gameEndedDialog.playerStats?.[player.id];
+                    if (!stats) return null;
+                    
+                    return (
+                      <div key={player.id} className="border rounded-lg p-3 bg-gray-50">
+                        <h4 className="font-semibold mb-2">{player.name}</h4>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">🤥 Caught Bluffing:</span>
+                            <span className="font-semibold">{stats.timesCaughtBluffing}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">😎 Successful Bluffs:</span>
+                            <span className="font-semibold">{stats.timesBluffedSuccessfully}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">❌ False Accusations:</span>
+                            <span className="font-semibold">{stats.timesFalselyAccused}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">✅ Told Truth:</span>
+                            <span className="font-semibold">{stats.timesToldTruth}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button

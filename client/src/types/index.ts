@@ -1,4 +1,4 @@
-import type { Rank, Player, GamePhase } from "shared";
+import type { Rank, Player, GamePhase, PlayerStats } from "shared";
 // Room types
 export interface Room {
   id: string;
@@ -6,6 +6,8 @@ export interface Room {
   hostId: string;
   maxPlayers: number;
   players: Player[];
+  isPublic: boolean;
+  hostName: string;
 }
 
 export interface GameState {
@@ -21,4 +23,5 @@ export interface GameState {
   winners: string[];
   loser: string | null;
   playerHandCounts: Record<string, number>;
+  playerStats: Record<string, PlayerStats>;
 }

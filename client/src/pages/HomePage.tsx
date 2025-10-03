@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,20 +12,62 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Seo from "@/components/SEO";
 import { toast } from "sonner";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const SERVER_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+
+interface RoomInfo {
+  id: string;
+  hostName: string;
+  playerCount: number;
+  maxPlayers: number;
+  isPublic: boolean;
+  inProgress: boolean;
+  code?: string;
+}
 
 export default function HomePage() {
   const [playerName, setPlayerName] = useState(
     localStorage.getItem("playerName") || "",
   );
   const [roomCode, setRoomCode] = useState("");
+  const [rooms, setRooms] = useState<RoomInfo[]>([]);
+  const [isPublicRoom, setIsPublicRoom] = useState(true);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [roomPassword, setRoomPassword] = useState("");
   const navigate = useNavigate();
+
+  // Fetch rooms on component mount and periodically
+  useEffect(() => {
+    fetchRooms();
+    const interval = setInterval(fetchRooms, 5000); // Refresh every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchRooms = async () => {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/rooms`);
+      if (response.ok) {
+        const data = await response.json();
+        setRooms(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch rooms:", error);
+    }
+  };
 
   const handleCreateRoom = () => {
     if (!playerName.trim()) return;
     localStorage.setItem("playerName", playerName);
-    navigate("/room/create");
+    // Pass isPublic as query parameter
+    navigate(`/room/create?isPublic=${isPublicRoom}`);
   };
 
   const handleJoinRoom = () => {
@@ -46,6 +88,56 @@ export default function HomePage() {
       })
       .then(() => {
         navigate(`/room/${roomCode}`);
+      })
+      .catch((error) => {
+        toast.error(`❌ ${error.message}`);
+      });
+  };
+
+  const handleRoomClick = (room: RoomInfo) => {
+    if (!playerName.trim()) {
+      toast.error("Please enter your name first");
+      return;
+    }
+    
+    if (room.inProgress) {
+      toast.error("Game already in progress");
+      return;
+    }
+
+    localStorage.setItem("playerName", playerName);
+    
+    if (room.isPublic && room.code) {
+      // Public room - join directly
+      navigate(`/room/${room.code}`);
+    } else {
+      // Private room - ask for password
+      setShowPasswordDialog(true);
+    }
+  };
+
+  const handlePrivateRoomJoin = () => {
+    if (!roomPassword.trim()) {
+      toast.error("Please enter the room password");
+      return;
+    }
+
+    // For private rooms, the password is the room code
+    fetch(`${SERVER_URL}/api/rooms/${roomPassword.trim().toUpperCase()}`)
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.error || "Invalid password");
+        }
+        if (data.inProgress) {
+          throw new Error("Cannot join, game already in progress");
+        }
+        return data;
+      })
+      .then(() => {
+        navigate(`/room/${roomPassword.trim().toUpperCase()}`);
+        setShowPasswordDialog(false);
+        setRoomPassword("");
       })
       .catch((error) => {
         toast.error(`❌ ${error.message}`);
@@ -98,6 +190,32 @@ export default function HomePage() {
                     placeholder="Enter your name"
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label>Room Visibility</Label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={isPublicRoom ? "default" : "outline"}
+                      onClick={() => setIsPublicRoom(true)}
+                      className="flex-1"
+                    >
+                      🌍 Public
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={!isPublicRoom ? "default" : "outline"}
+                      onClick={() => setIsPublicRoom(false)}
+                      className="flex-1"
+                    >
+                      🔒 Private
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    {isPublicRoom 
+                      ? "Anyone can see and join your room" 
+                      : "Players need the room code to join"}
+                  </p>
+                </div>
                 <Button
                   className="w-full"
                   onClick={handleCreateRoom}
@@ -148,6 +266,54 @@ export default function HomePage() {
             </Card>
           </div>
 
+          {/* Available Rooms */}
+          {rooms.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-center">🎮 Available Rooms</CardTitle>
+                <CardDescription className="text-center">
+                  Click on a room to join
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {rooms.map((room) => (
+                    <div
+                      key={room.id}
+                      onClick={() => handleRoomClick(room)}
+                      className={`p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${
+                        room.inProgress ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">{room.hostName}'s Room</span>
+                          {room.isPublic ? (
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                              🌍 Public
+                            </span>
+                          ) : (
+                            <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">
+                              🔒 Private
+                            </span>
+                          )}
+                          {room.inProgress && (
+                            <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                              In Progress
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          👥 {room.playerCount}/{room.maxPlayers}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Game Rules Summary */}
           <Card className="border-dashed">
             <CardHeader>
@@ -187,6 +353,46 @@ export default function HomePage() {
           </Card>
         </div>
       </div>
+
+      {/* Password Dialog for Private Rooms */}
+      <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Join Private Room</DialogTitle>
+            <DialogDescription>
+              This is a private room. Please enter the room code (password) to join.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="room-password">Room Code</Label>
+              <Input
+                id="room-password"
+                value={roomPassword}
+                onChange={(e) => setRoomPassword(e.target.value.toUpperCase())}
+                placeholder="Enter room code"
+                maxLength={8}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handlePrivateRoomJoin();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowPasswordDialog(false);
+              setRoomPassword("");
+            }}>
+              Cancel
+            </Button>
+            <Button onClick={handlePrivateRoomJoin}>
+              Join Room
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

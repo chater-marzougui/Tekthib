@@ -34,6 +34,14 @@ export interface PlayerWithHand extends Player {
   hand: Card[];
 }
 
+// Player statistics for tracking game performance
+export interface PlayerStats {
+  timesCaughtBluffing: number;      // Called out and was lying
+  timesBluffedSuccessfully: number;  // Lied and wasn't caught
+  timesFalselyAccused: number;       // Challenged but was telling truth
+  timesToldTruth: number;            // Played cards honestly and wasn't challenged
+}
+
 
 // WebSocket message types
 export type WSMessageType = 
@@ -105,6 +113,7 @@ export interface JoinRoomPayload {
 export interface CreateRoomPayload {
   playerName: string;
   maxPlayers?: number;
+  isPublic?: boolean;
 }
 
 export interface PlayCardsPayload {

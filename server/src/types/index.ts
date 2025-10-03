@@ -1,4 +1,4 @@
-import { PlayerWithHand, Card, Rank, GamePhase } from 'shared';
+import { PlayerWithHand, Card, Rank, GamePhase, PlayerStats } from 'shared';
 
 export interface Room {
   id: string;
@@ -8,6 +8,8 @@ export interface Room {
   gameState: GameState | null;
   createdAt: Date;
   maxPlayers: number;
+  isPublic: boolean;
+  hostName: string;
 }
 
 export interface GameState {
@@ -21,4 +23,5 @@ export interface GameState {
   winners: string[];
   loser: string | null;
   consecutivePasses: number;
+  playerStats: Map<string, PlayerStats>; // Track statistics for each player
 }
