@@ -1,4 +1,4 @@
-import { Card, Suit, Rank } from '../types';
+import { Card, SuitTypes, playableRanks } from 'shared';
 
 export class Deck {
   private cards: Card[];
@@ -9,13 +9,11 @@ export class Deck {
 
   private createDeck(): Card[] {
     const cards: Card[] = [];
-    const suits: Suit[] = ['hearts', 'diamonds', 'clubs', 'spades'];
-    const ranks: Rank[] = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
 
     // Create two standard decks (52 cards each = 104 total)
     for (let deckNum = 1; deckNum <= 2; deckNum++) {
-      for (const suit of suits) {
-        for (const rank of ranks) {
+      for (const suit of SuitTypes) {
+        for (const rank of playableRanks) {
           cards.push({
             id: `${suit}-${rank}-${deckNum}`,
             suit,

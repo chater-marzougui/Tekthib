@@ -1,0 +1,13 @@
+{
+  "name": "@shared",
+  "version": "1.0.0",
+  "description": "Shared types for Takthib",
+  "main": "./src/types/index.ts",
+  "types": "./src/types/index.ts",
+  "exports": {
+    ".": "./src/types/index.ts"
+  },
+  "keywords": [],
+  "author": "Chater Marzougui",
+  "license": "ISC"
+}

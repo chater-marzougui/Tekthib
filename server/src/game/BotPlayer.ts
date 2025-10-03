@@ -1,4 +1,4 @@
-import { Card, Player, Rank } from '../types';
+import { Card, playableRanks, Player, Rank } from 'shared';
 import { GameEngine } from './GameEngine';
 
 export class BotPlayer {
@@ -27,13 +27,17 @@ export class BotPlayer {
     // Reduce challenge probability based on number of bots
     // The more bots, the lower the probability to avoid excessive challenges
     if (botCount > 1) {
-      const reductionFactor = Math.min(0.8, botCount * 0.15);
+      const reductionFactor = Math.min(0.8, botCount * 0.075);
       baseProbability *= 1 - reductionFactor;
     }
 
     // Further reduce if many cards were played (likely telling truth)
     const lastPlayedCount = gameState.lastPlayedCount;
-    if (lastPlayedCount >= 3) {
+    if (lastPlayedCount > 4) {
+      baseProbability += 0.05 * lastPlayedCount;
+    } else if (lastPlayedCount === 2) {
+      baseProbability *= 0.8;
+    } else if (lastPlayedCount < 2) {
       baseProbability *= 0.6;
     }
 
@@ -147,23 +151,8 @@ export class BotPlayer {
           bestRank = nonJoker.rank;
         } else {
           // Only has Jokers - claim a random rank
-          const possibleRanks: Rank[] = [
-            '2',
-            '3',
-            '4',
-            '5',
-            '6',
-            '7',
-            '8',
-            '9',
-            '10',
-            'J',
-            'Q',
-            'K',
-            'A',
-          ];
           bestRank =
-            possibleRanks[Math.floor(Math.random() * possibleRanks.length)];
+            playableRanks[Math.floor(Math.random() * playableRanks.length)];
         }
       }
 

@@ -1,6 +1,7 @@
-import { Card, GameState, Player, Rank, Suit } from '../types';
+import  { Card, Player, Rank, Suit, SuitTypes } from 'shared';
 import { Deck } from './Deck';
 import { BotPlayer } from './BotPlayer';
+import { GameState } from '../types';
 
 export class GameEngine {
   private readonly gameState: GameState;
@@ -261,12 +262,11 @@ export class GameEngine {
           }
         });
 
-        const requiredSuits: Suit[] = ['hearts', 'diamonds', 'clubs', 'spades'];
-        const hasAllSuits = requiredSuits.every((suit) => suitCounts.has(suit));
+        const hasAllSuits = SuitTypes.every((suit) => suitCounts.has(suit));
 
         if (hasAllSuits) {
           // Check if we can remove 8 cards (2 of each suit)
-          const canRemoveEight = requiredSuits.every(
+          const canRemoveEight = SuitTypes.every(
             (suit) => (suitCounts.get(suit)?.length || 0) >= 2,
           );
 
@@ -274,14 +274,14 @@ export class GameEngine {
 
           if (canRemoveEight) {
             // Remove 2 cards of each suit (8 total)
-            requiredSuits.forEach((suit) => {
+            SuitTypes.forEach((suit) => {
               const cardsOfSuit = suitCounts.get(suit)!;
               cardsToRemove.add(cardsOfSuit[0].id);
               cardsToRemove.add(cardsOfSuit[1].id);
             });
           } else {
             // Remove 1 card of each suit (4 total)
-            requiredSuits.forEach((suit) => {
+            SuitTypes.forEach((suit) => {
               const cardOfSuit = suitCounts.get(suit)![0];
               cardsToRemove.add(cardOfSuit.id);
             });
