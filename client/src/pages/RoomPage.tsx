@@ -13,7 +13,8 @@ import ChatBox from "@/components/chat/ChatBox";
 import type { Player } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import VoiceChat from "@/components/chat/VoiceChat";
+import { VoiceChatProvider } from "@/context/VoiceChatContext";
+import VoiceChatEnhanced from "@/components/chat/VoiceChatEnhanced";
 
 function isDuplicatePlayer(players: Player[], newPlayer: Player): boolean {
   return players.some((p) => p.id === newPlayer.id);
@@ -198,7 +199,8 @@ export default function RoomPage() {
   const canStartGame =
     isHost && players.length >= 3 && players.every((p) => p.isReady);
 
-  return (
+  // Wrap content with VoiceChatProvider if we have a room
+  const content = (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 p-4">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
@@ -337,11 +339,10 @@ export default function RoomPage() {
               </CardContent>
             </Card>
 
-            {roomCode && (
-              <VoiceChat
-                roomId={roomCode}
-                localPlayerId={playerId}
+            {roomCode && playerId && (
+              <VoiceChatEnhanced
                 players={players}
+                localPlayerId={playerId}
               />
             )}
 
@@ -439,4 +440,20 @@ export default function RoomPage() {
       </div>
     </div>
   );
+
+  // Wrap with VoiceChatProvider if room is active
+  if (roomCode && playerId) {
+    return (
+      <VoiceChatProvider
+        roomId={roomCode}
+        localPlayerId={playerId}
+        players={players}
+        isHost={isHost}
+      >
+        {content}
+      </VoiceChatProvider>
+    );
+  }
+
+  return content;
 }
