@@ -79,7 +79,9 @@ export type WSMessageType =
   | 'KICK_PLAYER'
   | 'PLAYER_KICKED'
   | 'SWITCH_PLAYER_MIC'
-  | 'PLAYER_MIC_SWITCHED';
+  | 'PLAYER_MIC_SWITCHED'
+  | 'PLAY_AGAIN'
+  | 'GAME_RESET';
 
   
 export interface WSMessage {
@@ -137,4 +139,9 @@ export interface AddBotsPayload {
 
 export interface RemoveBotPayload {
   botId: string;
+}
+
+export interface PlayAgainPayload {
+  roomCode: string;
+  playerId: string;
 }

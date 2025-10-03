@@ -7,6 +7,7 @@ import {
   KickPlayerPayload,
   MutePlayerPayload,
   RemoveBotPayload,
+  PlayAgainPayload,
 } from 'shared';
 import { roomManager } from '../../utils/roomManager';
 import { sendToClient, broadcastToRoom, sendToPlayer } from '../index';
@@ -61,6 +62,10 @@ export function handleRoomMessages(
 
     case 'SWITCH_PLAYER_MIC':
       handleMutePlayer(ws, clients, message.payload as MutePlayerPayload);
+      break;
+
+    case 'PLAY_AGAIN':
+      handlePlayAgain(ws, clients, message.payload as PlayAgainPayload);
       break;
   }
 }
@@ -573,6 +578,95 @@ function handleMutePlayer(
       playerId: payload.playerId,
       playerName: playerToMute.name,
       mute: payload.mute,
+    },
+  });
+}
+
+function handlePlayAgain(
+  ws: WebSocket,
+  clients: Map<WebSocket, ClientInfo>,
+  payload: PlayAgainPayload,
+): void {
+  const clientInfo = clients.get(ws)!;
+
+  // Get room by code instead of clientInfo.roomId since they might have left
+  const room = roomManager.getRoomByCode(payload.roomCode);
+
+  if (!room) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: { message: 'Room not found', code: 'ROOM_NOT_FOUND' },
+    });
+    return;
+  }
+
+  // Check if player is already in the room
+  const existingPlayer = room.players.get(payload.playerId);
+  
+  if (!existingPlayer) {
+    // Player needs to rejoin the room
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: { message: 'Please rejoin the room first' },
+    });
+    return;
+  }
+
+  // Check if game has already been reset (gameState is null means already in waiting phase)
+  if (!room.gameState || room.gameState.phase !== 'ended') {
+    // Game already reset or not ended, just navigate the player to room
+    sendToClient(ws, {
+      type: 'GAME_RESET',
+      payload: {
+        room: {
+          id: room.id,
+          code: room.code,
+          hostId: room.hostId,
+          maxPlayers: room.maxPlayers,
+          players: Array.from(room.players.values()).map((p) => ({
+            id: p.id,
+            name: p.name,
+            isReady: p.isReady,
+            isConnected: p.isConnected,
+            isBot: p.isBot,
+          })),
+        },
+      },
+    });
+    return;
+  }
+
+  // First player to click becomes the host and resets the game
+  const result = roomManager.resetGame(room.id);
+
+  if (!result.success) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: { message: result.error || 'Failed to reset game' },
+    });
+    return;
+  }
+
+  // Set this player as the new host
+  room.hostId = payload.playerId;
+
+  // Broadcast to all players that game has been reset
+  broadcastToRoom(clients, room.id, {
+    type: 'GAME_RESET',
+    payload: {
+      room: {
+        id: room.id,
+        code: room.code,
+        hostId: room.hostId,
+        maxPlayers: room.maxPlayers,
+        players: Array.from(room.players.values()).map((p) => ({
+          id: p.id,
+          name: p.name,
+          isReady: p.isReady,
+          isConnected: p.isConnected,
+          isBot: p.isBot,
+        })),
+      },
     },
   });
 }
