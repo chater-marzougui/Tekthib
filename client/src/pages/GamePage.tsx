@@ -262,7 +262,7 @@ export default function GamePage() {
     : [];
 
   // Determine if current player is host (first player in the list)
-  const isHost = gameState && gameState.players.length > 0 && gameState.players[0].id === playerId;
+  const isHost = !!(gameState && gameState.players.length > 0 && gameState.players[0].id === playerId);
 
   // Update players list when game state changes
   useEffect(() => {

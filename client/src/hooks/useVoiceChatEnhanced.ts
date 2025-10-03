@@ -22,7 +22,7 @@ const ICE_SERVERS = {
   ],
 };
 
-export function useVoiceChatEnhanced({ roomId, localPlayerId, players, isHost = false }: VoiceChatConfig) {
+export function useVoiceChatEnhanced({ localPlayerId, players, isHost = false }: VoiceChatConfig) {
   const { sendMessage, registerHandler } = useWebSocketContext();
   
   const [isMuted, setIsMuted] = useState(false);
