@@ -76,6 +76,7 @@ function handleCreateRoom(
     clientInfo.id,
     payload.playerName,
     payload.maxPlayers || 10,
+    payload.isPublic ?? true,
   );
 
   clientInfo.roomId = room.id;

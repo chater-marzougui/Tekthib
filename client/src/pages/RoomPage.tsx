@@ -11,7 +11,6 @@ import {
 import { useWebSocketContext } from "@/context/WebSocketContext";
 import ChatBox from "@/components/chat/ChatBox";
 import type { Player } from "shared";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { VoiceChatProvider } from "@/context/VoiceChatContext";
 import VoiceChat from "@/components/chat/VoiceChat";
@@ -35,6 +34,10 @@ export default function RoomPage() {
   const playerName = localStorage.getItem("playerName") || "Unknown";
   const playerId = localStorage.getItem("clientId") || "";
   const roomCodeRef = useRef(roomCode);
+
+  // Get isPublic from URL params if creating room
+  const searchParams = new URLSearchParams(window.location.search);
+  const isPublic = searchParams.get("isPublic") !== "false";
 
   useEffect(() => {
     roomCodeRef.current = roomCode;
@@ -145,7 +148,7 @@ export default function RoomPage() {
     if (roomId === "create") {
       sendMessage({
         type: "CREATE_ROOM",
-        payload: { playerName, maxPlayers: 10 },
+        payload: { playerName, maxPlayers: 10, isPublic },
       });
     } else {
       sendMessage({

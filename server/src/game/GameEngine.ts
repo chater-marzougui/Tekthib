@@ -41,6 +41,17 @@ export class GameEngine {
       }
     });
 
+    // Initialize player stats
+    const playerStats = new Map<string, import('shared').PlayerStats>();
+    playerOrder.forEach((playerId) => {
+      playerStats.set(playerId, {
+        timesCaughtBluffing: 0,
+        timesBluffedSuccessfully: 0,
+        timesFalselyAccused: 0,
+        timesToldTruth: 0,
+      });
+    });
+
     return {
       phase: 'playing',
       currentPlayerIndex: 0,
@@ -52,6 +63,7 @@ export class GameEngine {
       winners: [],
       loser: null,
       consecutivePasses: 0,
+      playerStats,
     };
   }
 
@@ -102,6 +114,27 @@ export class GameEngine {
         success: false,
         error: `Must claim ${this.gameState.currentRank}`,
       };
+    }
+
+    // If there was a previous play that wasn't challenged, update stats for successful bluff
+    if (this.gameState.lastPlayerId && this.gameState.lastPlayedCards.length > 0) {
+      const previousPlayerId = this.gameState.lastPlayerId;
+      const previousClaimedRank = this.gameState.currentRank;
+      const previousCards = this.gameState.lastPlayedCards;
+      
+      // Check if previous play was a bluff (and got away with it)
+      const wasBluff = !previousCards.every(
+        (card) => card.rank === previousClaimedRank || card.rank === 'Joker'
+      );
+      
+      const previousPlayerStats = this.gameState.playerStats.get(previousPlayerId);
+      if (previousPlayerStats) {
+        if (wasBluff) {
+          previousPlayerStats.timesBluffedSuccessfully++;
+        } else {
+          previousPlayerStats.timesToldTruth++;
+        }
+      }
     }
 
     // Remove cards from player's hand
@@ -193,6 +226,20 @@ export class GameEngine {
     const getsThePile = this.players.get(
       wasLying ? this.gameState.lastPlayerId : challengerId,
     )!;
+
+    // Update player statistics
+    const lastPlayerStats = this.gameState.playerStats.get(this.gameState.lastPlayerId);
+    const challengerStats = this.gameState.playerStats.get(challengerId);
+    
+    if (wasLying) {
+      // Last player was lying - caught bluffing
+      if (lastPlayerStats) lastPlayerStats.timesCaughtBluffing++;
+    } else {
+      // Last player was telling truth
+      if (lastPlayerStats) lastPlayerStats.timesToldTruth++;
+      // Challenger falsely accused
+      if (challengerStats) challengerStats.timesFalselyAccused++;
+    }
 
     // Liar takes the pile
     getsThePile.hand.push(...this.gameState.pile);
@@ -336,6 +383,7 @@ export class GameEngine {
           this.players.get(id)?.hand.length || 0,
         ]),
       ),
+      playerStats: Object.fromEntries(this.gameState.playerStats),
     };
   }
 
