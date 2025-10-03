@@ -84,6 +84,8 @@ function handleMessage(ws: WebSocket, message: WSMessage): void {
     case 'READY':
     case 'ADD_BOTS':
     case 'START_GAME':
+    case 'KICK_PLAYER':
+    case 'MUTE_PLAYER':
       handleRoomMessages(ws, clients, message);
       break;
 

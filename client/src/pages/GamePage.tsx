@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useWebSocketContext } from '@/context/WebSocketContext';
+import { VoiceChatProvider } from '@/context/VoiceChatContext';
 import GameBoard from '../components/game/GameBoard';
 import PlayerHand from '../components/game/PlayerHand';
 import PlayerList from '../components/game/PlayerList';
 import ChatBox from '../components/chat/ChatBox';
+import VoiceChatEnhanced from '../components/chat/VoiceChatEnhanced';
 import { toast } from 'sonner';
-import type { Card as GameCard, GameState as ServerGameState, Rank } from '@/types';
+import type { Card as GameCard, GameState as ServerGameState, Rank, Player } from '@/types';
 
 interface GamePlayer {
   id: string;
@@ -248,6 +250,20 @@ export default function GamePage() {
     };
   }, [registerHandler, navigate, playerId, playerName, lastPlay]);
 
+  // Convert gameState players to Player[] format for voice chat
+  const playersForVoice: Player[] = gameState
+    ? gameState.players.map((p) => ({
+        id: p.id,
+        name: p.name,
+        isReady: true,
+        isConnected: p.isConnected,
+        isBot: p.isBot,
+      }))
+    : [];
+
+  // Determine if current player is host (first player in the list)
+  const isHost = gameState && gameState.players.length > 0 && gameState.players[0].id === playerId;
+
   // Update players list when game state changes
   useEffect(() => {
     if (!gameState) return;
@@ -327,7 +343,7 @@ export default function GamePage() {
     );
   }
 
-  return (
+  const content = (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 p-4">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
@@ -376,6 +392,14 @@ export default function GamePage() {
               players={players}
               currentPlayerName={playerName}
             />
+
+            {/* Voice Chat */}
+            {roomId && playerId && (
+              <VoiceChatEnhanced
+                players={playersForVoice}
+                localPlayerId={playerId}
+              />
+            )}
 
             {/* Chat Box */}
             {playerId && playerName && (
@@ -443,4 +467,20 @@ export default function GamePage() {
       </Dialog>
     </div>
   );
+
+  // Wrap with VoiceChatProvider to maintain voice connections
+  if (roomId && playerId) {
+    return (
+      <VoiceChatProvider
+        roomId={roomId}
+        localPlayerId={playerId}
+        players={playersForVoice}
+        isHost={isHost}
+      >
+        {content}
+      </VoiceChatProvider>
+    );
+  }
+
+  return content;
 }

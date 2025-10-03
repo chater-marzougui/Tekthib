@@ -76,7 +76,11 @@ export type WSMessageType =
   | 'RTC_ANSWER'
   | 'RTC_ICE_CANDIDATE'
   | 'CONNECT'
-  | 'CONNECTED';
+  | 'CONNECTED'
+  | 'KICK_PLAYER'
+  | 'PLAYER_KICKED'
+  | 'MUTE_PLAYER'
+  | 'PLAYER_MUTED';
 
 export interface WSMessage {
   type: WSMessageType;
@@ -89,4 +93,13 @@ export interface RTCSignalPayload {
   targetPlayerId: string;
   fromPlayerId?: string;
   signal: RTCSessionDescriptionInit | RTCIceCandidateInit;
+}
+
+// Host control payloads
+export interface KickPlayerPayload {
+  playerId: string;
+}
+
+export interface MutePlayerPayload {
+  playerId: string;
 }

@@ -76,7 +76,11 @@ export type WSMessageType =
   | 'ERROR'
   | 'RTC_OFFER'
   | 'RTC_ANSWER'
-  | 'RTC_ICE_CANDIDATE';
+  | 'RTC_ICE_CANDIDATE'
+  | 'KICK_PLAYER'
+  | 'PLAYER_KICKED'
+  | 'MUTE_PLAYER'
+  | 'PLAYER_MUTED';
 
 export interface WSMessage {
   type: WSMessageType;
@@ -117,4 +121,12 @@ export interface RTCSignalPayload {
 
 export interface AddBotsPayload {
   count: number;
+}
+
+export interface KickPlayerPayload {
+  playerId: string;
+}
+
+export interface MutePlayerPayload {
+  playerId: string;
 }
