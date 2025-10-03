@@ -93,7 +93,7 @@ function handleJoinRoom(
   if (!room) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Room not found' }
+      payload: { message: 'Room not found', code: 'ROOM_NOT_FOUND' }
     });
     return;
   }

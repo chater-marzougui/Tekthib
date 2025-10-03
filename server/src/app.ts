@@ -21,12 +21,29 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Get room info by code (for checking if room exists)
 app.get('/api/rooms/:code', (req, res) => {
   const room = roomManager.getRoomByCode(req.params.code.toUpperCase());
-  
+  console.log('Fetching room:', req.params.code, room ? 'Found' : 'Not Found');
+
   if (!room) {
-    return res.status(404).json({ error: 'Room not found' });
+    return res.status(404).json({ 
+      error: 'Room not found', 
+      code: 'ROOM_NOT_FOUND' 
+    });
+  }
+  
+  if (room.gameState?.phase === 'playing') {
+    return res.status(403).json({
+      error: 'Game already started',
+      code: 'GAME_ALREADY_STARTED'
+    });
+  }
+
+  if (room.players.size >= room.maxPlayers) {
+    return res.status(403).json({
+      error: 'Room is full',
+      code: 'ROOM_FULL'
+    });
   }
 
   res.json({
@@ -34,9 +51,10 @@ app.get('/api/rooms/:code', (req, res) => {
     code: room.code,
     playerCount: room.players.size,
     maxPlayers: room.maxPlayers,
-    inProgress: room.gameState?.phase === 'playing'
+    inProgress: room.gameState?.phase === 'ended'
   });
 });
+
 
 // Admin routes
 app.use('/api/admin', adminRoutes);

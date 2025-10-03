@@ -113,6 +113,12 @@ export default function RoomPage() {
     const unregisterError = registerHandler("error", (message) => {
       if (message.type === "ERROR") {
         setError(message.payload.message);
+        toast.error(`Error: ${message.payload.message}`);
+      }
+      if (message.payload.code === "ROOM_NOT_FOUND") {
+        setTimeout(() => {
+          navigate("/");
+        }, 2000);
       }
     });
 
@@ -214,7 +220,7 @@ export default function RoomPage() {
               <Button
                 variant="outline"
                 onClick={copyRoomCode}
-                className="font-mono text-lg px-4"
+                className="font-mono text-lg px-4 cursor-pointer"
                 disabled={!roomCode}
               >
                 {roomCode || "Loading..."}

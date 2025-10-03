@@ -11,6 +11,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Seo from "@/components/SEO";
+import { toast } from "sonner";
+
+const SERVER_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 export default function HomePage() {
   const [playerName, setPlayerName] = useState(
@@ -28,7 +31,25 @@ export default function HomePage() {
   const handleJoinRoom = () => {
     if (!playerName.trim() || !roomCode.trim()) return;
     localStorage.setItem("playerName", playerName);
-    navigate(`/room/${roomCode}`);
+    console.log("Based on server URL:", SERVER_URL);
+
+    fetch(`${SERVER_URL}/api/rooms/${roomCode.trim().toUpperCase()}`)
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({})); // fallback if no body
+        if (!response.ok) {
+          throw new Error(data.error || "Unknown error");
+        }
+        if (data.inProgress) {
+          throw new Error("Cannot join, game already in progress");
+        }
+        return data;
+      })
+      .then(() => {
+        navigate(`/room/${roomCode}`);
+      })
+      .catch((error) => {
+        toast.error(`❌ ${error.message}`);
+      });
   };
 
   return (
