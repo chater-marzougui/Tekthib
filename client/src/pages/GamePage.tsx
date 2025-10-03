@@ -2,14 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useWebSocketContext } from "@/context/WebSocketContext";
 import { VoiceChatProvider } from "@/context/VoiceChatContext";
 import GameBoard from "../components/game/GameBoard";
@@ -20,6 +12,7 @@ import { toast } from "sonner";
 import type { Card as GameCard, Rank, Player, DisplayGameCard } from "shared";
 import type { GameState as ServerGameState } from "./../types";
 import VoiceChat from "@/components/chat/VoiceChat";
+import { EndGameDialog } from "@/components/game/EndGameDialog";
 
 interface GamePlayer extends Player {
   isCurrentTurn: boolean;
@@ -108,13 +101,13 @@ export default function GamePage() {
 
           if (hand) {
             setPlayerHand(
-              hand.map((card: GameCard) => ({ ...card, selected: false })),
+              hand.map((card: GameCard) => ({ ...card, selected: false }))
             );
           }
 
           setIsLoading(false);
         }
-      },
+      }
     );
 
     // Register WebSocket handlers
@@ -126,7 +119,7 @@ export default function GamePage() {
 
           if (hand) {
             setPlayerHand(
-              hand.map((card: GameCard) => ({ ...card, selected: false })),
+              hand.map((card: GameCard) => ({ ...card, selected: false }))
             );
           }
 
@@ -135,7 +128,7 @@ export default function GamePage() {
             setIsMyTurn(newGameState.currentPlayerId === playerId);
           }
         }
-      },
+      }
     );
 
     const unregisterCardsPlayed = registerHandler("cards-played", (message) => {
@@ -221,7 +214,7 @@ export default function GamePage() {
             setIsMyTurn(newGameState.currentPlayerId === playerId);
           }
         }
-      },
+      }
     );
 
     const unregisterGameEnded = registerHandler("game-ended", (message) => {
@@ -232,7 +225,7 @@ export default function GamePage() {
           .map(
             (id: string) =>
               finalState?.players?.find((p: Player) => p.id === id)?.name ||
-              "Unknown",
+              "Unknown"
           )
           .join(", ");
 
@@ -322,14 +315,14 @@ export default function GamePage() {
   const handleCardSelect = (cardId: string) => {
     setPlayerHand((prev) =>
       prev.map((card) =>
-        card.id === cardId ? { ...card, selected: !card.selected } : card,
-      ),
+        card.id === cardId ? { ...card, selected: !card.selected } : card
+      )
     );
 
     setSelectedCards((prev) =>
       prev.includes(cardId)
         ? prev.filter((id) => id !== cardId)
-        : [...prev, cardId],
+        : [...prev, cardId]
     );
   };
 
@@ -360,7 +353,7 @@ export default function GamePage() {
   const handleLeaveGame = () => {
     navigate("/");
   };
-
+  
   // Show loading state while fetching game data
   if (isLoading || !gameState) {
     return (
@@ -461,89 +454,15 @@ export default function GamePage() {
           </div>
         </div>
       </div>
-
-      {/* Game Ended Dialog */}
-      <Dialog
+      <EndGameDialog
         open={gameEndedDialog.open}
-        onOpenChange={(open) => {
-          setGameEndedDialog({ ...gameEndedDialog, open });
-          if (!open) {
-            navigate("/");
-          }
-        }}
-      >
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>🎉 Game Over!</DialogTitle>
-            <DialogDescription>
-              The game has ended. Here are the results:
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div>
-              <h3 className="font-semibold text-green-600 mb-2">🏆 Winners:</h3>
-              <ul className="list-disc list-inside space-y-1">
-                {gameEndedDialog.winners.map((winner, idx) => (
-                  <li key={idx} className="text-lg">
-                    {winner}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-red-600 mb-2">😢 Loser:</h3>
-              <p className="text-lg">{gameEndedDialog.loser}</p>
-            </div>
-            
-            {/* Player Statistics */}
-            {gameEndedDialog.playerStats && gameState && (
-              <div className="mt-6">
-                <h3 className="font-semibold text-blue-600 mb-3">📊 Player Statistics</h3>
-                <div className="space-y-3">
-                  {gameState.players.map((player) => {
-                    const stats = gameEndedDialog.playerStats?.[player.id];
-                    if (!stats) return null;
-                    
-                    return (
-                      <div key={player.id} className="border rounded-lg p-3 bg-gray-50">
-                        <h4 className="font-semibold mb-2">{player.name}</h4>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">🤥 Caught Bluffing:</span>
-                            <span className="font-semibold">{stats.timesCaughtBluffing}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">😎 Successful Bluffs:</span>
-                            <span className="font-semibold">{stats.timesBluffedSuccessfully}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">❌ False Accusations:</span>
-                            <span className="font-semibold">{stats.timesFalselyAccused}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">✅ Told Truth:</span>
-                            <span className="font-semibold">{stats.timesToldTruth}</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button
-              onClick={() => {
-                setGameEndedDialog({ ...gameEndedDialog, open: false });
-                navigate("/");
-              }}
-            >
-              Return to Home
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        winners={gameEndedDialog.winners}
+        loser={gameEndedDialog.loser}
+        playerStats={gameEndedDialog.playerStats}
+        gameState={gameState}
+        currentPlayerId={playerId} // Add this prop
+        onClose={() => setGameEndedDialog({ ...gameEndedDialog, open: false })}
+      />
     </div>
   );
 

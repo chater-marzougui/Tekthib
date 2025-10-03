@@ -1,242 +1,115 @@
-# 🎮 Tekthib - Quick Setup Guide
+1. Animations (biggest missing piece)
 
-## 📋 What Was Implemented
+Card flip / slide when played → use framer-motion for smooth transitions.(good one i'll try it)
 
-This implementation completed **Phases 1-4** of the project plan:
+Pile animation when challenged (e.g., cards scatter → loser hand) (good one too).
 
-### ✅ Phase 1: Core Infrastructure
-- React + TypeScript + Vite frontend
-- Node.js + Express + WebSocket backend
-- Complete project structure
-- Tailwind CSS + Shadcn UI setup
+Winner glow effect when someone finishes their cards(already done, glow when it's his turn too so players can open mic and insult him knowing who to insult).
 
-### ✅ Phase 2: Room System
-- Create/join rooms with unique codes
-- Real-time player list
-- Ready/start game controls
-- Player disconnect handling
+2. Game Feedback
 
-### ✅ Phase 3: Game Engine
-- Full game logic (deck, turns, bluffing, challenges)
-- Real-time card playing
-- Challenge verification
-- Win/lose detection
-- Four-of-a-kind auto-removal
+Toasts/notifications:
 
-### ✅ Phase 4: Chat System
-- Text chat in lobby and game
-- Real-time message broadcasting
-- XSS protection
+    const unregisterChallengeResult = registerHandler(
+      "challenge-result",
+      (message) => {
+        if (message.type === "CHALLENGE_RESULT") {
+          const {
+            challengerName,
+            wasLying,
+            playerName: lastPlayerName,
+            gameState: newGameState,
+          } = message.payload;
+          let toastType = "info";
 
-### ⏳ Phase 5: WebRTC Voice Chat
-**NOT IMPLEMENTED** - This is optional and can be added later. The game is fully playable without it.
+          // Don't reveal cards, just show who was right/wrong
+          let resultMessage = "";
+          if (wasLying && lastPlayerName === playerName) {
+            resultMessage = `You were caught lying! Learn to play!.`;
+            toastType = "error";
+          } else if (wasLying && challengerName === playerName) {
+            resultMessage = `You were right! ${lastPlayerName} was lying.`;
+            toastType = "success";
+          } else if (!wasLying && lastPlayerName === playerName) {
+            resultMessage = `You were telling the truth! Well played, ${challengerName} was wrong.`;
+            toastType = "success";
+          } else if (!wasLying && challengerName === playerName) {
+            resultMessage = `You were wrong! ${lastPlayerName} was telling the truth.`;
+            toastType = "error";
+          } else {
+            resultMessage = wasLying
+              ? `${challengerName} was right! ${lastPlayerName} was lying.`
+              : `${challengerName} was wrong! ${lastPlayerName} was telling the truth.`;
+          }
 
-## 🚀 Running the Project Locally
+          // Show toast notification
+          if (toastType === "error") {
+            toast.error(resultMessage);
+          } else if (toastType === "success") {
+            toast.success(resultMessage);
+          } else {
+            toast(resultMessage);
+          }
 
-### Option 1: Quick Start (Recommended)
+          // Add system message to chat
+          const systemMessage: SystemMessage = {
+            id: `system-${Date.now()}${Math.random()}`,
+            playerId: "system",
+            playerName: "System",
+            message: resultMessage,
+            timestamp: Date.now(),
+            isSystem: true,
+          };
+          setSystemMessages((prev) => [...prev, systemMessage]);
 
-```bash
-# 1. Clone the repository
-git clone https://github.com/chater-marzougui/Tekthib.git
-cd Tekthib
+          setLastPlay(null);
+          setCanChallenge(false);
 
-# 2. Install all dependencies
-npm run install:all
+          if (newGameState) {
+            setGameState(newGameState);
+            setIsMyTurn(newGameState.currentPlayerId === playerId);
+          }
+        }
+      },
+    );
 
-# 3. Setup environment files
-cp server/.env.example server/.env
-cp client/.env.example client/.env
 
-# 4. Run the server (Terminal 1)
-npm run dev:server
+Maybe a little sound FX (card shuffle, slap, win fanfare) (good one will add ).
 
-# 5. Run the client (Terminal 2)
-npm run dev:client
+3. Lobby & Room UX
 
-# 6. Open your browser to http://localhost:5173
-```
+Room code copy/share button.(already exists)
 
-### Option 2: Manual Setup
+QR code generator (so someone can scan to join).(good one)
 
-**Backend:**
-```bash
-cd server
-npm install
-cp .env.example .env
-npm run dev
-```
+List of connected players + bots, toggle ready state (you already did some of this)(done with kick player, toggle of his mic for the host s he can manage minions).
 
-**Frontend (in a new terminal):**
-```bash
-cd client
-npm install
-cp .env.example .env
-npm run dev
-```
+4. Bluff Shout Integration
 
-## 🎮 Testing the Game
+Hook your voice recognition mini-model so “TA7CHI FIIH” auto-triggers callBluff().(the best but i'm procastrinating )
 
-1. **Open multiple browser tabs** (at least 3 for testing)
-2. **Tab 1**: Create a room
-   - Enter your name
-   - Click "Create New Room"
-   - Copy the room code
-3. **Tabs 2-3**: Join the room
-   - Enter different names
-   - Paste the room code
-   - Click "Join Room"
-4. **All tabs**: Mark as "Ready"
-5. **Tab 1 (Host)**: Click "Start Game"
-6. **Play the game!**
-   - Select cards from your hand
-   - Choose a rank to claim
-   - Click "Play X Cards"
-   - Other players can challenge if they think you're lying
-   - Use chat to communicate
+That’s chef’s kiss immersion.
 
-## 📦 Shadcn Components Installation
+5. Avatars & Cosmetics
 
-The project currently uses these Shadcn components (already installed):
-- `button`
-- `card`
-- `input`
-- `label`
+Custom avatars (done basic).
 
-**To add more Shadcn components in the future:**
-```bash
-cd client
-npx shadcn@latest add [component-name]
-```
+Add player colors/borders to cards so you always know “this pile is coming from X.”(done)
 
-Examples:
-```bash
-npx shadcn@latest add dialog
-npx shadcn@latest add badge
-npx shadcn@latest add avatar
-npx shadcn@latest add toast
-```
+Maybe unlockable cosmetics later.
 
-## 🏗️ Project Structure
+6. Scaling & Networking
 
-```
-Tekthib/
-├── client/                  # React Frontend
-│   ├── src/
-│   │   ├── components/     # UI Components
-│   │   │   ├── ui/        # Shadcn components
-│   │   │   ├── game/      # Game-specific components
-│   │   │   └── chat/      # Chat component
-│   │   ├── context/       # React Context (WebSocket)
-│   │   ├── hooks/         # Custom hooks (useWebsocket)
-│   │   ├── pages/         # Page components
-│   │   └── types/         # TypeScript types
-│   └── .env               # Frontend config
-│
-├── server/                  # Node.js Backend
-│   ├── src/
-│   │   ├── websocket/     # WebSocket handlers
-│   │   ├── game/          # Game engine
-│   │   ├── utils/         # Room manager
-│   │   └── types/         # TypeScript types
-│   └── .env               # Backend config
-│
-└── README.md               # Full documentation
-```
+Test with 10 real people in a room (Tunisia internet = boss fight).(trueeeee)
 
-## 🔧 Environment Configuration
+Optimize WebSocket events (batch updates if spammy).(true)
 
-### Server (.env)
-```env
-PORT=3001
-NODE_ENV=development
-CORS_ORIGIN=http://localhost:5173
-```
+Handle reconnection (refresh shouldn’t kill a game).(already implemented, and soon a spectator mode)
 
-### Client (.env)
-```env
-VITE_API_URL=http://localhost:3001
-VITE_WS_URL=ws://localhost:3001
-```
+7. Polish + Quality of Life
 
-## 🚨 Common Issues
+End-game screen with winner + loser highlights.(started it i'm implementing stats of caught/bluff, accused/truth)
 
-### Issue: "Cannot connect to server"
-**Solution:** Make sure the backend server is running on port 3001
+Session scoreboard (who won most rounds in one night)(can't since i don't use states and long term database).
 
-### Issue: "WebSocket connection failed"
-**Solution:** Check that VITE_WS_URL in client/.env matches the server port
-
-### Issue: "Modules not found"
-**Solution:** Run `npm run install:all` to install all dependencies
-
-### Issue: "Port already in use"
-**Solution:** Change PORT in server/.env to a different port (e.g., 3002)
-
-## 📝 Development Workflow
-
-### Making Changes
-
-**Frontend changes:**
-```bash
-cd client
-npm run dev
-# Edit files in src/
-# Changes hot-reload automatically
-```
-
-**Backend changes:**
-```bash
-cd server
-npm run dev
-# Edit files in src/
-# Server restarts automatically
-```
-
-### Building for Production
-
-```bash
-# Build everything
-npm run build:all
-
-# Or separately:
-npm run build:server
-npm run build:client
-```
-
-## 🌐 Future Deployment (Heroku)
-
-When ready to deploy to Heroku:
-
-1. Create Heroku app
-2. Set environment variables
-3. Configure buildpacks for both client and server
-4. Deploy via Git
-
-Detailed instructions are in the main README.md
-
-## 🎯 Next Steps
-
-Now that the core game is working, you can:
-
-1. **Test thoroughly** - Play multiple rounds with friends
-2. **Add features** - Voice chat, avatars, animations
-3. **Deploy** - Host on Heroku or another platform
-4. **Customize** - Change styles, add your own branding
-5. **Extend** - Add tournaments, statistics, replays
-
-## 📚 Additional Resources
-
-- [Shadcn UI Documentation](https://ui.shadcn.com/)
-- [React Documentation](https://react.dev/)
-- [WebSocket API](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)
-- [Tailwind CSS](https://tailwindcss.com/)
-
-## 🆘 Need Help?
-
-- Check the full README.md for detailed information
-- Review the code comments in the source files
-- Create an issue on GitHub for bugs or questions
-
----
-
-**Happy Gaming! 🃏**
+Auto-bot replace if someone rage-quits.(good one )

@@ -341,21 +341,29 @@ export class GameEngine {
     });
   }
 
-  private advanceTurn(): void {
-    const startIndex = this.gameState.currentPlayerIndex;
-    let nextIndex = (startIndex + 1) % this.gameState.playerOrder.length;
+  private advanceTurn(): void { 
+    const startIndex = this.gameState.currentPlayerIndex; 
+    let nextIndex = (startIndex + 1) % this.gameState.playerOrder.length; 
+    let skippedCount = 0;
 
-    // Skip winners
-    while (
-      this.gameState.winners.includes(this.gameState.playerOrder[nextIndex])
-    ) {
-      nextIndex = (nextIndex + 1) % this.gameState.playerOrder.length;
+    // Skip winners 
+    while ( 
+      this.gameState.winners.includes(this.gameState.playerOrder[nextIndex]) 
+    ) { 
+      nextIndex = (nextIndex + 1) % this.gameState.playerOrder.length; 
+      skippedCount++;
 
-      // Prevent infinite loop
-      if (nextIndex === startIndex) break;
-    }
+      // If we've looped through all players and they're all winners except one
+      if (skippedCount >= this.gameState.playerOrder.length) { 
+        this.gameState.phase = 'ended';
+        this.gameState.loser = this.gameState.playerOrder.find(
+          (id) => !this.gameState.winners.includes(id)
+        ) || null;
+        return;
+      } 
+    } 
 
-    this.gameState.currentPlayerIndex = nextIndex;
+    this.gameState.currentPlayerIndex = nextIndex; 
   }
 
   getPlayerHand(playerId: string): Card[] {
