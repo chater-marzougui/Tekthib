@@ -1,13 +1,14 @@
 import { createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
-import { useVoiceChatEnhanced } from '../hooks/useVoiceChatEnhanced';
 import type { Player } from '../types';
+import { useVoiceChat } from '@/hooks/useVoiceChat';
 
 interface VoiceChatContextType {
   isVoiceEnabled: boolean;
   isMuted: boolean;
   audioError: string | null;
   mutedPlayers: Set<string>;
+  hostMutedPlayers: Set<string>;
   hostMuted: boolean;
   isHost: boolean;
   enableVoiceChat: () => Promise<void>;
@@ -15,7 +16,7 @@ interface VoiceChatContextType {
   toggleMute: () => void;
   togglePlayerMute: (playerId: string) => void;
   kickPlayer: (playerId: string) => void;
-  mutePlayerMic: (playerId: string) => void;
+  mutePlayerMic: (playerId: string, mute: boolean) => void;
 }
 
 const VoiceChatContext = createContext<VoiceChatContextType | null>(null);
@@ -34,8 +35,8 @@ export function VoiceChatProvider({
   localPlayerId, 
   players, 
   isHost = false 
-}: VoiceChatProviderProps) {
-  const voiceChat = useVoiceChatEnhanced({ roomId, localPlayerId, players, isHost });
+}: Readonly<VoiceChatProviderProps>) {
+  const voiceChat = useVoiceChat({ roomId, localPlayerId, players, isHost });
 
   return (
     <VoiceChatContext.Provider value={voiceChat}>

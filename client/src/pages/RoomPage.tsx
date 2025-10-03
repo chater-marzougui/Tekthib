@@ -14,7 +14,7 @@ import type { Player } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { VoiceChatProvider } from "@/context/VoiceChatContext";
-import VoiceChatEnhanced from "@/components/chat/VoiceChatEnhanced";
+import VoiceChat from "@/components/chat/VoiceChat";
 
 function isDuplicatePlayer(players: Player[], newPlayer: Player): boolean {
   return players.some((p) => p.id === newPlayer.id);
@@ -340,7 +340,7 @@ export default function RoomPage() {
             </Card>
 
             {roomCode && playerId && (
-              <VoiceChatEnhanced
+              <VoiceChat
                 players={players}
                 localPlayerId={playerId}
               />

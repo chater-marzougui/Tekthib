@@ -79,8 +79,8 @@ export type WSMessageType =
   | 'CONNECTED'
   | 'KICK_PLAYER'
   | 'PLAYER_KICKED'
-  | 'MUTE_PLAYER'
-  | 'PLAYER_MUTED';
+  | 'SWITCH_PLAYER_MIC'
+  | 'PLAYER_MIC_SWITCHED';
 
 export interface WSMessage {
   type: WSMessageType;

@@ -79,8 +79,8 @@ export type WSMessageType =
   | 'RTC_ICE_CANDIDATE'
   | 'KICK_PLAYER'
   | 'PLAYER_KICKED'
-  | 'MUTE_PLAYER'
-  | 'PLAYER_MUTED';
+  | 'SWITCH_PLAYER_MIC'
+  | 'PLAYER_MIC_SWITCHED';
 
 export interface WSMessage {
   type: WSMessageType;
@@ -129,4 +129,5 @@ export interface KickPlayerPayload {
 
 export interface MutePlayerPayload {
   playerId: string;
+  mute: boolean;
 }

@@ -47,7 +47,7 @@ export function handleRoomMessages(
       handleKickPlayer(ws, clients, message.payload as KickPlayerPayload);
       break;
 
-    case 'MUTE_PLAYER':
+    case 'SWITCH_PLAYER_MIC':
       handleMutePlayer(ws, clients, message.payload as MutePlayerPayload);
       break;
   }
@@ -474,19 +474,21 @@ function handleMutePlayer(
 
   // Notify the muted player to disable their microphone
   sendToPlayer(clients, payload.playerId, {
-    type: 'PLAYER_MUTED',
+    type: 'PLAYER_MIC_SWITCHED',
     payload: { 
       message: 'Your microphone has been disabled by the host',
-      playerId: payload.playerId
+      playerId: payload.playerId,
+      mute: payload.mute
     }
   });
 
   // Also notify all other players for UI updates
   broadcastToRoom(clients, clientInfo.roomId, {
-    type: 'PLAYER_MUTED',
+    type: 'PLAYER_MIC_SWITCHED',
     payload: {
       playerId: payload.playerId,
-      playerName: playerToMute.name
+      playerName: playerToMute.name,
+      mute: payload.mute
     }
   });
 }

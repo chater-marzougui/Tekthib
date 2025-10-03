@@ -19,7 +19,7 @@ This document describes the voice chat features that have been implemented for t
 #### Mute Player Microphone
 - **Description**: Host can disable a player's microphone
 - **Implementation**:
-  - New WebSocket message types: `MUTE_PLAYER`, `PLAYER_MUTED`
+  - New WebSocket message types: `SWITCH_PLAYER_MIC`, `PLAYER_MIC_SWITCHED`
   - Server validates that only host can mute
   - Muted player's microphone is forcefully disabled
   - Player cannot unmute until they leave/rejoin or game ends
@@ -48,7 +48,7 @@ This document describes the voice chat features that have been implemented for t
 
 ### 4. Enhanced UI Components
 
-#### VoiceChatEnhanced Component
+#### VoiceChat Component
 New component with comprehensive features:
 - Join/Leave voice chat button
 - Personal mute/unmute button
@@ -68,11 +68,11 @@ New component with comprehensive features:
 ```
 client/src/
 ├── hooks/
-│   └── useVoiceChatEnhanced.ts         # Enhanced voice chat hook with host controls
+│   └── useVoiceChat.ts         # Voice chat hook with host controls
 ├── context/
-│   └── VoiceChatContext.tsx            # Context provider for persistent voice chat
+│   └── VoiceChatContext.tsx    # Context provider for persistent voice chat
 └── components/chat/
-    └── VoiceChatEnhanced.tsx           # Enhanced UI component with controls
+    └── VoiceChat.tsx           # UI component with controls
 ```
 
 ### Modified Files
@@ -81,7 +81,7 @@ client/src/
 ├── pages/
 │   ├── RoomPage.tsx                    # Wrapped with VoiceChatProvider, uses enhanced component
 │   └── GamePage.tsx                    # Added voice chat, wrapped with provider
-├── types/index.ts                      # Added KICK_PLAYER, MUTE_PLAYER message types
+├── types/index.ts                      # Added KICK_PLAYER, SWITCH_PLAYER_MIC message types
 └── hooks/useVoiceChat.ts               # Minor cleanup (unused param)
 
 server/src/
@@ -108,10 +108,10 @@ Server → PLAYER_LEFT → All Other Players
 
 #### Mute Player Flow
 ```
-Host Client → MUTE_PLAYER → Server
+Host Client → SWITCH_PLAYER_MIC → Server
 Server validates host permissions
-Server → PLAYER_MUTED → Target Player (disables mic)
-Server → PLAYER_MUTED → All Players (for UI update)
+Server → PLAYER_MIC_SWITCHED → Target Player (disables mic)
+Server → PLAYER_MIC_SWITCHED → All Players (for UI update)
 ```
 
 ### Voice Chat Architecture
@@ -124,13 +124,13 @@ Server → PLAYER_MUTED → All Players (for UI update)
 │  - Single source of truth for voice connections │
 └─────────────────┬───────────────────────────────┘
                   │
-                  ├─► useVoiceChatEnhanced Hook
+                  ├─► useVoiceChat Hook
                   │   - WebRTC peer connections
                   │   - Audio stream management
                   │   - Per-player mute state
                   │   - Host control functions
                   │
-                  └─► VoiceChatEnhanced Component
+                  └─► VoiceChat Component
                       - Join/Leave controls
                       - Player list with controls
                       - Mute/Kick buttons (host)

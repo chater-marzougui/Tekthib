@@ -9,9 +9,9 @@ import GameBoard from '../components/game/GameBoard';
 import PlayerHand from '../components/game/PlayerHand';
 import PlayerList from '../components/game/PlayerList';
 import ChatBox from '../components/chat/ChatBox';
-import VoiceChatEnhanced from '../components/chat/VoiceChatEnhanced';
 import { toast } from 'sonner';
 import type { Card as GameCard, GameState as ServerGameState, Rank, Player } from '@/types';
+import VoiceChat from '@/components/chat/VoiceChat';
 
 interface GamePlayer {
   id: string;
@@ -395,7 +395,7 @@ export default function GamePage() {
 
             {/* Voice Chat */}
             {roomId && playerId && (
-              <VoiceChatEnhanced
+              <VoiceChat
                 players={playersForVoice}
                 localPlayerId={playerId}
               />

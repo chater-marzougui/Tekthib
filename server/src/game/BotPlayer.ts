@@ -60,7 +60,10 @@ export class BotPlayer {
       // Find the rank with most cards in hand
       const rankCounts = new Map<Rank, Card[]>();
       hand.forEach(card => {
-        if (!rankCounts.has(card.rank) && card.rank !== 'Joker') {
+        if (card.rank !== 'Joker') {
+          return; // Skip jokers for counting
+        }
+        if (!rankCounts.has(card.rank)) {
           rankCounts.set(card.rank, []);
         }
         rankCounts.get(card.rank)!.push(card);
