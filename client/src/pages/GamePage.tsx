@@ -483,6 +483,7 @@ export default function GamePage() {
         gameState={gameState}
         currentPlayerId={playerId} // Add this prop
         onClose={() => setGameEndedDialog({ ...gameEndedDialog, open: false })}
+        handlePlayAgain={handlePlayAgain}
       />
     </div>
   );

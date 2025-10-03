@@ -1,9 +1,9 @@
-import { Card, Player, PlayerWithHand, Rank, Suit, SuitTypes } from 'shared';
+import { Card, Player, PlayerStats, PlayerWithHand, Rank, Suit, SuitTypes } from 'shared';
 import { Deck } from './Deck';
 import { BotPlayer } from './BotPlayer';
 import { GameState } from '../types';
 
-interface ReturnGameState extends Omit<GameState, 'pile' | 'lastPlayedCards'> {
+interface ReturnGameState extends Omit<GameState, 'pile' | 'lastPlayedCards' | 'playerStats'> {
   currentPlayerId: string;
   players: Player[];
   pileCount: number;
@@ -11,6 +11,7 @@ interface ReturnGameState extends Omit<GameState, 'pile' | 'lastPlayedCards'> {
   playerHandCounts: {
     [k: string]: number;
   };
+  playerStats: { [k: string]: PlayerStats; };
 }
 
 export class GameEngine {
@@ -409,7 +410,7 @@ export class GameEngine {
         ]),
       ),
       consecutivePasses: this.gameState.consecutivePasses,
-      playerStats: this.gameState.playerStats,
+      playerStats: Object.fromEntries(this.gameState.playerStats),
     };
   }
 

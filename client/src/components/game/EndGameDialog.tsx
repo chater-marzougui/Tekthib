@@ -19,6 +19,7 @@ interface EndGameDialogProps {
   gameState: GameState | null;
   currentPlayerId: string;
   onClose: () => void;
+  handlePlayAgain: () => void;
 }
 
 function calculateTitles(
@@ -144,6 +145,7 @@ export const EndGameDialog = ({
   gameState,
   currentPlayerId,
   onClose,
+  handlePlayAgain,
 }: EndGameDialogProps) => {
   const navigate = useNavigate();
 
@@ -208,8 +210,8 @@ export const EndGameDialog = ({
                         isLoserPlayer
                           ? "bg-red-50 border-red-300"
                           : isCurrentPlayer
-                          ? "bg-blue-50 border-blue-300"
-                          : "bg-gray-50"
+                            ? "bg-blue-50 border-blue-300"
+                            : "bg-gray-50"
                       }`}
                     >
                       <div className="flex items-center gap-2 mb-1">
@@ -279,8 +281,13 @@ export const EndGameDialog = ({
             </div>
           )}
         </div>
-        <DialogFooter>
-          <Button onClick={handleClose}>Return to Home</Button>
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button onClick={handlePlayAgain} variant="default">
+            🔄 Play Again
+          </Button>
+          <Button variant="outline" onClick={handleClose}>
+            Return to Home
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
