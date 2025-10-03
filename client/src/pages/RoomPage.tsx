@@ -13,11 +13,9 @@ import ChatBox from "@/components/chat/ChatBox";
 import type { Player } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import VoiceChat from "@/components/chat/VoiceChat";
 
-function isDuplicatePlayer(
-  players: Player[],
-  newPlayer: Player
-): boolean {
+function isDuplicatePlayer(players: Player[], newPlayer: Player): boolean {
   return players.some((p) => p.id === newPlayer.id);
 }
 
@@ -70,12 +68,12 @@ export default function RoomPage() {
       (message) => {
         if (message.type === "PLAYER_JOINED") {
           const { player } = message.payload;
-            setPlayers((prev) => {
+          setPlayers((prev) => {
             if (!isDuplicatePlayer(prev, player)) {
               return [...prev, player];
             }
             return prev;
-            });
+          });
         }
       }
     );
@@ -107,7 +105,6 @@ export default function RoomPage() {
 
     const unregisterGameStarted = registerHandler("game-started", (message) => {
       if (message.type === "GAME_STARTED") {
-
         const currentRoomCode = roomCodeRef.current || roomId;
         navigate(`/game/${currentRoomCode}`);
       }
@@ -150,14 +147,7 @@ export default function RoomPage() {
       unregisterError();
       unregisterBotsAdded();
     };
-  }, [
-    roomId,
-    isConnected,
-    sendMessage,
-    registerHandler,
-    navigate,
-    playerId,
-  ]);
+  }, [roomId, isConnected, sendMessage, registerHandler, navigate, playerId]);
 
   const handleReadyToggle = () => {
     const newReadyState = !isReady;
@@ -251,8 +241,18 @@ export default function RoomPage() {
                       className="flex items-center justify-between p-3 bg-background rounded-lg"
                     >
                       <div className="flex items-center gap-3">
-                        <Badge className={`w-8 h-8 ${player.id === playerId ? 'bg-blue-500 text-white' : player.isBot ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-800'} flex items-center justify-center rounded-full text-lg font-bold`}>
-                          {player.isBot ? '🤖' : player.name.charAt(0).toUpperCase()}
+                        <Badge
+                          className={`w-8 h-8 ${
+                            player.id === playerId
+                              ? "bg-blue-500 text-white"
+                              : player.isBot
+                              ? "bg-purple-500 text-white"
+                              : "bg-gray-200 text-gray-800"
+                          } flex items-center justify-center rounded-full text-lg font-bold`}
+                        >
+                          {player.isBot
+                            ? "🤖"
+                            : player.name.charAt(0).toUpperCase()}
                         </Badge>
                         <div>
                           <div className="font-medium">
@@ -331,6 +331,14 @@ export default function RoomPage() {
               </CardContent>
             </Card>
 
+            {roomCode && (
+              <VoiceChat
+                roomId={roomCode}
+                localPlayerId={playerId}
+                players={players}
+              />
+            )}
+
             {/* Game Controls */}
             <Card>
               <CardHeader>
@@ -340,7 +348,9 @@ export default function RoomPage() {
                 {isHost && (
                   <>
                     <div className="space-y-2">
-                      <div className="text-sm font-medium text-gray-700">Add Bot Players</div>
+                      <div className="text-sm font-medium text-gray-700">
+                        Add Bot Players
+                      </div>
                       <div className="flex gap-2">
                         <Button
                           onClick={() => handleAddBots(1)}
@@ -371,14 +381,16 @@ export default function RoomPage() {
                         </Button>
                       </div>
                     </div>
-                    
+
                     <Button
                       onClick={handleStartGame}
                       disabled={!canStartGame}
                       className="w-full"
                       size="lg"
                     >
-                      {canStartGame ? "🚀 Start Game" : "Waiting for players..."}
+                      {canStartGame
+                        ? "🚀 Start Game"
+                        : "Waiting for players..."}
                     </Button>
                   </>
                 )}

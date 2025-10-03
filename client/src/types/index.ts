@@ -83,3 +83,10 @@ export interface WSMessage {
   payload?: any;
   timestamp?: number;
 }
+
+// WebRTC signal payload
+export interface RTCSignalPayload {
+  targetPlayerId: string;
+  fromPlayerId?: string;
+  signal: RTCSessionDescriptionInit | RTCIceCandidateInit;
+}

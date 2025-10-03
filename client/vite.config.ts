@@ -11,4 +11,9 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    host: true,
+    allowedHosts: true,
+    strictPort: true, // Ensures the port is not changed if it's already in use
+  },
 })
