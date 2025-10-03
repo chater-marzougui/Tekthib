@@ -271,6 +271,14 @@ export default function GamePage() {
       }
     });
 
+    const unregisterGameReset = registerHandler("game-reset", (message) => {
+      if (message.type === "GAME_RESET") {
+        // Navigate to room page when game is reset
+        toast.success("Game reset! Return to room to start again.");
+        navigate(`/room/${roomId}`);
+      }
+    });
+
     return () => {
       unregisterInitialState();
       unregisterGameStateUpdate();
@@ -278,8 +286,9 @@ export default function GamePage() {
       unregisterChallengeResult();
       unregisterGameEnded();
       unregisterError();
+      unregisterGameReset();
     };
-  }, [registerHandler, navigate, playerId, playerName, lastPlay]);
+  }, [registerHandler, navigate, playerId, playerName, lastPlay, roomId]);
 
   // Convert gameState players to Player[] format for voice chat
   const playersForVoice: Player[] = gameState
@@ -359,6 +368,18 @@ export default function GamePage() {
 
   const handleLeaveGame = () => {
     navigate("/");
+  };
+
+  const handlePlayAgain = () => {
+    if (!roomId || !playerId) return;
+
+    sendMessage({
+      type: "PLAY_AGAIN",
+      payload: {
+        roomCode: roomId,
+        playerId,
+      },
+    });
   };
 
   // Show loading state while fetching game data
@@ -532,8 +553,15 @@ export default function GamePage() {
               </div>
             )}
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button
+              onClick={handlePlayAgain}
+              variant="default"
+            >
+              🔄 Play Again
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => {
                 setGameEndedDialog({ ...gameEndedDialog, open: false });
                 navigate("/");

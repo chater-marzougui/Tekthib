@@ -247,6 +247,40 @@ class RoomManager {
     return gameEngine;
   }
 
+  resetGame(roomId: string): {
+    success: boolean;
+    error?: string;
+    room?: Room;
+  } {
+    const room = this.rooms.get(roomId);
+    if (!room) {
+      return { success: false, error: 'Room not found' };
+    }
+
+    // Remove all bots from the room
+    const playersToRemove: string[] = [];
+    room.players.forEach((player, playerId) => {
+      if (player.isBot) {
+        playersToRemove.push(playerId);
+      } else {
+        // Reset ready state for human players
+        player.isReady = false;
+        player.hand = [];
+      }
+    });
+
+    // Remove bots
+    playersToRemove.forEach(botId => {
+      room.players.delete(botId);
+    });
+
+    // Clear game engine and state
+    this.gameEngines.delete(roomId);
+    room.gameState = null;
+
+    return { success: true, room };
+  }
+
   getGameEngine(roomId: string): GameEngine | undefined {
     return this.gameEngines.get(roomId);
   }
