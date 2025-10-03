@@ -189,6 +189,7 @@ export class GameEngine {
     if (remainingPlayers.length === 1) {
       this.gameState.loser = remainingPlayers[0];
       this.gameState.phase = 'ended';
+      console.log('Game ended, loser:', this.gameState.loser);
       return { success: true, newRank: claimedRank };
     }
 
@@ -377,6 +378,8 @@ export class GameEngine {
           this.gameState.playerOrder.find(
             (id) => !this.gameState.winners.includes(id),
           ) || null;
+        
+        console.log('Game ended, loser:', this.gameState.loser);
         return;
       }
     }

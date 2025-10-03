@@ -581,7 +581,6 @@ function handleMutePlayer(
     },
   });
 }
-
 function handlePlayAgain(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
@@ -612,9 +611,18 @@ function handlePlayAgain(
     return;
   }
 
-  // Check if game has already been reset (gameState is null means already in waiting phase)
-  if (!room.gameState || room.gameState.phase !== 'ended') {
-    // Game already reset or not ended, just navigate the player to room
+  // Check if game is still in progress (not ended)
+  // if (room.gameState && room.gameState.phase === 'playing') {
+  //   sendToClient(ws, {
+  //     type: 'ERROR',
+  //     payload: { message: 'Game still in progress' },
+  //   });
+  //   return;
+  // }
+
+  // Check if game has already been reset (no gameState means it's reset)
+  if (!room.gameState) {
+    // Game already reset, just send current room state
     sendToClient(ws, {
       type: 'GAME_RESET',
       payload: {
@@ -636,7 +644,7 @@ function handlePlayAgain(
     return;
   }
 
-  // First player to click becomes the host and resets the game
+  // Game is ended, first player to click resets it and becomes host
   const result = roomManager.resetGame(room.id);
 
   if (!result.success) {
@@ -649,6 +657,11 @@ function handlePlayAgain(
 
   // Set this player as the new host
   room.hostId = payload.playerId;
+
+  // Reset all players' ready status
+  room.players.forEach((player) => {
+    player.isReady = false;
+  });
 
   // Broadcast to all players that game has been reset
   broadcastToRoom(clients, room.id, {
