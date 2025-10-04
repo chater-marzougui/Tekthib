@@ -597,23 +597,6 @@ export default function GamePage() {
               const endY = window.innerHeight / 2 - 50;
               
               const rotation = Math.sin(index) * 15 - 7.5;
-              
-              const getCardSymbol = (suit: GameCard["suit"]) => {
-                switch (suit) {
-                  case "hearts": return "♥";
-                  case "diamonds": return "♦";
-                  case "clubs": return "♣";
-                  case "spades": return "♠";
-                  case "joker": return "🃏";
-                }
-              };
-              
-              const getCardColor = (suit: GameCard["suit"]) => {
-                if (suit === "joker") return "text-purple-600";
-                return suit === "hearts" || suit === "diamonds"
-                  ? "text-red-600"
-                  : "text-black";
-              };
 
               return (
                 <motion.div
