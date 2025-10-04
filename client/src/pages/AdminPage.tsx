@@ -25,6 +25,8 @@ interface SystemState {
   rooms: Room[];
 }
 
+const baseUrl = import.meta.env.VITE_API_URL || "https://takthib-a00f145250bc.herokuapp.com";
+
 export default function AdminPage() {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
@@ -37,7 +39,7 @@ export default function AdminPage() {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/admin/system-state?password=${encodeURIComponent(pwd)}`,
+        `${baseUrl}/api/admin/system-state?password=${encodeURIComponent(pwd)}`,
       );
 
       if (response.status === 401) {

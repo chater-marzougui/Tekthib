@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const SERVER_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const SERVER_URL = import.meta.env.VITE_API_URL || "https://takthib-a00f145250bc.herokuapp.com";
 
 interface RoomInfo {
   id: string;
