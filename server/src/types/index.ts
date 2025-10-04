@@ -24,4 +24,5 @@ export interface GameState {
   loser: string | null;
   consecutivePasses: number;
   playerStats: Map<string, PlayerStats>; // Track statistics for each player
+  removedCards: Card[]; // Cards removed from game (four-of-a-kind)
 }
