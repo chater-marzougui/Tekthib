@@ -91,7 +91,7 @@ export function useVoiceChat({
         if (peerConn) {
           peerConn.stream = remoteStream;
 
-          // Create audio element and play
+          // Create audio element and play - Firefox compatible
           const audioElement = new Audio();
           audioElement.srcObject = remoteStream;
           audioElement.autoplay = true;
@@ -102,8 +102,15 @@ export function useVoiceChat({
           // Store audio element for later mute control
           peerConn.audioElement = audioElement;
 
+          // Firefox requires explicit play() call even with autoplay
           audioElement.play().catch((err) => {
             console.error("Error playing remote audio:", err);
+            // Retry play after a short delay for Firefox
+            setTimeout(() => {
+              audioElement.play().catch((e) => {
+                console.error("Retry failed:", e);
+              });
+            }, 100);
           });
         }
       };
@@ -150,7 +157,11 @@ export function useVoiceChat({
         createPeerConnection(remotePlayerId);
 
       try {
-        const offer = await pc.createOffer();
+        // Firefox-compatible offer options
+        const offer = await pc.createOffer({
+          offerToReceiveAudio: true,
+          offerToReceiveVideo: false,
+        });
         await pc.setLocalDescription(offer);
 
         sendMessage({
