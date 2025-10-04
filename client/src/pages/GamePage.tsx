@@ -71,6 +71,11 @@ export default function GamePage() {
   const [error, setError] = useState<string | null>(null);
   const [isMyTurn, setIsMyTurn] = useState(false);
   const [canChallenge, setCanChallenge] = useState(false);
+  const [challengeAnimation, setChallengeAnimation] = useState<{
+    show: boolean;
+    winner: string;
+    loser: string;
+  } | null>(null);
   const [gameEndedDialog, setGameEndedDialog] = useState<{
     open: boolean;
     winners: string[];
@@ -212,6 +217,16 @@ export default function GamePage() {
           } else {
             toast.info(resultMessage);
           }
+
+          // Show challenge animation
+          const winner = wasLying ? challengerName : lastPlayerName;
+          const loser = wasLying ? lastPlayerName : challengerName;
+          setChallengeAnimation({ show: true, winner, loser });
+          
+          // Hide animation after 2 seconds
+          setTimeout(() => {
+            setChallengeAnimation(null);
+          }, 2000);
 
           // Add system message to chat
           const systemMessage: SystemMessage = {
@@ -459,6 +474,23 @@ export default function GamePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Challenge Animation Overlay */}
+      {challengeAnimation?.show && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-lg p-8 shadow-2xl animate-bounce">
+            <div className="text-center space-y-4">
+              <div className="text-6xl">🃏</div>
+              <div className="text-2xl font-bold">
+                {challengeAnimation.winner} wins!
+              </div>
+              <div className="text-lg text-gray-600">
+                {challengeAnimation.loser} takes the pile
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
