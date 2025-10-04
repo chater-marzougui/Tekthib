@@ -105,6 +105,13 @@ export default function ChatBox({
     }
   };
 
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [allMessages]);
+
   return (
     <Card className="h-96 flex flex-col">
       <CardHeader className="flex-shrink-0">

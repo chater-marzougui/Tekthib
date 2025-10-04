@@ -638,11 +638,8 @@ export default function GamePage() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              🃏 Tekthib Game
+              🃏 Tekthib
             </h1>
-            <p className="text-gray-600">
-              {isMyTurn ? "Your turn!" : "Waiting for other players..."}
-            </p>
             {error && <p className="text-red-600 text-sm mt-1">{error}</p>}
             {!isConnected && (
               <p className="text-yellow-600 text-sm mt-1">
@@ -657,6 +654,7 @@ export default function GamePage() {
 
         <div className="grid lg:grid-cols-4 gap-6">
           <div className="lg:col-span-3 space-y-6">
+            
             <GameBoard
               lastPlay={lastPlay}
               pileCount={gameState.pileCount}
@@ -670,22 +668,6 @@ export default function GamePage() {
               onCardSelect={handleCardSelect}
               playerCards={playerHand}
             />
-          </div>
-
-          <div className="space-y-4">
-            <PlayerList players={players} currentPlayerId={playerId} />
-
-            {playerId && playerName && (
-              <ChatBox
-                playerName={playerName}
-                playerId={playerId}
-                systemMessages={systemMessages}
-              />
-            )}
-
-            {roomId && playerId && (
-              <VoiceChat players={playersForVoice} localPlayerId={playerId} />
-            )}
 
             <Card>
               <CardHeader>
@@ -699,6 +681,17 @@ export default function GamePage() {
                 <div>• First to empty hand wins!</div>
               </CardContent>
             </Card>
+          </div>
+
+          <div className="space-y-4">
+            {playerId && playerName && (
+              <ChatBox
+                playerName={playerName}
+                playerId={playerId}
+                systemMessages={systemMessages}
+              />
+            )}
+            <PlayerList players={players} currentPlayerId={playerId} />
           </div>
         </div>
       </div>
