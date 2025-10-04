@@ -84,7 +84,6 @@ export function useVoiceChat({
 
       // Handle incoming remote stream
       pc.ontrack = (event) => {
-        console.log(`Received remote track from ${remotePlayerId}`);
         const [remoteStream] = event.streams;
 
         // Update peer connection with the stream
@@ -124,10 +123,6 @@ export function useVoiceChat({
 
       // Handle connection state changes
       pc.onconnectionstatechange = () => {
-        console.log(
-          `Connection state with ${remotePlayerId}: ${pc.connectionState}`,
-        );
-
         if (
           pc.connectionState === "failed" ||
           pc.connectionState === "disconnected"

@@ -25,8 +25,6 @@ app.get('/api/health', (req, res) => {
 
 app.get('/api/rooms/:code', (req, res) => {
   const room = roomManager.getRoomByCode(req.params.code.toUpperCase());
-  console.log('Fetching room:', req.params.code, room ? 'Found' : 'Not Found');
-
   if (!room) {
     return res.status(404).json({
       error: 'Room not found',

@@ -57,7 +57,8 @@ export default function RoomPage() {
         setIsHost(true);
         setPlayers(room.players);
         // Update URL to reflect actual room code
-        window.history.replaceState(null, "", `/room/${room.code}`);
+        const basePath = window.location.pathname.split("/room")[0];
+        window.history.replaceState(null, "", `${basePath}/room/${room.code}`);
       }
     });
 
@@ -232,7 +233,6 @@ export default function RoomPage() {
   };
 
   const handleRemovePlayer = (Id: string, isBot: boolean) => {
-    console.log("Removing player or bot:", Id, isBot);
     if (isHost) {
       sendMessage({
         type: isBot ? "REMOVE_BOT" : "KICK_PLAYER",

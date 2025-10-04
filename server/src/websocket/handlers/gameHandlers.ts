@@ -63,8 +63,6 @@ function handleGetGameState(
       type: 'ERROR',
       payload: { message: 'Room not found' },
     });
-
-    console.log('Room not found:', roomCode);
     return;
   }
 

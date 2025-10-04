@@ -35,8 +35,6 @@ export function setupWebSocket(server: Server): WebSocketServer {
 
     ws.on('close', () => {
       const clientInfo = clients.get(ws);
-      console.log(`Client disconnected: ${clientInfo?.id}`);
-
       if (clientInfo?.roomId) {
         // Mark player as disconnected instead of removing them
         const room = roomManager.getRoom(clientInfo.roomId);
@@ -182,8 +180,6 @@ function handleConnect(ws: WebSocket, message: WSMessage): void {
       name: existingName,
     });
   }
-
-  console.log(`Client connected with ID: ${clientId}`);
 
   sendToClient(ws, {
     type: 'CONNECTED',

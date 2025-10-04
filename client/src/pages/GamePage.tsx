@@ -65,10 +65,8 @@ export default function GamePage() {
 
   // Request initial game state when component mounts
   useEffect(() => {
-    console.log(roomId, playerId);
     if (isConnected && roomId && playerId) {
       // Request current game state from server
-      console.log("Requesting initial game state for room:", roomId);
       sendMessage({
         type: "GET_GAME_STATE",
         payload: {
@@ -91,7 +89,6 @@ export default function GamePage() {
       "initial-game-state",
       (message) => {
         if (message.type === "INITIAL_GAME_STATE") {
-          console.log("Received initial game state:", message.payload);
           const { hand, gameState: initialGameState } = message.payload;
 
           if (initialGameState) {

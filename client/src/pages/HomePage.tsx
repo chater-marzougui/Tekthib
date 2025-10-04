@@ -73,7 +73,6 @@ export default function HomePage() {
   const handleJoinRoom = () => {
     if (!playerName.trim() || !roomCode.trim()) return;
     localStorage.setItem("playerName", playerName);
-    console.log("Based on server URL:", SERVER_URL);
 
     fetch(`${SERVER_URL}/api/rooms/${roomCode.trim().toUpperCase()}`)
       .then(async (response) => {

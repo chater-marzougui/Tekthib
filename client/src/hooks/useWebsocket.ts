@@ -25,7 +25,6 @@ export function useWebSocket() {
 
     ws.onopen = () => {
       const currentStoredId = storedIdRef.current;
-      console.log("Stored ID:", currentStoredId);
       if (currentStoredId) {
         // Tell server "hey, it's me again"
         ws.send(
@@ -51,7 +50,6 @@ export function useWebSocket() {
           storedIdRef.current = message.payload.clientId;
         }
         isConnectedRef.current = true;
-        console.log("Connected");
 
         // Call registered handlers
         messageHandlersRef.current.forEach((handler) => {
@@ -63,15 +61,12 @@ export function useWebSocket() {
     };
 
     ws.onclose = () => {
-      console.log("WebSocket disconnected");
       isConnectedRef.current = false;
       if (reconnectTimeoutRef.current) return;
 
       // Attempt to reconnect after 3 seconds
       reconnectTimeoutRef.current = window.setTimeout(() => {
-        console.log("Attempting to reconnect...");
         if (isConnectedRef.current) {
-          console.log("Already reconnected, aborting reconnect attempt");
           return;
         }
         reconnectTimeoutRef.current = undefined;
