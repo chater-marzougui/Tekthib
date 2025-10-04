@@ -15,7 +15,6 @@ import { Label } from "@/components/ui/label";
 import { useWebSocketContext } from "@/context/WebSocketContext";
 import { VoiceChatProvider } from "@/context/VoiceChatContext";
 import GameBoard from "../components/game/GameBoard";
-import PlayerHand from "../components/game/PlayerHand";
 import PlayerList from "../components/game/PlayerList";
 import ChatBox from "../components/chat/ChatBox";
 import { toast } from "sonner";
@@ -186,6 +185,7 @@ export default function GamePage() {
             wasLying,
             playerName: lastPlayerName,
             gameState: newGameState,
+            revealedCards,
           } = message.payload;
           let toastType = "info";
 
@@ -210,6 +210,7 @@ export default function GamePage() {
           }
 
           // Show toast notification
+          console.log("Revealed Cards:", revealedCards);
           if (toastType === "error") {
             toast.error(resultMessage);
           } else if (toastType === "success") {
@@ -524,15 +525,11 @@ export default function GamePage() {
               canChallenge={canChallenge}
               onChallenge={handleChallenge}
               removedCards={gameState.removedCards || []}
-            />
-
-            <PlayerHand
-              cards={playerHand}
-              lastPlay={lastPlay}
-              onCardSelect={handleCardSelect}
-              onPlayCards={handlePlayCards}
               isMyTurn={isMyTurn}
               selectedCards={selectedCards}
+              onPlayCards={handlePlayCards}
+              onCardSelect={handleCardSelect}
+              playerCards={playerHand}
             />
           </div>
 

@@ -257,10 +257,11 @@ class RoomManager {
       return { success: false, error: 'Room not found' };
     }
 
-    // Remove all bots from the room
     room.players.forEach((player) => {
       if (!player.isBot) {
         player.isReady = false;
+      } else {
+        player.isReady = true; // Bots are always ready
       }
       player.hand = [];
     });
