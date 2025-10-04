@@ -121,14 +121,26 @@ const renderSuitPatterns = (
       // For face cards, you might want an image, but a large symbol works as a placeholder.
       return [symbol(`${positions.center} text-4xl`, 1)];
     case "Joker":
-      // Joker gets a special image in the center
+      // Joker gets a special GIF that plays on hover
       return [
         <img
           key={`joker-${positionInHand}`}
           src="../icons/joker-smile.png"
           alt="Joker"
-          className="absolute select-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 object-contain"
+          className="absolute select-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 object-contain transition-opacity duration-200"
+          onMouseEnter={(e) => {
+            e.currentTarget.src = "../icons/joker-smile.gif";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.src = "../icons/joker-smile.png";
+          }}
         />
+        // <img
+        //   key={`joker-${positionInHand}`}
+        //   src="../icons/joker-smile.png"
+        //   alt="Joker"
+        //   className="absolute select-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 object-contain"
+        // />
       ];
     default:
       return []; // Return nothing for ranks that don't have patterns
