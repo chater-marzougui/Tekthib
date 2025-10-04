@@ -85,8 +85,9 @@ Play smart, bluff well, and be the first to get rid of all your cards. The last 
 - ✅ React + TypeScript + Vite frontend with Tailwind CSS
 - ✅ Node.js + Express backend with TypeScript
 - ✅ WebSocket server for real-time communication
-- ✅ Full routing system (HomePage, RoomPage, GamePage)
+- ✅ Full routing system (HomePage, RoomPage, GamePage, AdminPage)
 - ✅ WebSocket context provider for global state management
+- ✅ SEO optimization with dynamic meta tags
 
 #### Room Management
 - ✅ Create room with unique 6-character code
@@ -96,6 +97,8 @@ Play smart, bluff well, and be the first to get rid of all your cards. The last 
 - ✅ Host-based game start controls
 - ✅ Player leave/disconnect handling
 - ✅ Automatic host transfer when original host leaves
+- ✅ QR code generation for easy room sharing
+- ✅ Bot players support (add bots to fill room)
 
 #### Game Engine
 - ✅ Complete server-side game logic
@@ -107,42 +110,54 @@ Play smart, bluff well, and be the first to get rid of all your cards. The last 
 - ✅ Four-of-a-kind auto-removal
 - ✅ Winner/loser detection
 - ✅ Real-time game state synchronization
+- ✅ AI bot players with strategic decision-making
 
 #### User Interface
 - ✅ Responsive design with Tailwind CSS
-- ✅ Shadcn UI components (button, card, input, label)
+- ✅ Shadcn UI components (button, card, input, label, dialog, etc.)
 - ✅ Player hand visualization with card selection
 - ✅ Game board showing last play
 - ✅ Player list with turn indicators
 - ✅ Challenge button with animations
 - ✅ Error handling and loading states
+- ✅ End game dialog with player statistics and titles
+- ✅ Player badges with avatars (DiceBear integration)
+- ✅ Enhanced footer with GitHub link and creator info
 
 #### Communication
 - ✅ Text chat in both lobby and game
 - ✅ Real-time message broadcasting
 - ✅ XSS protection for chat messages
-- ✅ WebRTC voice chat with peer-to-peer audio
+- ✅ **WebRTC voice chat with peer-to-peer audio**
+- ✅ **Cross-browser voice chat support (Chrome, Firefox, Brave, Edge)**
 - ✅ Voice chat persists seamlessly from lobby to game
 - ✅ Host controls: kick players and mute player microphones
 - ✅ Per-player mute: mute specific players locally without affecting others
+
+#### Admin & Monitoring
+- ✅ Admin dashboard for system monitoring
+- ✅ Real-time room and player statistics
+- ✅ Room management and monitoring tools
+- ✅ Auto-refresh system state
 
 ### 🚧 Future Work
 
 #### Planned Enhancements
 - ⏳ **AI Integration**: Lightweight AI model for detecting keywords like "LIAR" or "BLUFF" in voice/text chat and triggering appropriate game actions or animations
-- ⏳ **Avatar Customization**: Player profile pictures, custom avatars, and cosmetic items
+- ⏳ **Avatar Customization**: Custom avatar selection and profile pictures
 - ⏳ **Enhanced Voice Features**: 
   - Spatial audio positioning based on player order
   - Voice activity indicators (speaking animations)
   - Voice recording and playback for highlights
 - ⏳ **Spectator Mode**: Allow users to watch ongoing games
-- ⏳ **Game Statistics**: Track wins, losses, successful bluffs, and challenges
+- ⏳ **Persistent Statistics**: Database integration for long-term player statistics tracking
 - ⏳ **Tournament System**: Organized tournaments with brackets and leaderboards
-- ⏳ **Advanced Bot AI**: Smarter bots with different personality types (aggressive, conservative, random)
+- ⏳ **Advanced Bot AI**: Enhanced bot strategies with different personality types (aggressive, conservative, adaptive)
 - ⏳ **Sound Effects & Animations**: Card flip sounds, challenge animations, celebration effects
-- ⏳ **Mobile Optimization**: Responsive design improvements and native mobile app
+- ⏳ **Mobile Optimization**: Native mobile app and improved touch controls
 - ⏳ **Replay System**: Record and replay games for analysis or entertainment
 - ⏳ **Custom Game Modes**: Variations on rules, speed rounds, team play
+- ⏳ **Friend System**: Add friends, create private rooms, invite specific players
 
 ## 🚀 Getting Started
 
@@ -195,6 +210,14 @@ npm run preview
 - Frontend: http://localhost:5173
 - Backend: http://localhost:3001
 - WebSocket: ws://localhost:3001
+- Admin Dashboard: http://localhost:5173/admin (password required)
+
+### 5. Admin Dashboard (Optional)
+The admin dashboard allows you to monitor system state:
+- View total rooms and players
+- Monitor active games
+- See real-time room statistics
+- Access with admin password (set via environment variable)
 
 ## 📦 Required Shadcn Components
 
@@ -232,6 +255,7 @@ npx shadcn@latest add [component-name]
 ### Chat & Voice
 - Use the chat box to communicate with other players
 - Join voice chat to talk in real-time with other players
+- **Browser Compatibility**: Voice chat works on Chrome, Firefox, Brave, Edge, and other modern browsers
 - **Host Controls**: If you're the host, you can:
   - Kick players from the room
   - Mute players' microphones (they can't unmute until the game ends)
@@ -239,19 +263,38 @@ npx shadcn@latest add [component-name]
 - Voice chat continues seamlessly when the game starts
 - Banter, strategize, or bluff through messages and voice!
 
+### Bot Players
+- Add AI bot players to fill your room if you don't have enough human players
+- Bots make strategic decisions based on game state
+- Bots can bluff, challenge, and play just like human players
+- Perfect for testing or playing with fewer friends
+
+### End Game Statistics
+- View detailed statistics after each game
+- Track bluffs, challenges, accusations, and more
+- Earn fun titles based on your playstyle:
+  - 🎭 Master Liar, 🔍 Detective, 😇 Saint, 🤔 False Accuser
+- Share your achievements with other players
+
 ## 🏗️ Technical Architecture
 
 ### Frontend: React + TypeScript + Tailwind
 - **Real-time Communication**: WebSocket for chat + signaling
-- **Voice Chat**: WebRTC for peer-to-peer audio
-- **UI Framework**: Shadcn UI components
+- **Voice Chat**: WebRTC for peer-to-peer audio (cross-browser compatible)
+- **UI Framework**: Shadcn UI components with Radix UI primitives
 - **State Management**: React hooks + Context API
+- **Styling**: Tailwind CSS with custom animations
+- **Avatar Generation**: DiceBear library for player avatars
+- **QR Code**: QRCode.react for easy room sharing
+- **SEO**: Dynamic meta tags for better discoverability
 
 ### Backend: Node.js + Express
 - **Deployment**: Heroku (scalable with dynos)
 - **Data Storage**: In-memory (ephemeral rooms)
-- **Communication**: WebSocket server
+- **Communication**: WebSocket server (ws library)
 - **Signaling**: WebRTC connection coordination
+- **Game Logic**: Server-authoritative game engine
+- **Bot AI**: Strategic bot player implementation
 
 ### Architecture Flow
 ```
