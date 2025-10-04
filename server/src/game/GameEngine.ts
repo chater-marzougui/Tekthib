@@ -3,7 +3,7 @@ import { Deck } from './Deck';
 import { BotPlayer } from './BotPlayer';
 import { GameState } from '../types';
 
-interface ReturnGameState extends Omit<GameState, 'pile' | 'lastPlayedCards' | 'playerStats'> {
+interface ReturnGameState extends Omit<GameState, 'pile' | 'lastPlayedCards' | 'playerStats' | 'removedCards'> {
   currentPlayerId: string;
   players: Player[];
   pileCount: number;
@@ -12,6 +12,7 @@ interface ReturnGameState extends Omit<GameState, 'pile' | 'lastPlayedCards' | '
     [k: string]: number;
   };
   playerStats: { [k: string]: PlayerStats; };
+  removedCards: Card[];
 }
 
 export class GameEngine {
@@ -75,6 +76,7 @@ export class GameEngine {
       loser: null,
       consecutivePasses: 0,
       playerStats,
+      removedCards: [],
     };
   }
 
@@ -336,22 +338,30 @@ export class GameEngine {
 
           const cardsToRemove = new Set<string>();
 
+          // Track cards that will be removed
+          const removedCardsList: Card[] = [];
+          
           if (canRemoveEight) {
             // Remove 2 cards of each suit (8 total)
             SuitTypes.forEach((suit) => {
               const cardsOfSuit = suitCounts.get(suit)!;
               cardsToRemove.add(cardsOfSuit[0].id);
               cardsToRemove.add(cardsOfSuit[1].id);
+              removedCardsList.push(cardsOfSuit[0], cardsOfSuit[1]);
             });
           } else {
             // Remove 1 card of each suit (4 total)
             SuitTypes.forEach((suit) => {
               const cardOfSuit = suitCounts.get(suit)![0];
               cardsToRemove.add(cardOfSuit.id);
+              removedCardsList.push(cardOfSuit);
             });
           }
 
-          // Remove the cards
+          // Add removed cards to game state tracking
+          this.gameState.removedCards.push(...removedCardsList);
+          
+          // Remove the cards from player's hand
           player.hand = player.hand.filter((c) => !cardsToRemove.has(c.id));
         }
       }
@@ -412,6 +422,7 @@ export class GameEngine {
       ),
       consecutivePasses: this.gameState.consecutivePasses,
       playerStats: Object.fromEntries(this.gameState.playerStats),
+      removedCards: [...this.gameState.removedCards],
     };
   }
 

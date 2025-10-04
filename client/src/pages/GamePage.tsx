@@ -491,6 +491,7 @@ export default function GamePage() {
               currentPlayer={players.find((p) => p.isCurrentTurn)?.name || ""}
               canChallenge={canChallenge}
               onChallenge={handleChallenge}
+              removedCards={gameState.removedCards || []}
             />
 
             <PlayerHand
