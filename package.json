@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "🃏 Tunisian Online Card Game - A real-time multiplayer bluffing card game",
   "scripts": {
+    "start": "cd server && npm run start",
     "install:all": "npm install && cd client && npm install && cd ../server && npm install",
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev",
