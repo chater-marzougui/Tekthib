@@ -8,6 +8,10 @@
 
 A real-time multiplayer card game platform that brings the classic Tunisian bluffing card game online. Players can create rooms, invite friends via room codes, and enjoy voice chat while playing this exciting game of deception and strategy.
 
+> **🌐 Live Application**: Play now at https://chater-marzougui.me/Tekthib/
+> 
+> **📚 Deployment Guide**: See [DEPLOYMENT.md](./DEPLOYMENT.md) for deployment documentation and troubleshooting.
+
 ### 🎯 The Game: Quick Rules
 - **Goal**: Be the first to get rid of all your cards. Last player with cards loses.
 - **Core Mechanic**: Players place cards face-down and announce a rank (truthfully or lying)
