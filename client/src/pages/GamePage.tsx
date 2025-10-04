@@ -442,11 +442,6 @@ export default function GamePage() {
           <div className="space-y-4">
             <PlayerList players={players} currentPlayerId={playerId} />
 
-            {/* Voice Chat */}
-            {roomId && playerId && (
-              <VoiceChat players={playersForVoice} localPlayerId={playerId} />
-            )}
-
             {/* Chat Box */}
             {playerId && playerName && (
               <ChatBox
@@ -454,6 +449,11 @@ export default function GamePage() {
                 playerId={playerId}
                 systemMessages={systemMessages}
               />
+            )}
+
+            {/* Voice Chat */}
+            {roomId && playerId && (
+              <VoiceChat players={playersForVoice} localPlayerId={playerId} />
             )}
 
             {/* Game Rules Quick Reference */}

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { QrCode } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { Card } from "./ui/card";
+import { toast } from "sonner";
 
 interface QRCodeGeneratorProps {
   value: string | number;
@@ -53,6 +54,7 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({
 
   const copyRoomUrl = () => {
     navigator.clipboard.writeText(roomUrl);
+    toast.success("Room link copied to clipboard!");
   };
 
   return (
@@ -64,7 +66,7 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({
         className="cursor-pointer"
         title="Show QR Code"
       >
-        <QrCode className="w-5 h-5" />
+        <QrCode className="w-8 h-8" />
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -89,7 +91,7 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({
             <Button
               onClick={copyRoomUrl}
               variant="outline"
-              className="w-full"
+              className="w-full cursor-pointer"
             >
               Copy Link
             </Button>

@@ -135,8 +135,8 @@ export default function RoomPage() {
         const { players: updatedPlayers } = message.payload;
         setPlayers(updatedPlayers);
         toast.success("Bots added successfully!");
-        
-            toast.info("resultMessage");
+
+        toast.info("resultMessage");
       }
     });
 
@@ -375,9 +375,9 @@ export default function RoomPage() {
               <CardHeader>
                 <CardTitle>Your Status</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-2">
                 <div className="text-center">
-                  <div className="text-sm text-gray-600 mb-2">Playing as:</div>
+                  <div className="text-sm text-gray-600 mb-1">Playing as:</div>
                   <div className="font-semibold text-lg">{playerName}</div>
                 </div>
                 <Button
@@ -389,19 +389,7 @@ export default function RoomPage() {
                 >
                   {isReady ? "✓ Ready!" : "Mark as Ready"}
                 </Button>
-              </CardContent>
-            </Card>
 
-            {roomCode && playerId && (
-              <VoiceChat players={players} localPlayerId={playerId} />
-            )}
-
-            {/* Game Controls */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Game Controls</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
                 {isHost && (
                   <>
                     <div className="space-y-2">
@@ -409,33 +397,16 @@ export default function RoomPage() {
                         Add Bot Players
                       </div>
                       <div className="flex gap-2">
+                        {Array.from({ length: 3 }).map((_, index) => (
                         <Button
-                          onClick={() => handleAddBots(1)}
-                          disabled={players.length >= 10}
+                          onClick={() => handleAddBots(index + 1)}
+                          disabled={players.length >= 10 - (index + 1)}
                           variant="outline"
                           size="sm"
                           className="flex-1"
                         >
-                          +1 Bot
-                        </Button>
-                        <Button
-                          onClick={() => handleAddBots(2)}
-                          disabled={players.length >= 9}
-                          variant="outline"
-                          size="sm"
-                          className="flex-1"
-                        >
-                          +2 Bots
-                        </Button>
-                        <Button
-                          onClick={() => handleAddBots(3)}
-                          disabled={players.length >= 8}
-                          variant="outline"
-                          size="sm"
-                          className="flex-1"
-                        >
-                          +3 Bots
-                        </Button>
+                          +{index + 1} Bot
+                        </Button>))}
                       </div>
                     </div>
 
@@ -461,6 +432,10 @@ export default function RoomPage() {
                 </Button>
               </CardContent>
             </Card>
+
+            {roomCode && playerId && (
+              <VoiceChat players={players} localPlayerId={playerId} />
+            )}
 
             {/* Game Info */}
             <Card>

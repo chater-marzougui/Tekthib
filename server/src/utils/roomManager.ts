@@ -258,20 +258,11 @@ class RoomManager {
     }
 
     // Remove all bots from the room
-    const playersToRemove: string[] = [];
-    room.players.forEach((player, playerId) => {
-      if (player.isBot) {
-        playersToRemove.push(playerId);
-      } else {
-        // Reset ready state for human players
+    room.players.forEach((player) => {
+      if (!player.isBot) {
         player.isReady = false;
-        player.hand = [];
       }
-    });
-
-    // Remove bots
-    playersToRemove.forEach(botId => {
-      room.players.delete(botId);
+      player.hand = [];
     });
 
     // Clear game engine and state
