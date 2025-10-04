@@ -228,7 +228,7 @@ class RoomManager {
       return { canStart: false, reason: 'Need at least 3 players' };
     }
 
-    const allReady = Array.from(room.players.values()).every((p) => p.isReady);
+    const allReady = Array.from(room.players.values()).every((p) => p.isReady || p.isBot);
     if (!allReady) {
       return { canStart: false, reason: 'Not all players are ready' };
     }

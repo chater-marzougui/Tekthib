@@ -272,7 +272,7 @@ export default function RoomPage() {
   };
 
   const canStartGame =
-    isHost && players.length >= 3 && players.every((p) => p.isReady);
+    isHost && players.length >= 3 && players.every((p) => p.isReady || p.isBot);
 
   // Wrap content with VoiceChatProvider if we have a room
   const content = (
@@ -392,7 +392,7 @@ export default function RoomPage() {
                           onClick={handleReadyToggle}
                           disabled={player.id !== playerId}
                         >
-                          {player.isReady ? (
+                          {player.isReady || player.isBot ? (
                             <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
                               Ready ✓
                             </span>

@@ -110,7 +110,7 @@ export default function ChatBox({
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
     }
-  }, [allMessages]);
+  }, [messages]);
 
   return (
     <Card className="h-96 flex flex-col">
