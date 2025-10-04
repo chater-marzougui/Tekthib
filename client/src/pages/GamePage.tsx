@@ -74,6 +74,10 @@ export default function GamePage() {
     show: boolean;
     cards: GameCard[];
   } | null>(null);
+  const [playingCardsAnimation, setPlayingCardsAnimation] = useState<{
+    show: boolean;
+    cards: GameCard[];
+  } | null>(null);
   const [gameEndedDialog, setGameEndedDialog] = useState<{
     open: boolean;
     winners: string[];
@@ -111,6 +115,23 @@ export default function GamePage() {
           if (initialGameState) {
             setGameState(initialGameState);
             setIsMyTurn(initialGameState.currentPlayerId === playerId);
+            
+            // If there's a pile and a last player, reconstruct lastPlay
+            if (initialGameState.lastPlayerId && initialGameState.pileCount > 0 && initialGameState.currentRank) {
+              const lastPlayerData = initialGameState.players.find(
+                (p: Player) => p.id === initialGameState.lastPlayerId
+              );
+              setLastPlay({
+                player: lastPlayerData?.name || "Unknown",
+                cardCount: initialGameState.lastPlayedCount || 0,
+                claimedRank: initialGameState.currentRank,
+              });
+              
+              // If it's my turn and there's a last play, I can challenge
+              const isWinner = initialGameState.winners.includes(playerId);
+              const isLastPlayer = initialGameState.lastPlayerId === playerId;
+              setCanChallenge(initialGameState.currentPlayerId === playerId && !isLastPlayer && !isWinner && initialGameState.pileCount > 0);
+            }
           }
 
           if (hand) {
@@ -356,6 +377,19 @@ export default function GamePage() {
   const handlePlayCards = (selectedCardIds: string[], claimedRank: string) => {
     if (selectedCardIds.length === 0 || !claimedRank) return;
 
+    // Get the cards being played for animation
+    const cardsBeingPlayed = playerHand.filter(card => 
+      selectedCardIds.includes(card.id)
+    );
+
+    // Show animation of cards moving to pile
+    setPlayingCardsAnimation({ show: true, cards: cardsBeingPlayed });
+
+    // Clear animation after it completes
+    setTimeout(() => {
+      setPlayingCardsAnimation(null);
+    }, 1000);
+
     sendMessage({
       type: "PLAY_CARDS",
       payload: {
@@ -544,6 +578,58 @@ export default function GamePage() {
                 );
               })}
             </div>
+          </div>
+        </div>
+      )}
+
+      {playingCardsAnimation?.show && (
+        <div className="fixed inset-0 z-40 pointer-events-none flex items-center justify-center">
+          <div className="relative w-full h-full">
+            {playingCardsAnimation.cards.map((card, index) => {
+              const totalCards = playingCardsAnimation.cards.length;
+              
+              // Start from bottom of screen (player's hand position)
+              const startX = window.innerWidth / 2 + (index - totalCards / 2) * 40;
+              const startY = window.innerHeight - 150;
+              
+              // End at center (pile position)
+              const endX = window.innerWidth / 2;
+              const endY = window.innerHeight / 2 - 50;
+              
+              const rotation = Math.sin(index) * 15 - 7.5;
+
+              return (
+                <motion.div
+                  key={`play-${card.id}-${index}`}
+                  initial={{
+                    x: startX,
+                    y: startY,
+                    scale: 1,
+                    opacity: 1,
+                    rotate: 0
+                  }}
+                  animate={{
+                    x: endX,
+                    y: endY,
+                    scale: 0.8,
+                    opacity: 0.8,
+                    rotate: rotation
+                  }}
+                  transition={{
+                    duration: 0.6,
+                    delay: index * 0.08,
+                    ease: "easeInOut"
+                  }}
+                  className="absolute w-20 h-28"
+                >
+                  <div className="w-full h-full bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg border-2 border-purple-300 shadow-2xl flex items-center justify-center">
+                    <div className="text-white font-bold text-4xl opacity-70">
+                      ?
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       )}
