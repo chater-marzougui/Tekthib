@@ -115,9 +115,13 @@ export default function GamePage() {
           if (initialGameState) {
             setGameState(initialGameState);
             setIsMyTurn(initialGameState.currentPlayerId === playerId);
-            
+
             // If there's a pile and a last player, reconstruct lastPlay
-            if (initialGameState.lastPlayerId && initialGameState.pileCount > 0 && initialGameState.currentRank) {
+            if (
+              initialGameState.lastPlayerId &&
+              initialGameState.pileCount > 0 &&
+              initialGameState.currentRank
+            ) {
               const lastPlayerData = initialGameState.players.find(
                 (p: Player) => p.id === initialGameState.lastPlayerId
               );
@@ -126,11 +130,16 @@ export default function GamePage() {
                 cardCount: initialGameState.lastPlayedCount || 0,
                 claimedRank: initialGameState.currentRank,
               });
-              
+
               // If it's my turn and there's a last play, I can challenge
               const isWinner = initialGameState.winners.includes(playerId);
               const isLastPlayer = initialGameState.lastPlayerId === playerId;
-              setCanChallenge(initialGameState.currentPlayerId === playerId && !isLastPlayer && !isWinner && initialGameState.pileCount > 0);
+              setCanChallenge(
+                initialGameState.currentPlayerId === playerId &&
+                  !isLastPlayer &&
+                  !isWinner &&
+                  initialGameState.pileCount > 0
+              );
             }
           }
 
@@ -205,7 +214,7 @@ export default function GamePage() {
           let resultMessage = "";
           if (wasLying && lastPlayerName === playerName) {
             resultMessage = `You were caught lying by ${challengerName}! Learn to play!`;
-            toastType = "error";  
+            toastType = "error";
           } else if (wasLying && challengerName === playerName) {
             resultMessage = `You were right! ${lastPlayerName} was lying.`;
             toastType = "success";
@@ -230,13 +239,17 @@ export default function GamePage() {
             toast.info(resultMessage);
           }
 
-          const shouldShowCardReveal = 
-            (wasLying && lastPlayerName === playerName) || 
+          const shouldShowCardReveal =
+            (wasLying && lastPlayerName === playerName) ||
             (!wasLying && challengerName === playerName);
 
-          if (shouldShowCardReveal && revealedCards && revealedCards.length > 0) {
+          if (
+            shouldShowCardReveal &&
+            revealedCards &&
+            revealedCards.length > 0
+          ) {
             setRevealedCardsAnimation({ show: true, cards: revealedCards });
-            
+
             setTimeout(() => {
               setRevealedCardsAnimation(null);
             }, 3000);
@@ -378,7 +391,7 @@ export default function GamePage() {
     if (selectedCardIds.length === 0 || !claimedRank) return;
 
     // Get the cards being played for animation
-    const cardsBeingPlayed = playerHand.filter(card => 
+    const cardsBeingPlayed = playerHand.filter((card) =>
       selectedCardIds.includes(card.id)
     );
 
@@ -459,7 +472,10 @@ export default function GamePage() {
   const content = (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 p-4">
       <Dialog open={showNameDialog} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
+        <DialogContent
+          className="sm:max-w-md"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>Enter Your Name</DialogTitle>
             <DialogDescription>
@@ -475,7 +491,7 @@ export default function GamePage() {
                 onChange={(e) => setNameInput(e.target.value)}
                 placeholder="Enter your name"
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === "Enter") {
                     handleNameSubmit();
                   }
                 }}
@@ -498,25 +514,30 @@ export default function GamePage() {
                 const totalCards = revealedCardsAnimation.cards.length;
                 const centerX = 300;
                 const centerY = 200;
-                
+
                 const startX = centerX + (Math.random() - 0.5) * 40;
                 const startY = centerY + (Math.random() - 0.5) * 40;
-                
+
                 const spreadWidth = Math.min(totalCards * 30, 400);
                 const cardSpacing = spreadWidth / totalCards;
-                const endX = (centerX - spreadWidth / 2) + (index * cardSpacing);
+                const endX = centerX - spreadWidth / 2 + index * cardSpacing;
                 const endY = 350;
-                
+
                 const getCardSymbol = (suit: GameCard["suit"]) => {
                   switch (suit) {
-                    case "hearts": return "♥";
-                    case "diamonds": return "♦";
-                    case "clubs": return "♣";
-                    case "spades": return "♠";
-                    case "joker": return "🃏";
+                    case "hearts":
+                      return "♥";
+                    case "diamonds":
+                      return "♦";
+                    case "clubs":
+                      return "♣";
+                    case "spades":
+                      return "♠";
+                    case "joker":
+                      return "🃏";
                   }
                 };
-                
+
                 const getCardColor = (suit: GameCard["suit"]) => {
                   if (suit === "joker") return "text-purple-600";
                   return suit === "hearts" || suit === "diamonds"
@@ -532,19 +553,19 @@ export default function GamePage() {
                       y: startY,
                       rotateY: 180,
                       scale: 0.8,
-                      opacity: 0
+                      opacity: 0,
                     }}
                     animate={{
                       x: endX,
                       y: endY,
                       rotateY: 0,
                       scale: 1,
-                      opacity: 1
+                      opacity: 1,
                     }}
                     transition={{
                       duration: 0.8,
                       delay: index * 0.1,
-                      ease: "easeOut"
+                      ease: "easeOut",
                     }}
                     className="absolute w-24 h-36"
                     style={{
@@ -553,20 +574,26 @@ export default function GamePage() {
                   >
                     <div className="w-full h-full bg-white rounded-lg border-2 border-gray-400 shadow-2xl p-2 relative">
                       <div className="absolute top-1 left-2 flex flex-col items-center leading-none">
-                        <div className={`text-lg font-bold ${getCardColor(card.suit)}`}>
+                        <div
+                          className={`text-lg font-bold ${getCardColor(card.suit)}`}
+                        >
                           {card.rank}
                         </div>
                         <div className={`text-2xl ${getCardColor(card.suit)}`}>
                           {getCardSymbol(card.suit)}
                         </div>
                       </div>
-                      
-                      <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-5xl ${getCardColor(card.suit)}`}>
+
+                      <div
+                        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-5xl ${getCardColor(card.suit)}`}
+                      >
                         {getCardSymbol(card.suit)}
                       </div>
-                      
+
                       <div className="absolute bottom-1 right-2 flex flex-col items-center leading-none rotate-180">
-                        <div className={`text-lg font-bold ${getCardColor(card.suit)}`}>
+                        <div
+                          className={`text-lg font-bold ${getCardColor(card.suit)}`}
+                        >
                           {card.rank}
                         </div>
                         <div className={`text-2xl ${getCardColor(card.suit)}`}>
@@ -587,15 +614,16 @@ export default function GamePage() {
           <div className="relative w-full h-full">
             {playingCardsAnimation.cards.map((card, index) => {
               const totalCards = playingCardsAnimation.cards.length;
-              
+
               // Start from bottom of screen (player's hand position)
-              const startX = window.innerWidth / 2 + (index - totalCards / 2) * 40;
+              const startX =
+                window.innerWidth / 2 + (index - totalCards / 2) * 40;
               const startY = window.innerHeight - 150;
-              
+
               // End at center (pile position)
               const endX = window.innerWidth / 2;
               const endY = window.innerHeight / 2 - 50;
-              
+
               const rotation = Math.sin(index) * 15 - 7.5;
 
               return (
@@ -606,19 +634,19 @@ export default function GamePage() {
                     y: startY,
                     scale: 1,
                     opacity: 1,
-                    rotate: 0
+                    rotate: 0,
                   }}
                   animate={{
                     x: endX,
                     y: endY,
                     scale: 0.8,
                     opacity: 0.8,
-                    rotate: rotation
+                    rotate: rotation,
                   }}
                   transition={{
                     duration: 0.6,
                     delay: index * 0.08,
-                    ease: "easeInOut"
+                    ease: "easeInOut",
                   }}
                   className="absolute w-20 h-28"
                 >
@@ -637,9 +665,7 @@ export default function GamePage() {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              🃏 Tekthib
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900">🃏 Tekthib</h1>
             {error && <p className="text-red-600 text-sm mt-1">{error}</p>}
             {!isConnected && (
               <p className="text-yellow-600 text-sm mt-1">
@@ -654,7 +680,6 @@ export default function GamePage() {
 
         <div className="grid lg:grid-cols-4 gap-6">
           <div className="lg:col-span-3 space-y-6">
-            
             <GameBoard
               lastPlay={lastPlay}
               pileCount={gameState.pileCount}
@@ -668,6 +693,10 @@ export default function GamePage() {
               onCardSelect={handleCardSelect}
               playerCards={playerHand}
             />
+
+            {roomId && playerId && (
+              <VoiceChat players={playersForVoice} localPlayerId={playerId} />
+            )}
 
             <Card>
               <CardHeader>
