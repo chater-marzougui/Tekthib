@@ -1,5 +1,7 @@
 {
-  "name": "takthib",
+  "name": "client",
+  "description": "Frontend for the Tekthib game",
+  "homepage": "https://chater-marzougui.me/Tekthib/",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,7 +11,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "typecheck": "tsc -b",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "@dicebear/collection": "^9.2.4",
@@ -42,6 +46,7 @@
     "eslint": "^9.36.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
+    "gh-pages": "^6.3.0",
     "globals": "^16.4.0",
     "tailwindcss": "^4.1.13",
     "tw-animate-css": "^1.4.0",

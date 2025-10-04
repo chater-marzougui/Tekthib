@@ -26,6 +26,6 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "../STM32PAGE.tsx"],
+  "include": ["src"],
   "exclude": ["**/*.d.ts"]
 }
