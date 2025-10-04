@@ -6,7 +6,7 @@
   
   <!-- Homepage -->
   <url>
-    <loc>https://tekthib.com/</loc>
+    <loc>https://chater-marzougui.me/</loc>
     <lastmod>2025-01-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
@@ -14,7 +14,7 @@
   
   <!-- Game Page -->
   <url>
-    <loc>https://tekthib.com/game</loc>
+    <loc>https://chater-marzougui.me/game</loc>
     <lastmod>2025-01-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -22,7 +22,7 @@
   
   <!-- Room Page -->
   <url>
-    <loc>https://tekthib.com/room</loc>
+    <loc>https://chater-marzougui.me/room</loc>
     <lastmod>2025-01-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

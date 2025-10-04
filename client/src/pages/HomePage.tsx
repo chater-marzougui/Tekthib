@@ -151,7 +151,7 @@ export default function HomePage() {
         description="Play Tekthib, the ultimate Tunisian bluffing card game online! Create rooms, invite friends, and master the art of deception."
         keywords="Tekthib, Tunisian card game, online card game, bluffing game, multiplayer"
         image="/og-image.png"
-        url="https://tekthib.com"
+        url="https://chater-marzougui.me"
       />
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="w-full max-w-2xl space-y-8">
