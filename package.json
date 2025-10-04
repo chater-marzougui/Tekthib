@@ -15,7 +15,9 @@
     "lint:client": "cd client && npm run lint",
     "format": "cd server && npm run format && cd ../client && npm run format",
     "format:server": "cd server && npm run format",
-    "format:client": "cd client && npm run format"
+    "format:client": "cd client && npm run format",
+    "heroku-postbuild": "cd shared && npm install && cd ../server && npm install && npm run build"
+
   },
   "repository": {
     "type": "git",
