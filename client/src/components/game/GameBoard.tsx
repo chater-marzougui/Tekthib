@@ -44,36 +44,51 @@ export default function GameBoard({
   );
   const autoPlayTimeout = 45; // seconds
   const [timer, setTimer] = useState(autoPlayTimeout);
+  const [turnStartTime, setTurnStartTime] = useState<number | null>(null);
 
   // Timer effect for auto-play
   useEffect(() => {
     if (!isMyTurn) {
-      setTimer(autoPlayTimeout); // Reset timer when it's not player's turn
+      localStorage.removeItem("turnStartTime");
+      setTurnStartTime(null);
       return;
     }
 
+    // Get or set turn start time
+    const storedStartTime = localStorage.getItem("turnStartTime");
+    const startTime = storedStartTime ? parseInt(storedStartTime) : Date.now();
+
+    if (!storedStartTime) {
+      localStorage.setItem("turnStartTime", startTime.toString());
+      setTurnStartTime(startTime);
+    } else {
+      setTurnStartTime(startTime);
+    }
+
     const interval = setInterval(() => {
-      setTimer((prev) => {
-        if (prev <= 1) {
-          // Time's up - auto-play random cards
-          const numCards = Math.floor(Math.random() * 4) + 1; // 1-4 cards
-          const availableCards = playerCards.slice(
-            0,
-            Math.min(numCards, playerCards.length)
-          );
-          const autoSelectedCards = availableCards.map((c) => c.id);
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const remaining = Math.max(0, autoPlayTimeout - elapsed);
 
-          // Determine the rank to claim
-          const rankToClaim = lastPlay
-            ? lastPlay.claimedRank
-            : playableRanks[Math.floor(Math.random() * playableRanks.length)];
+      setTimer(remaining);
 
-          onPlayCards(autoSelectedCards, rankToClaim);
-          return autoPlayTimeout;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+      if (remaining === 0) {
+        // Time's up - auto-play random cards
+        const numCards = Math.floor(Math.random() * 4) + 1; // 1-4 cards
+        const availableCards = playerCards.slice(
+          0,
+          Math.min(numCards, playerCards.length)
+        );
+        const autoSelectedCards = availableCards.map((c) => c.id);
+
+        // Determine the rank to claim
+        const rankToClaim = lastPlay
+          ? lastPlay.claimedRank
+          : playableRanks[Math.floor(Math.random() * playableRanks.length)];
+
+        onPlayCards(autoSelectedCards, rankToClaim);
+        localStorage.removeItem("turnStartTime");
+      }
+    }, 100); // Check more frequently for accuracy
 
     return () => clearInterval(interval);
   }, [isMyTurn, playerCards, lastPlay, onPlayCards]);
