@@ -2,6 +2,16 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useWebSocketContext } from "@/context/WebSocketContext";
 import { VoiceChatProvider } from "@/context/VoiceChatContext";
 import GameBoard from "../components/game/GameBoard";
@@ -44,9 +54,18 @@ export default function GamePage() {
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [systemMessages, setSystemMessages] = useState<SystemMessage[]>([]);
+  const [showNameDialog, setShowNameDialog] = useState(false);
+  const [nameInput, setNameInput] = useState("");
 
-  const playerName = localStorage.getItem("playerName") || "Anonymous";
+  const playerName = localStorage.getItem("playerName") || "";
   const playerId = localStorage.getItem("clientId") || "";
+
+  // Check if player name is set on mount
+  useEffect(() => {
+    if (!playerName || playerName === "Anonymous") {
+      setShowNameDialog(true);
+    }
+  }, [playerName]);
 
   const [lastPlay, setLastPlay] = useState<LastPlay | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -146,7 +165,9 @@ export default function GamePage() {
         if (newGameState) {
           setGameState(newGameState);
           setIsMyTurn(newGameState.currentPlayerId === playerId);
-          setCanChallenge(pName !== playerName);
+          // Winners can't challenge
+          const isWinner = newGameState.winners.includes(playerId);
+          setCanChallenge(pName !== playerName && !isWinner);
         }
       }
     });
@@ -372,6 +393,17 @@ export default function GamePage() {
     });
   };
 
+  const handleNameSubmit = () => {
+    if (nameInput.trim()) {
+      localStorage.setItem("playerName", nameInput.trim());
+      setShowNameDialog(false);
+      // Reload the page to use the new name
+      window.location.reload();
+    } else {
+      toast.error("Please enter a valid name");
+    }
+  };
+
   // Show loading state while fetching game data
   if (isLoading || !gameState) {
     return (
@@ -395,6 +427,39 @@ export default function GamePage() {
 
   const content = (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 p-4">
+      {/* Name prompt dialog */}
+      <Dialog open={showNameDialog} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Enter Your Name</DialogTitle>
+            <DialogDescription>
+              Please enter your name to continue playing
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="player-name">Your Name</Label>
+              <Input
+                id="player-name"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                placeholder="Enter your name"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleNameSubmit();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleNameSubmit} disabled={!nameInput.trim()}>
+              Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
