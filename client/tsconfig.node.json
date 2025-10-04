@@ -11,8 +11,7 @@
     "moduleResolution": "bundler",
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
-    "noEmit": false,
-    "composite": true,
+    "noEmit": true,
 
     /* Linting */
     "strict": true,

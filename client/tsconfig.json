@@ -19,16 +19,5 @@
       "@shared": ["../shared/src/types"]
     }
   },
-  "include": ["src", "vite.config.ts", "env.d.ts"],
-  "files": [],
-  "references": [
-    {
-      "compilerOptions": { "baseUrl": "./", "paths": { "@/*": ["./src/*"] } },
-      "path": "./tsconfig.app.json"
-    },
-    {
-      "compilerOptions": { "baseUrl": "./", "paths": { "@/*": ["./src/*"] } },
-      "path": "./tsconfig.node.json"
-    }
-  ]
+  "include": ["src", "vite.config.ts", "env.d.ts"]
 }

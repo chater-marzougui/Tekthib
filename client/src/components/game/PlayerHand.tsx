@@ -35,14 +35,14 @@ export default function PlayerHand({
   selectedCards,
 }: Readonly<PlayerHandProps>) {
   const [claimedRank, setClaimedRank] = useState(
-    lastPlay ? lastPlay.claimedRank : "",
+    lastPlay ? lastPlay.claimedRank : ""
   );
-  const [timer, setTimer] = useState(15);
+  const [timer, setTimer] = useState(1500);
 
   // Timer effect for auto-play
   useEffect(() => {
     if (!isMyTurn) {
-      setTimer(15); // Reset timer when it's not player's turn
+      setTimer(1500); // Reset timer when it's not player's turn
       return;
     }
 
@@ -51,14 +51,17 @@ export default function PlayerHand({
         if (prev <= 1) {
           // Time's up - auto-play random cards
           const numCards = Math.floor(Math.random() * 4) + 1; // 1-4 cards
-          const availableCards = cards.slice(0, Math.min(numCards, cards.length));
-          const autoSelectedCards = availableCards.map(c => c.id);
-          
+          const availableCards = cards.slice(
+            0,
+            Math.min(numCards, cards.length)
+          );
+          const autoSelectedCards = availableCards.map((c) => c.id);
+
           // Determine the rank to claim
-          const rankToClaim = lastPlay 
-            ? lastPlay.claimedRank 
+          const rankToClaim = lastPlay
+            ? lastPlay.claimedRank
             : playableRanks[Math.floor(Math.random() * playableRanks.length)];
-          
+
           onPlayCards(autoSelectedCards, rankToClaim);
           return 15;
         }
@@ -85,7 +88,8 @@ export default function PlayerHand({
   if (!cards || cards.length === 0) return null;
 
   // Calculate number of hands needed
-  const numberOfHands = Math.ceil(sortedCards.length / 14);
+  const maxCardsPerHand = Math.floor(window.innerWidth / 35);
+  const numberOfHands = Math.ceil(sortedCards.length / maxCardsPerHand);
 
   return (
     <div className="relative">
@@ -124,13 +128,15 @@ export default function PlayerHand({
 
             {/* Timer display when it's player's turn */}
             {isMyTurn && (
-              <div className={`relative ${timer <= 5 ? 'animate-pulse' : ''}`}>
+              <div className={`relative ${timer <= 5 ? "animate-pulse" : ""}`}>
                 <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-red-500 rounded-full blur-md opacity-50" />
-                <div className={`relative rounded-full w-16 h-16 flex items-center justify-center font-bold text-2xl shadow-lg ${
-                  timer <= 5 
-                    ? 'bg-gradient-to-br from-red-500 to-red-600 text-white' 
-                    : 'bg-gradient-to-br from-amber-500 to-orange-600 text-white'
-                }`}>
+                <div
+                  className={`relative rounded-full w-16 h-16 flex items-center justify-center font-bold text-2xl shadow-lg ${
+                    timer <= 5
+                      ? "bg-gradient-to-br from-red-500 to-red-600 text-white"
+                      : "bg-gradient-to-br from-amber-500 to-orange-600 text-white"
+                  }`}
+                >
                   {timer}
                 </div>
               </div>
@@ -156,11 +162,12 @@ export default function PlayerHand({
                 {Array.from({ length: numberOfHands }, (_, handIndex) =>
                   RenderOneHand(
                     sortedCards,
-                    handIndex * 14,
+                    handIndex * maxCardsPerHand,
                     isMyTurn,
                     onCardSelect,
                     selectedCards,
-                  ),
+                    maxCardsPerHand
+                  )
                 )}
               </div>
             </div>
@@ -173,47 +180,34 @@ export default function PlayerHand({
 
           {/* Play Controls */}
           {isMyTurn && cards.length > 0 && (
-            <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 space-y-4">
+            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4 space-y-4">
               {!lastPlay && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-white">
                     Claim this rank:
                   </label>
-                  <div className="grid grid-cols-13 gap-2">
+                  <div className="flex flex-wrap gap-2 justify-center">
                     {playableRanks.map((rank) => (
                       <button
                         key={rank}
                         onClick={() => setClaimedRank(rank)}
                         className={`
-                          relative py-3 px-2 rounded-lg font-bold text-lg transition-all duration-200
-                          ${
-                            claimedRank === rank
-                              ? "bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg scale-105"
-                              : "bg-slate-700 text-slate-300 hover:bg-slate-600 hover:scale-105"
-                          }
-                        `}
+                min-w-[40px] py-2 px-3 rounded-md font-bold text-base transition-all
+                ${
+                  claimedRank === rank
+                    ? "bg-blue-500 text-white shadow-md"
+                    : "bg-gray-700 text-gray-200 hover:bg-gray-600"
+                }
+              `}
                       >
-                        {claimedRank === rank && (
-                          <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-lg blur opacity-50" />
-                        )}
-                        <span className="relative">{rank}</span>
+                        {rank}
                       </button>
                     ))}
                   </div>
                 </div>
               )}
 
-              <div className="flex items-center gap-3">
-                <div className="flex-1 bg-slate-900/50 rounded-lg px-4 py-3 border border-slate-600">
-                  <p className="text-xs text-slate-400 mb-1">Selected cards</p>
-                  <p className="text-2xl font-bold text-white">
-                    {selectedCards.length}{" "}
-                    <span className="text-lg text-slate-400">
-                      card{selectedCards.length !== 1 ? "s" : ""}
-                    </span>
-                  </p>
-                </div>
-
+              <div className="flex justify-center">
                 <Button
                   onClick={handlePlayCards}
                   disabled={
@@ -221,21 +215,17 @@ export default function PlayerHand({
                   }
                   size="lg"
                   className={`
-                    relative overflow-hidden px-8 py-6 text-lg font-bold rounded-xl
-                    transition-all duration-300
-                    ${
-                      selectedCards.length > 0 && (claimedRank || lastPlay)
-                        ? "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-green-500/50 hover:scale-105"
-                        : "bg-slate-700 text-slate-500 cursor-not-allowed"
-                    }
-                  `}
+          px-6 py-4 text-base font-semibold rounded-lg transition-all
+          ${
+            selectedCards.length > 0 && (claimedRank || lastPlay)
+              ? "bg-green-600 hover:bg-green-700 text-white shadow-md"
+              : "bg-gray-600 text-gray-400 cursor-not-allowed"
+          }
+        `}
                 >
-                  {selectedCards.length > 0 && (claimedRank || lastPlay) && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-green-400/0 via-white/20 to-green-400/0" />
-                  )}
-                  <span className="relative flex items-center gap-2">
+                  <span className="flex items-center gap-2">
                     <svg
-                      className="w-6 h-6"
+                      className="w-5 h-5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"

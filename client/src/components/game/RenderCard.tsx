@@ -1,6 +1,11 @@
 import type { JSX } from "react";
 import type { DisplayGameCard, Rank } from "shared";
 
+const specialCards = ["2", "3", "A", "J", "Q", "K"] as Rank[];
+function isSpecialCard(rank: Rank) {
+  return specialCards.includes(rank);
+}
+
 /**
  * Renders the suit symbols in a pattern based on the card's rank.
  * This function creates the classic playing card look.
@@ -13,11 +18,13 @@ const renderSuitPatterns = (
   rank: Rank,
   suitSymbol: string,
   colorClass: string,
+  cardKey: string,
+  positionInHand?: number
 ): JSX.Element[] => {
   const symbol = (className: string, key: number, isRotated = false) => (
     <div
-      key={key}
-      className={`absolute text-3xl ${colorClass} ${className} ${
+      key={`${cardKey}-${key}`}
+      className={`absolute select-none ${colorClass} ${className} ${
         isRotated ? "rotate-180" : ""
       }`}
     >
@@ -27,17 +34,19 @@ const renderSuitPatterns = (
 
   // Reusable position classes for columns
   const positions = {
-    topCenter: "top-5 left-1/2 -translate-x-1/2",
-    midTopCenter: "top-1/4 left-1/2 -translate-x-1/2",
-    center: "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
-    midBottomCenter: "bottom-1/4 left-1/2 -translate-x-1/2",
-    bottomCenter: "bottom-5 left-1/2 -translate-x-1/2",
-    topLeft: "top-5 left-4",
-    topRight: "top-5 right-4",
-    midTopLeft: "top-1/4 left-4",
-    midTopRight: "top-1/4 right-4",
-    bottomLeft: "bottom-5 left-4",
-    bottomRight: "bottom-5 right-4",
+    topCenter: "top-3 left-1/2 -translate-x-1/2 text-xl",
+    midTopCenter: "top-1/4 left-1/2 -translate-x-1/2 text-xl",
+    center: "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl",
+    midBottomCenter: "bottom-1/4 left-1/2 -translate-x-1/2 text-xl",
+    bottomCenter: "bottom-3 left-1/2 -translate-x-1/2 text-xl",
+    topLeft: "top-3 left-3 text-xl",
+    topRight: "top-3 right-3 text-xl",
+    midLeft: "top-1/2 left-3 -translate-y-1/2 text-xl",
+    midRight: "top-1/2 right-3 -translate-y-1/2 text-xl",
+    midTopLeft: "top-1/4 left-3 text-xl",
+    midTopRight: "top-1/4 right-3 text-xl",
+    bottomLeft: "bottom-3 left-3 text-xl",
+    bottomRight: "bottom-3 right-3 text-xl",
   };
 
   switch (rank) {
@@ -73,19 +82,19 @@ const renderSuitPatterns = (
       return [
         symbol(positions.topLeft, 1),
         symbol(positions.topRight, 2),
-        symbol(positions.center.replace("top-1/2", "top-1/2 -mt-8"), 3),
-        symbol(positions.center.replace("top-1/2", "top-1/2 mt-8"), 4, true),
+        symbol(positions.midLeft, 3),
+        symbol(positions.midRight, 4),
         symbol(positions.bottomLeft, 5, true),
         symbol(positions.bottomRight, 6, true),
       ];
     case "7":
       return [
-        ...renderSuitPatterns("6", suitSymbol, colorClass),
+        ...renderSuitPatterns("6", suitSymbol, colorClass, cardKey),
         symbol(positions.midTopCenter, 7),
       ];
     case "8":
       return [
-        ...renderSuitPatterns("7", suitSymbol, colorClass),
+        ...renderSuitPatterns("7", suitSymbol, colorClass, cardKey),
         symbol(positions.midBottomCenter, 8, true),
       ];
     case "9":
@@ -97,12 +106,12 @@ const renderSuitPatterns = (
         symbol(positions.center, 5),
         symbol(positions.bottomLeft, 6, true),
         symbol(positions.bottomRight, 7, true),
-        symbol("bottom-1/4 left-4", 8, true),
-        symbol("bottom-1/4 right-4", 9, true),
+        symbol("bottom-1/4 left-3 text-xl", 8, true),
+        symbol("bottom-1/4 right-3 text-xl", 9, true),
       ];
     case "10":
       return [
-        ...renderSuitPatterns("8", suitSymbol, colorClass),
+        ...renderSuitPatterns("8", suitSymbol, colorClass, cardKey),
         symbol(positions.topLeft, 9),
         symbol(positions.bottomRight, 10, true),
       ];
@@ -110,7 +119,17 @@ const renderSuitPatterns = (
     case "Q":
     case "K":
       // For face cards, you might want an image, but a large symbol works as a placeholder.
-      return [symbol(`${positions.center} text-7xl`, 1)];
+      return [symbol(`${positions.center} text-4xl`, 1)];
+    case "Joker":
+      // Joker gets a special image in the center
+      return [
+        <img
+          key={`joker-${positionInHand}`}
+          src="../icons/joker-smile.png"
+          alt="Joker"
+          className="absolute select-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 object-contain"
+        />
+      ];
     default:
       return []; // Return nothing for ranks that don't have patterns
   }
@@ -145,29 +164,35 @@ const RenderCard = (
       : "text-black";
   };
 
-  // Calculate overlap offset for stacking
-  const overlapOffset = positionInHand * 35; // 35px overlap between cards
+  // Calculate overlap offset for stacking - reduced for smaller cards
+  const overlapOffset = positionInHand * 25; // Reduced from 35px to 25px
   const suitSymbol = getCardSymbol(card.suit);
   const colorClass = getCardColor(card.suit);
+  const isSpecial = isSpecialCard(card.rank);
+  const key = card.rank+card.suit+card.deckNumber+positionInHand
 
   return (
     <div
-      key={card.id}
+      key={key}
       onClick={() => isMyTurn && onCardSelect(card.id)}
-      // Removed absolute positioning from here to place it on the CardContent
-      className={`transition-transform duration-300
+      className={`transition-transform duration-300 select-none
         ${isMyTurn ? "cursor-pointer" : "cursor-not-allowed"}
         ${isSelected ? "z-0" : "z-10"}
       `}
       style={{
         position: "absolute",
         left: `${overlapOffset}px`,
-        transform: isSelected ? "translateY(-40px)" : "translateY(0px)",
+        transform: isSelected ? "translateY(-30px)" : "translateY(0px)", // Reduced from 40px to 30px
+        userSelect: "none",
+        WebkitUserSelect: "none",
+        MozUserSelect: "none",
+        msUserSelect: "none",
       }}
+      onDragStart={(e) => e.preventDefault()} // Prevent drag ghost image
     >
       <div
         className={`
-          relative w-24 h-36 rounded-lg shadow-md
+          relative w-20 h-28 rounded-md shadow-md select-none
           bg-slate-50 border transition-all duration-300
           ${
             isSelected
@@ -176,20 +201,26 @@ const RenderCard = (
           }
           overflow-hidden
         `}
+        style={{
+          userSelect: "none",
+          WebkitUserSelect: "none",
+          MozUserSelect: "none",
+          msUserSelect: "none",
+        }}
       >
         {/* Top left corner */}
-        <div className="absolute top-1 left-2 flex flex-col items-center leading-none">
-          <div className={`text-xl font-bold ${colorClass}`}>{card.rank}</div>
-          <div className={`text-2xl ${colorClass}`}>{suitSymbol}</div>
+        <div className="absolute top-1 left-1.5 flex flex-col items-center leading-none select-none">
+          <div className={`text-sm font-bold ${colorClass} select-none`}>{card.rank}</div> {/* Smaller text */}
+          {isSpecial && <div className={`text-lg ${colorClass} select-none`}>{suitSymbol}</div>} {/* Smaller icon */}
         </div>
 
         {/* The new suit patterns rendered in the center */}
-        {renderSuitPatterns(card.rank, suitSymbol, colorClass)}
+        {renderSuitPatterns(card.rank, suitSymbol, colorClass, key, positionInHand)}
 
         {/* Bottom right corner (rotated) */}
-        <div className="absolute bottom-1 right-2 flex flex-col items-center leading-none rotate-180">
-          <div className={`text-xl font-bold ${colorClass}`}>{card.rank}</div>
-          <div className={`text-2xl ${colorClass}`}>{suitSymbol}</div>
+        <div className="absolute bottom-1 right-1.5 flex flex-col items-center leading-none rotate-180 select-none">
+          <div className={`text-sm font-bold ${colorClass} select-none`}>{card.rank}</div> {/* Smaller text */}
+          {isSpecial && <div className={`text-lg ${colorClass} select-none`}>{suitSymbol}</div>} {/* Smaller icon */}
         </div>
       </div>
     </div>
@@ -202,18 +233,23 @@ const RenderOneHand = (
   isMyTurn: boolean,
   onCardSelect: (id: string) => void,
   selectedCards: string[],
+  maxCardsPerHand: number
 ) => {
-  const handCards = cards.slice(startIndex, startIndex + 14);
-  const handWidth = handCards.length * 35 + 89; // overlap * count + card width
+  const handCards = cards.slice(startIndex, startIndex + maxCardsPerHand);
+  const handWidth = handCards.length * 25 + 69; // Reduced overlap * count + smaller card width
 
   return (
     <div
       key={startIndex}
-      className="relative mb-4"
+      className="relative mb-3 select-none" // Reduced margin
       style={{
-        height: "180px",
+        height: "140px", // Reduced height
         width: `${handWidth}px`,
         margin: "0 auto",
+        userSelect: "none",
+        WebkitUserSelect: "none",
+        MozUserSelect: "none",
+        msUserSelect: "none",
       }}
     >
       {handCards.map((card, idx) => {

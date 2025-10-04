@@ -154,8 +154,6 @@ export default function RoomPage() {
         const { players: updatedPlayers } = message.payload;
         setPlayers(updatedPlayers);
         toast.success("Bots added successfully!");
-
-        toast.info("resultMessage");
       }
     });
 

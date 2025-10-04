@@ -1,9 +1,18 @@
-import { Card, Player, PlayerStats, PlayerWithHand, Rank, Suit, SuitTypes } from 'shared';
+import {
+  Card,
+  Player,
+  PlayerStats,
+  PlayerWithHand,
+  Rank,
+  Suit,
+  SuitTypes,
+} from 'shared';
 import { Deck } from './Deck';
 import { BotPlayer } from './BotPlayer';
 import { GameState } from '../types';
 
-interface ReturnGameState extends Omit<GameState, 'pile' | 'lastPlayedCards' | 'playerStats' | 'removedCards'> {
+interface ReturnGameState
+  extends Omit<GameState, 'pile' | 'lastPlayedCards' | 'playerStats'> {
   currentPlayerId: string;
   players: Player[];
   pileCount: number;
@@ -11,8 +20,7 @@ interface ReturnGameState extends Omit<GameState, 'pile' | 'lastPlayedCards' | '
   playerHandCounts: {
     [k: string]: number;
   };
-  playerStats: { [k: string]: PlayerStats; };
-  removedCards: Card[];
+  playerStats: { [k: string]: PlayerStats };
 }
 
 export class GameEngine {
@@ -44,12 +52,13 @@ export class GameEngine {
     // Distribute cards
     const deck = new Deck();
     const hands = deck.distributeCards(this.players.size);
+    const removedCards: Card[] = [];
 
     playerOrder.forEach((playerId, index) => {
       const player = this.players.get(playerId);
       if (player) {
         player.hand = hands[index];
-        this.checkAndRemoveFourOfKind(player);
+        removedCards.push(...this.checkAndRemoveFourOfKind(player, true));
       }
     });
 
@@ -76,7 +85,7 @@ export class GameEngine {
       loser: null,
       consecutivePasses: 0,
       playerStats,
-      removedCards: [],
+      removedCards,
     };
   }
 
@@ -120,7 +129,7 @@ export class GameEngine {
 
     // If there's a current rank, must claim the same rank
     if (
-      this.gameState.currentRank &&
+      this.gameState.pile.length > 0 && this.gameState.currentRank &&
       claimedRank !== this.gameState.currentRank
     ) {
       return {
@@ -301,8 +310,11 @@ export class GameEngine {
     };
   }
 
-  private checkAndRemoveFourOfKind(player: PlayerWithHand): void {
+  private checkAndRemoveFourOfKind(player: PlayerWithHand, isInitialCheck: boolean = false): Card[] {
     const rankGroups = new Map<Rank, Card[]>();
+
+    // Track cards that will be removed
+    const removedCardsList: Card[] = [];
 
     // Group cards by rank (excluding Jokers)
     player.hand.forEach((card) => {
@@ -338,9 +350,6 @@ export class GameEngine {
 
           const cardsToRemove = new Set<string>();
 
-          // Track cards that will be removed
-          const removedCardsList: Card[] = [];
-          
           if (canRemoveEight) {
             // Remove 2 cards of each suit (8 total)
             SuitTypes.forEach((suit) => {
@@ -359,13 +368,17 @@ export class GameEngine {
           }
 
           // Add removed cards to game state tracking
-          this.gameState.removedCards.push(...removedCardsList);
-          
+          if (!isInitialCheck) {
+            this.gameState.removedCards.push(...removedCardsList);
+          }
+
           // Remove the cards from player's hand
           player.hand = player.hand.filter((c) => !cardsToRemove.has(c.id));
         }
       }
     });
+    // Return the list of removed cards
+    return removedCardsList;
   }
 
   private advanceTurn(): void {
@@ -387,7 +400,7 @@ export class GameEngine {
           this.gameState.playerOrder.find(
             (id) => !this.gameState.winners.includes(id),
           ) || null;
-        
+
         return;
       }
     }
