@@ -8,7 +8,7 @@ import { Toaster } from "sonner";
 
 function App() {
   return (
-    <Router basename="/Tekthib">
+    <Router basename="/Tekthib/">
       <Toaster richColors duration={3000} position="top-right" />
       <Routes>
         <Route path="/" element={<HomePage />} />

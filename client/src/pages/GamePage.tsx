@@ -189,7 +189,7 @@ export default function GamePage() {
           } else if (toastType === "success") {
             toast.success(resultMessage);
           } else {
-            toast(resultMessage);
+            toast.info(resultMessage);
           }
 
           // Add system message to chat
