@@ -12,9 +12,6 @@
     "format": "prettier --write src/**/*.ts",
     "heroku-postbuild": "npm run build"
   },
-  "engines": {
-    "node": "20.x"
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
