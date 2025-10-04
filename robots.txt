@@ -5,7 +5,7 @@ Disallow: /admin
 Disallow: /api/
 
 # Sitemap
-Sitemap: https://tekthib.com/sitemap.xml
+Sitemap: https://chater-marzougui.me/sitemap.xml
 
 # Crawl Delay (optional, in seconds)
 Crawl-delay: 1
