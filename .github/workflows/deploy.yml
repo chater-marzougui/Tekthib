@@ -45,6 +45,8 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
+          VITE_API_URL: https://takthib-a00f145250bc.herokuapp.com
+          VITE_WS_URL: wss://takthib-a00f145250bc.herokuapp.com
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
