@@ -42,12 +42,13 @@ export default function GameBoard({
   const [claimedRank, setClaimedRank] = useState(
     lastPlay ? lastPlay.claimedRank : ""
   );
-  const [timer, setTimer] = useState(25);
+  const autoPlayTimeout = 45; // seconds
+  const [timer, setTimer] = useState(autoPlayTimeout);
 
   // Timer effect for auto-play
   useEffect(() => {
     if (!isMyTurn) {
-      setTimer(25); // Reset timer when it's not player's turn
+      setTimer(autoPlayTimeout); // Reset timer when it's not player's turn
       return;
     }
 
@@ -68,7 +69,7 @@ export default function GameBoard({
             : playableRanks[Math.floor(Math.random() * playableRanks.length)];
 
           onPlayCards(autoSelectedCards, rankToClaim);
-          return 25;
+          return autoPlayTimeout;
         }
         return prev - 1;
       });
