@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { WSMessage } from "shared";
 
-const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:3001";
+const WS_URL = import.meta.env.VITE_WS_URL || "wss://localhost:3001";
 
 export function useWebSocket() {
   const [lastMessage, setLastMessage] = useState<WSMessage | null>(null);
