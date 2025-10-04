@@ -1,0 +1,21 @@
+# Tekthib - Robots Configuration
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://tekthib.com/sitemap.xml
+
+# Crawl Delay (optional, in seconds)
+Crawl-delay: 1
+
+# Specific Bot Rules
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
