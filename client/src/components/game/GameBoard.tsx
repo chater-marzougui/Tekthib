@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
-import { DisplayGameCard, playableRanks, Rank, RankTypes } from "@shared";
+import { DisplayGameCard, playableRanks, RankTypes } from "@shared";
 import RenderOneHand from "./RenderCard";
 import type { Card as GameCard } from "shared";
 
@@ -85,8 +85,8 @@ export default function GameBoard({
   };
 
   const sortedCards = [...playerCards].sort((a, b) => {
-    const aIndex = RankTypes.indexOf(a.rank as Rank);
-    const bIndex = RankTypes.indexOf(b.rank as Rank);
+    const aIndex = RankTypes.indexOf(a.rank);
+    const bIndex = RankTypes.indexOf(b.rank);
     return aIndex - bIndex;
   });
 
@@ -96,7 +96,7 @@ export default function GameBoard({
   ).map((rank) => removedCards.find((card) => card.rank === rank)!);
 
   // Calculate number of hands needed
-  const maxCardsPerHand = Math.floor(window.innerWidth / 35);
+  const maxCardsPerHand = Math.min(Math.floor(window.innerWidth / 35), 18);
   const numberOfHands = Math.ceil(sortedCards.length / maxCardsPerHand);
 
   return (
@@ -106,8 +106,6 @@ export default function GameBoard({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <CardTitle className="text-2xl">DA GAME</CardTitle>
-
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-md opacity-50" />
@@ -199,7 +197,7 @@ export default function GameBoard({
                                 opacity: 0,
                                 scale: 0.5,
                                 y: -100,
-                                rotate: 0,
+                                rotate: 0,  
                               }}
                               animate={{
                                 opacity: 1,

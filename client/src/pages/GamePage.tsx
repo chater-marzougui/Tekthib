@@ -22,6 +22,7 @@ import type { Card as GameCard, Rank, Player, DisplayGameCard } from "shared";
 import type { GameState as ServerGameState } from "./../types";
 import VoiceChat from "@/components/chat/VoiceChat";
 import { EndGameDialog } from "@/components/game/EndGameDialog";
+import { motion } from "framer-motion";
 
 interface GamePlayer extends Player {
   isCurrentTurn: boolean;
@@ -59,7 +60,6 @@ export default function GamePage() {
   const playerName = localStorage.getItem("playerName") || "";
   const playerId = localStorage.getItem("clientId") || "";
 
-  // Check if player name is set on mount
   useEffect(() => {
     if (!playerName || playerName === "Anonymous") {
       setShowNameDialog(true);
@@ -70,10 +70,9 @@ export default function GamePage() {
   const [error, setError] = useState<string | null>(null);
   const [isMyTurn, setIsMyTurn] = useState(false);
   const [canChallenge, setCanChallenge] = useState(false);
-  const [challengeAnimation, setChallengeAnimation] = useState<{
+  const [revealedCardsAnimation, setRevealedCardsAnimation] = useState<{
     show: boolean;
-    winner: string;
-    loser: string;
+    cards: GameCard[];
   } | null>(null);
   const [gameEndedDialog, setGameEndedDialog] = useState<{
     open: boolean;
@@ -86,10 +85,8 @@ export default function GamePage() {
     loser: "",
   });
 
-  // Request initial game state when component mounts
   useEffect(() => {
     if (isConnected && roomId && playerId) {
-      // Request current game state from server
       sendMessage({
         type: "GET_GAME_STATE",
         payload: {
@@ -98,16 +95,13 @@ export default function GamePage() {
         },
       });
     } else if (isConnected && roomId && !playerId) {
-      // If no playerId, user probably navigated directly without going through room
       console.error("No player ID found. Please rejoin from home page.");
       setError("Session expired. Please return to home and rejoin the game.");
       setIsLoading(false);
     }
   }, [isConnected, roomId, playerId, sendMessage]);
 
-  // Initialize game data and setup WebSocket handlers
   useEffect(() => {
-    // Register handler for initial game state response
     const unregisterInitialState = registerHandler(
       "initial-game-state",
       (message) => {
@@ -130,7 +124,6 @@ export default function GamePage() {
       }
     );
 
-    // Register WebSocket handlers
     const unregisterGameStateUpdate = registerHandler(
       "game-state-update",
       (message) => {
@@ -169,7 +162,6 @@ export default function GamePage() {
         if (newGameState) {
           setGameState(newGameState);
           setIsMyTurn(newGameState.currentPlayerId === playerId);
-          // Winners can't challenge
           const isWinner = newGameState.winners.includes(playerId);
           setCanChallenge(pName !== playerName && !isWinner);
         }
@@ -189,7 +181,6 @@ export default function GamePage() {
           } = message.payload;
           let toastType = "info";
 
-          // Don't reveal cards, just show who was right/wrong
           let resultMessage = "";
           if (wasLying && lastPlayerName === playerName) {
             resultMessage = `You were caught lying by ${challengerName}! Learn to play!`;
@@ -209,7 +200,6 @@ export default function GamePage() {
               : `${challengerName} was wrong! ${lastPlayerName} was telling the truth.`;
           }
 
-          // Show toast notification
           console.log("Revealed Cards:", revealedCards);
           if (toastType === "error") {
             toast.error(resultMessage);
@@ -219,17 +209,18 @@ export default function GamePage() {
             toast.info(resultMessage);
           }
 
-          // Show challenge animation
-          const winner = wasLying ? challengerName : lastPlayerName;
-          const loser = wasLying ? lastPlayerName : challengerName;
-          setChallengeAnimation({ show: true, winner, loser });
-          
-          // Hide animation after 2 seconds
-          setTimeout(() => {
-            setChallengeAnimation(null);
-          }, 2000);
+          const shouldShowCardReveal = 
+            (wasLying && lastPlayerName === playerName) || 
+            (!wasLying && challengerName === playerName);
 
-          // Add system message to chat
+          if (shouldShowCardReveal && revealedCards && revealedCards.length > 0) {
+            setRevealedCardsAnimation({ show: true, cards: revealedCards });
+            
+            setTimeout(() => {
+              setRevealedCardsAnimation(null);
+            }, 3000);
+          }
+
           const systemMessage: SystemMessage = {
             id: `system-${Date.now()}${Math.random()}`,
             playerId: "system",
@@ -267,7 +258,6 @@ export default function GamePage() {
           finalState?.players?.find((p: Player) => p.id === loser)?.name ||
           "Unknown";
 
-        // Show dialog instead of alert
         setGameEndedDialog({
           open: true,
           winners: winnerNames.split(", "),
@@ -275,10 +265,8 @@ export default function GamePage() {
           playerStats: finalState?.playerStats,
         });
 
-        // Also show toast
         toast.success(`Game Over! Winners: ${winnerNames}`);
 
-        // Add system message to chat
         const systemMessage: SystemMessage = {
           id: `system-${Date.now()}`,
           playerId: "system",
@@ -300,7 +288,6 @@ export default function GamePage() {
 
     const unregisterGameReset = registerHandler("game-reset", (message) => {
       if (message.type === "GAME_RESET") {
-        // Navigate to room page when game is reset
         toast.success("Game reset! Return to room to start again.");
         navigate(`/room/${roomId}`);
       }
@@ -317,7 +304,6 @@ export default function GamePage() {
     };
   }, [registerHandler, navigate, playerId, playerName, lastPlay, roomId]);
 
-  // Convert gameState players to Player[] format for voice chat
   const playersForVoice: Player[] = gameState
     ? gameState.players.map((p) => ({
         id: p.id,
@@ -328,14 +314,12 @@ export default function GamePage() {
       }))
     : [];
 
-  // Determine if current player is host (first player in the list)
   const isHost = !!(
     gameState &&
     gameState.players.length > 0 &&
     gameState.players[0].id === playerId
   );
 
-  // Update players list when game state changes
   useEffect(() => {
     if (!gameState) return;
 
@@ -380,7 +364,6 @@ export default function GamePage() {
       },
     });
 
-    // Clear selection
     setSelectedCards([]);
   };
 
@@ -413,14 +396,12 @@ export default function GamePage() {
     if (nameInput.trim()) {
       localStorage.setItem("playerName", nameInput.trim());
       setShowNameDialog(false);
-      // Reload the page to use the new name
       window.location.reload();
     } else {
       toast.error("Please enter a valid name");
     }
   };
 
-  // Show loading state while fetching game data
   if (isLoading || !gameState) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 flex items-center justify-center">
@@ -443,7 +424,6 @@ export default function GamePage() {
 
   const content = (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 p-4">
-      {/* Name prompt dialog */}
       <Dialog open={showNameDialog} onOpenChange={() => {}}>
         <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
@@ -476,25 +456,99 @@ export default function GamePage() {
         </DialogContent>
       </Dialog>
 
-      {/* Challenge Animation Overlay */}
-      {challengeAnimation?.show && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-lg p-8 shadow-2xl animate-bounce">
-            <div className="text-center space-y-4">
-              <div className="text-6xl">🃏</div>
-              <div className="text-2xl font-bold">
-                {challengeAnimation.winner} wins!
-              </div>
-              <div className="text-lg text-gray-600">
-                {challengeAnimation.loser} takes the pile
-              </div>
+      {revealedCardsAnimation?.show && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="relative">
+            <div className="relative w-[600px] h-[400px]">
+              {revealedCardsAnimation.cards.map((card, index) => {
+                const totalCards = revealedCardsAnimation.cards.length;
+                const centerX = 300;
+                const centerY = 200;
+                
+                const startX = centerX + (Math.random() - 0.5) * 40;
+                const startY = centerY + (Math.random() - 0.5) * 40;
+                
+                const spreadWidth = Math.min(totalCards * 30, 400);
+                const cardSpacing = spreadWidth / totalCards;
+                const endX = (centerX - spreadWidth / 2) + (index * cardSpacing);
+                const endY = 350;
+                
+                const getCardSymbol = (suit: GameCard["suit"]) => {
+                  switch (suit) {
+                    case "hearts": return "♥";
+                    case "diamonds": return "♦";
+                    case "clubs": return "♣";
+                    case "spades": return "♠";
+                    case "joker": return "🃏";
+                  }
+                };
+                
+                const getCardColor = (suit: GameCard["suit"]) => {
+                  if (suit === "joker") return "text-purple-600";
+                  return suit === "hearts" || suit === "diamonds"
+                    ? "text-red-600"
+                    : "text-black";
+                };
+
+                return (
+                  <motion.div
+                    key={`reveal-${card.id}-${index}`}
+                    initial={{
+                      x: startX,
+                      y: startY,
+                      rotateY: 180,
+                      scale: 0.8,
+                      opacity: 0
+                    }}
+                    animate={{
+                      x: endX,
+                      y: endY,
+                      rotateY: 0,
+                      scale: 1,
+                      opacity: 1
+                    }}
+                    transition={{
+                      duration: 0.8,
+                      delay: index * 0.1,
+                      ease: "easeOut"
+                    }}
+                    className="absolute w-24 h-36"
+                    style={{
+                      transformStyle: "preserve-3d",
+                    }}
+                  >
+                    <div className="w-full h-full bg-white rounded-lg border-2 border-gray-400 shadow-2xl p-2 relative">
+                      <div className="absolute top-1 left-2 flex flex-col items-center leading-none">
+                        <div className={`text-lg font-bold ${getCardColor(card.suit)}`}>
+                          {card.rank}
+                        </div>
+                        <div className={`text-2xl ${getCardColor(card.suit)}`}>
+                          {getCardSymbol(card.suit)}
+                        </div>
+                      </div>
+                      
+                      <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-5xl ${getCardColor(card.suit)}`}>
+                        {getCardSymbol(card.suit)}
+                      </div>
+                      
+                      <div className="absolute bottom-1 right-2 flex flex-col items-center leading-none rotate-180">
+                        <div className={`text-lg font-bold ${getCardColor(card.suit)}`}>
+                          {card.rank}
+                        </div>
+                        <div className={`text-2xl ${getCardColor(card.suit)}`}>
+                          {getCardSymbol(card.suit)}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         </div>
       )}
 
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
@@ -516,7 +570,6 @@ export default function GamePage() {
         </div>
 
         <div className="grid lg:grid-cols-4 gap-6">
-          {/* Game Board - Center Area */}
           <div className="lg:col-span-3 space-y-6">
             <GameBoard
               lastPlay={lastPlay}
@@ -533,11 +586,9 @@ export default function GamePage() {
             />
           </div>
 
-          {/* Players List and Game Info */}
           <div className="space-y-4">
             <PlayerList players={players} currentPlayerId={playerId} />
 
-            {/* Chat Box */}
             {playerId && playerName && (
               <ChatBox
                 playerName={playerName}
@@ -546,12 +597,10 @@ export default function GamePage() {
               />
             )}
 
-            {/* Voice Chat */}
             {roomId && playerId && (
               <VoiceChat players={playersForVoice} localPlayerId={playerId} />
             )}
 
-            {/* Game Rules Quick Reference */}
             <Card>
               <CardHeader>
                 <CardTitle>Quick Rules</CardTitle>
@@ -573,14 +622,13 @@ export default function GamePage() {
         loser={gameEndedDialog.loser}
         playerStats={gameEndedDialog.playerStats}
         gameState={gameState}
-        currentPlayerId={playerId} // Add this prop
+        currentPlayerId={playerId}
         onClose={() => setGameEndedDialog({ ...gameEndedDialog, open: false })}
         handlePlayAgain={handlePlayAgain}
       />
     </div>
   );
 
-  // Wrap with VoiceChatProvider to maintain voice connections
   if (roomId && playerId) {
     return (
       <VoiceChatProvider
