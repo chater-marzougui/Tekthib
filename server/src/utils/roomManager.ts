@@ -243,7 +243,7 @@ class RoomManager {
     const gameEngine = new GameEngine(room.players);
     this.gameEngines.set(roomId, gameEngine);
     room.gameState = gameEngine.getGameState();
-
+    room.gameState.phase = 'playing';
     return gameEngine;
   }
 

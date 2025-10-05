@@ -53,6 +53,21 @@ export function useVoiceChat({
   );
   const navigate = useNavigate();
 
+  // Helper to ensure AudioContext is running (Firefox fix)
+  const ensureAudioContextRunning = useCallback(
+    async (audioContext: AudioContext) => {
+      if (audioContext.state === "suspended") {
+        try {
+          await audioContext.resume();
+          console.log("AudioContext resumed");
+        } catch (error) {
+          console.error("Failed to resume AudioContext:", error);
+        }
+      }
+    },
+    []
+  );
+
   // Initialize audio stream
   const initializeAudio = useCallback(async () => {
     try {
@@ -84,27 +99,45 @@ export function useVoiceChat({
       // Add local stream tracks to the connection
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach((track) => {
+          console.log(
+            "Adding track to peer connection:",
+            remotePlayerId,
+            track.kind
+          );
           pc.addTrack(track, localStreamRef.current!);
         });
+      } else {
+        console.warn("No local stream available when creating peer connection");
       }
 
       // Handle incoming remote stream
-      pc.ontrack = (event) => {
+      pc.ontrack = async (event) => {
+        console.log("Received remote track from:", remotePlayerId);
         const [remoteStream] = event.streams;
 
         const peerConn = peerConnectionsRef.current.get(remotePlayerId);
         if (peerConn) {
           peerConn.stream = remoteStream;
 
+          // Create audio element and play - Firefox compatible
           const audioElement = new Audio();
           audioElement.srcObject = remoteStream;
           audioElement.autoplay = true;
           audioElement.volume = mutedPlayers.has(remotePlayerId) ? 0 : 1;
+
+          // CRITICAL for Firefox: attach to DOM temporarily
+          audioElement.style.display = "none";
+          document.body.appendChild(audioElement);
+
           peerConn.audioElement = audioElement;
 
           // Setup audio level detection
           try {
             const audioContext = new AudioContext();
+
+            // FIREFOX FIX: Ensure AudioContext is running
+            await ensureAudioContextRunning(audioContext);
+
             const source = audioContext.createMediaStreamSource(remoteStream);
             const analyser = audioContext.createAnalyser();
             analyser.fftSize = 256;
@@ -121,7 +154,7 @@ export function useVoiceChat({
               analyser.getByteFrequencyData(dataArray);
               const average =
                 dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-              const level = Math.min(100, (average / 128) * 100); // Normalize to 0-100
+              const level = Math.min(100, (average / 128) * 100);
 
               setAudioLevels((prev) => {
                 const newMap = new Map(prev);
@@ -138,14 +171,21 @@ export function useVoiceChat({
             console.error("Error setting up audio analysis:", error);
           }
 
-          audioElement.play().catch((err) => {
+          // Firefox requires explicit play() call with error handling
+          try {
+            await audioElement.play();
+            console.log("Audio playing for:", remotePlayerId);
+          } catch (err) {
             console.error("Error playing remote audio:", err);
-            setTimeout(() => {
-              audioElement.play().catch((e) => {
+            // Retry with user interaction if needed
+            setTimeout(async () => {
+              try {
+                await audioElement.play();
+              } catch (e) {
                 console.error("Retry failed:", e);
-              });
-            }, 100);
-          });
+              }
+            }, 500);
+          }
         }
       };
 
@@ -164,10 +204,16 @@ export function useVoiceChat({
 
       // Handle connection state changes
       pc.onconnectionstatechange = () => {
+        console.log(
+          `Connection state with ${remotePlayerId}:`,
+          pc.connectionState
+        );
+
         if (
           pc.connectionState === "failed" ||
           pc.connectionState === "disconnected"
         ) {
+          console.log(`Attempting to reconnect to ${remotePlayerId}`);
           // Attempt to reconnect
           setTimeout(() => {
             if (pc.connectionState !== "connected") {
@@ -177,10 +223,18 @@ export function useVoiceChat({
         }
       };
 
+      // Log ICE connection state
+      pc.oniceconnectionstatechange = () => {
+        console.log(
+          `ICE connection state with ${remotePlayerId}:`,
+          pc.iceConnectionState
+        );
+      };
+
       peerConnectionsRef.current.set(remotePlayerId, { connection: pc });
       return pc;
     },
-    [sendMessage, mutedPlayers]
+    [sendMessage, mutedPlayers, ensureAudioContextRunning]
   );
 
   // Create and send offer to a remote player
@@ -312,6 +366,7 @@ export function useVoiceChat({
     if (!stream) return;
 
     setIsVoiceEnabled(true);
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Create connections to all other players (except bots)
     const otherPlayers = players.filter(
@@ -337,7 +392,11 @@ export function useVoiceChat({
     );
     animationFramesRef.current.clear();
 
-    audioContextsRef.current.forEach((ctx) => ctx.close());
+    audioContextsRef.current.forEach((ctx) => {
+      if (ctx.state !== "closed") {
+        ctx.close();
+      }
+    });
     audioContextsRef.current.clear();
 
     analysersRef.current.clear();
@@ -348,6 +407,10 @@ export function useVoiceChat({
       if (peerConn.audioElement) {
         peerConn.audioElement.pause();
         peerConn.audioElement.srcObject = null;
+        // Remove from DOM if attached
+        if (peerConn.audioElement.parentNode) {
+          peerConn.audioElement.parentNode.removeChild(peerConn.audioElement);
+        }
       }
       peerConn.connection.close();
     });
@@ -546,6 +609,12 @@ export function useVoiceChat({
           if (peerConn.audioElement) {
             peerConn.audioElement.pause();
             peerConn.audioElement.srcObject = null;
+            // Remove from DOM if attached
+            if (peerConn.audioElement.parentNode) {
+              peerConn.audioElement.parentNode.removeChild(
+                peerConn.audioElement
+              );
+            }
           }
           peerConn.connection.close();
           peerConnectionsRef.current.delete(peerId);
@@ -559,7 +628,7 @@ export function useVoiceChat({
         }
 
         const audioContext = audioContextsRef.current.get(peerId);
-        if (audioContext) {
+        if (audioContext && audioContext.state !== "closed") {
           audioContext.close();
           audioContextsRef.current.delete(peerId);
         }

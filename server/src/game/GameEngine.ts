@@ -74,7 +74,7 @@ export class GameEngine {
     });
 
     return {
-      phase: 'playing',
+      phase: 'waiting',
       currentPlayerIndex: 0,
       currentRank: null,
       pile: [],
@@ -129,7 +129,8 @@ export class GameEngine {
 
     // If there's a current rank, must claim the same rank
     if (
-      this.gameState.pile.length > 0 && this.gameState.currentRank &&
+      this.gameState.pile.length > 0 &&
+      this.gameState.currentRank &&
       claimedRank !== this.gameState.currentRank
     ) {
       return {
@@ -284,6 +285,8 @@ export class GameEngine {
           (this.gameState.currentPlayerIndex + 1) %
             this.gameState.playerOrder.length
         ];
+      this.gameState.winners.includes(lastPlayer.id) ||
+        this.gameState.winners.push(lastPlayer.id);
     } else {
       nextPlayerId = this.gameState.lastPlayerId;
     }
@@ -297,9 +300,9 @@ export class GameEngine {
     this.gameState.lastPlayedCards = [];
     this.gameState.lastPlayerId = null;
 
-    for (const player of this.players.values()) {
-      this.checkAndRemoveFourOfKind(player);
-    }
+    // for (const player of this.players.values()) {
+    //   this.checkAndRemoveFourOfKind(player);
+    // }
 
     return {
       success: true,
@@ -310,7 +313,10 @@ export class GameEngine {
     };
   }
 
-  private checkAndRemoveFourOfKind(player: PlayerWithHand, isInitialCheck: boolean = false): Card[] {
+  private checkAndRemoveFourOfKind(
+    player: PlayerWithHand,
+    isInitialCheck: boolean = false,
+  ): Card[] {
     const rankGroups = new Map<Rank, Card[]>();
 
     // Track cards that will be removed
@@ -377,6 +383,13 @@ export class GameEngine {
         }
       }
     });
+
+    if (
+      player.hand.length === 0 &&
+      !this.gameState.winners.includes(player.id)
+    ) {
+      this.gameState.winners.push(player.id);
+    }
     // Return the list of removed cards
     return removedCardsList;
   }
