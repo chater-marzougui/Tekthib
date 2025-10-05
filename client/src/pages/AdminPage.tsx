@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import type { Room as BaseRoom, GameState } from "@/types";
+import { Trash } from "lucide-react";
 
 interface Room extends BaseRoom {
   gameState: GameState | null;
@@ -25,7 +26,8 @@ interface SystemState {
   rooms: Room[];
 }
 
-const baseUrl = import.meta.env.VITE_API_URL || "https://takthib-a00f145250bc.herokuapp.com";
+const baseUrl =
+  import.meta.env.VITE_API_URL || "https://takthib-a00f145250bc.herokuapp.com";
 
 export default function AdminPage() {
   const navigate = useNavigate();
@@ -39,7 +41,7 @@ export default function AdminPage() {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `${baseUrl}/api/admin/system-state?password=${encodeURIComponent(pwd)}`,
+        `${baseUrl}/api/admin/system-state?password=${encodeURIComponent(pwd)}`
       );
 
       if (response.status === 401) {
@@ -60,6 +62,49 @@ export default function AdminPage() {
       toast.error("Failed to fetch system state");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const deleteRoom = async (roomId: string) => {
+    if (!password) {
+      toast.error("Admin password is required");
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete room ${roomId}?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${baseUrl}/api/admin/delete-room`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ roomId, password }),
+      });
+
+      if (response.status === 401) {
+        toast.error("Invalid admin password");
+        setIsAuthenticated(false);
+        return;
+      }
+
+      if (response.status === 404) {
+        toast.error("Room not found");
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error("Failed to delete room");
+      }
+
+      toast.success(`Room ${roomId} deleted`);
+      // Refresh system state
+      fetchSystemState(password);
+    } catch (error) {
+      console.error("Error deleting room:", error);
+      toast.error("Failed to delete room");
     }
   };
 
@@ -217,6 +262,15 @@ export default function AdminPage() {
                           </CardDescription>
                         </div>
                         <div className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="hover:bg-red-100 cursor-pointer"
+                            onClick={() => deleteRoom(room.id)}
+                            title="Delete Room"
+                          >
+                            <Trash className="text-red-500 cursor-pointer" />
+                          </Button>
                           <div className="text-sm font-medium">
                             Players: {room.playerCount}/{room.maxPlayers}
                           </div>

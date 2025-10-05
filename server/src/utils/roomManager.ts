@@ -289,6 +289,15 @@ class RoomManager {
     return this.rooms.size;
   }
 
+  deleteRoom(roomId: string): boolean {
+    const room = this.rooms.get(roomId);
+    if (!room) return false;
+
+    this.rooms.delete(roomId);
+    this.gameEngines.delete(roomId);
+    return true;
+  }
+
   cleanup(): void {
     const now = Date.now();
     const maxAge = 2 * 60 * 60 * 1000; // 2 hours

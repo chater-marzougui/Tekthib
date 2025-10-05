@@ -4,15 +4,28 @@ import { roomManager } from './utils/roomManager';
 import adminRoutes from './routes/adminRoutes';
 
 const app: Express = express();
+const ORIGINS = process.env.NODE_ENV === 'production'
+  ? ['https://chater-marzougui.me', 'https://chater-marzougui.me/Tekthib']
+  : ['http://localhost:5173'];
 
 // Middleware
 app.use(
   cors({
-    origin: '*',
+    origin: (origin, callback) => {
+      if (!origin || ORIGINS.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
-  }),
+  })
 );
 app.use(express.json());
+
+app.get('/', (req, res) => {
+  res.redirect('https://chater-marzougui.me/Tekthib');
+});
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
