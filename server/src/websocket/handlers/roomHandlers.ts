@@ -587,8 +587,6 @@ function handlePlayAgain(
   clients: Map<WebSocket, ClientInfo>,
   payload: PlayAgainPayload,
 ): void {
-  const clientInfo = clients.get(ws)!;
-
   // Get room by code instead of clientInfo.roomId since they might have left
   const room = roomManager.getRoomByCode(payload.roomCode);
 

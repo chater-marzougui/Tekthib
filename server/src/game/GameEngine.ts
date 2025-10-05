@@ -280,13 +280,18 @@ export class GameEngine {
     if (wasLying) {
       nextPlayerId = challengerId;
     } else if (lastPlayer.hand.length === 0) {
-      nextPlayerId =
-        this.gameState.playerOrder[
-          (this.gameState.currentPlayerIndex + 1) %
-            this.gameState.playerOrder.length
-        ];
-      this.gameState.winners.includes(lastPlayer.id) ||
+      if (!this.gameState.winners.includes(lastPlayer.id)) {
         this.gameState.winners.push(lastPlayer.id);
+      }
+      let nextIndex =
+        (this.gameState.currentPlayerIndex + 1) %
+        this.gameState.playerOrder.length;
+      while (
+        this.gameState.winners.includes(this.gameState.playerOrder[nextIndex])
+      ) {
+        nextIndex = (nextIndex + 1) % this.gameState.playerOrder.length;
+      }
+      nextPlayerId = this.gameState.playerOrder[nextIndex];
     } else {
       nextPlayerId = this.gameState.lastPlayerId;
     }

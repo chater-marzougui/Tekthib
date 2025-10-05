@@ -1,6 +1,5 @@
 import type { JSX } from "react";
 import type { Card, DisplayGameCard, Rank } from "shared";
-import { Button } from "../ui/button";
 
 const specialCards = ["2", "3", "A", "J", "Q", "K"] as Rank[];
 const renderRank = (rank: Rank) => {

@@ -6,7 +6,7 @@ interface PlayerControlsProps {
   canPlay: boolean;
   setClaimedRank: (rank: string) => void;
   claimedRank: string | null;
-  selectedCards: any[];
+  selectedCards: string[];
   handlePlayCards: () => void;
   lastPlay: { player: string; cardCount: number; claimedRank: string } | null;
 }
