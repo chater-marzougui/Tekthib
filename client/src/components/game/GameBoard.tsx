@@ -1,16 +1,14 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { motion, AnimatePresence } from "framer-motion";
 import { DisplayGameCard, playableRanks, RankTypes } from "@shared";
 import RenderOneHand from "./RenderCard";
-import type { Card as GameCard } from "shared";
-
-interface LastPlay {
-  player: string;
-  cardCount: number;
-  claimedRank: string;
-}
+import type { Card as GameCard, LastPlay } from "shared";
+import WastedPile from "./board/WastedPile";
+import { Badge } from "@/components/ui/badge";
+import PlayerControls from "./board/PlayerControls";
+import StateCard from "./board/StateCard";
+import CenterPile from "./board/CenterPile";
 
 interface MergedGameBoardProps {
   lastPlay: LastPlay | null;
@@ -47,11 +45,6 @@ export default function GameBoard({
 
   // Timer effect for auto-play
   useEffect(() => {
-    if (!isMyTurn) {
-      localStorage.removeItem("turnStartTime");
-      return;
-    }
-
     // Get or set turn start time
     const storedStartTime = localStorage.getItem("turnStartTime");
     const startTime = storedStartTime ? parseInt(storedStartTime) : Date.now();
@@ -66,7 +59,7 @@ export default function GameBoard({
 
       setTimer(remaining);
 
-      if (remaining === 0) {
+      if (remaining === 0 && isMyTurn) {
         // Time's up - auto-play random cards
         const numCards = Math.floor(Math.random() * 4) + 1; // 1-4 cards
         const availableCards = playerCards.slice(
@@ -81,9 +74,12 @@ export default function GameBoard({
           : playableRanks[Math.floor(Math.random() * playableRanks.length)];
 
         onPlayCards(autoSelectedCards, rankToClaim);
-        localStorage.removeItem("turnStartTime");
+      } else if (remaining === 0) {
+        clearInterval(interval);
+        setTimer(autoPlayTimeout);
+        localStorage.setItem("turnStartTime", Date.now().toString());
       }
-    }, 100); // Check more frequently for accuracy
+    }, 500); // Check more frequently for accuracy
 
     return () => clearInterval(interval);
   }, [isMyTurn, playerCards, lastPlay, onPlayCards]);
@@ -91,6 +87,9 @@ export default function GameBoard({
   const handlePlayCards = () => {
     if (selectedCards.length > 0 && (claimedRank || lastPlay)) {
       onPlayCards(selectedCards, lastPlay ? lastPlay.claimedRank : claimedRank);
+      localStorage.setItem("turnStartTime", Date.now().toString());
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimer(autoPlayTimeout);
       setClaimedRank("");
     }
   };
@@ -101,315 +100,113 @@ export default function GameBoard({
     return aIndex - bIndex;
   });
 
-  // Get unique ranks from removed cards (one card per four-of-a-kind)
-  const uniqueRemovedRanks = Array.from(
-    new Set(removedCards.map((card) => card.rank))
-  ).map((rank) => removedCards.find((card) => card.rank === rank)!);
-
   // Calculate number of hands needed
   const maxCardsPerHand = Math.min(Math.floor(window.innerWidth / 35), 24);
   const numberOfHands = Math.ceil(sortedCards.length / maxCardsPerHand);
+  useEffect(() => {
+    localStorage.setItem("turnStartTime", Date.now().toString());
+  }, [isMyTurn, lastPlay]);
 
   return (
     <div className="space-y-4">
       {/* Main Game Board */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-md opacity-50" />
-                  <div className="relative bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-lg shadow-lg">
-                    {playerCards.length}
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-foreground">
-                    Your Cards
-                  </h3>
-                  <p className="text-sm text-slate-400">
-                    {isMyTurn ? (
-                      <span className="text-green-400 flex items-center gap-1">
-                        <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                        Your turn - {timer}s
-                      </span>
-                    ) : currentPlayer ? (
-                      `${currentPlayer}'s turn`
-                    ) : (
-                      "Waiting for game to start..."
-                    )}
-                  </p>
-                </div>
-              </div>
+          <div className="flex flex-col md:flex-row items-stretch md:items-start gap-4 md:gap-6">
+            {/* Mobile: Top row wrapper for StateCard + WastedPile */}
+            <div className="flex md:hidden flex-row justify-between items-start gap-4 w-full">
+              <StateCard
+                isMyTurn={isMyTurn}
+                currentPlayer={currentPlayer}
+                timer={timer}
+                lastPlay={lastPlay}
+              />
+              <WastedPile removedCards={removedCards} />
             </div>
 
-            <div className="flex items-center gap-4">
-              {/* Timer display when it's player's turn */}
-              {isMyTurn && (
-                <div
-                  className={`relative ${timer <= 5 ? "animate-pulse" : ""}`}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-red-500 rounded-full blur-md opacity-50" />
-                  <div
-                    className={`relative rounded-full w-16 h-16 flex items-center justify-center font-bold text-2xl shadow-lg ${
-                      timer <= 5
-                        ? "bg-gradient-to-br from-red-500 to-red-600 text-white"
-                        : "bg-gradient-to-br from-amber-500 to-orange-600 text-white"
-                    }`}
-                  >
-                    {timer}
-                  </div>
-                </div>
-              )}
-
-              {lastPlay && !isMyTurn && (
-                <div className="bg-foreground backdrop-blur-sm border border-slate-600 rounded-lg px-4 py-2">
-                  <p className="text-xs text-slate-400">Current claim</p>
-                  <p className="text-2xl font-bold text-white">
-                    {lastPlay.claimedRank}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {lastPlay.cardCount} cards
-                  </p>
-                </div>
-              )}
+            {/* Desktop: Left side - StateCard only */}
+            <div className="hidden md:block">
+              <StateCard
+                isMyTurn={isMyTurn}
+                currentPlayer={currentPlayer}
+                timer={timer}
+                lastPlay={lastPlay}
+              />
             </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {lastPlay ? (
-            <div className="text-center space-y-4">
-              <div className="text-lg">
-                <span className="font-semibold">{lastPlay.player}</span> played{" "}
-                <span className="font-bold text-blue-600">
-                  {lastPlay.cardCount} ({lastPlay.claimedRank}
-                  {lastPlay.cardCount > 1 ? "s" : ""})
-                </span>
-              </div>
 
-              <div className="flex justify-center items-start gap-8">
-                {/* Center pile */}
-                <div className="flex-shrink-0">
-                  <p className="text-xs font-semibold text-gray-600 mb-2 text-center">
-                    Center Pile
-                  </p>
-                  <div className="relative h-36 w-28">
-                    <AnimatePresence>
-                      {Array.from({ length: Math.min(pileCount, 6) }).map(
-                        (_, i) => {
-                          const rotation = Math.sin(i) * 15 - 7.5;
-                          const offsetX = Math.cos(i * 1.5) * 8;
+            {/* Center - Game board (both mobile and desktop) */}
+            <div className="flex-1 flex flex-col items-center justify-center min-w-0">
+              <div className="w-full space-y-4">
+                {lastPlay && (
+                  <div className="relative">
+                    {/* Decorative background blur */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 rounded-lg blur-xl" />
 
-                          return (
-                            <motion.div
-                              key={`pile-card-${i}`}
-                              initial={{
-                                opacity: 0,
-                                scale: 0.5,
-                                y: -100,
-                                rotate: 0,
-                              }}
-                              animate={{
-                                opacity: 1,
-                                scale: 1,
-                                y: 0,
-                                rotate: rotation,
-                              }}
-                              exit={{
-                                opacity: 0,
-                                scale: 0.5,
-                                y: 100,
-                              }}
-                              transition={{
-                                duration: 0.5,
-                                delay: i * 0.05,
-                                type: "spring",
-                                stiffness: 200,
-                              }}
-                              className="absolute w-20 h-28 bg-white rounded-lg border-2 border-gray-300 shadow-xl"
-                              style={{
-                                top: `${i * 3}px`,
-                                left: `calc(50% + ${offsetX}px)`,
-                                transform: `translateX(-50%)`,
-                                zIndex: i,
-                                background:
-                                  "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                              }}
-                            >
-                              <div className="w-full h-full flex items-center justify-center">
-                                <div className="text-white font-bold text-3xl opacity-50">
-                                  ?
-                                </div>
-                              </div>
-                            </motion.div>
-                          );
-                        }
-                      )}
-                    </AnimatePresence>
-                    {pileCount > 0 && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="absolute top-0 right-0 bg-amber-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold border-2 border-white shadow-lg z-20"
-                      >
-                        {pileCount}
-                      </motion.div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Out of game pile */}
-                {uniqueRemovedRanks.length > 0 && (
-                  <div className="flex-shrink-0">
-                    <p className="text-xs font-semibold text-gray-600 mb-2 text-center">
-                      Out of Game
-                    </p>
-                    <div className="relative h-36 w-28">
-                      {uniqueRemovedRanks.slice(0, 6).map((card, i) => {
-                        const rotation = Math.sin(i * 2) * 12 - 6;
-                        const offsetX = Math.cos(i * 2) * 6;
-
-                        return (
-                          <motion.div
-                            key={`removed-${card.id}`}
-                            initial={{ opacity: 0, scale: 0.5 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: i * 0.05 }}
-                            className="absolute w-20 h-28 bg-white rounded-lg border-2 border-gray-400 shadow-lg flex flex-col items-center justify-center"
-                            style={{
-                              top: `${i * 3}px`,
-                              left: `calc(50% + ${offsetX}px)`,
-                              transform: `translateX(-50%) rotate(${rotation}deg)`,
-                              zIndex: i,
-                              color:
-                                card.suit === "hearts" ||
-                                card.suit === "diamonds"
-                                  ? "red"
-                                  : "black",
-                            }}
+                    {/* Content */}
+                    <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-lg px-4 py-3 shadow-sm">
+                      <div className="flex items-center justify-center gap-2 flex-wrap">
+                        <span className="font-bold text-foreground">
+                          {lastPlay.player}
+                        </span>
+                        <span className="text-sm md:text-base text-muted-foreground">
+                          claimed
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          {lastPlay.cardCount}×
+                          <Badge
+                            variant={isMyTurn ? "destructive" : "default"}
+                            className="text-base md:text-lg font-bold px-3 py-1"
                           >
-                            <div className="font-bold text-2xl">
-                              {card.rank}
-                            </div>
-                            <div className="text-3xl">
-                              {card.suit === "hearts" && "♥"}
-                              {card.suit === "diamonds" && "♦"}
-                              {card.suit === "clubs" && "♣"}
-                              {card.suit === "spades" && "♠"}
-                              {card.suit === "joker" && "🃏"}
-                            </div>
-                          </motion.div>
-                        );
-                      })}
-                      {uniqueRemovedRanks.length > 1 && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold border-2 border-white shadow-lg z-20"
-                        >
-                          {uniqueRemovedRanks.length}
-                        </motion.div>
-                      )}
+                            {lastPlay.claimedRank}
+                          </Badge>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
-              </div>
 
-              {/* Challenge button */}
-              {canChallenge && (
-                <div className="space-y-0">
-                  <Button
-                    onClick={onChallenge}
-                    variant="destructive"
-                    size="lg"
-                    className="animate-pulse"
-                  >
-                    🤔 Challenge (Call Liar!)
-                  </Button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="text-center text-gray-500 py-8">
-              <div className="text-4xl mb-2">🃏</div>
-              <div>Waiting for first play...</div>
-              <div className="text-sm mt-2">
-                The game will begin once someone plays their first cards
-              </div>
-            </div>
-          )}
-        </CardContent>
+                <CenterPile pileCount={pileCount} lastPlay={lastPlay} />
 
-        {/* Play Controls */}
-        {isMyTurn && playerCards.length > 0 && (
-          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-0 space-y-4">
-            {!lastPlay && (
-              <div className="space-y-3">
-                <label className="text-sm font-medium text-white">
-                  Claim this rank:
-                </label>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {playableRanks.map((rank) => (
-                    <button
-                      key={rank}
-                      onClick={() => setClaimedRank(rank)}
-                      className={`
-                  min-w-[40px] py-2 px-3 rounded-md font-bold text-base transition-all
-                  ${
-                    claimedRank === rank
-                      ? "bg-blue-500 text-white shadow-md"
-                      : "bg-gray-700 text-gray-200 hover:bg-gray-600"
-                  }
-                `}
+                {canChallenge && lastPlay && (
+                  <div className="flex justify-center">
+                    <Button
+                      onClick={onChallenge}
+                      variant="destructive"
+                      size="lg"
+                      className="animate-pulse"
                     >
-                      {rank}
-                    </button>
-                  ))}
-                </div>
+                      🤔 Challenge (Call Liar!)
+                    </Button>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
 
-            <div className="flex justify-center">
-              <Button
-                onClick={handlePlayCards}
-                disabled={
-                  selectedCards.length === 0 || (!lastPlay && !claimedRank)
-                }
-                size="lg"
-                className={`
-            px-6 py-4 text-base font-semibold rounded-lg transition-all
-            ${
-              selectedCards.length > 0 && (claimedRank || lastPlay)
-                ? "bg-green-600 hover:bg-green-700 text-white shadow-md"
-                : "bg-gray-600 text-gray-400 cursor-not-allowed"
-            }
-          `}
-              >
-                <span className="flex items-center gap-2">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M14 5l7 7m0 0l-7 7m7-7H3"
-                    />
-                  </svg>
-                  Play Cards
-                </span>
-              </Button>
+            {/* Desktop: Right side - WastedPile only */}
+            <div className="hidden md:block">
+              <WastedPile removedCards={removedCards} />
             </div>
           </div>
-        )}
+        </CardHeader>
+        {/* Play Controls */}
+        <PlayerControls
+          isMyTurn={isMyTurn}
+          canPlay={playerCards.length > 0}
+          setClaimedRank={setClaimedRank}
+          claimedRank={claimedRank}
+          selectedCards={selectedCards}
+          handlePlayCards={handlePlayCards}
+          lastPlay={lastPlay}
+        />
         {playerCards.length > 0 && (
-          <CardContent className="p-6 space-y-6 pt-0 border-t">
-            {/* Header Section */}
-            <div className="flex items-center justify-between"></div>
+          <CardContent className="p-6 space-y-6 px-0">
+            <div className="relative flex items-center justify-center p-0 m-0 mb-3">
+              <div className="flex-1 border-t border-border"></div>
+              <div className="px-4 text-sm font-semibold text-muted-foreground bg-background">
+                Your Cards ({playerCards.length})
+              </div>
+              <div className="flex-1 border-t border-border"></div>
+            </div>
             {/* Cards Display */}
             <div className="relative py-4">
               <div className="flex flex-col items-center gap-2">

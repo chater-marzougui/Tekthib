@@ -299,14 +299,10 @@ class RoomManager {
   }
 
   cleanup(): void {
-    const now = Date.now();
-    const maxAge = 2 * 60 * 60 * 1000; // 2 hours
-
     for (const [roomId, room] of this.rooms.entries()) {
-      const age = now - room.createdAt.getTime();
-
+      const allPlayerBotsOrDisconnected = Array.from(room.players.values()).every(player => player.isBot || !player.isConnected);
       // Delete old inactive rooms
-      if (age > maxAge) {
+      if (allPlayerBotsOrDisconnected) {
         this.rooms.delete(roomId);
         this.gameEngines.delete(roomId);
       }
@@ -356,10 +352,10 @@ class RoomManager {
 
 export const roomManager = new RoomManager();
 
-// Cleanup every 30 minutes
+// Cleanup every 20 minutes
 setInterval(
   () => {
     roomManager.cleanup();
   },
-  30 * 60 * 1000,
+  20 * 60 * 1000,
 );

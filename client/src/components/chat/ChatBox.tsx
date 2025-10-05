@@ -14,7 +14,7 @@ interface ChatMessage {
   message: string;
   timestamp: number;
   isSystem?: boolean;
-  systemMessageColor?: string; // e.g., "red", "green", "blue"
+  systemMessageColor?: string;
 }
 
 interface ChatBoxProps {
@@ -75,10 +75,9 @@ export default function ChatBox({
 }: Readonly<ChatBoxProps>) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const { sendMessage, registerHandler } = useWebSocketContext();
 
-  // Merge chat messages and system messages
   const allMessages = [...messages, ...systemMessages].sort(
     (a, b) => a.timestamp - b.timestamp,
   );
@@ -136,12 +135,12 @@ export default function ChatBox({
     }
   };
 
-  // Auto-scroll to bottom when new messages arrive
+  // Scroll to bottom using scrollTop instead of scrollIntoView
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [allMessages]);
 
   return (
     <Card className="h-96 flex flex-col">
@@ -150,14 +149,16 @@ export default function ChatBox({
       </CardHeader>
       <CardContent className="flex-1 flex flex-col p-0 min-h-0">
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto space-y-4 p-4">
+        <div 
+          ref={messagesContainerRef}
+          className="flex-1 overflow-y-auto space-y-4 p-4"
+        >
           {allMessages.length === 0 ? (
             <div className="flex items-center justify-center h-full text-muted-foreground">
               No messages yet. Start the conversation!
             </div>
           ) : (
             allMessages.map((msg) => {
-              // System message styling
               if (msg.isSystem) {
                 const { containerClass, textColor, timeColor } = getSystemMessageStyleClass(msg.systemMessageColor);
                 return (
@@ -177,7 +178,6 @@ export default function ChatBox({
                 );
               }
 
-              // Regular chat message styling
               const isCurrentUser = msg.playerId === playerId;
               const playerInitials = msg.playerName
                 .split(" ")
@@ -227,7 +227,6 @@ export default function ChatBox({
               );
             })
           )}
-          <div ref={messagesEndRef} />
         </div>
 
         {/* Input Area */}

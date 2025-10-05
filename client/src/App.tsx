@@ -12,10 +12,17 @@ function App() {
     <Router basename="/Tekthib/">
       <Toaster
         richColors
-        duration={5000}
+        duration={3500}
         position="top-center"
-        swipeDirections={["left", "right", "top"]}
-        toastOptions={{ style: { fontSize: "1.1rem", width: "90%", maxWidth: "500px" } }}
+        closeButton={true}
+        swipeDirections={["left", "right", "top", "bottom"]}
+        toastOptions={{
+          style: { fontSize: "0.9rem" },
+          classNames: {
+            toast:
+              "scale-90 md:scale-115 px-4 md:px-16 py-2 md:py-0 md:max-w-[500px]",
+          },
+        }}
       />
       <Routes>
         <Route path="/" element={<HomePage />} />

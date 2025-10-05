@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
+
     <!-- Start Single Page Apps for GitHub Pages -->
     <script type="text/javascript">
       // Single Page Apps for GitHub Pages
@@ -16,16 +16,22 @@
       // When the single page app is loaded further down in this file,
       // the correct url will be waiting in the browser's history for
       // the single page app to route accordingly.
-      (function(l) {
-        if (l.search[1] === '/' ) {
-          var decoded = l.search.slice(1).split('&').map(function(s) { 
-            return s.replace(/~and~/g, '&')
-          }).join('?');
-          window.history.replaceState(null, null,
-              l.pathname.slice(0, -1) + decoded + l.hash
+      (function (l) {
+        if (l.search[1] === "/") {
+          var decoded = l.search
+            .slice(1)
+            .split("&")
+            .map(function (s) {
+              return s.replace(/~and~/g, "&");
+            })
+            .join("?");
+          window.history.replaceState(
+            null,
+            null,
+            l.pathname.slice(0, -1) + decoded + l.hash
           );
         }
-      }(window.location))
+      })(window.location);
     </script>
     <!-- End Single Page Apps for GitHub Pages -->
 
@@ -52,10 +58,29 @@
 
     <!-- Favicon and Icons -->
     <link rel="icon" type="image/x-icon" href="/Tekthib/favicon.ico" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/Tekthib/icons/logo-16.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/Tekthib/icons/logo-32.png" />
-    <link rel="icon" type="image/png" sizes="96x96" href="/Tekthib/icons/logo-96.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/Tekthib/apple-touch-icon.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="/Tekthib/icons/logo-16.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/Tekthib/icons/logo-32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="96x96"
+      href="/Tekthib/icons/logo-96.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/Tekthib/apple-touch-icon.png"
+    />
 
     <!-- PWA Manifest -->
     <link rel="manifest" href="/Tekthib/manifest.json" />
@@ -68,7 +93,10 @@
       property="og:description"
       content="Master the art of bluffing! Play Tekthib online with friends. Create rooms, strategize, and be the first to empty your hand."
     />
-    <meta property="og:image" content="https://chater-marzougui.me/Tekthib/og-image.png" />
+    <meta
+      property="og:image"
+      content="https://chater-marzougui.me/Tekthib/og-image.png"
+    />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:site_name" content="Tekthib" />
@@ -78,11 +106,21 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="https://chater-marzougui.me/Tekthib/" />
     <meta name="twitter:title" content="Tekthib - Tunisian Online Card Game" />
+
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <meta
       name="twitter:description"
       content="Master the art of bluffing! Play Tekthib online with friends."
     />
-    <meta name="twitter:image" content="https://chater-marzougui.me/Tekthib/og-image.png" />
+    <meta
+      name="twitter:image"
+      content="https://chater-marzougui.me/Tekthib/og-image.png"
+    />
     <meta name="twitter:creator" content="@tekthib" />
 
     <!-- Additional SEO -->

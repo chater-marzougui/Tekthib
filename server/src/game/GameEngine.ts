@@ -300,10 +300,6 @@ export class GameEngine {
     this.gameState.lastPlayedCards = [];
     this.gameState.lastPlayerId = null;
 
-    // for (const player of this.players.values()) {
-    //   this.checkAndRemoveFourOfKind(player);
-    // }
-
     return {
       success: true,
       wasLying,
@@ -318,9 +314,7 @@ export class GameEngine {
     isInitialCheck: boolean = false,
   ): Card[] {
     const rankGroups = new Map<Rank, Card[]>();
-
-    // Track cards that will be removed
-    const removedCardsList: Card[] = [];
+    const removedCardsList: Card[] = []; // This will be the return value
 
     // Group cards by rank (excluding Jokers)
     player.hand.forEach((card) => {
@@ -335,7 +329,6 @@ export class GameEngine {
     // Check each rank group for suit-complete four-of-a-kind or eight-of-a-kind
     rankGroups.forEach((cards, _) => {
       if (cards.length >= 4) {
-        // Count cards by suit
         const suitCounts = new Map<Suit, Card[]>();
         cards.forEach((card) => {
           if (card.suit !== 'joker') {
@@ -349,34 +342,34 @@ export class GameEngine {
         const hasAllSuits = SuitTypes.every((suit) => suitCounts.has(suit));
 
         if (hasAllSuits) {
-          // Check if we can remove 8 cards (2 of each suit)
           const canRemoveEight = SuitTypes.every(
             (suit) => (suitCounts.get(suit)?.length || 0) >= 2,
           );
 
           const cardsToRemove = new Set<string>();
+          const cardsToTrack: Card[] = []; // Temporary array for this rank group
 
           if (canRemoveEight) {
-            // Remove 2 cards of each suit (8 total)
             SuitTypes.forEach((suit) => {
               const cardsOfSuit = suitCounts.get(suit)!;
               cardsToRemove.add(cardsOfSuit[0].id);
               cardsToRemove.add(cardsOfSuit[1].id);
-              removedCardsList.push(cardsOfSuit[0], cardsOfSuit[1]);
+              cardsToTrack.push(cardsOfSuit[0], cardsOfSuit[1]);
             });
           } else {
-            // Remove 1 card of each suit (4 total)
             SuitTypes.forEach((suit) => {
               const cardOfSuit = suitCounts.get(suit)![0];
               cardsToRemove.add(cardOfSuit.id);
-              removedCardsList.push(cardOfSuit);
+              cardsToTrack.push(cardOfSuit);
             });
           }
 
-          // Add removed cards to game state tracking
+          // Add to game state if not initial check
           if (!isInitialCheck) {
-            this.gameState.removedCards.push(...removedCardsList);
+            this.gameState.removedCards.push(...cardsToTrack);
           }
+          // Always add to return list
+          removedCardsList.push(...cardsToTrack);
 
           // Remove the cards from player's hand
           player.hand = player.hand.filter((c) => !cardsToRemove.has(c.id));
@@ -390,7 +383,7 @@ export class GameEngine {
     ) {
       this.gameState.winners.push(player.id);
     }
-    // Return the list of removed cards
+
     return removedCardsList;
   }
 

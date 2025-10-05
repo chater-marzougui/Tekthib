@@ -1,5 +1,6 @@
 import type { JSX } from "react";
-import type { DisplayGameCard, Rank } from "shared";
+import type { Card, DisplayGameCard, Rank } from "shared";
+import { Button } from "../ui/button";
 
 const specialCards = ["2", "3", "A", "J", "Q", "K"] as Rank[];
 const renderRank = (rank: Rank) => {
@@ -7,7 +8,7 @@ const renderRank = (rank: Rank) => {
     return (
       <>
         {rank.split("").map((char, i) => (
-          <span key={i} className="m-0 p-0" style={{ lineHeight: 0.8 }}>
+          <span key={i+1} className="m-0 p-0" style={{ lineHeight: 0.8 }}>
             {char}
           </span>
         ))}
@@ -161,24 +162,53 @@ const renderSuitPatterns = (
             e.currentTarget.src = "../icons/joker-smile.png";
           }}
         />,
-        // <img
-        //   key={`joker-${positionInHand}`}
-        //   src="../icons/joker-smile.png"
-        //   alt="Joker"
-        //   className="absolute select-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 object-contain"
-        // />
       ];
     default:
       return []; // Return nothing for ranks that don't have patterns
   }
 };
 
-const RenderCard = (
-  card: DisplayGameCard,
+interface SizeProps {
+  cardSize: string;
+  overlapOffset: number;
+  selectedOffset: number;
+  YTranslation: number;
+}
+
+interface SizesProps {
+  small: SizeProps;
+  medium: SizeProps;
+  large: SizeProps;
+}
+  
+const sizes: SizesProps = {
+  small: {
+    cardSize: "w-16 h-24",
+    overlapOffset: 22,
+    selectedOffset: 30,
+    YTranslation: -20,
+  },
+  medium: {
+    cardSize: "w-18 h-26",
+    overlapOffset: 23,
+    selectedOffset: 35,
+    YTranslation: -25,
+  },
+  large: {
+    cardSize: "w-20 h-28",
+    overlapOffset: 25,
+    selectedOffset: 40,
+    YTranslation: -30,
+  },
+};
+
+export const RenderCard = (
+  card: Card,
   isMyTurn: boolean,
   onCardSelect: (id: string) => void,
   isSelected: boolean,
-  positionInHand: number
+  positionInHand: number,
+  size: "small" | "large" | "medium" = "large"
 ) => {
   const getCardSymbol = (suit: DisplayGameCard["suit"]) => {
     switch (suit) {
@@ -202,15 +232,17 @@ const RenderCard = (
       : "text-black";
   };
 
+  const cardSize = sizes[size];
+
   // Calculate overlap offset for stacking - reduced for smaller cards
-  const overlapOffset = positionInHand * 25; // Reduced from 35px to 25px
+  const overlapOffset = positionInHand * cardSize.overlapOffset;
   const suitSymbol = getCardSymbol(card.suit);
   const colorClass = getCardColor(card.suit);
   const isSpecial = isSpecialCard(card.rank);
   const key = card.rank + card.suit + card.deckNumber + positionInHand;
 
   return (
-    <div
+    <button
       key={key}
       onClick={() => isMyTurn && onCardSelect(card.id)}
       className={`transition-transform duration-300 select-none
@@ -220,17 +252,19 @@ const RenderCard = (
       style={{
         position: "absolute",
         left: `${overlapOffset}px`,
-        transform: isSelected ? "translateY(-30px)" : "translateY(0px)", // Reduced from 40px to 30px
+        transform: isSelected ? `translateY(${cardSize.YTranslation}px)` : "translateY(0px)", // Reduced from 40px to 30px
         userSelect: "none",
         WebkitUserSelect: "none",
         MozUserSelect: "none",
         msUserSelect: "none",
       }}
       onDragStart={(e) => e.preventDefault()} // Prevent drag ghost image
+      onTouchMove={(e) => e.preventDefault()} // Prevent touch drag
+      onContextMenu={(e) => e.preventDefault()} // Prevent context menu on long press
     >
       <div
         className={`
-          relative w-20 h-28 rounded-md shadow-md select-none
+          relative ${cardSize.cardSize} rounded-md shadow-md select-none
           bg-slate-50 border transition-all duration-300
           ${
             isSelected
@@ -285,7 +319,7 @@ const RenderCard = (
           {/* Smaller icon */}
         </div>
       </div>
-    </div>
+    </button>
   );
 };
 

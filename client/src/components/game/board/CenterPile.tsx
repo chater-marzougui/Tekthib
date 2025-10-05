@@ -1,0 +1,94 @@
+import { LastPlay } from "@shared";
+import { AnimatePresence, motion } from "framer-motion";
+
+interface CenterPileProps {
+  pileCount: number;
+  lastPlay: LastPlay | null;
+}
+
+const CenterPile: React.FC<CenterPileProps> = ({ pileCount, lastPlay }) => {
+  if (!lastPlay) {
+    return (
+      <div className="text-center text-gray-500 py-8">
+        <div className="text-4xl mb-2">🃏</div>
+        <div className="text-base md:text-lg">Waiting for first play...</div>
+        <div className="text-sm mt-2">
+          The game will begin once someone plays their first cards
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex justify-center">
+      <div className="flex-shrink-0">
+        <p className="text-xs font-semibold text-gray-600 mb-2 text-center">
+          Center Pile
+        </p>
+        <div className="relative h-36 w-28">
+          <AnimatePresence>
+            {Array.from({ length: Math.min(pileCount, 6) }).map((_, i) => {
+              const rotation = Math.sin(i) * 15 - 7.5;
+              const offsetX = Math.cos(i * 1.5) * 8;
+
+              return (
+                <motion.div
+                  key={`pile-card-${i+1}`}
+                  initial={{
+                    opacity: 0,
+                    scale: 0.5,
+                    y: -100,
+                    rotate: 0,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    scale: 1,
+                    y: 0,
+                    rotate: rotation,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    scale: 0.5,
+                    y: 100,
+                  }}
+                  transition={{
+                    duration: 0.5,
+                    delay: i * 0.05,
+                    type: "spring",
+                    stiffness: 200,
+                  }}
+                  className="absolute w-20 h-28 bg-white rounded-lg border-2 border-gray-300 shadow-xl"
+                  style={{
+                    top: `${i * 3}px`,
+                    left: `calc(25% - ${offsetX}px)`,
+                    transform: `translateX(-50%)`,
+                    zIndex: i,
+                    background:
+                      "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  }}
+                >
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="text-white font-bold text-3xl opacity-50">
+                      ?
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+          {pileCount > 0 && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute top-0 right-0 bg-amber-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold border-2 border-white shadow-lg z-20"
+            >
+              {pileCount}
+            </motion.div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CenterPile;

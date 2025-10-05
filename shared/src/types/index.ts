@@ -34,6 +34,12 @@ export interface PlayerWithHand extends Player {
   hand: Card[];
 }
 
+export interface LastPlay {
+  player: string;
+  cardCount: number;
+  claimedRank: string;
+}
+
 // Player statistics for tracking game performance
 export interface PlayerStats {
   timesCaughtBluffing: number;      // Called out and was lying
