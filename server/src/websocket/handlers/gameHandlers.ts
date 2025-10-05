@@ -386,7 +386,8 @@ function processBotTurn(
   }
 
   if (!gameEngine.isCurrentPlayerBot()) {
-    // Current player is human, nothing to do
+    // Current player is human, trigger random bot chat
+    gameEngine.triggerRandomBotChat();
     return;
   }
 

@@ -1,10 +1,29 @@
 import { Room } from '../types';
-import { PlayerWithHand } from 'shared';
+import { PlayerWithHand, BotPersonality } from 'shared';
 import { GameEngine } from '../game/GameEngine';
 
 class RoomManager {
   private readonly rooms: Map<string, Room> = new Map();
   private readonly gameEngines: Map<string, GameEngine> = new Map();
+  
+  // Pool of bot names that don't reveal personality
+  private readonly botNames: string[] = [
+    'Bot Alpha',
+    'Bot Beta',
+    'Bot Gamma',
+    'Bot Delta',
+    'Bot Echo',
+    'Bot Nova',
+    'Bot Omega',
+    'Bot Zeta',
+    'Bot Sigma',
+    'Bot Phoenix',
+    'Bot Nexus',
+    'Bot Titan',
+    'Bot Cyber',
+    'Bot Quantum',
+    'Bot Phantom',
+  ];
 
   generateRoomCode(): string {
     // Generate 6-character alphanumeric code
@@ -20,6 +39,32 @@ class RoomManager {
     }
 
     return code;
+  }
+
+  /**
+   * Get an available bot name that's not already taken in the room
+   */
+  private getAvailableBotName(room: Room): string {
+    const existingNames = new Set(
+      Array.from(room.players.values()).map(p => p.name)
+    );
+
+    // Shuffle bot names for variety
+    const shuffledNames = [...this.botNames].sort(() => Math.random() - 0.5);
+
+    // Find first available name
+    for (const name of shuffledNames) {
+      if (!existingNames.has(name)) {
+        return name;
+      }
+    }
+
+    // If all names taken, add a number suffix
+    let counter = 1;
+    while (existingNames.has(`Bot Player ${counter}`)) {
+      counter++;
+    }
+    return `Bot Player ${counter}`;
   }
 
   createRoom(hostId: string, hostName: string, maxPlayers: number = 10, isPublic: boolean = true): Room {
@@ -118,15 +163,28 @@ class RoomManager {
       };
     }
 
+    const personalities: BotPersonality[] = ['aggressive', 'truthful', 'unpredictable'];
     const botIds: string[] = [];
+    
     for (let i = 0; i < count; i++) {
       const botId = `bot_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-      const botName = `Bot ${room.players.size + 1}`;
+      const personality = personalities[i % personalities.length]; // Distribute personalities evenly
+      
+      // Get an available bot name (doesn't reveal personality)
+      const botName = this.getAvailableBotName(room);
 
-      const result = this.addPlayerToRoom(roomId, botId, botName, true);
-      if (result.success) {
-        botIds.push(botId);
-      }
+      const bot: PlayerWithHand = {
+        id: botId,
+        name: botName,
+        hand: [],
+        isConnected: true,
+        isReady: true,
+        isBot: true,
+        botPersonality: personality,
+      };
+
+      room.players.set(botId, bot);
+      botIds.push(botId);
     }
 
     return { success: true, botIds };
@@ -236,11 +294,17 @@ class RoomManager {
     return { canStart: true };
   }
 
-  startGame(roomId: string): GameEngine | null {
+  startGame(roomId: string, botChatCallback?: (botId: string, message: string) => void): GameEngine | null {
     const room = this.rooms.get(roomId);
     if (!room) return null;
 
     const gameEngine = new GameEngine(room.players);
+    
+    // Set up bot chat callback if provided
+    if (botChatCallback) {
+      gameEngine.setBotChatCallback(botChatCallback);
+    }
+    
     this.gameEngines.set(roomId, gameEngine);
     room.gameState = gameEngine.getGameState();
     room.gameState.phase = 'playing';

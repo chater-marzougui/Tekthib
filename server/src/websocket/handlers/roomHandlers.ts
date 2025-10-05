@@ -390,7 +390,23 @@ function handleStartGame(
     return;
   }
 
-  const gameEngine = roomManager.startGame(clientInfo.roomId);
+  // Create bot chat callback
+  const botChatCallback = (botId: string, message: string) => {
+    const botPlayer = room.players.get(botId);
+    if (botPlayer) {
+      broadcastToRoom(clients, clientInfo.roomId!, {
+        type: 'CHAT_MESSAGE',
+        payload: {
+          playerId: botId,
+          playerName: botPlayer.name,
+          message: message,
+          timestamp: Date.now(),
+        },
+      });
+    }
+  };
+
+  const gameEngine = roomManager.startGame(clientInfo.roomId, botChatCallback);
   if (!gameEngine) {
     sendToClient(ws, {
       type: 'ERROR',

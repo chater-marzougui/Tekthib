@@ -1,13 +1,37 @@
-import { Card, playableRanks, Player, PlayerWithHand, Rank } from 'shared';
+import { Card, playableRanks, Player, PlayerWithHand, Rank, BotPersonality } from 'shared';
 import { GameEngine } from './GameEngine';
+import { BotMemory } from './BotMemory';
+import { getBotChatMessage, shouldBotChat, BotChatContext } from './BotChatMessages';
 
 export class BotPlayer {
   private readonly gameEngine: GameEngine;
-  private readonly roomId: string;
+  private readonly playerId: string;
+  private readonly personality: BotPersonality;
+  private readonly memory: BotMemory;
+  private chatCallback?: (message: string) => void;
 
-  constructor(gameEngine: GameEngine, roomId: string) {
+  constructor(gameEngine: GameEngine, playerId: string, personality: BotPersonality) {
     this.gameEngine = gameEngine;
-    this.roomId = roomId;
+    this.playerId = playerId;
+    this.personality = personality;
+    this.memory = new BotMemory(personality);
+  }
+
+  /**
+   * Set callback for bot to send chat messages
+   */
+  setChatCallback(callback: (message: string) => void): void {
+    this.chatCallback = callback;
+  }
+
+  /**
+   * Send a chat message if probability allows
+   */
+  private maybeSendChat(context: BotChatContext): void {
+    if (this.chatCallback && shouldBotChat(context)) {
+      const message = getBotChatMessage(this.personality, context);
+      this.chatCallback(message);
+    }
   }
 
   /**
@@ -17,31 +41,60 @@ export class BotPlayer {
    */
   shouldChallenge(isCurrentPlayer: boolean): boolean {
     const gameState = this.gameEngine.getPublicGameState();
+    const lastPlayerId = gameState.lastPlayerId;
+    
+    if (!lastPlayerId) return false;
 
-    // Count how many bots are in the game
+    // Initialize memory for the player being considered for challenge
+    this.memory.initializePlayer(lastPlayerId);
+
+    // Get personality modifiers
+    const personalityMod = this.memory.getPersonalityModifier();
+    
+    // Base probability based on whose turn it is
+    let challengeProbability = isCurrentPlayer ? 0.3 : 0.2;
+    
+    // Apply personality modifier
+    challengeProbability += personalityMod.challengeBonus;
+
+    // Count bots to reduce excessive challenging
     const botCount = gameState.players.filter((p: Player) => p.isBot).length;
-
-    // Base probabilities
-    let baseProbability = isCurrentPlayer ? 0.3 : 0.2;
-
-    // Reduce challenge probability based on number of bots
-    // The more bots, the lower the probability to avoid excessive challenges
     if (botCount > 1) {
       const reductionFactor = Math.min(0.8, botCount * 0.075);
-      baseProbability *= 1 - reductionFactor;
+      challengeProbability *= (1 - reductionFactor);
     }
 
-    // Further reduce if many cards were played (likely telling truth)
+    // Check opponent's bluff rate
+    if (this.memory.isRiskyPlayer(lastPlayerId)) {
+      challengeProbability += 0.15; // More likely to challenge known bluffers
+    }
+
+    // Adjust based on number of cards played
     const lastPlayedCount = gameState.lastPlayedCount;
     if (lastPlayedCount > 4) {
-      baseProbability += 0.05 * lastPlayedCount;
-    } else if (lastPlayedCount === 2) {
-      baseProbability *= 0.8;
-    } else if (lastPlayedCount < 2) {
-      baseProbability *= 0.6;
+      challengeProbability += 0.05 * lastPlayedCount; // Large plays are suspicious
+    } else if (lastPlayedCount === 1) {
+      challengeProbability *= 0.6; // Single cards more likely to be true
     }
 
-    return Math.random() < baseProbability;
+    // Game position adjustment
+    const myCardCount = gameState.playerHandCounts[this.playerId] || 0;
+    const opponentCardCount = gameState.playerHandCounts[lastPlayerId] || 0;
+    const averageCardCount = 
+      Object.values(gameState.playerHandCounts).reduce((a, b) => a + b, 0) / 
+      Object.keys(gameState.playerHandCounts).length;
+
+    const positionAdjustment = this.memory.getPositionBasedChallengeAdjustment(
+      myCardCount,
+      opponentCardCount,
+      averageCardCount,
+    );
+    challengeProbability += positionAdjustment;
+
+    // Ensure probability stays in valid range
+    challengeProbability = Math.max(0.05, Math.min(0.9, challengeProbability));
+
+    return Math.random() < challengeProbability;
   }
 
   /**
@@ -58,125 +111,249 @@ export class BotPlayer {
     claimedRank: Rank;
   } {
     const hand = botPlayer.hand;
+    const gameState = this.gameEngine.getPublicGameState();
+    
+    // Calculate game position
+    const myCardCount = hand.length;
+    const averageCardCount = 
+      Object.values(gameState.playerHandCounts).reduce((a, b) => a + b, 0) / 
+      Object.keys(gameState.playerHandCounts).length;
 
-    // If there's a current rank, we must claim it
+    // Get personality-adjusted bluff rate
+    const bluffRate = this.memory.getPositionBasedBluffRate(myCardCount, averageCardCount);
+
     if (currentRank) {
-      // Check if bot has cards of the current rank
-      const matchingCards = hand.filter(
-        (card) => card.rank === currentRank || card.rank === 'Joker',
-      );
+      const result = this.playWithCurrentRank(hand, currentRank, bluffRate);
+      
+      // Check if we're playing more than 3 cards (big play)
+      if (result.cardIds.length > 3) {
+        this.maybeSendChat('bigPlay');
+      }
+      
+      return result;
+    } else {
+      const result = this.playNewRank(hand);
+      
+      // Check if we're playing more than 3 cards (big play)
+      if (result.cardIds.length > 3) {
+        this.maybeSendChat('bigPlay');
+      }
+      
+      return result;
+    }
+  }
 
-      if (matchingCards.length > 0) {
-        // Bot has the cards, but might lie occasionally (20% chance)
-        const shouldLieAnyway = Math.random() < 0.2;
+  /**
+   * Play cards when there's a current rank to match
+   */
+  private playWithCurrentRank(
+    hand: Card[],
+    currentRank: Rank,
+    bluffRate: number,
+  ): { cardIds: string[]; claimedRank: Rank } {
+    const matchingCards = hand.filter(
+      (card) => card.rank === currentRank || card.rank === 'Joker',
+    );
 
-        if (shouldLieAnyway && hand.length > matchingCards.length) {
-          // Lie by playing some wrong cards mixed with right ones
-          const numWrongCards = Math.floor(Math.random() * 3) + 1;
-          const wrongCards = hand
-            .filter((c) => c.rank !== currentRank && c.rank !== 'Joker')
-            .slice(0, numWrongCards);
+    if (matchingCards.length > 0) {
+      // Bot has matching cards - decide whether to lie anyway
+      const shouldLieAnyway = Math.random() < bluffRate * 0.3; // Reduced chance when actually having cards
 
-          // Mix some matching cards with wrong ones
-          const numMatchingToPlay = Math.max(
-            Math.min(
-              Math.floor(Math.random() * matchingCards.length),
-              matchingCards.length,
-            ),
-            0,
-          );
-
-          const someMatchingCards = matchingCards.slice(0, numMatchingToPlay);
-
-          const cardsToPlay = [...someMatchingCards, ...wrongCards];
-
-          return {
-            cardIds: cardsToPlay.map((c) => c.id),
-            claimedRank: currentRank,
-          };
-        } else {
-          // Play truthfully - all matching cards
-
-          const numMatchingToPlay = Math.max(
-            Math.min(
-              Math.floor(Math.random() * matchingCards.length) + 1,
-              matchingCards.length,
-            ),
-            0,
-          );
-
-          const someMatchingCards = matchingCards.slice(0, numMatchingToPlay);
-          return {
-            cardIds: someMatchingCards.map((c) => c.id),
-            claimedRank: currentRank,
-          };
-        }
+      if (shouldLieAnyway && hand.length > matchingCards.length) {
+        return this.playMixedCards(matchingCards, hand, currentRank);
       } else {
-        // Bot doesn't have the rank, so it must lie
-        // Play 1-3 random cards (smaller lies are safer)
-        const numCards = Math.floor(Math.random() * 3) + 1;
-        const cardsToPlay = hand.slice(0, Math.min(numCards, hand.length));
-        return {
-          cardIds: cardsToPlay.map((c) => c.id),
-          claimedRank: currentRank,
-        };
+        return this.playHonestCards(matchingCards, currentRank);
       }
     } else {
-      // No current rank - bot can claim any rank
-      // Find the rank with most cards in hand (excluding Joker)
-      const rankCounts = new Map<Rank, Card[]>();
-      hand.forEach((card) => {
-        if (card.rank !== 'Joker') {
-          if (!rankCounts.has(card.rank)) {
-            rankCounts.set(card.rank, []);
-          }
-          rankCounts.get(card.rank)!.push(card);
-        }
-      });
-
-      // Find the most common rank
-      let bestRank: Rank | null = null;
-      let maxCount = 0;
-      rankCounts.forEach((cards, rank) => {
-        if (cards.length > maxCount) {
-          maxCount = cards.length;
-          bestRank = rank;
-        }
-      });
-
-      // Fallback if no rank found (only has Jokers)
-      if (!bestRank) {
-        const nonJoker = hand.find((c) => c.rank !== 'Joker');
-        if (nonJoker) {
-          bestRank = nonJoker.rank;
-        } else {
-          // Only has Jokers - claim a random rank
-          bestRank =
-            playableRanks[Math.floor(Math.random() * playableRanks.length)];
-        }
-      }
-
-      const cardsOfBestRank = rankCounts.get(bestRank) || [];
-
-      // Add jokers to the play (they're wild)
-      const jokers = hand.filter((c) => c.rank === 'Joker');
-      const shouldUseJokers = Math.random() < 0.3;
-      const allCardsToPlay = shouldUseJokers
-        ? [
-            ...cardsOfBestRank,
-            ...jokers.slice(0, Math.floor(Math.random() * jokers.length) + 1),
-          ]
-        : cardsOfBestRank;
-
-      // If no cards to play, must play at least something
-      if (allCardsToPlay.length === 0 && hand.length > 0) {
-        allCardsToPlay.push(hand[0]);
-      }
-
-      return {
-        cardIds: allCardsToPlay.map((c) => c.id),
-        claimedRank: bestRank,
-      };
+      // Bot doesn't have the rank - must lie
+      return this.playBluffCards(hand, currentRank, bluffRate);
     }
+  }
+
+  /**
+   * Play a mix of real and fake cards (bluffing with some truth)
+   */
+  private playMixedCards(
+    matchingCards: Card[],
+    hand: Card[],
+    currentRank: Rank,
+  ): { cardIds: string[]; claimedRank: Rank } {
+    const numWrongCards = Math.floor(Math.random() * 3) + 1;
+    const wrongCards = hand
+      .filter((c) => c.rank !== currentRank && c.rank !== 'Joker')
+      .slice(0, numWrongCards);
+
+    const numMatchingToPlay = Math.max(
+      Math.min(
+        Math.floor(Math.random() * matchingCards.length),
+        matchingCards.length,
+      ),
+      0,
+    );
+
+    const someMatchingCards = matchingCards.slice(0, numMatchingToPlay);
+    const cardsToPlay = [...someMatchingCards, ...wrongCards];
+
+    return {
+      cardIds: cardsToPlay.map((c) => c.id),
+      claimedRank: currentRank,
+    };
+  }
+
+  /**
+   * Play honest cards (all matching)
+   */
+  private playHonestCards(
+    matchingCards: Card[],
+    currentRank: Rank,
+  ): { cardIds: string[]; claimedRank: Rank } {
+    const numMatchingToPlay = Math.max(
+      Math.min(
+        Math.floor(Math.random() * matchingCards.length) + 1,
+        matchingCards.length,
+      ),
+      1,
+    );
+
+    const someMatchingCards = matchingCards.slice(0, numMatchingToPlay);
+    
+    return {
+      cardIds: someMatchingCards.map((c) => c.id),
+      claimedRank: currentRank,
+    };
+  }
+
+  /**
+   * Play bluff cards (no matching cards)
+   */
+  private playBluffCards(
+    hand: Card[],
+    currentRank: Rank,
+    bluffRate: number,
+  ): { cardIds: string[]; claimedRank: Rank } {
+    // Adjust number of cards based on personality and risk
+    let maxCards = 3;
+    if (this.personality === 'aggressive') {
+      maxCards = 4;
+    } else if (this.personality === 'truthful') {
+      maxCards = 2;
+    }
+
+    const numCards = Math.floor(Math.random() * maxCards) + 1;
+    const cardsToPlay = hand.slice(0, Math.min(numCards, hand.length));
+    
+    return {
+      cardIds: cardsToPlay.map((c) => c.id),
+      claimedRank: currentRank,
+    };
+  }
+
+  /**
+   * Play cards when starting a new rank
+   */
+  private playNewRank(hand: Card[]): { cardIds: string[]; claimedRank: Rank } {
+    const rankCounts = new Map<Rank, Card[]>();
+    
+    // Group cards by rank (excluding Jokers)
+    hand.forEach((card) => {
+      if (card.rank !== 'Joker') {
+        if (!rankCounts.has(card.rank)) {
+          rankCounts.set(card.rank, []);
+        }
+        rankCounts.get(card.rank)!.push(card);
+      }
+    });
+
+    // Find the most common rank
+    let bestRank: Rank | null = null;
+    let maxCount = 0;
+    rankCounts.forEach((cards, rank) => {
+      if (cards.length > maxCount) {
+        maxCount = cards.length;
+        bestRank = rank;
+      }
+    });
+
+    // Fallback if no rank found (only has Jokers)
+    if (!bestRank) {
+      const nonJoker = hand.find((c) => c.rank !== 'Joker');
+      if (nonJoker) {
+        bestRank = nonJoker.rank;
+      } else {
+        bestRank = playableRanks[Math.floor(Math.random() * playableRanks.length)];
+      }
+    }
+
+    const cardsOfBestRank = rankCounts.get(bestRank) || [];
+
+    // Add jokers to the play (they're wild)
+    const jokers = hand.filter((c) => c.rank === 'Joker');
+    const shouldUseJokers = Math.random() < 0.3;
+    const allCardsToPlay = shouldUseJokers
+      ? [
+          ...cardsOfBestRank,
+          ...jokers.slice(0, Math.floor(Math.random() * jokers.length) + 1),
+        ]
+      : cardsOfBestRank;
+
+    // If no cards to play, must play at least something
+    if (allCardsToPlay.length === 0 && hand.length > 0) {
+      allCardsToPlay.push(hand[0]);
+    }
+
+    return {
+      cardIds: allCardsToPlay.map((c) => c.id),
+      claimedRank: bestRank,
+    };
+  }
+
+  /**
+   * Record observation when a challenge happens (for learning)
+   */
+  recordChallengeResult(
+    challengerId: string,
+    playerId: string,
+    wasLying: boolean,
+  ): void {
+    if (wasLying) {
+      this.memory.recordFailedBluff(playerId);
+      this.memory.recordSuccessfulChallenge(challengerId);
+      
+      // Bot caught someone bluffing
+      if (challengerId === this.playerId) {
+        this.maybeSendChat('caughtBluff');
+      }
+    } else {
+      this.memory.recordSuccessfulBluff(playerId);
+      this.memory.recordFailedChallenge(challengerId);
+    }
+  }
+
+  /**
+   * Record when a play goes unchallenged (for learning)
+   */
+  recordUnchallengedPlay(playerId: string, wasBluff: boolean): void {
+    if (wasBluff) {
+      this.memory.recordSuccessfulBluff(playerId);
+      
+      // Bot got away with a bluff
+      if (playerId === this.playerId) {
+        this.maybeSendChat('successfulBluff');
+      }
+    }
+  }
+
+  /**
+   * Send random chat during opponent's turn
+   */
+  maybeRandomChat(): void {
+    this.maybeSendChat('random');
+  }
+
+  /**
+   * Get bot personality
+   */
+  getPersonality(): BotPersonality {
+    return this.personality;
   }
 }

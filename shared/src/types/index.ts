@@ -10,6 +10,8 @@ export const playableRanks = RankTypes.filter(rank => rank !== 'Joker');
 
 export type GamePhase = 'waiting' | 'playing' | 'ended';
 
+export type BotPersonality = 'aggressive' | 'truthful' | 'unpredictable';
+
 export interface Card {
   id: string;
   suit: Suit | 'joker';
@@ -28,6 +30,7 @@ export interface Player {
   isConnected: boolean;
   isReady: boolean;
   isBot: boolean;
+  botPersonality?: BotPersonality;
 }
 
 export interface PlayerWithHand extends Player {

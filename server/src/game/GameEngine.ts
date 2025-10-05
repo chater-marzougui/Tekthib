@@ -6,6 +6,7 @@ import {
   Rank,
   Suit,
   SuitTypes,
+  BotPersonality,
 } from 'shared';
 import { Deck } from './Deck';
 import { BotPlayer } from './BotPlayer';
@@ -27,17 +28,42 @@ export class GameEngine {
   private readonly gameState: GameState;
   private readonly players: Map<string, PlayerWithHand>;
   private readonly botPlayers: Map<string, BotPlayer> = new Map();
+  private botChatCallback?: (botId: string, message: string) => void;
 
   constructor(players: Map<string, PlayerWithHand>) {
     this.players = players;
     this.gameState = this.initializeGame();
 
-    // Initialize bot players
+    // Initialize bot players with their personalities
     players.forEach((player, playerId) => {
       if (player.isBot) {
-        this.botPlayers.set(playerId, new BotPlayer(this, playerId));
+        const personality = player.botPersonality || this.assignRandomPersonality();
+        const botPlayer = new BotPlayer(this, playerId, personality);
+        this.botPlayers.set(playerId, botPlayer);
       }
     });
+  }
+
+  /**
+   * Set callback for bot chat messages
+   */
+  setBotChatCallback(callback: (botId: string, message: string) => void): void {
+    this.botChatCallback = callback;
+    
+    // Set chat callback for all bot players
+    this.botPlayers.forEach((bot, botId) => {
+      bot.setChatCallback((message: string) => {
+        callback(botId, message);
+      });
+    });
+  }
+
+  /**
+   * Assign a random personality to a bot
+   */
+  private assignRandomPersonality(): BotPersonality {
+    const personalities: BotPersonality[] = ['aggressive', 'truthful', 'unpredictable'];
+    return personalities[Math.floor(Math.random() * personalities.length)];
   }
 
   private initializeGame(): GameState {
@@ -158,8 +184,18 @@ export class GameEngine {
       if (previousPlayerStats) {
         if (wasBluff) {
           previousPlayerStats.timesBluffedSuccessfully++;
+          
+          // Record for bot learning
+          this.botPlayers.forEach((bot) => {
+            bot.recordUnchallengedPlay(previousPlayerId, true);
+          });
         } else {
           previousPlayerStats.timesToldTruth++;
+          
+          // Record for bot learning
+          this.botPlayers.forEach((bot) => {
+            bot.recordUnchallengedPlay(previousPlayerId, false);
+          });
         }
       }
     }
@@ -263,11 +299,21 @@ export class GameEngine {
     if (wasLying) {
       // Last player was lying - caught bluffing
       if (lastPlayerStats) lastPlayerStats.timesCaughtBluffing++;
+      
+      // Record for bot learning
+      this.botPlayers.forEach((bot) => {
+        bot.recordChallengeResult(challengerId, this.gameState.lastPlayerId!, true);
+      });
     } else {
       // Last player was telling truth
       if (lastPlayerStats) lastPlayerStats.timesToldTruth++;
       // Challenger falsely accused
       if (challengerStats) challengerStats.timesFalselyAccused++;
+      
+      // Record for bot learning
+      this.botPlayers.forEach((bot) => {
+        bot.recordChallengeResult(challengerId, this.gameState.lastPlayerId!, false);
+      });
     }
 
     // Liar takes the pile
@@ -503,5 +549,20 @@ export class GameEngine {
       this.gameState.playerOrder[this.gameState.currentPlayerIndex];
     const player = this.players.get(currentPlayerId);
     return player?.isBot === true;
+  }
+
+  /**
+   * Trigger random chat from non-current-turn bots
+   */
+  triggerRandomBotChat(): void {
+    const currentPlayerId =
+      this.gameState.playerOrder[this.gameState.currentPlayerIndex];
+    
+    this.botPlayers.forEach((bot, botId) => {
+      // Only non-current-turn bots can send random chat
+      if (botId !== currentPlayerId) {
+        bot.maybeRandomChat();
+      }
+    });
   }
 }
