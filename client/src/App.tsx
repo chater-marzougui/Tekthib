@@ -5,6 +5,7 @@ import RoomPage from "./pages/RoomPage";
 import GamePage from "./pages/GamePage";
 import AdminPage from "./pages/AdminPage";
 import { Toaster } from "sonner";
+import { SoundProvider } from "./context/SoundPlayerContext";
 
 function App() {
   return (
@@ -14,7 +15,7 @@ function App() {
         duration={5000}
         position="top-center"
         swipeDirections={["left", "right", "top"]}
-        toastOptions={{ style: { fontSize: "1.1rem" } }}
+        toastOptions={{ style: { fontSize: "1.1rem", width: "90%", maxWidth: "500px" } }}
       />
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -23,10 +24,12 @@ function App() {
           path="/*"
           element={
             <WebSocketProvider>
-              <Routes>
-                <Route path="/room/:roomId" element={<RoomPage />} />
-                <Route path="/game/:roomId" element={<GamePage />} />
-              </Routes>
+              <SoundProvider>
+                <Routes>
+                  <Route path="/room/:roomId" element={<RoomPage />} />
+                  <Route path="/game/:roomId" element={<GamePage />} />
+                </Routes>
+              </SoundProvider>
             </WebSocketProvider>
           }
         />

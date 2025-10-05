@@ -213,30 +213,38 @@ export default function GamePage() {
           let toastColor = "blue";
 
           let resultMessage = "";
+          let resultDescription = "";
           if (wasLying && lastPlayerName === playerName) {
-            resultMessage = `You were caught lying by ${challengerName}! Learn to play!`;
+            resultMessage = `Caught lying by ${challengerName}!`;
+            resultDescription = "Learn to play! and Try to be more honest next time.";
             toastColor = "red";
           } else if (wasLying && challengerName === playerName) {
-            resultMessage = `You were right! ${lastPlayerName} was lying.`;
+            resultMessage = `You are right! ${lastPlayerName} was lying.`;
             toastColor = "green";
           } else if (!wasLying && lastPlayerName === playerName) {
-            resultMessage = `You were telling the truth! Well played, ${challengerName} was wrong.`;
+            resultMessage = `Well played, ${challengerName} accused you.`;
+            resultDescription = "You were telling the truth!";
             toastColor = "green";
           } else if (!wasLying && challengerName === playerName) {
-            resultMessage = `You were wrong! ${lastPlayerName} was telling the truth.`;
+            resultMessage = `You are wrong! ${lastPlayerName} is telling the truth.`;
+            resultDescription = "Try to be more careful next time.";
             toastColor = "red";
           } else {
             resultMessage = wasLying
-              ? `${challengerName} was right! ${lastPlayerName} was lying.`
-              : `${challengerName} was wrong! ${lastPlayerName} was telling the truth.`;
+              ? `${challengerName} is right!`
+              : `${challengerName} is wrong!`;
+
+            resultDescription = `${challengerName} accused ${lastPlayerName} of lying. ${
+              wasLying ? "He's right!" : "He's wrong!"
+            }`;
           }
 
           if (toastColor === "red") {
-            toast.error(resultMessage);
+            toast.error(resultMessage, { description: resultDescription });
           } else if (toastColor === "green") {
-            toast.success(resultMessage);
+            toast.success(resultMessage, { description: resultDescription });
           } else {
-            toast.info(resultMessage);
+            toast.info(resultMessage, { description: resultDescription });
           }
 
           const shouldShowCardReveal =
