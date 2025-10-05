@@ -30,20 +30,26 @@ export function useVoiceChat({
   isHost = false,
 }: VoiceChatConfig) {
   const { sendMessage, registerHandler } = useWebSocketContext();
+  const [audioLevels, setAudioLevels] = useState<Map<string, number>>(
+    new Map()
+  );
 
   const [isMuted, setIsMuted] = useState(false);
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
   const [audioError, setAudioError] = useState<string | null>(null);
   const [mutedPlayers, setMutedPlayers] = useState<Set<string>>(new Set());
   const [hostMutedPlayers, setHostMutedPlayers] = useState<Set<string>>(
-    new Set(),
+    new Set()
   );
   const [hostMuted, setHostMuted] = useState(false);
 
+  const audioContextsRef = useRef<Map<string, AudioContext>>(new Map());
+  const analysersRef = useRef<Map<string, AnalyserNode>>(new Map());
+  const animationFramesRef = useRef<Map<string, number>>(new Map());
   const localStreamRef = useRef<MediaStream | null>(null);
   const peerConnectionsRef = useRef<Map<string, PeerConnection>>(new Map());
   const pendingCandidatesRef = useRef<Map<string, RTCIceCandidate[]>>(
-    new Map(),
+    new Map()
   );
   const navigate = useNavigate();
 
@@ -86,26 +92,54 @@ export function useVoiceChat({
       pc.ontrack = (event) => {
         const [remoteStream] = event.streams;
 
-        // Update peer connection with the stream
         const peerConn = peerConnectionsRef.current.get(remotePlayerId);
         if (peerConn) {
           peerConn.stream = remoteStream;
 
-          // Create audio element and play - Firefox compatible
           const audioElement = new Audio();
           audioElement.srcObject = remoteStream;
           audioElement.autoplay = true;
-
-          // Check if this player is muted
           audioElement.volume = mutedPlayers.has(remotePlayerId) ? 0 : 1;
-
-          // Store audio element for later mute control
           peerConn.audioElement = audioElement;
 
-          // Firefox requires explicit play() call even with autoplay
+          // Setup audio level detection
+          try {
+            const audioContext = new AudioContext();
+            const source = audioContext.createMediaStreamSource(remoteStream);
+            const analyser = audioContext.createAnalyser();
+            analyser.fftSize = 256;
+            analyser.smoothingTimeConstant = 0.8;
+            source.connect(analyser);
+
+            audioContextsRef.current.set(remotePlayerId, audioContext);
+            analysersRef.current.set(remotePlayerId, analyser);
+
+            // Start monitoring audio levels
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+            const updateLevel = () => {
+              analyser.getByteFrequencyData(dataArray);
+              const average =
+                dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+              const level = Math.min(100, (average / 128) * 100); // Normalize to 0-100
+
+              setAudioLevels((prev) => {
+                const newMap = new Map(prev);
+                newMap.set(remotePlayerId, level);
+                return newMap;
+              });
+
+              const frameId = requestAnimationFrame(updateLevel);
+              animationFramesRef.current.set(remotePlayerId, frameId);
+            };
+
+            updateLevel();
+          } catch (error) {
+            console.error("Error setting up audio analysis:", error);
+          }
+
           audioElement.play().catch((err) => {
             console.error("Error playing remote audio:", err);
-            // Retry play after a short delay for Firefox
             setTimeout(() => {
               audioElement.play().catch((e) => {
                 console.error("Retry failed:", e);
@@ -146,7 +180,7 @@ export function useVoiceChat({
       peerConnectionsRef.current.set(remotePlayerId, { connection: pc });
       return pc;
     },
-    [sendMessage, mutedPlayers],
+    [sendMessage, mutedPlayers]
   );
 
   // Create and send offer to a remote player
@@ -175,7 +209,7 @@ export function useVoiceChat({
         console.error("Error creating offer:", error);
       }
     },
-    [createPeerConnection, sendMessage],
+    [createPeerConnection, sendMessage]
   );
 
   // Handle incoming offer
@@ -211,7 +245,7 @@ export function useVoiceChat({
         console.error("Error handling offer:", error);
       }
     },
-    [createPeerConnection, sendMessage],
+    [createPeerConnection, sendMessage]
   );
 
   // Handle incoming answer
@@ -222,7 +256,7 @@ export function useVoiceChat({
 
       try {
         await peerConn.connection.setRemoteDescription(
-          new RTCSessionDescription(answer),
+          new RTCSessionDescription(answer)
         );
 
         // Add any pending ICE candidates
@@ -236,7 +270,7 @@ export function useVoiceChat({
         console.error("Error handling answer:", error);
       }
     },
-    [],
+    []
   );
 
   // Handle incoming ICE candidate
@@ -255,7 +289,7 @@ export function useVoiceChat({
       try {
         if (peerConn.connection.remoteDescription) {
           await peerConn.connection.addIceCandidate(
-            new RTCIceCandidate(candidate),
+            new RTCIceCandidate(candidate)
           );
         } else {
           // Store for later if remote description isn't set yet
@@ -267,7 +301,7 @@ export function useVoiceChat({
         console.error("Error adding ICE candidate:", error);
       }
     },
-    [],
+    []
   );
 
   // Enable voice chat
@@ -281,7 +315,7 @@ export function useVoiceChat({
 
     // Create connections to all other players (except bots)
     const otherPlayers = players.filter(
-      (p) => p.id !== localPlayerId && !p.isBot && p.isConnected,
+      (p) => p.id !== localPlayerId && !p.isBot && p.isConnected
     );
 
     for (const player of otherPlayers) {
@@ -296,6 +330,18 @@ export function useVoiceChat({
       localStreamRef.current.getTracks().forEach((track) => track.stop());
       localStreamRef.current = null;
     }
+
+    // Clean up audio analysis
+    animationFramesRef.current.forEach((frameId) =>
+      cancelAnimationFrame(frameId)
+    );
+    animationFramesRef.current.clear();
+
+    audioContextsRef.current.forEach((ctx) => ctx.close());
+    audioContextsRef.current.clear();
+
+    analysersRef.current.clear();
+    setAudioLevels(new Map());
 
     // Close all peer connections and stop audio elements
     peerConnectionsRef.current.forEach((peerConn) => {
@@ -353,7 +399,7 @@ export function useVoiceChat({
         payload: { playerId },
       });
     },
-    [isHost, sendMessage],
+    [isHost, sendMessage]
   );
 
   // Host mutes a player's microphone (server-side enforcement)
@@ -377,7 +423,7 @@ export function useVoiceChat({
         return newSet;
       });
     },
-    [isHost, sendMessage],
+    [isHost, sendMessage]
   );
 
   // Register WebSocket handlers for WebRTC signaling
@@ -454,7 +500,7 @@ export function useVoiceChat({
             navigate("/");
           }
         }
-      },
+      }
     );
 
     return () => {
@@ -481,7 +527,7 @@ export function useVoiceChat({
 
     const currentPeerIds = new Set(peerConnectionsRef.current.keys());
     const activePlayers = players.filter(
-      (p) => p.id !== localPlayerId && !p.isBot && p.isConnected,
+      (p) => p.id !== localPlayerId && !p.isBot && p.isConnected
     );
 
     // Create connections for new players
@@ -504,6 +550,26 @@ export function useVoiceChat({
           peerConn.connection.close();
           peerConnectionsRef.current.delete(peerId);
         }
+
+        // Clean up audio analysis
+        const frameId = animationFramesRef.current.get(peerId);
+        if (frameId) {
+          cancelAnimationFrame(frameId);
+          animationFramesRef.current.delete(peerId);
+        }
+
+        const audioContext = audioContextsRef.current.get(peerId);
+        if (audioContext) {
+          audioContext.close();
+          audioContextsRef.current.delete(peerId);
+        }
+
+        analysersRef.current.delete(peerId);
+        setAudioLevels((prev) => {
+          const newMap = new Map(prev);
+          newMap.delete(peerId);
+          return newMap;
+        });
       }
     });
   }, [players, localPlayerId, isVoiceEnabled, createOffer]);
@@ -516,6 +582,7 @@ export function useVoiceChat({
     hostMutedPlayers,
     hostMuted,
     isHost,
+    audioLevels,
     enableVoiceChat,
     disableVoiceChat,
     toggleMute,

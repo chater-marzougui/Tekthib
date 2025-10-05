@@ -11,6 +11,7 @@ interface VoiceChatContextType {
   hostMutedPlayers: Set<string>;
   hostMuted: boolean;
   isHost: boolean;
+  audioLevels: Map<string, number>;
   enableVoiceChat: () => Promise<void>;
   disableVoiceChat: () => void;
   toggleMute: () => void;
