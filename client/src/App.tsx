@@ -9,7 +9,13 @@ import { Toaster } from "sonner";
 function App() {
   return (
     <Router basename="/Tekthib/">
-      <Toaster richColors duration={3000} position="top-right" />
+      <Toaster
+        richColors
+        duration={5000}
+        position="top-center"
+        swipeDirections={["left", "right", "top"]}
+        toastOptions={{ style: { fontSize: "1.1rem" } }}
+      />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/admin" element={<AdminPage />} />

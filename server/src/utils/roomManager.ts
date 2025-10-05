@@ -247,7 +247,7 @@ class RoomManager {
     return gameEngine;
   }
 
-  resetGame(roomId: string): {
+  resetGame(roomId: string, playerId: string): {
     success: boolean;
     error?: string;
     room?: Room;
@@ -258,10 +258,10 @@ class RoomManager {
     }
 
     room.players.forEach((player) => {
-      if (!player.isBot) {
+      if (!player.isBot && player.id !== playerId) {
         player.isReady = false;
       } else {
-        player.isReady = true; // Bots are always ready
+        player.isReady = true; // Bots and host are always ready
       }
       player.hand = [];
     });

@@ -75,6 +75,7 @@ export default function RoomPage() {
         setRoomCode(room.code);
         setIsHost(true);
         setPlayers(room.players);
+        setIsReady(room.players.find((p: Player) => p.id === playerId)?.isReady || false);
         // Update URL to reflect actual room code
         const basePath = window.location.pathname.split("/room")[0];
         window.history.replaceState(null, "", `${basePath}/room/${room.code}`);
@@ -86,6 +87,7 @@ export default function RoomPage() {
         const { room } = message.payload;
         setRoomCode(room.code);
         setPlayers(room.players);
+        setIsReady(room.players.find((p: Player) => p.id === playerId)?.isReady || isReady);
         setIsHost(room.hostId === playerId);
       }
     });
@@ -121,6 +123,9 @@ export default function RoomPage() {
         if (message.type === "GAME_STATE_UPDATE") {
           const { playerId: updatedPlayerId, isReady: updatedReady } =
             message.payload;
+          setIsReady((prev) =>
+            updatedPlayerId === playerId ? updatedReady : prev
+          );
           setPlayers((prev) =>
             prev.map((p) =>
               p.id === updatedPlayerId ? { ...p, isReady: updatedReady } : p
@@ -213,7 +218,6 @@ export default function RoomPage() {
 
   const handleReadyToggle = () => {
     const newReadyState = !isReady;
-    setIsReady(newReadyState);
     sendMessage({
       type: "READY",
       payload: { ready: newReadyState },
@@ -371,7 +375,7 @@ export default function RoomPage() {
                         </div>
                       </div>
                       <div className="flex items-center">
-                        {isHost && (
+                        {isHost && player.id !== playerId && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -410,7 +414,7 @@ export default function RoomPage() {
                   {Array.from({ length: Math.max(0, 6 - players.length) }).map(
                     (_, index) => (
                       <div
-                        key={`empty-${index}-slot`}
+                        key={`empty-${index + 1}-slot`}
                         className="flex items-center p-3 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300"
                       >
                         <div className="text-gray-400">
@@ -460,6 +464,7 @@ export default function RoomPage() {
                       <div className="flex gap-2">
                         {Array.from({ length: 3 }).map((_, index) => (
                         <Button
+                          key={`add-bot-${index + 1}`}
                           onClick={() => handleAddBots(index + 1)}
                           disabled={players.length >= 10 - (index + 1)}
                           variant="outline"
@@ -474,7 +479,7 @@ export default function RoomPage() {
                     <Button
                       onClick={handleStartGame}
                       disabled={!canStartGame}
-                      className="w-full"
+                      className="w-full cursor-pointer"
                       size="lg"
                     >
                       {canStartGame

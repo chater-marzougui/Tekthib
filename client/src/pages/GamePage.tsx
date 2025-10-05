@@ -41,6 +41,7 @@ interface SystemMessage {
   message: string;
   timestamp: number;
   isSystem: boolean;
+  systemMessageColor?: string; // e.g., "red", "green", "blue"
 }
 
 export default function GamePage() {
@@ -209,31 +210,30 @@ export default function GamePage() {
             gameState: newGameState,
             revealedCards,
           } = message.payload;
-          let toastType = "info";
+          let toastColor = "blue";
 
           let resultMessage = "";
           if (wasLying && lastPlayerName === playerName) {
             resultMessage = `You were caught lying by ${challengerName}! Learn to play!`;
-            toastType = "error";
+            toastColor = "red";
           } else if (wasLying && challengerName === playerName) {
             resultMessage = `You were right! ${lastPlayerName} was lying.`;
-            toastType = "success";
+            toastColor = "green";
           } else if (!wasLying && lastPlayerName === playerName) {
             resultMessage = `You were telling the truth! Well played, ${challengerName} was wrong.`;
-            toastType = "success";
+            toastColor = "green";
           } else if (!wasLying && challengerName === playerName) {
             resultMessage = `You were wrong! ${lastPlayerName} was telling the truth.`;
-            toastType = "error";
+            toastColor = "red";
           } else {
             resultMessage = wasLying
               ? `${challengerName} was right! ${lastPlayerName} was lying.`
               : `${challengerName} was wrong! ${lastPlayerName} was telling the truth.`;
           }
 
-          console.log("Revealed Cards:", revealedCards);
-          if (toastType === "error") {
+          if (toastColor === "red") {
             toast.error(resultMessage);
-          } else if (toastType === "success") {
+          } else if (toastColor === "green") {
             toast.success(resultMessage);
           } else {
             toast.info(resultMessage);
@@ -252,7 +252,7 @@ export default function GamePage() {
 
             setTimeout(() => {
               setRevealedCardsAnimation(null);
-            }, 3000);
+            }, 2500);
           }
 
           const systemMessage: SystemMessage = {
@@ -262,6 +262,7 @@ export default function GamePage() {
             message: resultMessage,
             timestamp: Date.now(),
             isSystem: true,
+            systemMessageColor: toastColor,
           };
           setSystemMessages((prev) => [...prev, systemMessage]);
 
@@ -401,7 +402,7 @@ export default function GamePage() {
     // Clear animation after it completes
     setTimeout(() => {
       setPlayingCardsAnimation(null);
-    }, 1000);
+    }, 1200);
 
     sendMessage({
       type: "PLAY_CARDS",

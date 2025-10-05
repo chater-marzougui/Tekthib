@@ -2,6 +2,20 @@ import type { JSX } from "react";
 import type { DisplayGameCard, Rank } from "shared";
 
 const specialCards = ["2", "3", "A", "J", "Q", "K"] as Rank[];
+const renderRank = (rank: Rank) => {
+  if (rank === "Joker")
+    return (
+      <>
+        {rank.split("").map((char, i) => (
+          <span key={i} className="m-0 p-0" style={{ lineHeight: 0.8 }}>
+            {char}
+          </span>
+        ))}
+      </>
+    );
+  return rank;
+};
+
 function isSpecialCard(rank: Rank) {
   return specialCards.includes(rank);
 }
@@ -128,13 +142,25 @@ const renderSuitPatterns = (
           src="../icons/joker-smile.png"
           alt="Joker"
           className="absolute select-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 object-contain transition-opacity duration-200"
-          onMouseEnter={(e) => {
+          onPointerEnter={(e) => {
             e.currentTarget.src = "../icons/joker-smile.gif";
+          }}
+          onPointerLeave={(e) => {
+            e.currentTarget.src = "../icons/joker-smile.png";
           }}
           onMouseLeave={(e) => {
             e.currentTarget.src = "../icons/joker-smile.png";
           }}
-        />
+          onDragLeave={(e) => {
+            e.currentTarget.src = "../icons/joker-smile.png";
+          }}
+          onTouchEnd={(e) => {
+            e.currentTarget.src = "../icons/joker-smile.png";
+          }}
+          onPointerOut={(e) => {
+            e.currentTarget.src = "../icons/joker-smile.png";
+          }}
+        />,
         // <img
         //   key={`joker-${positionInHand}`}
         //   src="../icons/joker-smile.png"
@@ -152,7 +178,7 @@ const RenderCard = (
   isMyTurn: boolean,
   onCardSelect: (id: string) => void,
   isSelected: boolean,
-  positionInHand: number,
+  positionInHand: number
 ) => {
   const getCardSymbol = (suit: DisplayGameCard["suit"]) => {
     switch (suit) {
@@ -181,7 +207,7 @@ const RenderCard = (
   const suitSymbol = getCardSymbol(card.suit);
   const colorClass = getCardColor(card.suit);
   const isSpecial = isSpecialCard(card.rank);
-  const key = card.rank+card.suit+card.deckNumber+positionInHand
+  const key = card.rank + card.suit + card.deckNumber + positionInHand;
 
   return (
     <div
@@ -222,17 +248,41 @@ const RenderCard = (
       >
         {/* Top left corner */}
         <div className="absolute top-1 left-1.5 flex flex-col items-center leading-none select-none">
-          <div className={`text-sm font-bold ${colorClass} select-none`}>{card.rank}</div> {/* Smaller text */}
-          {isSpecial && <div className={`text-lg ${colorClass} select-none`}>{suitSymbol}</div>} {/* Smaller icon */}
+          <div
+            className={`text-sm font-bold ${colorClass} select-none flex flex-col items-center`}
+          >
+            {renderRank(card.rank)}
+          </div>
+          {isSpecial && (
+            <div className={`text-lg ${colorClass} select-none`}>
+              {suitSymbol}
+            </div>
+          )}
         </div>
 
         {/* The new suit patterns rendered in the center */}
-        {renderSuitPatterns(card.rank, suitSymbol, colorClass, key, positionInHand)}
+        {renderSuitPatterns(
+          card.rank,
+          suitSymbol,
+          colorClass,
+          key,
+          positionInHand
+        )}
 
         {/* Bottom right corner (rotated) */}
         <div className="absolute bottom-1 right-1.5 flex flex-col items-center leading-none rotate-180 select-none">
-          <div className={`text-sm font-bold ${colorClass} select-none`}>{card.rank}</div> {/* Smaller text */}
-          {isSpecial && <div className={`text-lg ${colorClass} select-none`}>{suitSymbol}</div>} {/* Smaller icon */}
+          <div
+            className={`text-sm font-bold ${colorClass} select-none flex flex-col items-center`}
+          >
+            {renderRank(card.rank)}
+          </div>
+          {/* Smaller text */}
+          {isSpecial && (
+            <div className={`text-lg ${colorClass} select-none`}>
+              {suitSymbol}
+            </div>
+          )}{" "}
+          {/* Smaller icon */}
         </div>
       </div>
     </div>

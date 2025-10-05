@@ -46,7 +46,7 @@ export function triggerBotTurn(
   if (gameEngine) {
     setTimeout(() => {
       processBotTurn(clients, roomId, gameEngine);
-    }, 1500); // Give players time to see the initial state
+    }, 3500); // Give players time to see the initial state
   }
 }
 
@@ -210,7 +210,7 @@ function handlePlayCards(
   // After a human plays, check if any bot wants to challenge
   setTimeout(() => {
     processBotChallenge(clients, clientInfo.roomId!, gameEngine);
-  }, 2000); // 1 second delay for realism
+  }, 3000); // 3 second delay for realism
 }
 
 function handleChallenge(
@@ -293,7 +293,7 @@ function handleChallenge(
   // After human challenges, trigger bot turn if needed
   setTimeout(() => {
     processBotTurn(clients, clientInfo.roomId!, gameEngine);
-  }, 1500);
+  }, 2000);
 }
 
 /**
@@ -350,13 +350,13 @@ function processBotChallenge(
       // After challenge, trigger next bot turn if needed
       setTimeout(() => {
         processBotTurn(clients, roomId, gameEngine);
-      }, 1500);
+      }, 3000);
     }
   } else {
     // No bot challenged, proceed to next turn (might be a bot)
     setTimeout(() => {
       processBotTurn(clients, roomId, gameEngine);
-    }, 500);
+    }, 1500);
   }
 }
 
@@ -448,6 +448,6 @@ function processBotTurn(
     // After bot plays, check if any bot wants to challenge
     setTimeout(() => {
       processBotChallenge(clients, roomId, gameEngine);
-    }, 2000);
+    }, 3000);
   }
 }

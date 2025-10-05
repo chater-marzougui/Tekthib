@@ -86,6 +86,7 @@ function handleCreateRoom(
 
   clientInfo.roomId = room.id;
   clientInfo.name = payload.playerName;
+  room.players.forEach((p) => {p.isReady = true;});
 
   sendToClient(ws, {
     type: 'ROOM_CREATED',
@@ -645,7 +646,7 @@ function handlePlayAgain(
   }
 
   // Game is ended, first player to click resets it and becomes host
-  const result = roomManager.resetGame(room.id);
+  const result = roomManager.resetGame(room.id, payload.playerId);
 
   if (!result.success) {
     sendToClient(ws, {
@@ -660,7 +661,7 @@ function handlePlayAgain(
 
   // Reset all players' ready status
   room.players.forEach((player) => {
-    player.isReady = false;
+    player.isReady = player.id === payload.playerId;
   });
 
   // Broadcast to all players that game has been reset

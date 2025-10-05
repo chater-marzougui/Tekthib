@@ -14,6 +14,7 @@ interface ChatMessage {
   message: string;
   timestamp: number;
   isSystem?: boolean;
+  systemMessageColor?: string; // e.g., "red", "green", "blue"
 }
 
 interface ChatBoxProps {
@@ -35,6 +36,36 @@ function isDuplicateMessage(
         msg.message === newMessage.message,
     )
   );
+}
+
+interface SystemMessageStyle {
+  containerClass: string;
+  textColor: string;
+  timeColor: string;
+}
+
+function getSystemMessageStyleClass(color: string | undefined): SystemMessageStyle {
+  switch (color) {
+    case "red":
+      return {
+        containerClass: "bg-red-50 border-red-200",
+        textColor: "text-red-800",
+        timeColor: "text-red-600",
+      };
+    case "green":
+      return {
+        containerClass: "bg-green-50 border-green-200",
+        textColor: "text-green-800",
+        timeColor: "text-green-600",
+      };
+    case "blue":
+    default:
+      return {
+        containerClass: "bg-blue-50 border-blue-200",
+        textColor: "text-blue-800",
+        timeColor: "text-blue-600",
+      };
+  }
 }
 
 export default function ChatBox({
@@ -128,13 +159,14 @@ export default function ChatBox({
             allMessages.map((msg) => {
               // System message styling
               if (msg.isSystem) {
+                const { containerClass, textColor, timeColor } = getSystemMessageStyleClass(msg.systemMessageColor);
                 return (
-                  <div key={msg.id} className="flex justify-center my-2">
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-2 max-w-md">
-                      <div className="text-sm text-center text-yellow-800 font-medium">
+                  <div key={msg.id} className={`flex justify-center my-2 ${containerClass}`}>
+                    <div className={`rounded-lg px-4 py-2 max-w-md ${containerClass}`}>
+                      <div className={`text-sm text-center ${textColor} font-medium`}>
                         {msg.message}
                       </div>
-                      <div className="text-xs text-center text-yellow-600 mt-1">
+                      <div className={`text-xs text-center ${timeColor} mt-1`}>
                         {new Date(msg.timestamp).toLocaleTimeString([], {
                           hour: "numeric",
                           minute: "2-digit",
