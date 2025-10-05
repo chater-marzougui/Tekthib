@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect } from 'react';
 import { useSoundManager } from '../hooks/useSoundManager';
-import { SOUNDS, CRITICAL_SOUNDS } from '../lib/sounds';
+import { CRITICAL_SOUNDS } from '../lib/sounds';
 
 interface SoundContextType {
   playSound: (path: string, options?: any) => void;

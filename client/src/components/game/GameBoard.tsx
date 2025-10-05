@@ -44,13 +44,11 @@ export default function GameBoard({
   );
   const autoPlayTimeout = 45; // seconds
   const [timer, setTimer] = useState(autoPlayTimeout);
-  const [turnStartTime, setTurnStartTime] = useState<number | null>(null);
 
   // Timer effect for auto-play
   useEffect(() => {
     if (!isMyTurn) {
       localStorage.removeItem("turnStartTime");
-      setTurnStartTime(null);
       return;
     }
 
@@ -60,9 +58,6 @@ export default function GameBoard({
 
     if (!storedStartTime) {
       localStorage.setItem("turnStartTime", startTime.toString());
-      setTurnStartTime(startTime);
-    } else {
-      setTurnStartTime(startTime);
     }
 
     const interval = setInterval(() => {
