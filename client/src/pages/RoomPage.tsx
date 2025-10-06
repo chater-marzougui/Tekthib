@@ -44,6 +44,7 @@ export default function RoomPage() {
   const [error, setError] = useState<string | null>(null);
   const [showNameDialog, setShowNameDialog] = useState(false);
   const [nameInput, setNameInput] = useState("");
+  const [timerEnabled, setTimerEnabled] = useState(true);
   const playerName = localStorage.getItem("playerName") || "";
   const playerId = localStorage.getItem("clientId") || "";
   const roomCodeRef = useRef(roomCode);
@@ -75,6 +76,7 @@ export default function RoomPage() {
         setRoomCode(room.code);
         setIsHost(true);
         setPlayers(room.players);
+        setTimerEnabled(room.timerEnabled ?? true);
         setIsReady(room.players.find((p: Player) => p.id === playerId)?.isReady || false);
         // Update URL to reflect actual room code
         const basePath = window.location.pathname.split("/room")[0];
@@ -87,6 +89,7 @@ export default function RoomPage() {
         const { room } = message.payload;
         setRoomCode(room.code);
         setPlayers(room.players);
+        setTimerEnabled(room.timerEnabled ?? true);
         setIsReady(room.players.find((p: Player) => p.id === playerId)?.isReady || isReady);
         setIsHost(room.hostId === playerId);
       }
@@ -185,7 +188,7 @@ export default function RoomPage() {
     if (roomId === "create") {
       sendMessage({
         type: "CREATE_ROOM",
-        payload: { playerName, maxPlayers: 10, isPublic },
+        payload: { playerName, maxPlayers: 10, isPublic, timerEnabled },
       });
     } else {
       sendMessage({
@@ -473,6 +476,25 @@ export default function RoomPage() {
                         >
                           +{index + 1} Bot
                         </Button>))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium text-gray-700">
+                        Game Settings
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="text-sm">
+                          <div className="font-medium">Turn Timer</div>
+                          <div className="text-xs text-gray-500">45 seconds per turn</div>
+                        </div>
+                        <Button
+                          onClick={() => setTimerEnabled(!timerEnabled)}
+                          variant={timerEnabled ? "default" : "outline"}
+                          size="sm"
+                        >
+                          {timerEnabled ? "Enabled" : "Disabled"}
+                        </Button>
                       </div>
                     </div>
 

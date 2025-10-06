@@ -125,6 +125,7 @@ export interface CreateRoomPayload {
   playerName: string;
   maxPlayers?: number;
   isPublic?: boolean;
+  timerEnabled?: boolean;
 }
 
 export interface PlayCardsPayload {

@@ -22,6 +22,7 @@ interface MergedGameBoardProps {
   onPlayCards: (selectedCards: string[], claimedRank: string) => void;
   isMyTurn: boolean;
   selectedCards: string[];
+  timerEnabled?: boolean;
 }
 
 export default function GameBoard({
@@ -36,6 +37,7 @@ export default function GameBoard({
   onPlayCards,
   isMyTurn,
   selectedCards,
+  timerEnabled = true,
 }: Readonly<MergedGameBoardProps>) {
   const [claimedRank, setClaimedRank] = useState(
     lastPlay ? lastPlay.claimedRank : ""
@@ -45,6 +47,12 @@ export default function GameBoard({
 
   // Timer effect for auto-play
   useEffect(() => {
+    // If timer is disabled, don't run the timer logic
+    if (!timerEnabled) {
+      setTimer(autoPlayTimeout);
+      return;
+    }
+
     // Get or set turn start time
     const storedStartTime = localStorage.getItem("turnStartTime");
     const startTime = storedStartTime ? parseInt(storedStartTime) : Date.now();
@@ -82,7 +90,7 @@ export default function GameBoard({
     }, 500); // Check more frequently for accuracy
 
     return () => clearInterval(interval);
-  }, [isMyTurn, playerCards, lastPlay, onPlayCards]);
+  }, [isMyTurn, playerCards, lastPlay, onPlayCards, timerEnabled]);
 
   const handlePlayCards = () => {
     if (selectedCards.length > 0 && (claimedRank || lastPlay)) {
@@ -118,7 +126,7 @@ export default function GameBoard({
               <StateCard
                 isMyTurn={isMyTurn}
                 currentPlayer={currentPlayer}
-                timer={timer}
+                timer={timerEnabled ? timer : null}
                 lastPlay={lastPlay}
               />
               <WastedPile removedCards={removedCards} />
@@ -129,7 +137,7 @@ export default function GameBoard({
               <StateCard
                 isMyTurn={isMyTurn}
                 currentPlayer={currentPlayer}
-                timer={timer}
+                timer={timerEnabled ? timer : null}
                 lastPlay={lastPlay}
               />
             </div>

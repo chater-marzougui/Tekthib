@@ -34,8 +34,11 @@ export function useVoiceChat({
     new Map()
   );
 
+  // Check if voice was previously enabled (persist across page navigation)
+  const wasVoiceEnabled = sessionStorage.getItem('voiceChatEnabled') === 'true';
+  
   const [isMuted, setIsMuted] = useState(false);
-  const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(wasVoiceEnabled);
   const [audioError, setAudioError] = useState<string | null>(null);
   const [mutedPlayers, setMutedPlayers] = useState<Set<string>>(new Set());
   const [hostMutedPlayers, setHostMutedPlayers] = useState<Set<string>>(
@@ -366,6 +369,7 @@ export function useVoiceChat({
     if (!stream) return;
 
     setIsVoiceEnabled(true);
+    sessionStorage.setItem('voiceChatEnabled', 'true');
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Create connections to all other players (except bots)
@@ -418,6 +422,7 @@ export function useVoiceChat({
     pendingCandidatesRef.current.clear();
 
     setIsVoiceEnabled(false);
+    sessionStorage.removeItem('voiceChatEnabled');
     setIsMuted(false);
   }, []);
 
@@ -642,6 +647,17 @@ export function useVoiceChat({
       }
     });
   }, [players, localPlayerId, isVoiceEnabled, createOffer]);
+
+  // Auto-reconnect voice chat if it was enabled before page transition
+  useEffect(() => {
+    if (wasVoiceEnabled && !isVoiceEnabled && players.length > 0) {
+      // Small delay to ensure page is fully loaded
+      const timer = setTimeout(() => {
+        enableVoiceChat();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [wasVoiceEnabled, isVoiceEnabled, players.length, enableVoiceChat]);
 
   return {
     isVoiceEnabled,
