@@ -345,7 +345,7 @@ export class GameEngine {
     this.gameState.currentPlayerIndex = challengerIndex;
 
     // Reset pile and rank
-    const revealedCards = [...this.gameState.lastPlayedCards];
+    const revealedCards = [...this.gameState.pile];
     this.gameState.pile = [];
     this.gameState.currentRank = null;
     this.gameState.lastPlayedCards = [];
