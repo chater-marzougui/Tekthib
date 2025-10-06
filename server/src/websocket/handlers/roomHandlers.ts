@@ -82,6 +82,7 @@ function handleCreateRoom(
     payload.playerName,
     payload.maxPlayers || 10,
     payload.isPublic ?? true,
+    payload.timerEnabled ?? true,
   );
 
   clientInfo.roomId = room.id;
@@ -96,6 +97,7 @@ function handleCreateRoom(
         code: room.code,
         hostId: room.hostId,
         maxPlayers: room.maxPlayers,
+        timerEnabled: room.timerEnabled,
         players: Array.from(room.players.values()).map((p) => ({
           id: p.id,
           name: p.name,
@@ -152,6 +154,7 @@ function handleJoinRoom(
         code: room.code,
         hostId: room.hostId,
         maxPlayers: room.maxPlayers,
+        timerEnabled: room.timerEnabled,
         players: Array.from(room.players.values()).map((p) => ({
           id: p.id,
           name: p.name,

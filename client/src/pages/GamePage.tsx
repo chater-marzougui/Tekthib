@@ -57,6 +57,7 @@ export default function GamePage() {
   const [systemMessages, setSystemMessages] = useState<SystemMessage[]>([]);
   const [showNameDialog, setShowNameDialog] = useState(false);
   const [nameInput, setNameInput] = useState("");
+  const [timerEnabled, setTimerEnabled] = useState(true);
 
   const playerName = localStorage.getItem("playerName") || "";
   const playerId = localStorage.getItem("clientId") || "";
@@ -111,7 +112,12 @@ export default function GamePage() {
       "initial-game-state",
       (message) => {
         if (message.type === "INITIAL_GAME_STATE") {
-          const { hand, gameState: initialGameState } = message.payload;
+          const { hand, gameState: initialGameState, room } = message.payload;
+
+          // Set timer enabled from room settings
+          if (room && room.timerEnabled !== undefined) {
+            setTimerEnabled(room.timerEnabled);
+          }
 
           if (initialGameState) {
             setGameState(initialGameState);
@@ -154,6 +160,14 @@ export default function GamePage() {
         }
       }
     );
+
+    const unregisterRoomJoined = registerHandler("room-joined", (message) => {
+      if (message.type === "ROOM_JOINED") {
+        // Room exists but game hasn't started, redirect to room page
+        toast.info("Game hasn't started yet. Redirecting to room...");
+        navigate(`/room/${roomId}`);
+      }
+    });
 
     const unregisterGameStateUpdate = registerHandler(
       "game-state-update",
@@ -324,7 +338,24 @@ export default function GamePage() {
 
     const unregisterError = registerHandler("error", (message) => {
       if (message.type === "ERROR") {
-        setError(message.payload.message);
+        const errorMessage = message.payload.message;
+        const errorCode = message.payload.code;
+        
+        // If room not found, redirect to home page
+        if (errorCode === "ROOM_NOT_FOUND" || errorMessage === "Room not found") {
+          toast.error("Room not found. Redirecting to home...");
+          navigate("/");
+          return;
+        }
+        
+        // If player not in room, redirect to room page if it exists
+        if (errorMessage === "Player not in room") {
+          toast.error("You are not in this game. Redirecting...");
+          navigate("/");
+          return;
+        }
+        
+        setError(errorMessage);
         setTimeout(() => setError(null), 3000);
       }
     });
@@ -338,6 +369,7 @@ export default function GamePage() {
 
     return () => {
       unregisterInitialState();
+      unregisterRoomJoined();
       unregisterGameStateUpdate();
       unregisterCardsPlayed();
       unregisterChallengeResult();
@@ -701,6 +733,7 @@ export default function GamePage() {
               onPlayCards={handlePlayCards}
               onCardSelect={handleCardSelect}
               playerCards={playerHand}
+              timerEnabled={timerEnabled}
             />
 
             {roomId && playerId && (
