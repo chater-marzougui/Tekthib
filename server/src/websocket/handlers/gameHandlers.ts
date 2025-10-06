@@ -94,7 +94,7 @@ function handleGetGameState(
           code: room.code,
           hostId: room.hostId,
           maxPlayers: room.maxPlayers,
-          timerEnabled: room.timerEnabled,
+          autoPlayTimeout: room.autoPlayTimeout,
           players: Array.from(room.players.values()).map((p) => ({
             id: p.id,
             name: p.name,
@@ -122,7 +122,7 @@ function handleGetGameState(
         code: room.code,
         hostId: room.hostId,
         maxPlayers: room.maxPlayers,
-        timerEnabled: room.timerEnabled,
+        autoPlayTimeout: room.autoPlayTimeout,
         players: Array.from(room.players.values()).map((p) => ({
           id: p.id,
           name: p.name,

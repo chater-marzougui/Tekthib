@@ -10,7 +10,7 @@ export interface Room {
   maxPlayers: number;
   isPublic: boolean;
   hostName: string;
-  timerEnabled?: boolean;
+  autoPlayTimeout: number;
 }
 
 export interface GameState {

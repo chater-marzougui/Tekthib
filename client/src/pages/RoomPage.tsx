@@ -27,6 +27,7 @@ import VoiceChat from "@/components/chat/VoiceChat";
 import { Trash } from "lucide-react";
 import { PlayerBadge } from "@/components/PlayerBadge";
 import { QRCodeCard } from "@/components/QRCodeDialog";
+import { Switch } from "@/components/ui/switch";
 
 function isDuplicatePlayer(players: Player[], newPlayer: Player): boolean {
   return players.some((p) => p.id === newPlayer.id);
@@ -44,7 +45,9 @@ export default function RoomPage() {
   const [error, setError] = useState<string | null>(null);
   const [showNameDialog, setShowNameDialog] = useState(false);
   const [nameInput, setNameInput] = useState("");
-  const [timerEnabled, setTimerEnabled] = useState(true);
+  const [timerSlideEnabled, setTimerSlideEnabled] = useState(true);
+  const [autoPlayTimeout, setAutoPlayTimeout] = useState(45);
+  
   const playerName = localStorage.getItem("playerName") || "";
   const playerId = localStorage.getItem("clientId") || "";
   const roomCodeRef = useRef(roomCode);
@@ -76,8 +79,11 @@ export default function RoomPage() {
         setRoomCode(room.code);
         setIsHost(true);
         setPlayers(room.players);
-        setTimerEnabled(room.timerEnabled ?? true);
-        setIsReady(room.players.find((p: Player) => p.id === playerId)?.isReady || false);
+        setAutoPlayTimeout(room.autoPlayTimeout ?? 45);
+        setTimerSlideEnabled(room.autoPlayTimeout && room.autoPlayTimeout > 0);
+        setIsReady(
+          room.players.find((p: Player) => p.id === playerId)?.isReady || false
+        );
         // Update URL to reflect actual room code
         const basePath = window.location.pathname.split("/room")[0];
         window.history.replaceState(null, "", `${basePath}/room/${room.code}`);
@@ -89,8 +95,11 @@ export default function RoomPage() {
         const { room } = message.payload;
         setRoomCode(room.code);
         setPlayers(room.players);
-        setTimerEnabled(room.timerEnabled ?? true);
-        setIsReady(room.players.find((p: Player) => p.id === playerId)?.isReady || isReady);
+        setAutoPlayTimeout(room.autoPlayTimeout ?? 45);
+        setIsReady(
+          room.players.find((p: Player) => p.id === playerId)?.isReady ||
+            isReady
+        );
         setIsHost(room.hostId === playerId);
       }
     });
@@ -188,9 +197,14 @@ export default function RoomPage() {
     if (roomId === "create") {
       sendMessage({
         type: "CREATE_ROOM",
-        payload: { playerName, maxPlayers: 10, isPublic, timerEnabled },
+        payload: {
+          playerName,
+          maxPlayers: 10,
+          isPublic,
+          autoPlayTimeout,
+        },
       });
-    } else {
+    } else if (roomId !== "create") {
       sendMessage({
         type: "JOIN_ROOM",
         payload: { roomCode: roomId || "", playerName },
@@ -217,6 +231,7 @@ export default function RoomPage() {
     navigate,
     playerId,
     playerName,
+    isPublic,
   ]);
 
   const handleReadyToggle = () => {
@@ -231,7 +246,7 @@ export default function RoomPage() {
     if (isHost && canStartGame) {
       sendMessage({
         type: "START_GAME",
-        payload: {},
+        payload: { autoPlayTimeout },
       });
     }
   };
@@ -286,7 +301,10 @@ export default function RoomPage() {
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 p-4">
       {/* Name prompt dialog */}
       <Dialog open={showNameDialog} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
+        <DialogContent
+          className="sm:max-w-md"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>Enter Your Name</DialogTitle>
             <DialogDescription>
@@ -302,7 +320,7 @@ export default function RoomPage() {
                 onChange={(e) => setNameInput(e.target.value)}
                 placeholder="Enter your name"
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === "Enter") {
                     handleNameSubmit();
                   }
                 }}
@@ -466,35 +484,79 @@ export default function RoomPage() {
                       </div>
                       <div className="flex gap-2">
                         {Array.from({ length: 3 }).map((_, index) => (
-                        <Button
-                          key={`add-bot-${index + 1}`}
-                          onClick={() => handleAddBots(index + 1)}
-                          disabled={players.length >= 10 - (index + 1)}
-                          variant="outline"
-                          size="sm"
-                          className="flex-1"
-                        >
-                          +{index + 1} Bot
-                        </Button>))}
+                          <Button
+                            key={`add-bot-${index + 1}`}
+                            onClick={() => handleAddBots(index + 1)}
+                            disabled={players.length >= 10 - (index + 1)}
+                            variant="outline"
+                            size="sm"
+                            className="flex-1"
+                          >
+                            +{index + 1} Bot
+                          </Button>
+                        ))}
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <div className="text-sm font-medium text-gray-700">
-                        Game Settings
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div className="text-sm">
-                          <div className="font-medium">Turn Timer</div>
-                          <div className="text-xs text-gray-500">45 seconds per turn</div>
+                      <div className="p-4 bg-gray-50 rounded-lg space-y-4">
+                        {/* Auto-play toggle */}
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label
+                              htmlFor="auto-play"
+                              className="text-sm font-medium"
+                            >
+                              Auto-Play Timer
+                            </Label>
+                            <div className="text-xs text-gray-500">
+                              Automatically play random cards when time runs out
+                            </div>
+                          </div>
+                          <Switch
+                            id="auto-play"
+                            checked={timerSlideEnabled}
+                            onCheckedChange={(checked) => {
+                              setTimerSlideEnabled(checked);
+                              if (!checked) {
+                                setAutoPlayTimeout(0);
+                              } else {
+                                setAutoPlayTimeout(45);
+                              }
+                            }}
+                          />
                         </div>
-                        <Button
-                          onClick={() => setTimerEnabled(!timerEnabled)}
-                          variant={timerEnabled ? "default" : "outline"}
-                          size="sm"
-                        >
-                          {timerEnabled ? "Enabled" : "Disabled"}
-                        </Button>
+
+                        {/* Timer input - only shown when enabled */}
+                        {timerSlideEnabled && (
+                          <div className="space-y-2 pt-2 border-t">
+                            <Label htmlFor="timer-duration" className="text-sm">
+                              Timer Duration (seconds)
+                            </Label>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                id="timer-duration"
+                                type="number"
+                                min="10"
+                                max="300"
+                                value={autoPlayTimeout}
+                                onChange={(e) => {
+                                  const value = parseInt(e.target.value) || 0;
+                                  setAutoPlayTimeout(
+                                    Math.max(10, Math.min(300, value))
+                                  );
+                                }}
+                                className="w-24"
+                              />
+                              <span className="text-sm text-gray-500">
+                                seconds per turn
+                              </span>
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              Range: 10-300 seconds
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 

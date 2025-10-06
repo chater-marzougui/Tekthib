@@ -57,7 +57,7 @@ export default function GamePage() {
   const [systemMessages, setSystemMessages] = useState<SystemMessage[]>([]);
   const [showNameDialog, setShowNameDialog] = useState(false);
   const [nameInput, setNameInput] = useState("");
-  const [timerEnabled, setTimerEnabled] = useState(true);
+  const [autoPlayTimeout, setAutoPlayTimeout] = useState(45);
 
   const playerName = localStorage.getItem("playerName") || "";
   const playerId = localStorage.getItem("clientId") || "";
@@ -114,9 +114,13 @@ export default function GamePage() {
         if (message.type === "INITIAL_GAME_STATE") {
           const { hand, gameState: initialGameState, room } = message.payload;
 
-          // Set timer enabled from room settings
-          if (room && room.timerEnabled !== undefined) {
-            setTimerEnabled(room.timerEnabled);
+          // Set auto play timeout from room settings
+          if (room && room.autoPlayTimeout !== undefined) {
+            console.log("Setting autoPlayTimeout to:", room.autoPlayTimeout);
+            setAutoPlayTimeout(room.autoPlayTimeout);
+          } else {
+            console.warn("No room info in INITIAL_GAME_STATE");
+            setAutoPlayTimeout(45);
           }
 
           if (initialGameState) {
@@ -733,7 +737,7 @@ export default function GamePage() {
               onPlayCards={handlePlayCards}
               onCardSelect={handleCardSelect}
               playerCards={playerHand}
-              timerEnabled={timerEnabled}
+              autoPlayTimeout={autoPlayTimeout}
             />
 
             {roomId && playerId && (

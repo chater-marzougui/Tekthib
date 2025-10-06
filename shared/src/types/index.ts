@@ -123,9 +123,13 @@ export interface JoinRoomPayload {
 
 export interface CreateRoomPayload {
   playerName: string;
+  autoPlayTimeout: number;
   maxPlayers?: number;
   isPublic?: boolean;
-  timerEnabled?: boolean;
+}
+
+export interface StartGamePayload {
+  autoPlayTimeout: number;
 }
 
 export interface PlayCardsPayload {

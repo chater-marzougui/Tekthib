@@ -8,6 +8,7 @@ import {
   MutePlayerPayload,
   RemoveBotPayload,
   PlayAgainPayload,
+  StartGamePayload,
 } from 'shared';
 import { roomManager } from '../../utils/roomManager';
 import { sendToClient, broadcastToRoom, sendToPlayer } from '../index';
@@ -53,7 +54,7 @@ export function handleRoomMessages(
       break;
 
     case 'START_GAME':
-      handleStartGame(ws, clients);
+      handleStartGame(ws, clients, message.payload as StartGamePayload);
       break;
 
     case 'KICK_PLAYER':
@@ -80,9 +81,9 @@ function handleCreateRoom(
   const room = roomManager.createRoom(
     clientInfo.id,
     payload.playerName,
+    payload.autoPlayTimeout,
     payload.maxPlayers || 10,
     payload.isPublic ?? true,
-    payload.timerEnabled ?? true,
   );
 
   clientInfo.roomId = room.id;
@@ -97,7 +98,7 @@ function handleCreateRoom(
         code: room.code,
         hostId: room.hostId,
         maxPlayers: room.maxPlayers,
-        timerEnabled: room.timerEnabled,
+        autoPlayTimeout: room.autoPlayTimeout,
         players: Array.from(room.players.values()).map((p) => ({
           id: p.id,
           name: p.name,
@@ -154,7 +155,7 @@ function handleJoinRoom(
         code: room.code,
         hostId: room.hostId,
         maxPlayers: room.maxPlayers,
-        timerEnabled: room.timerEnabled,
+        autoPlayTimeout: room.autoPlayTimeout,
         players: Array.from(room.players.values()).map((p) => ({
           id: p.id,
           name: p.name,
@@ -364,6 +365,7 @@ function handleRemoveBot(
 function handleStartGame(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
+  payload: StartGamePayload,
 ): void {
   const clientInfo = clients.get(ws)!;
 
@@ -376,6 +378,7 @@ function handleStartGame(
   }
 
   const room = roomManager.getRoom(clientInfo.roomId);
+  roomManager.setAutoPlayTimeout(clientInfo.roomId, payload.autoPlayTimeout);
   if (!room || room.hostId !== clientInfo.id) {
     sendToClient(ws, {
       type: 'ERROR',

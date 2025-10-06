@@ -5,7 +5,7 @@ import { GameEngine } from '../game/GameEngine';
 class RoomManager {
   private readonly rooms: Map<string, Room> = new Map();
   private readonly gameEngines: Map<string, GameEngine> = new Map();
-  
+
   // Pool of bot names that don't reveal personality
   private readonly botNames: string[] = [
     'Bot Alpha',
@@ -67,7 +67,13 @@ class RoomManager {
     return `Bot Player ${counter}`;
   }
 
-  createRoom(hostId: string, hostName: string, maxPlayers: number = 10, isPublic: boolean = true, timerEnabled: boolean = true): Room {
+  createRoom(
+    hostId: string,
+    hostName: string,
+    autoPlayTimeout: number,
+    maxPlayers: number = 10,
+    isPublic: boolean = true,
+  ): Room {
     const roomId = `room_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const code = this.generateRoomCode();
 
@@ -90,7 +96,7 @@ class RoomManager {
       maxPlayers,
       isPublic,
       hostName,
-      timerEnabled,
+      autoPlayTimeout,
     };
 
     this.rooms.set(roomId, room);
@@ -164,13 +170,17 @@ class RoomManager {
       };
     }
 
-    const personalities: BotPersonality[] = ['aggressive', 'truthful', 'unpredictable'];
+    const personalities: BotPersonality[] = [
+      'aggressive',
+      'truthful',
+      'unpredictable',
+    ];
     const botIds: string[] = [];
-    
+
     for (let i = 0; i < count; i++) {
       const botId = `bot_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       const personality = personalities[i % personalities.length]; // Distribute personalities evenly
-      
+
       // Get an available bot name (doesn't reveal personality)
       const botName = this.getAvailableBotName(room);
 
@@ -287,7 +297,9 @@ class RoomManager {
       return { canStart: false, reason: 'Need at least 3 players' };
     }
 
-    const allReady = Array.from(room.players.values()).every((p) => p.isReady || p.isBot);
+    const allReady = Array.from(room.players.values()).every(
+      (p) => p.isReady || p.isBot,
+    );
     if (!allReady) {
       return { canStart: false, reason: 'Not all players are ready' };
     }
@@ -295,24 +307,30 @@ class RoomManager {
     return { canStart: true };
   }
 
-  startGame(roomId: string, botChatCallback?: (botId: string, message: string) => void): GameEngine | null {
+  startGame(
+    roomId: string,
+    botChatCallback?: (botId: string, message: string) => void,
+  ): GameEngine | null {
     const room = this.rooms.get(roomId);
     if (!room) return null;
 
     const gameEngine = new GameEngine(room.players);
-    
+
     // Set up bot chat callback if provided
     if (botChatCallback) {
       gameEngine.setBotChatCallback(botChatCallback);
     }
-    
+
     this.gameEngines.set(roomId, gameEngine);
     room.gameState = gameEngine.getGameState();
     room.gameState.phase = 'playing';
     return gameEngine;
   }
 
-  resetGame(roomId: string, playerId: string): {
+  resetGame(
+    roomId: string,
+    playerId: string,
+  ): {
     success: boolean;
     error?: string;
     room?: Room;
@@ -347,7 +365,7 @@ class RoomManager {
   }
 
   getPublicRooms(): Room[] {
-    return Array.from(this.rooms.values()).filter(room => room.isPublic);
+    return Array.from(this.rooms.values()).filter((room) => room.isPublic);
   }
 
   getRoomCount(): number {
@@ -365,13 +383,23 @@ class RoomManager {
 
   cleanup(): void {
     for (const [roomId, room] of this.rooms.entries()) {
-      const allPlayerBotsOrDisconnected = Array.from(room.players.values()).every(player => player.isBot || !player.isConnected);
+      const allPlayerBotsOrDisconnected = Array.from(
+        room.players.values(),
+      ).every((player) => player.isBot || !player.isConnected);
       // Delete old inactive rooms
       if (allPlayerBotsOrDisconnected) {
         this.rooms.delete(roomId);
         this.gameEngines.delete(roomId);
       }
     }
+  }
+
+  setAutoPlayTimeout(roomId: string, timeout: number): boolean {
+    const room = this.rooms.get(roomId);
+    if (!room) return false;
+
+    room.autoPlayTimeout = timeout;
+    return true;
   }
 
   getSystemState() {

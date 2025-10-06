@@ -22,7 +22,7 @@ interface MergedGameBoardProps {
   onPlayCards: (selectedCards: string[], claimedRank: string) => void;
   isMyTurn: boolean;
   selectedCards: string[];
-  timerEnabled?: boolean;
+  autoPlayTimeout: number;
 }
 
 export default function GameBoard({
@@ -37,65 +37,102 @@ export default function GameBoard({
   onPlayCards,
   isMyTurn,
   selectedCards,
-  timerEnabled = true,
+  autoPlayTimeout,
 }: Readonly<MergedGameBoardProps>) {
   const [claimedRank, setClaimedRank] = useState(
     lastPlay ? lastPlay.claimedRank : ""
   );
-  const autoPlayTimeout = 45; // seconds
   const [timer, setTimer] = useState(autoPlayTimeout);
+
+  // Create a unique turn identifier based on current player and last play
+  const currentTurnId = lastPlay ? lastPlay.player + "-" + lastPlay.cardCount + "-" + lastPlay.claimedRank : "start";
 
   // Timer effect for auto-play
   useEffect(() => {
     // If timer is disabled, don't run the timer logic
-    if (!timerEnabled) {
-      setTimer(autoPlayTimeout);
+    if (autoPlayTimeout < 10) {
+      setTimer(0);
       return;
     }
 
-    // Get or set turn start time
-    const storedStartTime = localStorage.getItem("turnStartTime");
-    const startTime = storedStartTime ? parseInt(storedStartTime) : Date.now();
+    // Get stored turn info
+    const storedTurnId = localStorage.getItem("currentTurnId");
+    const storedRemainingTime = localStorage.getItem("remainingTime");
+    const storedLastUpdate = localStorage.getItem("lastUpdateTime");
 
-    if (!storedStartTime) {
-      localStorage.setItem("turnStartTime", startTime.toString());
+    let initialRemaining: number;
+
+    // Check if this is the same turn or a new turn
+    if (
+      storedTurnId === currentTurnId &&
+      storedRemainingTime &&
+      storedLastUpdate
+    ) {
+      // Same turn - calculate remaining time based on stored value and time passed
+      const lastUpdate = parseInt(storedLastUpdate);
+      const timePassed = Math.floor((Date.now() - lastUpdate) / 1000);
+      initialRemaining = Math.max(
+        0,
+        parseInt(storedRemainingTime) - timePassed
+      );
+    } else {
+      // New turn - reset the timer
+      initialRemaining = autoPlayTimeout;
+      localStorage.setItem("currentTurnId", currentTurnId);
+      localStorage.setItem("remainingTime", autoPlayTimeout.toString());
+      localStorage.setItem("lastUpdateTime", Date.now().toString());
     }
 
+    setTimer(initialRemaining);
+
     const interval = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      const remaining = Math.max(0, autoPlayTimeout - elapsed);
+      setTimer((prevTimer) => {
+        const newTimer = Math.max(0, prevTimer - 1);
 
-      setTimer(remaining);
+        // Update localStorage with new remaining time
+        localStorage.setItem("remainingTime", newTimer.toString());
+        localStorage.setItem("lastUpdateTime", Date.now().toString());
 
-      if (remaining === 0 && isMyTurn) {
-        // Time's up - auto-play random cards
-        const numCards = Math.floor(Math.random() * 4) + 1; // 1-4 cards
-        const availableCards = playerCards.slice(
-          0,
-          Math.min(numCards, playerCards.length)
-        );
-        const autoSelectedCards = availableCards.map((c) => c.id);
+        if (newTimer === 0 && isMyTurn) {
+          // Time's up - auto-play random cards
+          const numCards = Math.floor(Math.random() * 4) + 1; // 1-4 cards
+          const availableCards = playerCards.slice(
+            0,
+            Math.min(numCards, playerCards.length)
+          );
+          const autoSelectedCards = availableCards.map((c) => c.id);
 
-        // Determine the rank to claim
-        const rankToClaim = lastPlay
-          ? lastPlay.claimedRank
-          : playableRanks[Math.floor(Math.random() * playableRanks.length)];
+          // Determine the rank to claim
+          const rankToClaim = lastPlay
+            ? lastPlay.claimedRank
+            : playableRanks[Math.floor(Math.random() * playableRanks.length)];
 
-        onPlayCards(autoSelectedCards, rankToClaim);
-      } else if (remaining === 0) {
-        clearInterval(interval);
-        setTimer(autoPlayTimeout);
-        localStorage.setItem("turnStartTime", Date.now().toString());
-      }
-    }, 500); // Check more frequently for accuracy
+          onPlayCards(autoSelectedCards, rankToClaim);
+        }
+
+        return newTimer;
+      });
+    }, 1000);
 
     return () => clearInterval(interval);
-  }, [isMyTurn, playerCards, lastPlay, onPlayCards, timerEnabled]);
+  }, [
+    isMyTurn,
+    playerCards,
+    lastPlay,
+    onPlayCards,
+    autoPlayTimeout,
+    currentPlayer,
+    currentTurnId,
+  ]);
 
   const handlePlayCards = () => {
     if (selectedCards.length > 0 && (claimedRank || lastPlay)) {
       onPlayCards(selectedCards, lastPlay ? lastPlay.claimedRank : claimedRank);
-      localStorage.setItem("turnStartTime", Date.now().toString());
+
+      // Clear turn tracking since we're playing cards (turn will change)
+      localStorage.removeItem("turnStartTime");
+      localStorage.removeItem("currentTurnId");
+
       window.scrollTo({ top: 0, behavior: "smooth" });
       setTimer(autoPlayTimeout);
       setClaimedRank("");
@@ -111,9 +148,6 @@ export default function GameBoard({
   // Calculate number of hands needed
   const maxCardsPerHand = Math.min(Math.floor(window.innerWidth / 35), 24);
   const numberOfHands = Math.ceil(sortedCards.length / maxCardsPerHand);
-  useEffect(() => {
-    localStorage.setItem("turnStartTime", Date.now().toString());
-  }, [isMyTurn, lastPlay]);
 
   return (
     <div className="space-y-4">
@@ -126,7 +160,7 @@ export default function GameBoard({
               <StateCard
                 isMyTurn={isMyTurn}
                 currentPlayer={currentPlayer}
-                timer={timerEnabled ? timer : null}
+                timer={autoPlayTimeout >= 10 ? timer : null}
                 lastPlay={lastPlay}
               />
               <WastedPile removedCards={removedCards} />
@@ -137,7 +171,7 @@ export default function GameBoard({
               <StateCard
                 isMyTurn={isMyTurn}
                 currentPlayer={currentPlayer}
-                timer={timerEnabled ? timer : null}
+                timer={autoPlayTimeout >= 10 ? timer : null}
                 lastPlay={lastPlay}
               />
             </div>
