@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -25,6 +26,7 @@ import { EndGameDialog } from "@/components/game/EndGameDialog";
 import { motion } from "framer-motion";
 import { RenderCard } from "@/components/game/RenderCard";
 import { useHeader } from "@/context/HeaderContext";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface GamePlayer extends Player {
   isCurrentTurn: boolean;
@@ -47,6 +49,7 @@ interface SystemMessage {
 }
 
 export default function GamePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { roomId } = useParams<{ roomId: string }>();
   const { sendMessage, registerHandler, isConnected } = useWebSocketContext();
@@ -64,6 +67,7 @@ export default function GamePage() {
   const [serverTimer, setServerTimer] = useState<number | undefined>(undefined);
   const [pilePosition, setPilePosition] = useState({ x: 0, y: 0 });
   const [handPosition, setHandPosition] = useState({ x: 0, y: 0 });
+  const [showLeaveDialog, setShowLeaveDialog] = useState(false);
 
   const playerName = localStorage.getItem("playerName") || "";
   const playerId = localStorage.getItem("clientId") || "";
@@ -108,10 +112,10 @@ export default function GamePage() {
       });
     } else if (isConnected && roomId && !playerId) {
       console.error("No player ID found. Please rejoin from home page.");
-      setError("Session expired. Please return to home and rejoin the game.");
+      setError(t('game.sessionExpired'));
       setIsLoading(false);
     }
-  }, [isConnected, roomId, playerId, sendMessage]);
+  }, [isConnected, roomId, playerId, sendMessage, t]);
 
   useEffect(() => {
     const unregisterInitialState = registerHandler(
@@ -172,7 +176,7 @@ export default function GamePage() {
     const unregisterRoomJoined = registerHandler("room-joined", (message) => {
       if (message.type === "ROOM_JOINED") {
         // Room exists but game hasn't started, redirect to room page
-        toast.info("Game hasn't started yet. Redirecting to room...");
+        toast.info(t('game.gameNotStarted'));
         navigate(`/room/${roomId}`);
       }
     });
@@ -237,29 +241,29 @@ export default function GamePage() {
           let resultMessage = "";
           let resultDescription = "";
           if (wasLying && lastPlayerName === playerName) {
-            resultMessage = `Caught lying by ${challengerName}!`;
-            resultDescription =
-              "Learn to play! and Try to be more honest next time.";
+            resultMessage = t('game.caughtLying', { challenger: challengerName });
+            resultDescription = t('game.learnToPlay');
             toastColor = "red";
           } else if (wasLying && challengerName === playerName) {
-            resultMessage = `You are right! ${lastPlayerName} was lying.`;
+            resultMessage = t('game.youAreRight', { player: lastPlayerName });
             toastColor = "green";
           } else if (!wasLying && lastPlayerName === playerName) {
-            resultMessage = `Well played, ${challengerName} accused you.`;
-            resultDescription = "You were telling the truth!";
+            resultMessage = t('game.wellPlayed', { challenger: challengerName });
+            resultDescription = t('game.tellingTheTruth');
             toastColor = "green";
           } else if (!wasLying && challengerName === playerName) {
-            resultMessage = `You are wrong! ${lastPlayerName} is telling the truth.`;
-            resultDescription = "Try to be more careful next time.";
+            resultMessage = t('game.wrongChallenge', { player: lastPlayerName });
+            resultDescription = t('game.penaltyCards', { count: revealedCards?.length || 0 });
             toastColor = "red";
           } else {
             resultMessage = wasLying
-              ? `${challengerName} is right!`
-              : `${challengerName} is wrong!`;
+              ? t('game.playerWasLying', { player: lastPlayerName })
+              : t('game.playerWasTruthful', { player: lastPlayerName });
 
-            resultDescription = `${challengerName} accused ${lastPlayerName} of lying. ${
-              wasLying ? "He's right!" : "He's wrong!"
-            }`;
+            resultDescription = t('game.playerChallenged', { 
+              challenger: challengerName, 
+              player: lastPlayerName 
+            });
           }
 
           if (toastColor === "red") {
@@ -436,8 +440,8 @@ export default function GamePage() {
   useEffect(() => {
     setHeaderConfig({
       actionButton: {
-        label: "Leave Game",
-        onClick: () => handleLeaveGame(),
+        label: t('game.leaveGame'),
+        onClick: () => setShowLeaveDialog(true),
         variant: "destructive",
         color: "default",
       },
@@ -447,7 +451,7 @@ export default function GamePage() {
         actionButton: undefined,
       });
     };
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     const updatePositions = () => {
@@ -552,7 +556,7 @@ export default function GamePage() {
       setShowNameDialog(false);
       window.location.reload();
     } else {
-      toast.error("Please enter a valid name");
+      toast.error(t('game.pleaseEnterValidName'));
     }
   };
 
@@ -563,10 +567,10 @@ export default function GamePage() {
           <CardContent className="pt-6">
             <div className="text-center space-y-4">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-              <p className="text-gray-600">Loading game...</p>
+              <p className="text-gray-600">{t('game.loadingGame')}</p>
               {!isConnected && (
                 <p className="text-yellow-600 text-sm">
-                  Connecting to server...
+                  {t('game.connectingToServer')}
                 </p>
               )}
             </div>
@@ -578,25 +582,37 @@ export default function GamePage() {
 
   const content = (
     <div className="min-h-screen p-4">
+      {/* Confirm leave dialog */}
+      <ConfirmDialog
+        open={showLeaveDialog}
+        onOpenChange={setShowLeaveDialog}
+        onConfirm={handleLeaveGame}
+        title={t('confirmDialog.leaveGameTitle')}
+        description={t('confirmDialog.leaveGameDescription')}
+        confirmText={t('confirmDialog.leave')}
+        cancelText={t('confirmDialog.cancel')}
+        variant="destructive"
+      />
+
       <Dialog open={showNameDialog} onOpenChange={() => {}}>
         <DialogContent
           className="sm:max-w-md"
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogHeader>
-            <DialogTitle>Enter Your Name</DialogTitle>
+            <DialogTitle>{t('game.enterYourName')}</DialogTitle>
             <DialogDescription>
-              Please enter your name to continue playing
+              {t('game.enterNameDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="player-name">Your Name</Label>
+              <Label htmlFor="player-name">{t('game.yourName')}</Label>
               <Input
                 id="player-name"
                 value={nameInput}
                 onChange={(e) => setNameInput(e.target.value)}
-                placeholder="Enter your name"
+                placeholder={t('game.enterNamePlaceholder')}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     handleNameSubmit();
@@ -607,7 +623,7 @@ export default function GamePage() {
           </div>
           <DialogFooter>
             <Button onClick={handleNameSubmit} disabled={!nameInput.trim()}>
-              Continue
+              {t('game.continue')}
             </Button>
           </DialogFooter>
         </DialogContent>

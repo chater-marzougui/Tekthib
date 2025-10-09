@@ -30,6 +30,7 @@ import { PlayerBadge } from "@/components/PlayerBadge";
 import { QRCodeCard } from "@/components/QRCodeDialog";
 import { Switch } from "@/components/ui/switch";
 import { useHeader } from "@/context/HeaderContext";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 function isDuplicatePlayer(players: Player[], newPlayer: Player): boolean {
   return players.some((p) => p.id === newPlayer.id);
@@ -51,6 +52,7 @@ export default function RoomPage() {
   const [nameInput, setNameInput] = useState("");
   const [timerSlideEnabled, setTimerSlideEnabled] = useState(true);
   const [autoPlayTimeout, setAutoPlayTimeout] = useState(45);
+  const [showLeaveDialog, setShowLeaveDialog] = useState(false);
 
   const playerName = localStorage.getItem("playerName") || "";
   const playerId = localStorage.getItem("clientId") || "";
@@ -242,7 +244,7 @@ export default function RoomPage() {
     setHeaderConfig({
       actionButton: {
         label: t('room.leaveRoom'),
-        onClick: () => handleLeaveRoom(),
+        onClick: () => setShowLeaveDialog(true),
         variant: "destructive",
         color: "default",
       },
@@ -320,6 +322,18 @@ export default function RoomPage() {
   // Wrap content with VoiceChatProvider if we have a room
   const content = (
     <div className="min-h-screen p-4">
+      {/* Confirm leave dialog */}
+      <ConfirmDialog
+        open={showLeaveDialog}
+        onOpenChange={setShowLeaveDialog}
+        onConfirm={handleLeaveRoom}
+        title={t('confirmDialog.leaveRoomTitle')}
+        description={t('confirmDialog.leaveRoomDescription')}
+        confirmText={t('confirmDialog.leave')}
+        cancelText={t('confirmDialog.cancel')}
+        variant="destructive"
+      />
+
       {/* Name prompt dialog */}
       <Dialog open={showNameDialog} onOpenChange={() => {}}>
         <DialogContent
@@ -610,7 +624,7 @@ export default function RoomPage() {
 
                 <Button
                   variant="outline"
-                  onClick={handleLeaveRoom}
+                  onClick={() => setShowLeaveDialog(true)}
                   className="w-full"
                 >
                   {t('room.leaveRoom')}
