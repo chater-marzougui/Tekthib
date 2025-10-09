@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keyword Detection Test - Standalone</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        button {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #startBtn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #startBtn.listening {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .status.listening {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            color: #1976d2;
+        }
+
+        .status.error {
+            background: #ffebee;
+            border: 2px solid #f44336;
+            color: #c62828;
+        }
+
+        .detected-word {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .detected-word .emoji {
+            font-size: 4rem;
+            margin-bottom: 10px;
+        }
+
+        .detected-word .word {
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .detected-word .description {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .keywords-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .keyword-card {
+            padding: 20px;
+            border-radius: 8px;
+            background: #f5f5f5;
+            border: 2px solid #ddd;
+            transition: all 0.3s ease;
+        }
+
+        .keyword-card.detected {
+            background: #e8f5e9;
+            border-color: #4caf50;
+        }
+
+        .keyword-card .emoji {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .keyword-card .label {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .keyword-card .desc {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card .number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-card .label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .log {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .log-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .log-item.matched {
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+        }
+
+        .log-item.no-match {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+        }
+
+        .pulse {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: #2196f3;
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.2);
+            }
+        }
+
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge.match {
+            background: #4caf50;
+            color: white;
+        }
+
+        .badge.no-match {
+            background: #9e9e9e;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="card">
+            <h1>🎤 Keyword Detection Test</h1>
+            <p class="subtitle">Test speech recognition for game keywords</p>
+        </div>
+
+        <!-- Controls -->
+        <div class="card">
+            <button id="startBtn" onclick="toggleListening()">
+                Start Listening
+            </button>
+            
+            <div id="status" style="display: none;"></div>
+        </div>
+
+        <!-- Last Detected -->
+        <div id="lastDetected" style="display: none;"></div>
+
+        <!-- Statistics -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="number" id="totalCount">0</div>
+                <div class="label">Total Detected</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="matchedCount">0</div>
+                <div class="label">Matched</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="uniqueCount">0</div>
+                <div class="label">Unique</div>
+            </div>
+        </div>
+
+        <!-- Target Keywords -->
+        <div class="card">
+            <h2 style="margin-bottom: 15px;">🎯 Target Keywords</h2>
+            <div class="keywords-grid" id="keywordsGrid"></div>
+        </div>
+
+        <!-- Detection Log -->
+        <div class="card">
+            <h2>📋 Detection Log</h2>
+            <div class="log" id="detectionLog">
+                <p style="text-align: center; color: #999; padding: 40px;">
+                    No detections yet. Start listening and speak!
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands"></script>
+    
+    <script>
+        const TARGET_KEYWORDS = {
+            'tekthib': { emoji: '🤥', label: 'تكذّب (Tekthib)', desc: "You're lying" },
+            'tahchi_fih': { emoji: '🤔', label: 'تحشي فيه (Tahchi Fih)', desc: "You're bluffing" },
+            'liar': { emoji: '🤥', label: 'Liar', desc: 'English: Liar' },
+            'bluff': { emoji: '🃏', label: 'Bluff', desc: 'English: Bluff' },
+            'kadab': { emoji: '🤥', label: 'كدّاب (Kadab)', desc: 'Liar (noun)' },
+            'kaddeb': { emoji: '🤔', label: 'كدّب (Kaddeb)', desc: 'He lied' }
+        };
+
+        let recognizer = null;
+        let isListening = false;
+        let detections = [];
+        let detectedKeywords = new Set();
+
+        // Initialize keywords grid
+        function initKeywordsGrid() {
+            const grid = document.getElementById('keywordsGrid');
+            Object.entries(TARGET_KEYWORDS).forEach(([key, info]) => {
+                const card = document.createElement('div');
+                card.className = 'keyword-card';
+                card.id = `keyword-${key}`;
+                card.innerHTML = `
+                    <div class="emoji">${info.emoji}</div>
+                    <div class="label">${info.label}</div>
+                    <div class="desc">${info.desc}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        async function toggleListening() {
+            if (isListening) {
+                await stopListening();
+            } else {
+                await startListening();
+            }
+        }
+
+        async function startListening() {
+            const btn = document.getElementById('startBtn');
+            const status = document.getElementById('status');
+            
+            try {
+                btn.textContent = 'Initializing...';
+                btn.disabled = true;
+
+                // Create and load model
+                recognizer = speechCommands.create('BROWSER_FFT');
+                await recognizer.ensureModelLoaded();
+
+                // Start listening
+                await recognizer.listen(result => {
+                    const words = recognizer.wordLabels();
+                    const scores = Array.from(result.scores);
+                    const maxScore = Math.max(...scores);
+                    const maxIndex = scores.indexOf(maxScore);
+                    const detectedWord = words[maxIndex];
+
+                    if (maxScore > 0.7 && detectedWord !== '_background_noise_') {
+                        handleDetection(detectedWord, maxScore);
+                    }
+                }, {
+                    includeSpectrogram: true,
+                    probabilityThreshold: 0.7,
+                    overlapFactor: 0.5
+                });
+
+                isListening = true;
+                btn.textContent = 'Stop Listening';
+                btn.classList.add('listening');
+                btn.disabled = false;
+
+                status.className = 'status listening';
+                status.innerHTML = '<span class="pulse"></span> Listening for keywords...';
+                status.style.display = 'block';
+
+            } catch (error) {
+                console.error('Error starting:', error);
+                status.className = 'status error';
+                status.textContent = 'Error: ' + error.message;
+                status.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Start Listening';
+            }
+        }
+
+        async function stopListening() {
+            if (recognizer) {
+                await recognizer.stopListening();
+                recognizer = null;
+            }
+
+            isListening = false;
+            const btn = document.getElementById('startBtn');
+            btn.textContent = 'Start Listening';
+            btn.classList.remove('listening');
+
+            document.getElementById('status').style.display = 'none';
+            document.getElementById('lastDetected').style.display = 'none';
+        }
+
+        function handleDetection(word, confidence) {
+            const normalized = word.toLowerCase().replace(/[^a-z_]/g, '');
+            const matched = Object.keys(TARGET_KEYWORDS).find(k => 
+                normalized.includes(k) || k.includes(normalized)
+            );
+
+            const detection = {
+                word: matched || word,
+                timestamp: Date.now(),
+                matched: !!matched,
+                confidence
+            };
+
+            detections.unshift(detection);
+            if (detections.length > 50) detections.pop();
+
+            if (matched) {
+                detectedKeywords.add(matched);
+                showLastDetected(matched);
+                highlightKeyword(matched);
+            }
+
+            updateStats();
+            updateLog();
+        }
+
+        function showLastDetected(keyword) {
+            const lastDetected = document.getElementById('lastDetected');
+            const info = TARGET_KEYWORDS[keyword];
+            
+            lastDetected.className = 'detected-word';
+            lastDetected.innerHTML = `
+                <div class="emoji">${info.emoji}</div>
+                <div class="word">${info.label}</div>
+                <div class="description">${info.desc}</div>
+            `;
+            lastDetected.style.display = 'block';
+
+            setTimeout(() => {
+                lastDetected.style.display = 'none';
+            }, 5000);
+        }
+
+        function highlightKeyword(keyword) {
+            const card = document.getElementById(`keyword-${keyword}`);
+            if (card) {
+                card.classList.add('detected');
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalCount').textContent = detections.length;
+            document.getElementById('matchedCount').textContent = 
+                detections.filter(d => d.matched).length;
+            document.getElementById('uniqueCount').textContent = detectedKeywords.size;
+        }
+
+        function updateLog() {
+            const log = document.getElementById('detectionLog');
+            log.innerHTML = detections.map(d => {
+                const info = TARGET_KEYWORDS[d.word] || { emoji: '❓', label: d.word };
+                const time = new Date(d.timestamp).toLocaleTimeString();
+                return `
+                    <div class="log-item ${d.matched ? 'matched' : 'no-match'}">
+                        <div>
+                            <span style="font-size: 1.5rem; margin-right: 10px;">${info.emoji}</span>
+                            <strong>${info.label || d.word}</strong>
+                            <span style="color: #999; margin-left: 10px; font-size: 0.85rem;">${time}</span>
+                        </div>
+                        <span class="badge ${d.matched ? 'match' : 'no-match'}">
+                            ${d.matched ? '✓ Match' : 'No Match'}
+                        </span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Initialize on load
+        initKeywordsGrid();
+    </script>
+</body>
+</html>

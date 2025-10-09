@@ -6,6 +6,7 @@ import HomePage from "./pages/HomePage";
 import RoomPage from "./pages/RoomPage";
 import GamePage from "./pages/GamePage";
 import AdminPage from "./pages/AdminPage";
+import KeywordTestPage from "./pages/KeywordTestPage";
 import { Toaster } from "sonner";
 import { SoundProvider } from "./context/SoundPlayerContext";
 import { ThemeProvider } from "./context/ThemeProvider";
@@ -32,6 +33,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/keyword-test" element={<KeywordTestPage />} />
         <Route
           path="/*"
           element={

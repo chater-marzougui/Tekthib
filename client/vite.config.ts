@@ -13,6 +13,27 @@ export default defineConfig({
       "@shared": path.resolve(__dirname, "../shared/src/types"),
     },
   },
+  optimizeDeps: {
+    exclude: ["@tensorflow/tfjs", "@tensorflow-models/speech-commands"],
+    esbuildOptions: {
+      define: {
+        global: "globalThis",
+      },
+    },
+  },
+  build: {
+    rollupOptions: {
+      onwarn(warning, warn) {
+        if (warning.code === "MODULE_LEVEL_DIRECTIVE") {
+          return;
+        }
+        warn(warning);
+      },
+    },
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
   server: {
     port: 5173,
     host: true,
