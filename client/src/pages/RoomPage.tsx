@@ -24,7 +24,7 @@ import type { Player } from "shared";
 import { toast } from "sonner";
 import { VoiceChatProvider } from "@/context/VoiceChatContext";
 import VoiceChat from "@/components/chat/VoiceChat";
-import { Trash } from "lucide-react";
+import { Trash, Gamepad2, Bot, Check, Rocket } from "lucide-react";
 import { PlayerBadge } from "@/components/PlayerBadge";
 import { QRCodeCard } from "@/components/QRCodeDialog";
 import { Switch } from "@/components/ui/switch";
@@ -338,7 +338,9 @@ export default function RoomPage() {
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-gray-900">🎮 Game Lobby</h1>
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center justify-center gap-2">
+            <Gamepad2 className="w-8 h-8" /> Game Lobby
+          </h1>
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
               {error}
@@ -388,7 +390,9 @@ export default function RoomPage() {
                           <div className="font-medium">
                             {player.name}
                             {player.id === playerId && " (You)"}
-                            {player.isBot && " 🤖"}
+                            {player.isBot && (
+                              <Bot className="w-4 h-4 inline-block ml-1" />
+                            )}
                           </div>
                           {player.id === players[0]?.id && (
                             <div className="text-xs text-gray-500">Host</div>
@@ -418,8 +422,8 @@ export default function RoomPage() {
                           disabled={player.id !== playerId}
                         >
                           {player.isReady || player.isBot ? (
-                            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                              Ready ✓
+                            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium flex items-center gap-1">
+                              Ready <Check className="w-3 h-3" />
                             </span>
                           ) : (
                             <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
@@ -473,7 +477,13 @@ export default function RoomPage() {
                   }`}
                   variant={isReady ? "default" : "outline"}
                 >
-                  {isReady ? "✓ Ready!" : "Mark as Ready"}
+                  {isReady ? (
+                    <span className="flex items-center gap-2">
+                      <Check className="w-4 h-4" /> Ready!
+                    </span>
+                  ) : (
+                    "Mark as Ready"
+                  )}
                 </Button>
 
                 {isHost && (
@@ -566,9 +576,13 @@ export default function RoomPage() {
                       className="w-full cursor-pointer"
                       size="lg"
                     >
-                      {canStartGame
-                        ? "🚀 Start Game"
-                        : "Waiting for players..."}
+                      {canStartGame ? (
+                        <span className="flex items-center gap-2">
+                          <Rocket className="w-5 h-5" /> Start Game
+                        </span>
+                      ) : (
+                        "Waiting for players..."
+                      )}
                     </Button>
                   </>
                 )}

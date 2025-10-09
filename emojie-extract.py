@@ -34,7 +34,7 @@ files_with_emojis = 0
 print(f" Searching for emojis in: {PROJECT_PATH}")
 print(f" Output file: {OUTPUT_FILE}\n")
 
-toSkip_dirs = {"node_modules", ".git", "server"}
+toSkip_dirs = {"node_modules", ".git", "server", "dist", "build", "out"}
 toSkip_files = {"BotChatMessages.ts", "EndGameDialog.tsx", "RenderCard.tsx"}
 
 for root, _, files in os.walk(PROJECT_PATH):

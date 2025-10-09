@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Player as BasePlayer } from "shared";
 import { PlayerBadge } from "../PlayerBadge";
+import { Bot, Trophy } from "lucide-react";
 
 interface Player extends BasePlayer {
   isCurrentTurn: boolean;
@@ -37,7 +38,9 @@ export default function PlayerList({
                   <div>
                     <div className="font-medium">
                       {player.name}
-                      {player.isBot && " 🤖"}
+                      {player.isBot && (
+                        <Bot className="w-4 h-4 inline-block ml-1" />
+                      )}
                       {player.id === currentPlayerId && (
                         <span className="text-xs text-green-600 ml-2">
                           (You)
@@ -57,8 +60,8 @@ export default function PlayerList({
                     </div>
                   )}
                   {player.cardCount === 0 && (
-                    <div className="text-green-600 font-semibold text-sm">
-                      🏆 Winner!
+                    <div className="flex items-center gap-1 text-green-600 font-semibold text-sm">
+                      <Trophy className="w-4 h-4" /> Winner!
                     </div>
                   )}
                 </div>

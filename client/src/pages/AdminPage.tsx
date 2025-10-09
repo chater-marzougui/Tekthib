@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import type { Room as BaseRoom, GameState } from "@/types";
-import { Trash } from "lucide-react";
+import { Trash, Lock, Gamepad2, Home, Users, RotateCw, Pause, Circle, Check, Clock } from "lucide-react";
 
 interface Room extends BaseRoom {
   gameState: GameState | null;
@@ -132,7 +132,9 @@ export default function AdminPage() {
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 flex items-center justify-center p-4">
         <Card className="w-96">
           <CardHeader>
-            <CardTitle>🔐 Admin Login</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Lock className="w-5 h-5" /> Admin Login
+            </CardTitle>
             <CardDescription>
               Enter admin password to view system state
             </CardDescription>
@@ -176,8 +178,8 @@ export default function AdminPage() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              🎮 System Admin Dashboard
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+              <Gamepad2 className="w-8 h-8" /> System Admin Dashboard
             </h1>
             <p className="text-gray-600">Real-time system state monitoring</p>
           </div>
@@ -187,13 +189,27 @@ export default function AdminPage() {
               onClick={() => setAutoRefresh(!autoRefresh)}
               className={autoRefresh ? "bg-green-100" : ""}
             >
-              {autoRefresh ? "🔄 Auto-refresh ON" : "⏸️ Auto-refresh OFF"}
+              {autoRefresh ? (
+                <>
+                  <RotateCw className="w-4 h-4 mr-2" /> Auto-refresh ON
+                </>
+              ) : (
+                <>
+                  <Pause className="w-4 h-4 mr-2" /> Auto-refresh OFF
+                </>
+              )}
             </Button>
             <Button
               onClick={() => fetchSystemState(password)}
               disabled={isLoading}
             >
-              {isLoading ? "Refreshing..." : "🔄 Refresh"}
+              {isLoading ? (
+                "Refreshing..."
+              ) : (
+                <>
+                  <RotateCw className="w-4 h-4 mr-2" /> Refresh
+                </>
+              )}
             </Button>
             <Button
               variant="outline"
@@ -212,7 +228,9 @@ export default function AdminPage() {
         <div className="grid md:grid-cols-2 gap-4">
           <Card>
             <CardHeader>
-              <CardTitle>🏠 Total Active Rooms</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Home className="w-5 h-5" /> Total Active Rooms
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-4xl font-bold text-blue-600">
@@ -222,7 +240,9 @@ export default function AdminPage() {
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>👥 Total Players Online</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5" /> Total Players Online
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-4xl font-bold text-green-600">
@@ -275,8 +295,8 @@ export default function AdminPage() {
                             Players: {room.playerCount}/{room.maxPlayers}
                           </div>
                           {room.gameState && (
-                            <div className="text-xs text-green-600 font-medium">
-                              🎮 Game in Progress
+                            <div className="flex items-center gap-1 text-xs text-green-600 font-medium">
+                              <Gamepad2 className="w-3 h-3" /> Game in Progress
                             </div>
                           )}
                         </div>
@@ -338,22 +358,35 @@ export default function AdminPage() {
                                 <span
                                   className={
                                     player.isConnected
-                                      ? "text-green-600"
-                                      : "text-red-600"
+                                      ? "text-green-600 flex items-center gap-1"
+                                      : "text-red-600 flex items-center gap-1"
                                   }
                                 >
-                                  {player.isConnected
-                                    ? "🟢 Online"
-                                    : "🔴 Offline"}
+                                  <Circle
+                                    className={`w-2 h-2 fill-current ${
+                                      player.isConnected
+                                        ? "text-green-600"
+                                        : "text-red-600"
+                                    }`}
+                                  />
+                                  {player.isConnected ? "Online" : "Offline"}
                                 </span>
                                 <span
                                   className={
                                     player.isReady
-                                      ? "text-green-600"
-                                      : "text-gray-500"
+                                      ? "text-green-600 flex items-center gap-1"
+                                      : "text-gray-500 flex items-center gap-1"
                                   }
                                 >
-                                  {player.isReady ? "✓ Ready" : "⏳ Not Ready"}
+                                  {player.isReady ? (
+                                    <>
+                                      <Check className="w-3 h-3" /> Ready
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Clock className="w-3 h-3" /> Not Ready
+                                    </>
+                                  )}
                                 </span>
                                 {room.gameState && (
                                   <span className="text-blue-600">

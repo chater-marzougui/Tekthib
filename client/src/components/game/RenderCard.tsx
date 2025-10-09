@@ -220,7 +220,7 @@ export const RenderCard = (
       case "spades":
         return "♠";
       case "joker":
-        return "🃏";
+        return "";
     }
   };
 

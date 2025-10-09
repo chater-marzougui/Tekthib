@@ -1,6 +1,7 @@
 import type { Player } from "shared";
 import { Badge } from "./ui/badge";
 import { useAvatar } from "@/hooks/useAvatar";
+import { Bot } from "lucide-react";
 
 interface PlayerBadgeProps {
   player: Player;
@@ -34,7 +35,7 @@ export const PlayerBadge = ({ player, playerId }: PlayerBadgeProps) => {
             : "bg-gray-200 text-gray-800"
       } flex items-center justify-center rounded-full text-lg font-bold`}
     >
-      {isBot ? "🤖" : player.name.charAt(0).toUpperCase()}
+      {isBot ? <Bot className="w-5 h-5" /> : player.name.charAt(0).toUpperCase()}
     </Badge>
   );
 };

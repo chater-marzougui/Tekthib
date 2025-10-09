@@ -1,5 +1,5 @@
 import React from "react";
-import { Heart, Code, ExternalLink, Github, Gamepad2 } from "lucide-react";
+import { Heart, Code, ExternalLink, Github, Gamepad2, Flag } from "lucide-react";
 
 const MinimalFooter: React.FC = () => {
   return (
@@ -43,8 +43,8 @@ const MinimalFooter: React.FC = () => {
               <span>Source</span>
             </a>
             <span className="text-background/30">•</span>
-            <span className="text-background/50">
-              Made in Tunisia 🇹🇳
+            <span className="flex items-center gap-1 text-background/50">
+              Made in Tunisia <Flag className="w-3.5 h-3.5 text-red-500" />
             </span>
           </div>
         </div>

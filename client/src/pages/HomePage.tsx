@@ -20,6 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Gamepad2, DoorOpen, Globe, Lock, Users, Target, Layers, Frown, Trophy, Spade } from "lucide-react";
 
 const SERVER_URL = import.meta.env.VITE_API_URL || "https://takthib-a00f145250bc.herokuapp.com";
 
@@ -89,7 +90,7 @@ export default function HomePage() {
         navigate(`/room/${roomCode}`);
       })
       .catch((error) => {
-        toast.error(`❌ ${error.message}`);
+        toast.error(error.message);
       });
   };
 
@@ -139,7 +140,7 @@ export default function HomePage() {
         setRoomPassword("");
       })
       .catch((error) => {
-        toast.error(`❌ ${error.message}`);
+        toast.error(error.message);
       });
   };
 
@@ -156,8 +157,8 @@ export default function HomePage() {
         <div className="w-full max-w-2xl space-y-8">
           {/* Game Title and Description */}
           <div className="text-center space-y-4">
-            <h1 className="text-5xl font-bold text-gray-900 mb-2">
-              🃏 Tekthib
+            <h1 className="text-5xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-3">
+              <Spade className="w-12 h-12" /> Tekthib
             </h1>
             <p className="text-xl text-gray-600 mb-4">
               Tunisian Online Card Game
@@ -174,7 +175,9 @@ export default function HomePage() {
             {/* Create Room Card */}
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <CardTitle className="text-center">🎮 Create Room</CardTitle>
+                <CardTitle className="text-center flex items-center justify-center gap-2">
+                  <Gamepad2 className="w-5 h-5" /> Create Room
+                </CardTitle>
                 <CardDescription className="text-center">
                   Start a new game and invite friends
                 </CardDescription>
@@ -198,7 +201,7 @@ export default function HomePage() {
                       onClick={() => setIsPublicRoom(true)}
                       className="flex-1"
                     >
-                      🌍 Public
+                      <Globe className="w-4 h-4 mr-2" /> Public
                     </Button>
                     <Button
                       type="button"
@@ -206,7 +209,7 @@ export default function HomePage() {
                       onClick={() => setIsPublicRoom(false)}
                       className="flex-1"
                     >
-                      🔒 Private
+                      <Lock className="w-4 h-4 mr-2" /> Private
                     </Button>
                   </div>
                   <p className="text-xs text-gray-500">
@@ -228,7 +231,9 @@ export default function HomePage() {
             {/* Join Room Card */}
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <CardTitle className="text-center">🚪 Join Room</CardTitle>
+                <CardTitle className="text-center flex items-center justify-center gap-2">
+                  <DoorOpen className="w-5 h-5" /> Join Room
+                </CardTitle>
                 <CardDescription className="text-center">
                   Join an existing game with a room code
                 </CardDescription>
@@ -269,7 +274,9 @@ export default function HomePage() {
           {rooms.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-center">🎮 Available Rooms</CardTitle>
+                <CardTitle className="text-center flex items-center justify-center gap-2">
+                  <Gamepad2 className="w-5 h-5" /> Available Rooms
+                </CardTitle>
                 <CardDescription className="text-center">
                   Click on a room to join
                 </CardDescription>
@@ -288,12 +295,12 @@ export default function HomePage() {
                         <div className="flex items-center gap-2">
                           <span className="font-semibold">{room.hostName}'s Room</span>
                           {room.isPublic ? (
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                              🌍 Public
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded flex items-center gap-1">
+                              <Globe className="w-3 h-3" /> Public
                             </span>
                           ) : (
-                            <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">
-                              🔒 Private
+                            <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded flex items-center gap-1">
+                              <Lock className="w-3 h-3" /> Private
                             </span>
                           )}
                           {room.inProgress && (
@@ -302,8 +309,8 @@ export default function HomePage() {
                             </span>
                           )}
                         </div>
-                        <div className="text-sm text-gray-600">
-                          👥 {room.playerCount}/{room.maxPlayers}
+                        <div className="flex items-center gap-1 text-sm text-gray-600">
+                          <Users className="w-4 h-4" /> {room.playerCount}/{room.maxPlayers}
                         </div>
                       </div>
                     </div>
@@ -316,32 +323,42 @@ export default function HomePage() {
           {/* Game Rules Summary */}
           <Card className="border-dashed">
             <CardHeader>
-              <CardTitle className="text-center">📖 Quick Rules</CardTitle>
+              <CardTitle className="text-center flex items-center justify-center gap-2">
+                <Layers className="w-5 h-5" /> Quick Rules
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-4 text-sm">
                 <div>
-                  <h4 className="font-semibold mb-2">🎯 Goal</h4>
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <Target className="w-4 h-4" /> Goal
+                  </h4>
                   <p className="text-gray-600">
                     Be the first to get rid of all your cards. Last player with
                     cards loses.
                   </p>
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-2">🃏 Gameplay</h4>
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <Spade className="w-4 h-4" /> Gameplay
+                  </h4>
                   <p className="text-gray-600">
                     Play cards face-down and announce a rank. Others can
                     challenge if they think you're lying!
                   </p>
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-2">🤥 Bluffing</h4>
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <Frown className="w-4 h-4" /> Bluffing
+                  </h4>
                   <p className="text-gray-600">
                     You don't need the cards you claim to have. Bluff wisely!
                   </p>
                 </div>
                 <div>
-                  <h4 className="font-semibold mb-2">🏆 Special Rule</h4>
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <Trophy className="w-4 h-4" /> Special Rule
+                  </h4>
                   <p className="text-gray-600">
                     Collect all 4 cards of the same rank to remove them
                     permanently.
