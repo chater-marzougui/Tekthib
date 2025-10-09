@@ -78,7 +78,7 @@
     "gameSettings": "Game Settings",
     "shareRoomCode": "Share this code with friends:",
     "waitingForHost": "Waiting for host to start the game...",
-    "allPlayersReady": "All players ready! Click Start Game to begin.",
+    "allPlayersReady": "All players must be ready before the host can start the game.",
     "notAllReady": "Not all players are ready yet.",
     "youAreHost": "You are the host",
     "playerJoined": "{{name}} joined the room",
@@ -87,7 +87,22 @@
     "youAreReady": "You are ready!",
     "youAreNotReady": "Mark yourself as ready to play",
     "needMorePlayers": "Need at least 3 players to start",
-    "tooFewPlayers": "Not enough players. Minimum 3 required."
+    "tooFewPlayers": "Not enough players. Minimum 3 required.",
+    "enterYourName": "Enter Your Name",
+    "enterNameToJoin": "Please enter your name to join the room",
+    "yourName": "Your Name",
+    "joinRoom": "Join Room",
+    "gameLobby": "Game Lobby",
+    "connectingToServer": "Connecting to server...",
+    "roomCode": "Room Code",
+    "playersCount": "Players ({{current}}/{{max}})",
+    "waitingForPlayers": "Waiting for players to join and get ready...",
+    "you": "You",
+    "emptySlot": "Waiting for players...",
+    "yourStatus": "Your Status",
+    "playingAs": "Playing as",
+    "secondsPerTurn": "seconds per turn",
+    "timerRange": "Range: 10-300 seconds"
   },
   "game": {
     "yourTurn": "Your turn",
@@ -191,6 +206,15 @@
     "cards": "cards",
     "currentTurn": "Current Turn",
     "winner": "Winner!"
+  },
+  "playerControls": {
+    "claimThisRank": "Claim this rank",
+    "playCards": "Play Cards"
+  },
+  "centerPile": {
+    "title": "Center Pile",
+    "waitingForFirstPlay": "Waiting for first play...",
+    "gameWillBegin": "The game will begin once someone plays their first cards"
   },
   "confirmDialog": {
     "leaveRoomTitle": "Leave Room?",

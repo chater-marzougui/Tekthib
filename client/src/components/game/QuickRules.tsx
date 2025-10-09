@@ -1,13 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import i18n from "@/i18n";
+import { useTextDirection } from "@/hooks/useTextDirection";
 
 const QuickRules = () => {
   const { t } = useTranslation();
-  const currentLang = i18n.language || window.navigator.language;
-  const direction = ["ar", "he", "fa", "ur"].includes(currentLang.split("-")[0])
-    ? "rtl"
-    : "ltr";
+  const direction = useTextDirection();
 
   return (
     <Card dir={direction}>

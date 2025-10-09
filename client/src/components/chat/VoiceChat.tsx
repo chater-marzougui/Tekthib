@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useVoiceChatContext } from "@/context/VoiceChatContext";
 import type { Player } from "shared";
+import { useTextDirection } from "@/hooks/useTextDirection";
 
 interface VoiceChatProps {
   players: Player[];
@@ -32,6 +33,8 @@ export default function VoiceChat({
     mutePlayerMic,
   } = useVoiceChatContext();
 
+  const direction = useTextDirection();
+
   const handleToggleVoice = () => {
     if (isVoiceEnabled) {
       disableVoiceChat();
@@ -46,7 +49,7 @@ export default function VoiceChat({
   );
 
   return (
-    <Card>
+    <Card  dir={direction}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Icon icon="mdi:phone" className="w-5 h-5" />

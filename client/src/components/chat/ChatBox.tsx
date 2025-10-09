@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useWebSocketContext } from "@/context/WebSocketContext";
 import type { WSMessage } from "shared";
 import { Icon } from "@iconify/react";
+import { useTextDirection } from "@/hooks/useTextDirection";
 
 interface ChatMessage {
   id: string;
@@ -79,6 +80,7 @@ export default function ChatBox({
   const [inputMessage, setInputMessage] = useState("");
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const { sendMessage, registerHandler } = useWebSocketContext();
+  const direction = useTextDirection();
 
   const allMessages = [...messages, ...systemMessages].sort(
     (a, b) => a.timestamp - b.timestamp,
@@ -145,7 +147,7 @@ export default function ChatBox({
   }, [allMessages]);
 
   return (
-    <Card className="h-96 flex flex-col">
+    <Card className="h-96 flex flex-col" dir={direction}>
       <CardHeader className="flex-shrink-0">
         <CardTitle>{t('chat.title')}</CardTitle>
       </CardHeader>
@@ -232,7 +234,7 @@ export default function ChatBox({
         </div>
 
         {/* Input Area */}
-        <div className="flex items-center gap-2 p-2 border-t">
+        <div className="flex items-center gap-2 p-2 border-t" dir="ltr">
           <Input
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
@@ -240,6 +242,7 @@ export default function ChatBox({
             placeholder={t('chat.typeMessage')}
             className="flex-1 border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
             autoComplete="off"
+            dir={direction}
           />
           <Button
             onClick={handleSendMessage}

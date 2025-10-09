@@ -31,6 +31,7 @@ import { QRCodeCard } from "@/components/QRCodeDialog";
 import { Switch } from "@/components/ui/switch";
 import { useHeader } from "@/context/HeaderContext";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useTextDirection } from "@/hooks/useTextDirection";
 
 function isDuplicatePlayer(players: Player[], newPlayer: Player): boolean {
   return players.some((p) => p.id === newPlayer.id);
@@ -53,6 +54,7 @@ export default function RoomPage() {
   const [timerSlideEnabled, setTimerSlideEnabled] = useState(true);
   const [autoPlayTimeout, setAutoPlayTimeout] = useState(45);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
+  const direction = useTextDirection();
 
   const playerName = localStorage.getItem("playerName") || "";
   const playerId = localStorage.getItem("clientId") || "";
@@ -242,8 +244,14 @@ export default function RoomPage() {
 
   useEffect(() => {
     setHeaderConfig({
+      middleElement: (
+        <h2 className="text-xl font-bold flex items-center justify-center gap-2">
+          <Icon icon="mdi:gamepad-variant" className="w-8 h-8" />{" "}
+          {t("room.gameLobby")}
+        </h2>
+      ),
       actionButton: {
-        label: t('room.leaveRoom'),
+        label: t("room.leaveRoom"),
         onClick: () => setShowLeaveDialog(true),
         variant: "destructive",
         color: "default",
@@ -252,10 +260,11 @@ export default function RoomPage() {
 
     return () => {
       setHeaderConfig({
+        middleElement: undefined,
         actionButton: undefined,
       });
     };
-  }, [t]);
+  }, [t, roomCode]);
 
   const handleReadyToggle = () => {
     const newReadyState = !isReady;
@@ -327,10 +336,10 @@ export default function RoomPage() {
         open={showLeaveDialog}
         onOpenChange={setShowLeaveDialog}
         onConfirm={handleLeaveRoom}
-        title={t('confirmDialog.leaveRoomTitle')}
-        description={t('confirmDialog.leaveRoomDescription')}
-        confirmText={t('confirmDialog.leave')}
-        cancelText={t('confirmDialog.cancel')}
+        title={t("confirmDialog.leaveRoomTitle")}
+        description={t("confirmDialog.leaveRoomDescription")}
+        confirmText={t("confirmDialog.leave")}
+        cancelText={t("confirmDialog.cancel")}
         variant="destructive"
       />
 
@@ -341,19 +350,17 @@ export default function RoomPage() {
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogHeader>
-            <DialogTitle>Enter Your Name</DialogTitle>
-            <DialogDescription>
-              Please enter your name to join the room
-            </DialogDescription>
+            <DialogTitle>{t("room.enterYourName")}</DialogTitle>
+            <DialogDescription>{t("room.enterNameToJoin")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="player-name">Your Name</Label>
+              <Label htmlFor="player-name">{t("room.yourName")}</Label>
               <Input
                 id="player-name"
                 value={nameInput}
                 onChange={(e) => setNameInput(e.target.value)}
-                placeholder="Enter your name"
+                placeholder={t("room.enterYourName")}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     handleNameSubmit();
@@ -364,7 +371,7 @@ export default function RoomPage() {
           </div>
           <DialogFooter>
             <Button onClick={handleNameSubmit} disabled={!nameInput.trim()}>
-              Join Room
+              {t("room.joinRoom")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -373,9 +380,6 @@ export default function RoomPage() {
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold flex items-center justify-center gap-2">
-            <Icon icon="mdi:gamepad-variant" className="w-8 h-8" /> Game Lobby
-          </h1>
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
               {error}
@@ -383,19 +387,21 @@ export default function RoomPage() {
           )}
           {!isConnected && (
             <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative">
-              Connecting to server...
+              {t("room.connectingToServer")}
             </div>
           )}
           <div className="flex items-center justify-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-lg font-semibold">Room Code:</span>
+              <span className="text-lg font-semibold">
+                {t("room.roomCode")}:
+              </span>
               <Button
                 variant="outline"
                 onClick={copyRoomCode}
                 className="font-mono text-lg px-4 cursor-pointer"
                 disabled={!roomCode}
               >
-                {roomCode || "Loading..."}
+                {roomCode || t("common.loading")}
               </Button>
               {roomCode && <QRCodeCard roomCode={roomCode} />}
             </div>
@@ -405,12 +411,12 @@ export default function RoomPage() {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Players List */}
           <div className="lg:col-span-2 space-y-6">
-            <Card>
+            <Card dir={direction}>
               <CardHeader>
-                <CardTitle>Players ({players.length}/10)</CardTitle>
-                <CardDescription>
-                  Waiting for players to join and get ready...
-                </CardDescription>
+                <CardTitle>
+                  {t("room.playersCount", { current: players.length, max: 10 })}
+                </CardTitle>
+                <CardDescription>{t("room.waitingForPlayers")}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -424,13 +430,18 @@ export default function RoomPage() {
                         <div>
                           <div className="font-medium">
                             {player.name}
-                            {player.id === playerId && " (You)"}
+                            {player.id === playerId && ` (${t("room.you")})`}
                             {player.isBot && (
-                              <Icon icon="mdi:robot" className="w-4 h-4 inline-block ml-1" />
+                              <Icon
+                                icon="mdi:robot"
+                                className="w-4 h-4 inline-block ml-1"
+                              />
                             )}
                           </div>
                           {player.id === players[0]?.id && (
-                            <div className="text-xs text-gray-500">{t('room.youAreHost')}</div>
+                            <div className="text-xs text-gray-500">
+                              {t("room.youAreHost")}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -458,11 +469,12 @@ export default function RoomPage() {
                         >
                           {player.isReady || player.isBot ? (
                             <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium flex items-center gap-1">
-                              {t('room.ready')} <Icon icon="mdi:check" className="w-3 h-3" />
+                              {t("room.ready")}{" "}
+                              <Icon icon="mdi:check" className="w-3 h-3" />
                             </span>
                           ) : (
                             <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
-                              {t('room.notReady')}
+                              {t("room.notReady")}
                             </span>
                           )}
                         </Button>
@@ -478,7 +490,7 @@ export default function RoomPage() {
                         className="flex items-center p-3 bg-card rounded-lg border-2 border-dashed border-gray-300"
                       >
                         <div className="text-gray-400">
-                          {t('room.waiting')}
+                          {t("room.emptySlot")}
                         </div>
                       </div>
                     )
@@ -494,15 +506,17 @@ export default function RoomPage() {
           </div>
 
           {/* Game Controls */}
-          <div className="space-y-6">
+          <div className="space-y-6" dir={direction}>
             {/* Ready Status */}
             <Card>
               <CardHeader>
-                <CardTitle>Your Status</CardTitle>
+                <CardTitle>{t("room.yourStatus")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="text-center">
-                  <div className="text-sm text-gray-600 mb-1">Playing as:</div>
+                  <div className="text-sm text-gray-600 mb-1">
+                    {t("room.playingAs")}:
+                  </div>
                   <div className="font-semibold text-lg">{playerName}</div>
                 </div>
                 <Button
@@ -514,10 +528,11 @@ export default function RoomPage() {
                 >
                   {isReady ? (
                     <span className="flex items-center gap-2">
-                      <Icon icon="mdi:check" className="w-4 h-4" /> {t('room.youAreReady')}
+                      <Icon icon="mdi:check" className="w-4 h-4" />{" "}
+                      {t("room.youAreReady")}
                     </span>
                   ) : (
-                    t('room.youAreNotReady')
+                    t("room.youAreNotReady")
                   )}
                 </Button>
 
@@ -525,7 +540,7 @@ export default function RoomPage() {
                   <>
                     <div className="space-y-2">
                       <div className="text-sm font-medium text-gray-700">
-                        {t('room.addBots')}
+                        {t("room.addBots")}
                       </div>
                       <div className="flex gap-2">
                         {Array.from({ length: 3 }).map((_, index) => (
@@ -552,10 +567,10 @@ export default function RoomPage() {
                               htmlFor="auto-play"
                               className="text-sm font-medium"
                             >
-                              {t('room.autoPlayTimer')}
+                              {t("room.autoPlayTimer")}
                             </Label>
                             <div className="text-xs text-gray-500">
-                              {t('room.autoPlayTimerDescription')}
+                              {t("room.autoPlayTimerDescription")}
                             </div>
                           </div>
                           <Switch
@@ -576,7 +591,7 @@ export default function RoomPage() {
                         {timerSlideEnabled && (
                           <div className="space-y-2 pt-2 border-t">
                             <Label htmlFor="timer-duration" className="text-sm">
-                              {t('room.timerDuration')}
+                              {t("room.timerDuration")}
                             </Label>
                             <div className="flex items-center gap-2">
                               <Input
@@ -594,11 +609,11 @@ export default function RoomPage() {
                                 className="w-24"
                               />
                               <span className="text-sm text-gray-500">
-                                seconds per turn
+                                {t("room.secondsPerTurn")}
                               </span>
                             </div>
                             <div className="text-xs text-gray-400">
-                              Range: 10-300 seconds
+                              {t("room.timerRange")}
                             </div>
                           </div>
                         )}
@@ -613,10 +628,11 @@ export default function RoomPage() {
                     >
                       {canStartGame ? (
                         <span className="flex items-center gap-2">
-                          <Icon icon="mdi:rocket-launch" className="w-5 h-5" /> {t('room.startGame')}
+                          <Icon icon="mdi:rocket-launch" className="w-5 h-5" />{" "}
+                          {t("room.startGame")}
                         </span>
                       ) : (
-                        t('room.waiting')
+                        t("room.waiting")
                       )}
                     </Button>
                   </>
@@ -627,7 +643,7 @@ export default function RoomPage() {
                   onClick={() => setShowLeaveDialog(true)}
                   className="w-full"
                 >
-                  {t('room.leaveRoom')}
+                  {t("room.leaveRoom")}
                 </Button>
               </CardContent>
             </Card>
@@ -637,25 +653,25 @@ export default function RoomPage() {
             )}
 
             {/* Game Info */}
-            <Card>
+            <Card dir={direction}>
               <CardHeader>
-                <CardTitle>{t('room.gameRequirements')}</CardTitle>
+                <CardTitle>{t("room.gameRequirements")}</CardTitle>
               </CardHeader>
               <CardContent className="text-sm space-y-2">
                 <div className="flex justify-between">
-                  <span>{t('room.minPlayers')}:</span>
+                  <span>{t("room.minPlayers")}:</span>
                   <span className="font-medium">3</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>{t('room.maxPlayers')}:</span>
+                  <span>{t("room.maxPlayers")}:</span>
                   <span className="font-medium">10</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>{t('room.cardsPerDeck')}:</span>
+                  <span>{t("room.cardsPerDeck")}:</span>
                   <span className="font-medium">108</span>
                 </div>
                 <div className="text-xs text-gray-500 mt-3">
-                  All players must be ready before the host can start the game.
+                  {t("room.allPlayersReady")}
                 </div>
               </CardContent>
             </Card>

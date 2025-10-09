@@ -4,7 +4,7 @@ import { useHeader } from "@/context/HeaderContext";
 
 export function Header() {
   const { headerState } = useHeader();
-  const { actionButton, showLogo, logoUrl, showName, appName } = headerState;
+  const { actionButton, showLogo, logoUrl, showName, appName, middleElement } = headerState;
   return (
     <header
       className="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60"
@@ -22,6 +22,11 @@ export function Header() {
               {appName}
             </h1>
           )}
+        </div>
+
+        {/* Center - Custom Element */}
+        <div className="flex-1 flex justify-center">
+          {middleElement}
         </div>
 
         {/* Right Side - Action Button and NavUser */}

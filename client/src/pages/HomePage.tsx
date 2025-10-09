@@ -22,6 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Icon } from "@iconify/react";
+import { useTextDirection } from "@/hooks/useTextDirection";
 
 const SERVER_URL = import.meta.env.VITE_API_URL || "https://takthib-a00f145250bc.herokuapp.com";
 
@@ -46,6 +47,7 @@ export default function HomePage() {
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [roomPassword, setRoomPassword] = useState("");
   const navigate = useNavigate();
+  const direction = useTextDirection();
 
   // Fetch rooms on component mount and periodically
   useEffect(() => {
@@ -147,7 +149,7 @@ export default function HomePage() {
   };
 
   return (
-    <>
+    <div dir={direction}>
       <Seo
         title="Tekthib - Tunisian Online Card Game"
         description="Play Tekthib, the ultimate Tunisian bluffing card game online! Create rooms, invite friends, and master the art of deception."
@@ -382,7 +384,7 @@ export default function HomePage() {
                 onChange={(e) => setRoomPassword(e.target.value.toUpperCase())}
                 placeholder={t('home.enterRoomCode')}
                 maxLength={8}
-                onKeyPress={(e) => {
+                onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     handlePrivateRoomJoin();
                   }
@@ -403,6 +405,6 @@ export default function HomePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }

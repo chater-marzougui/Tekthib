@@ -13,6 +13,7 @@ export interface HeaderActionButton {
   readonly color?: string;
   readonly disabled?: boolean;
   readonly loading?: boolean;
+  readonly middleElement?: ReactNode;
 }
 
 interface HeaderState {
@@ -21,6 +22,7 @@ interface HeaderState {
   logoUrl: string;
   showName: boolean;
   appName: string;
+  middleElement?: ReactNode;
 }
 
 interface HeaderContextType {
@@ -37,12 +39,14 @@ const defaultHeaderState: HeaderState = {
   logoUrl: "/Tekthib/icons/logo-96.png",
   showName: true,
   appName: "Tekthib",
+  middleElement: undefined,
 };
 
 const HeaderContext = createContext<HeaderContextType | undefined>(undefined);
 
-export function HeaderProvider({ children }: { children: ReactNode }) {
-  const [headerState, setHeaderState] = useState<HeaderState>(defaultHeaderState);
+export function HeaderProvider({ children }: Readonly<{ children: ReactNode }>) {
+  const [headerState, setHeaderState] =
+    useState<HeaderState>(defaultHeaderState);
 
   const setActionButton = (button?: HeaderActionButton) => {
     setHeaderState((prev) => ({ ...prev, actionButton: button }));
@@ -72,9 +76,7 @@ export function HeaderProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <HeaderContext.Provider value={value}>
-      {children}
-    </HeaderContext.Provider>
+    <HeaderContext.Provider value={value}>{children}</HeaderContext.Provider>
   );
 }
 

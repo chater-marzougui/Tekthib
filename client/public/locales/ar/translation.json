@@ -87,7 +87,22 @@
     "youAreReady": "أنت جاهز!",
     "youAreNotReady": "ضع علامة على نفسك كجاهز للعب",
     "needMorePlayers": "تحتاج إلى 3 لاعبين على الأقل للبدء",
-    "tooFewPlayers": "عدد اللاعبين غير كافٍ. الحد الأدنى 3 مطلوب."
+    "tooFewPlayers": "عدد اللاعبين غير كافٍ. الحد الأدنى 3 مطلوب.",
+    "enterYourName": "أدخل اسمك",
+    "enterNameToJoin": "الرجاء إدخال اسمك للانضمام إلى الغرفة",
+    "yourName": "اسمك",
+    "joinRoom": "الانضمام إلى الغرفة",
+    "gameLobby": "صالة اللعبة",
+    "connectingToServer": "الاتصال بالخادم...",
+    "roomCode": "رمز الغرفة",
+    "playersCount": "اللاعبون ({{current}}/{{max}})",
+    "waitingForPlayers": "في انتظار انضمام اللاعبين والاستعداد...",
+    "you": "أنت",
+    "emptySlot": "في انتظار اللاعبين...",
+    "yourStatus": "حالتك",
+    "playingAs": "تلعب باسم",
+    "secondsPerTurn": "ثانية لكل دور",
+    "timerRange": "المدى: 10-300 ثانية"
   },
   "game": {
     "yourTurn": "دورك",
@@ -191,6 +206,15 @@
     "cards": "ورقة",
     "currentTurn": "الدور الحالي",
     "winner": "فائز!"
+  },
+  "playerControls": {
+    "claimThisRank": "ادعي هذه الرتبة",
+    "playCards": "العب الأوراق"
+  },
+  "centerPile": {
+    "title": "الكومة المركزية",
+    "waitingForFirstPlay": "في انتظار اللعبة الأولى...",
+    "gameWillBegin": "ستبدأ اللعبة بمجرد أن يلعب شخص ما أوراقه الأولى"
   },
   "confirmDialog": {
     "leaveRoomTitle": "مغادرة الغرفة؟",

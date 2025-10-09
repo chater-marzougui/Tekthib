@@ -49,9 +49,10 @@ export function NavUser() {
   const avatarSvg = useAvatar(playerId || randomStr);
 
   const handleLanguageChange = (language: string) => {
+    if(i18n.language === language) return;
     i18n.changeLanguage(language);
     localStorage.setItem("locale", language);
-    window.location.reload();
+    // window.location.reload();
   };
 
   return (

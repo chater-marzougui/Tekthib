@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { playableRanks } from "@shared";
 
@@ -20,6 +21,8 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
   handlePlayCards,
   lastPlay,
 }) => {
+  const { t } = useTranslation();
+  
   if (!isMyTurn || !canPlay) return null;
   return (
     <div className="flex flex-col justify-center items-center border-white/20 rounded-lg p-0 space-y-4 align-center">
@@ -29,7 +32,7 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
             htmlFor="claimed-rank"
             className="text-sm font-medium text-white"
           >
-            Claim this rank:
+            {t('playerControls.claimThisRank')}:
           </label>
           <div className="flex flex-wrap gap-2 justify-center">
             {playableRanks.map((rank) => (
@@ -80,7 +83,7 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
                 d="M14 5l7 7m0 0l-7 7m7-7H3"
               />
             </svg>
-            Play Cards
+            {t('playerControls.playCards')}
           </span>
         </Button>
       </div>

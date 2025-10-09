@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { LastPlay } from "@shared";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -7,13 +8,15 @@ interface CenterPileProps {
 }
 
 const CenterPile: React.FC<CenterPileProps> = ({ pileCount, lastPlay }) => {
+  const { t } = useTranslation();
+  
   if (!lastPlay) {
     return (
       <div className="text-center text-gray-500 py-8">
         <div className="text-4xl mb-2">🃏</div>
-        <div className="text-base md:text-lg">Waiting for first play...</div>
+        <div className="text-base md:text-lg">{t('centerPile.waitingForFirstPlay')}</div>
         <div className="text-sm mt-2">
-          The game will begin once someone plays their first cards
+          {t('centerPile.gameWillBegin')}
         </div>
       </div>
     );
@@ -23,7 +26,7 @@ const CenterPile: React.FC<CenterPileProps> = ({ pileCount, lastPlay }) => {
     <div className="flex justify-center center-pile-container">
       <div className="flex-shrink-0">
         <p className="text-xs font-semibold text-gray-600 mb-2 text-center">
-          Center Pile
+          {t('centerPile.title')}
         </p>
         <div className="relative h-36 w-28">
           <AnimatePresence>

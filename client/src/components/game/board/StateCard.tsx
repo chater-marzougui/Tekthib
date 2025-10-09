@@ -1,5 +1,5 @@
-import i18n from "@/i18n";
 import { useTranslation } from "react-i18next";
+import { useTextDirection } from "@/hooks/useTextDirection";
 
 interface StateCardProps {
   isMyTurn: boolean;
@@ -47,10 +47,7 @@ const StateCard: React.FC<StateCardProps> = ({
   lastPlay,
 }) => {
   const { t } = useTranslation();
-  const currentLang = i18n.language || window.navigator.language;
-  const direction = ["ar", "he", "fa", "ur"].includes(currentLang.split("-")[0])
-    ? "rtl"
-    : "ltr";
+  const direction = useTextDirection();
 
   return (
     <div className="md:flex-shrink-0 max-w-[150px] md:max-w-[200px] " dir={direction}>
