@@ -69,14 +69,14 @@
   ],
   "screenshots": [
     {
-      "src": "/screenshots/gameplay.png",
+      "src": "/Tekthib/screenshots/gameplay.png",
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
       "label": "Gameplay screen showing active game"
     },
     {
-      "src": "/screenshots/lobby.png",
+      "src": "/Tekthib/screenshots/lobby.png",
       "sizes": "750x1334",
       "type": "image/png",
       "form_factor": "narrow",

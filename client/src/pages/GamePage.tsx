@@ -24,6 +24,7 @@ import VoiceChat from "@/components/chat/VoiceChat";
 import { EndGameDialog } from "@/components/game/EndGameDialog";
 import { motion } from "framer-motion";
 import { RenderCard } from "@/components/game/RenderCard";
+import { useHeader } from "@/context/HeaderContext";
 
 interface GamePlayer extends Player {
   isCurrentTurn: boolean;
@@ -49,6 +50,7 @@ export default function GamePage() {
   const navigate = useNavigate();
   const { roomId } = useParams<{ roomId: string }>();
   const { sendMessage, registerHandler, isConnected } = useWebSocketContext();
+  const { setHeaderConfig } = useHeader();
 
   const [players, setPlayers] = useState<GamePlayer[]>([]);
   const [playerHand, setPlayerHand] = useState<DisplayGameCard[]>([]);
@@ -119,10 +121,8 @@ export default function GamePage() {
 
           // Set auto play timeout from room settings
           if (room && room.autoPlayTimeout !== undefined) {
-            console.log("Setting autoPlayTimeout to:", room.autoPlayTimeout);
             setAutoPlayTimeout(room.autoPlayTimeout);
           } else {
-            console.warn("No room info in INITIAL_GAME_STATE");
             setAutoPlayTimeout(45);
           }
 
@@ -426,6 +426,22 @@ export default function GamePage() {
   }, [gameState]);
 
   useEffect(() => {
+    setHeaderConfig({
+      actionButton: {
+        label: "Leave Game",
+        onClick: () => handleLeaveGame(),
+        variant: "destructive",
+        color: "default",
+      },
+    });
+    return () => {
+      setHeaderConfig({
+        actionButton: undefined,
+      });
+    };
+  }, []);
+
+  useEffect(() => {
     const updatePositions = () => {
       // Find the center pile element - you'll need to add an id to CenterPile component
       const pileEl = document.querySelector(".center-pile-container"); // or use an ID
@@ -669,7 +685,6 @@ export default function GamePage() {
               const startY = pilePosition.y + (Math.random() - 0.5) * 40;
 
               const maxSpreadWidth = Math.min(window.innerWidth * 0.8, 600);
-              console.log("Total cards to reveal:", totalCards, cardWidth);
               const totalIdealWidth = totalCards * cardWidth;
               const spreadWidth = Math.min(totalIdealWidth, maxSpreadWidth);
               const cardSpacing =
@@ -717,10 +732,9 @@ export default function GamePage() {
           </div>
         )}
 
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-2">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">🃏 Tekthib</h1>
             {error && <p className="text-red-600 text-sm mt-1">{error}</p>}
             {!isConnected && (
               <p className="text-yellow-600 text-sm mt-1">
@@ -728,9 +742,6 @@ export default function GamePage() {
               </p>
             )}
           </div>
-          <Button variant="outline" onClick={handleLeaveGame}>
-            Leave Game
-          </Button>
         </div>
 
         <div className="grid lg:grid-cols-4 gap-6">

@@ -1,0 +1,87 @@
+import { createContext, useContext, useState, useMemo, ReactNode } from "react";
+
+export interface HeaderActionButton {
+  readonly label: string;
+  readonly onClick: () => void;
+  readonly variant?:
+    | "default"
+    | "destructive"
+    | "outline"
+    | "secondary"
+    | "ghost"
+    | "link";
+  readonly color?: string;
+  readonly disabled?: boolean;
+  readonly loading?: boolean;
+}
+
+interface HeaderState {
+  actionButton?: HeaderActionButton;
+  showLogo: boolean;
+  logoUrl: string;
+  showName: boolean;
+  appName: string;
+}
+
+interface HeaderContextType {
+  headerState: HeaderState;
+  setActionButton: (button?: HeaderActionButton) => void;
+  clearActionButton: () => void;
+  setHeaderConfig: (config: Partial<HeaderState>) => void;
+  resetHeader: () => void;
+}
+
+const defaultHeaderState: HeaderState = {
+  actionButton: undefined,
+  showLogo: true,
+  logoUrl: "/Tekthib/icons/logo-96.png",
+  showName: true,
+  appName: "Tekthib",
+};
+
+const HeaderContext = createContext<HeaderContextType | undefined>(undefined);
+
+export function HeaderProvider({ children }: { children: ReactNode }) {
+  const [headerState, setHeaderState] = useState<HeaderState>(defaultHeaderState);
+
+  const setActionButton = (button?: HeaderActionButton) => {
+    setHeaderState((prev) => ({ ...prev, actionButton: button }));
+  };
+
+  const clearActionButton = () => {
+    setHeaderState((prev) => ({ ...prev, actionButton: undefined }));
+  };
+
+  const setHeaderConfig = (config: Partial<HeaderState>) => {
+    setHeaderState((prev) => ({ ...prev, ...config }));
+  };
+
+  const resetHeader = () => {
+    setHeaderState(defaultHeaderState);
+  };
+
+  const value = useMemo(
+    () => ({
+      headerState,
+      setActionButton,
+      clearActionButton,
+      setHeaderConfig,
+      resetHeader,
+    }),
+    [headerState]
+  );
+
+  return (
+    <HeaderContext.Provider value={value}>
+      {children}
+    </HeaderContext.Provider>
+  );
+}
+
+export function useHeader() {
+  const context = useContext(HeaderContext);
+  if (!context) {
+    throw new Error("useHeader must be used within a HeaderProvider");
+  }
+  return context;
+}

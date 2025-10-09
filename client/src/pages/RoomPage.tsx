@@ -28,6 +28,7 @@ import { Trash, Gamepad2, Bot, Check, Rocket } from "lucide-react";
 import { PlayerBadge } from "@/components/PlayerBadge";
 import { QRCodeCard } from "@/components/QRCodeDialog";
 import { Switch } from "@/components/ui/switch";
+import { useHeader } from "@/context/HeaderContext";
 
 function isDuplicatePlayer(players: Player[], newPlayer: Player): boolean {
   return players.some((p) => p.id === newPlayer.id);
@@ -36,6 +37,7 @@ function isDuplicatePlayer(players: Player[], newPlayer: Player): boolean {
 export default function RoomPage() {
   const { roomId } = useParams();
   const navigate = useNavigate();
+  const { setHeaderConfig } = useHeader();
   const { sendMessage, registerHandler, isConnected } = useWebSocketContext();
 
   const [players, setPlayers] = useState<Player[]>([]);
@@ -47,7 +49,7 @@ export default function RoomPage() {
   const [nameInput, setNameInput] = useState("");
   const [timerSlideEnabled, setTimerSlideEnabled] = useState(true);
   const [autoPlayTimeout, setAutoPlayTimeout] = useState(45);
-  
+
   const playerName = localStorage.getItem("playerName") || "";
   const playerId = localStorage.getItem("clientId") || "";
   const roomCodeRef = useRef(roomCode);
@@ -234,6 +236,23 @@ export default function RoomPage() {
     isPublic,
   ]);
 
+  useEffect(() => {
+    setHeaderConfig({
+      actionButton: {
+        label: "Leave Room",
+        onClick: () => handleLeaveRoom(),
+        variant: "destructive",
+        color: "default",
+      },
+    });
+
+    return () => {
+      setHeaderConfig({
+        actionButton: undefined,
+      });
+    };
+  }, []);
+
   const handleReadyToggle = () => {
     const newReadyState = !isReady;
     sendMessage({
@@ -385,7 +404,7 @@ export default function RoomPage() {
                       className="flex items-center justify-between p-3 bg-background rounded-lg"
                     >
                       <div className="flex items-center gap-3">
-                        <PlayerBadge player={player} playerId={playerId} />
+                        <PlayerBadge player={player} playerId={player.id} />
                         <div>
                           <div className="font-medium">
                             {player.name}

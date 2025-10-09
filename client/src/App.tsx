@@ -1,16 +1,19 @@
 ﻿import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { WebSocketProvider } from "./context/WebSocketContext";
+import { HeaderProvider } from "./context/HeaderContext";
+import { Header } from "./components/Header";
 import HomePage from "./pages/HomePage";
 import RoomPage from "./pages/RoomPage";
 import GamePage from "./pages/GamePage";
 import AdminPage from "./pages/AdminPage";
 import { Toaster } from "sonner";
 import { SoundProvider } from "./context/SoundPlayerContext";
-
 function App() {
   return (
     <Router basename="/Tekthib/">
-      <Toaster
+      <HeaderProvider>
+        <Header />
+        <Toaster
         richColors
         duration={3500}
         position="top-center"
@@ -41,6 +44,7 @@ function App() {
           }
         />
       </Routes>
+      </HeaderProvider>
     </Router>
   );
 }

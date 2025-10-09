@@ -11,7 +11,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuItem } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
 import { Moon, Sun, Languages } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/context/ThemeProvider";
@@ -22,21 +21,21 @@ const countryOptions = [
     value: "france",
     name: "France",
     code: "fr",
-    flagUrl: "/flags/fr.webp",
+    flagUrl: "/Tekthib/flags/fr.webp",
     altText: "France Flag",
   },
   {
     value: "english",
     name: "English",
     code: "en",
-    flagUrl: "/flags/gb.webp",
+    flagUrl: "/Tekthib/flags/gb.webp",
     altText: "United Kingdom Flag",
   },
   {
     value: "arabic",
     name: "Arabic",
     code: "ar",
-    flagUrl: "/flags/tn.webp",
+    flagUrl: "/Tekthib/flags/tn.webp",
     altText: "Tunisia Flag",
   },
 ];
@@ -47,7 +46,7 @@ export function NavUser() {
   const playerId = localStorage.getItem("clientId");
   const randomStr = Math.random().toString(36).substring(2, 15);
 
-  const avatarSvg = useAvatar(playerId || randomStr);
+  const avatarSvg = useAvatar(playerId || randomStr, 122);
 
   const handleLanguageChange = (language: string) => {
     i18n.changeLanguage(language);
@@ -56,21 +55,15 @@ export function NavUser() {
   };
 
   return (
-    <div className="flex items-center gap-2 cursor-pointer">
+    <div className="sticky flex items-center gap-2 cursor-pointer">
       <SidebarMenu>
         <SidebarMenuItem>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant={"ghost"}
-                size="lg"
-                className="flex h-9 w-9 items-center rounded-full p-0 hover:bg-transparent active:bg-transparent cursor-pointer"
-              >
-                <div
-                  className={`w-8 h-8 rounded-full overflow-hidden flex items-center justify-center`}
-                  dangerouslySetInnerHTML={{ __html: avatarSvg! }}
-                />
-              </Button>
+              <div
+                className={`w-10 h-10 ring-2 ring-blue-500 rounded-full overflow-hidden flex items-center justify-center`}
+                dangerouslySetInnerHTML={{ __html: avatarSvg! }}
+              />
             </DropdownMenuTrigger>
             <DropdownMenuContent
               className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
@@ -78,7 +71,6 @@ export function NavUser() {
               align="end"
               sideOffset={4}
             >
-              <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuItem
                   onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -93,6 +85,7 @@ export function NavUser() {
                   </div>
                 </DropdownMenuItem>
 
+                <DropdownMenuSeparator />
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger className="dark:hover:text-accent-foreground">
                     <span className="flex flex-1 items-center gap-2">

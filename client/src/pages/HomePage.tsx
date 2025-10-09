@@ -153,13 +153,10 @@ export default function HomePage() {
         image="/og-image.png"
         url="https://chater-marzougui.me"
       />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="w-full max-w-2xl space-y-8">
           {/* Game Title and Description */}
           <div className="text-center space-y-4">
-            <h1 className="text-5xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-3">
-              <Spade className="w-12 h-12" /> Tekthib
-            </h1>
             <p className="text-xl text-gray-600 mb-4">
               Tunisian Online Card Game
             </p>
