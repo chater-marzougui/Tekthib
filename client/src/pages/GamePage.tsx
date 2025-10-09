@@ -23,6 +23,7 @@ import type { GameState as ServerGameState } from "./../types";
 import VoiceChat from "@/components/chat/VoiceChat";
 import { EndGameDialog } from "@/components/game/EndGameDialog";
 import { motion } from "framer-motion";
+import { RenderCard } from "@/components/game/RenderCard";
 
 interface GamePlayer extends Player {
   isCurrentTurn: boolean;
@@ -234,7 +235,8 @@ export default function GamePage() {
           let resultDescription = "";
           if (wasLying && lastPlayerName === playerName) {
             resultMessage = `Caught lying by ${challengerName}!`;
-            resultDescription = "Learn to play! and Try to be more honest next time.";
+            resultDescription =
+              "Learn to play! and Try to be more honest next time.";
             toastColor = "red";
           } else if (wasLying && challengerName === playerName) {
             resultMessage = `You are right! ${lastPlayerName} was lying.`;
@@ -344,21 +346,24 @@ export default function GamePage() {
       if (message.type === "ERROR") {
         const errorMessage = message.payload.message;
         const errorCode = message.payload.code;
-        
+
         // If room not found, redirect to home page
-        if (errorCode === "ROOM_NOT_FOUND" || errorMessage === "Room not found") {
+        if (
+          errorCode === "ROOM_NOT_FOUND" ||
+          errorMessage === "Room not found"
+        ) {
           toast.error("Room not found. Redirecting to home...");
           navigate("/");
           return;
         }
-        
+
         // If player not in room, redirect to room page if it exists
         if (errorMessage === "Player not in room") {
           toast.error("You are not in this game. Redirecting...");
           navigate("/");
           return;
         }
-        
+
         setError(errorMessage);
         setTimeout(() => setError(null), 3000);
       }
@@ -550,7 +555,6 @@ export default function GamePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {revealedCardsAnimation?.show && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="relative">
@@ -563,32 +567,35 @@ export default function GamePage() {
                 const startX = centerX + (Math.random() - 0.5) * 40;
                 const startY = centerY + (Math.random() - 0.5) * 40;
 
-                const spreadWidth = Math.min(totalCards * 30, 400);
-                const cardSpacing = spreadWidth / totalCards;
-                const endX = centerX - spreadWidth / 2 + index * cardSpacing;
+                // Dynamic spread based on card count
+                const cardWidth = 96; // w-24 = 96px
+                const maxSpreadWidth = 500; // Maximum spread width
+                const minSpacing = 20; // Minimum spacing between cards
+                const idealSpacing = 30; // Ideal spacing when there's room
+
+                // Calculate spacing: use ideal spacing but don't exceed max width
+                const totalIdealWidth =
+                  totalCards * cardWidth + (totalCards - 1) * idealSpacing;
+                const spreadWidth = Math.min(totalIdealWidth, maxSpreadWidth);
+                const cardSpacing =
+                  (spreadWidth - cardWidth) / Math.max(totalCards - 1, 1);
+
+                // Center the spread horizontally
+                const startOffset = centerX - spreadWidth / 2 + cardWidth / 2;
+                const endX = startOffset + index * cardSpacing;
                 const endY = 350;
 
-                const getCardSymbol = (suit: GameCard["suit"]) => {
-                  switch (suit) {
-                    case "hearts":
-                      return "♥";
-                    case "diamonds":
-                      return "♦";
-                    case "clubs":
-                      return "♣";
-                    case "spades":
-                      return "♠";
-                    case "joker":
-                      return "🃏";
-                  }
-                };
+                // Adaptive animation duration
+                const baseDuration = 0.6;
+                const duration = Math.max(
+                  0.4,
+                  Math.min(baseDuration, totalCards * 0.08)
+                );
 
-                const getCardColor = (suit: GameCard["suit"]) => {
-                  if (suit === "joker") return "text-purple-600";
-                  return suit === "hearts" || suit === "diamonds"
-                    ? "text-red-600"
-                    : "text-black";
-                };
+                // Adaptive delay - faster for many cards
+                const baseDelay =
+                  totalCards > 10 ? 0.05 : totalCards > 5 ? 0.08 : 0.1;
+                const delay = index * baseDelay;
 
                 return (
                   <motion.div
@@ -608,8 +615,8 @@ export default function GamePage() {
                       opacity: 1,
                     }}
                     transition={{
-                      duration: 0.8,
-                      delay: index * 0.1,
+                      duration: duration,
+                      delay: delay,
                       ease: "easeOut",
                     }}
                     className="absolute w-24 h-36"
@@ -617,35 +624,7 @@ export default function GamePage() {
                       transformStyle: "preserve-3d",
                     }}
                   >
-                    <div className="w-full h-full bg-white rounded-lg border-2 border-gray-400 shadow-2xl p-2 relative">
-                      <div className="absolute top-1 left-2 flex flex-col items-center leading-none">
-                        <div
-                          className={`text-lg font-bold ${getCardColor(card.suit)}`}
-                        >
-                          {card.rank}
-                        </div>
-                        <div className={`text-2xl ${getCardColor(card.suit)}`}>
-                          {getCardSymbol(card.suit)}
-                        </div>
-                      </div>
-
-                      <div
-                        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-5xl ${getCardColor(card.suit)}`}
-                      >
-                        {getCardSymbol(card.suit)}
-                      </div>
-
-                      <div className="absolute bottom-1 right-2 flex flex-col items-center leading-none rotate-180">
-                        <div
-                          className={`text-lg font-bold ${getCardColor(card.suit)}`}
-                        >
-                          {card.rank}
-                        </div>
-                        <div className={`text-2xl ${getCardColor(card.suit)}`}>
-                          {getCardSymbol(card.suit)}
-                        </div>
-                      </div>
-                    </div>
+                    {RenderCard(card, false, () => {}, false, 1, "medium")}
                   </motion.div>
                 );
               })}
@@ -660,16 +639,42 @@ export default function GamePage() {
             {playingCardsAnimation.cards.map((card, index) => {
               const totalCards = playingCardsAnimation.cards.length;
 
-              // Start from bottom of screen (player's hand position)
-              const startX =
-                window.innerWidth / 2 + (index - totalCards / 2) * 40;
+              // Card dimensions
+              const cardWidth = 80; // w-20 = 80px
+
+              // Adaptive spacing in hand
+              const maxHandSpread = window.innerWidth * 0.6; // Max 60% of screen width
+              const idealSpacing = 40;
+              const totalIdealWidth =
+                totalCards * cardWidth + (totalCards - 1) * idealSpacing;
+              const handSpread = Math.min(totalIdealWidth, maxHandSpread);
+              const cardSpacing =
+                totalCards > 1
+                  ? (handSpread - cardWidth) / (totalCards - 1)
+                  : 0;
+
+              // Start from bottom of screen (player's hand position) - centered
+              const handStartX =
+                (window.innerWidth - handSpread) / 2 + cardWidth / 2;
+              const startX = handStartX + index * cardSpacing;
               const startY = window.innerHeight - 150;
 
-              // End at center (pile position)
-              const endX = window.innerWidth / 2;
-              const endY = window.innerHeight / 2 - 50;
+              // End at center (pile position) with slight stacking offset
+              const stackOffset = 2; // Slight offset for visual stacking effect
+              const endX =
+                window.innerWidth / 2 + (index - totalCards / 2) * stackOffset;
+              const endY = window.innerHeight / 2 - 50 + index * stackOffset;
 
-              const rotation = Math.sin(index) * 15 - 7.5;
+              // More varied rotation for visual interest
+              const rotation =
+                (index - totalCards / 2) * 3 + (Math.random() - 0.5) * 5;
+
+              // Adaptive timing
+              const baseDuration = 0.6;
+              const duration = Math.min(baseDuration, 0.4 + totalCards * 0.02);
+              const baseDelay =
+                totalCards > 8 ? 0.05 : totalCards > 4 ? 0.07 : 0.08;
+              const delay = index * baseDelay;
 
               return (
                 <motion.div
@@ -689,8 +694,8 @@ export default function GamePage() {
                     rotate: rotation,
                   }}
                   transition={{
-                    duration: 0.6,
-                    delay: index * 0.08,
+                    duration: duration,
+                    delay: delay,
                     ease: "easeInOut",
                   }}
                   className="absolute w-20 h-28"

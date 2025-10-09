@@ -1,0 +1,183 @@
+EMOJI EXTRACTION REPORT
+================================================================================
+Generated: 2025-10-09 01:12:00
+Total Files Scanned: 49
+Files with Emojis: 34
+Total Emojis Found: 35
+================================================================================
+
+Emoji: 🇹
+File:  .\client\src\components\Footer.tsx
+Line:  47
+Text:  Made in Tunisia 🇹🇳
+--------------------------------------------------------------------------------
+Emoji: 🇳
+File:  .\client\src\components\Footer.tsx
+Line:  47
+Text:  Made in Tunisia 🇹🇳
+--------------------------------------------------------------------------------
+Emoji: 🤖
+File:  .\client\src\components\PlayerBadge.tsx
+Line:  37
+Text:  {isBot ? "🤖" : player.name.charAt(0).toUpperCase()}
+--------------------------------------------------------------------------------
+Emoji: 🤔
+File:  .\client\src\components\game\GameBoard.tsx
+Line:  220
+Text:  🤔 Challenge (Call Liar!)
+--------------------------------------------------------------------------------
+Emoji: 🤖
+File:  .\client\src\components\game\PlayerList.tsx
+Line:  40
+Text:  {player.isBot && " 🤖"}
+--------------------------------------------------------------------------------
+Emoji: 🏆
+File:  .\client\src\components\game\PlayerList.tsx
+Line:  61
+Text:  🏆 Winner!
+--------------------------------------------------------------------------------
+Emoji: 🔐
+File:  .\client\src\pages\AdminPage.tsx
+Line:  135
+Text:  <CardTitle>🔐 Admin Login</CardTitle>
+--------------------------------------------------------------------------------
+Emoji: 🎮
+File:  .\client\src\pages\AdminPage.tsx
+Line:  180
+Text:  🎮 System Admin Dashboard
+--------------------------------------------------------------------------------
+Emoji: 🔄
+File:  .\client\src\pages\AdminPage.tsx
+Line:  190
+Text:  {autoRefresh ? "🔄 Auto-refresh ON" : "⏸️ Auto-refresh OFF"}
+--------------------------------------------------------------------------------
+Emoji: 🔄
+File:  .\client\src\pages\AdminPage.tsx
+Line:  196
+Text:  {isLoading ? "Refreshing..." : "🔄 Refresh"}
+--------------------------------------------------------------------------------
+Emoji: 🏠
+File:  .\client\src\pages\AdminPage.tsx
+Line:  215
+Text:  <CardTitle>🏠 Total Active Rooms</CardTitle>
+--------------------------------------------------------------------------------
+Emoji: 👥
+File:  .\client\src\pages\AdminPage.tsx
+Line:  225
+Text:  <CardTitle>👥 Total Players Online</CardTitle>
+--------------------------------------------------------------------------------
+Emoji: 🎮
+File:  .\client\src\pages\AdminPage.tsx
+Line:  279
+Text:  🎮 Game in Progress
+--------------------------------------------------------------------------------
+Emoji: 🟢
+File:  .\client\src\pages\AdminPage.tsx
+Line:  346
+Text:  ? "🟢 Online"
+--------------------------------------------------------------------------------
+Emoji: 🔴
+File:  .\client\src\pages\AdminPage.tsx
+Line:  347
+Text:  : "🔴 Offline"}
+--------------------------------------------------------------------------------
+Emoji: ✓
+File:  .\client\src\pages\AdminPage.tsx
+Line:  356
+Text:  {player.isReady ? "✓ Ready" : "⏳ Not Ready"}
+--------------------------------------------------------------------------------
+Emoji: ❌
+File:  .\client\src\pages\HomePage.tsx
+Line:  92
+Text:  toast.error(`❌ ${error.message}`);
+--------------------------------------------------------------------------------
+Emoji: ❌
+File:  .\client\src\pages\HomePage.tsx
+Line:  142
+Text:  toast.error(`❌ ${error.message}`);
+--------------------------------------------------------------------------------
+Emoji: 🎮
+File:  .\client\src\pages\HomePage.tsx
+Line:  177
+Text:  <CardTitle className="text-center">🎮 Create Room</CardTitle>
+--------------------------------------------------------------------------------
+Emoji: 🌍
+File:  .\client\src\pages\HomePage.tsx
+Line:  201
+Text:  🌍 Public
+--------------------------------------------------------------------------------
+Emoji: 🔒
+File:  .\client\src\pages\HomePage.tsx
+Line:  209
+Text:  🔒 Private
+--------------------------------------------------------------------------------
+Emoji: 🚪
+File:  .\client\src\pages\HomePage.tsx
+Line:  231
+Text:  <CardTitle className="text-center">🚪 Join Room</CardTitle>
+--------------------------------------------------------------------------------
+Emoji: 🎮
+File:  .\client\src\pages\HomePage.tsx
+Line:  272
+Text:  <CardTitle className="text-center">🎮 Available Rooms</CardTitle>
+--------------------------------------------------------------------------------
+Emoji: 🌍
+File:  .\client\src\pages\HomePage.tsx
+Line:  292
+Text:  🌍 Public
+--------------------------------------------------------------------------------
+Emoji: 🔒
+File:  .\client\src\pages\HomePage.tsx
+Line:  296
+Text:  🔒 Private
+--------------------------------------------------------------------------------
+Emoji: 👥
+File:  .\client\src\pages\HomePage.tsx
+Line:  306
+Text:  👥 {room.playerCount}/{room.maxPlayers}
+--------------------------------------------------------------------------------
+Emoji: 📖
+File:  .\client\src\pages\HomePage.tsx
+Line:  319
+Text:  <CardTitle className="text-center">📖 Quick Rules</CardTitle>
+--------------------------------------------------------------------------------
+Emoji: 🎯
+File:  .\client\src\pages\HomePage.tsx
+Line:  324
+Text:  <h4 className="font-semibold mb-2">🎯 Goal</h4>
+--------------------------------------------------------------------------------
+Emoji: 🤥
+File:  .\client\src\pages\HomePage.tsx
+Line:  338
+Text:  <h4 className="font-semibold mb-2">🤥 Bluffing</h4>
+--------------------------------------------------------------------------------
+Emoji: 🏆
+File:  .\client\src\pages\HomePage.tsx
+Line:  344
+Text:  <h4 className="font-semibold mb-2">🏆 Special Rule</h4>
+--------------------------------------------------------------------------------
+Emoji: 🎮
+File:  .\client\src\pages\RoomPage.tsx
+Line:  341
+Text:  <h1 className="text-3xl font-bold text-gray-900">🎮 Game Lobby</h1>
+--------------------------------------------------------------------------------
+Emoji: 🤖
+File:  .\client\src\pages\RoomPage.tsx
+Line:  391
+Text:  {player.isBot && " 🤖"}
+--------------------------------------------------------------------------------
+Emoji: ✓
+File:  .\client\src\pages\RoomPage.tsx
+Line:  422
+Text:  Ready ✓
+--------------------------------------------------------------------------------
+Emoji: ✓
+File:  .\client\src\pages\RoomPage.tsx
+Line:  476
+Text:  {isReady ? "✓ Ready!" : "Mark as Ready"}
+--------------------------------------------------------------------------------
+Emoji: 🚀
+File:  .\client\src\pages\RoomPage.tsx
+Line:  570
+Text:  ? "🚀 Start Game"
+--------------------------------------------------------------------------------
