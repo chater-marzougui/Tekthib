@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -35,6 +36,7 @@ function isDuplicatePlayer(players: Player[], newPlayer: Player): boolean {
 }
 
 export default function RoomPage() {
+  const { t } = useTranslation();
   const { roomId } = useParams();
   const navigate = useNavigate();
   const { setHeaderConfig } = useHeader();
@@ -239,7 +241,7 @@ export default function RoomPage() {
   useEffect(() => {
     setHeaderConfig({
       actionButton: {
-        label: "Leave Room",
+        label: t('room.leaveRoom'),
         onClick: () => handleLeaveRoom(),
         variant: "destructive",
         color: "default",
@@ -251,7 +253,7 @@ export default function RoomPage() {
         actionButton: undefined,
       });
     };
-  }, []);
+  }, [t]);
 
   const handleReadyToggle = () => {
     const newReadyState = !isReady;
@@ -414,7 +416,7 @@ export default function RoomPage() {
                             )}
                           </div>
                           {player.id === players[0]?.id && (
-                            <div className="text-xs text-gray-500">Host</div>
+                            <div className="text-xs text-gray-500">{t('room.youAreHost')}</div>
                           )}
                         </div>
                       </div>
@@ -442,11 +444,11 @@ export default function RoomPage() {
                         >
                           {player.isReady || player.isBot ? (
                             <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium flex items-center gap-1">
-                              Ready <Check className="w-3 h-3" />
+                              {t('room.ready')} <Check className="w-3 h-3" />
                             </span>
                           ) : (
                             <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
-                              Not Ready
+                              {t('room.notReady')}
                             </span>
                           )}
                         </Button>
@@ -462,7 +464,7 @@ export default function RoomPage() {
                         className="flex items-center p-3 bg-card rounded-lg border-2 border-dashed border-gray-300"
                       >
                         <div className="text-gray-400">
-                          Waiting for player...
+                          {t('room.waiting')}
                         </div>
                       </div>
                     )
@@ -498,10 +500,10 @@ export default function RoomPage() {
                 >
                   {isReady ? (
                     <span className="flex items-center gap-2">
-                      <Check className="w-4 h-4" /> Ready!
+                      <Check className="w-4 h-4" /> {t('room.youAreReady')}
                     </span>
                   ) : (
-                    "Mark as Ready"
+                    t('room.youAreNotReady')
                   )}
                 </Button>
 
@@ -509,7 +511,7 @@ export default function RoomPage() {
                   <>
                     <div className="space-y-2">
                       <div className="text-sm font-medium text-gray-700">
-                        Add Bot Players
+                        {t('room.addBots')}
                       </div>
                       <div className="flex gap-2">
                         {Array.from({ length: 3 }).map((_, index) => (
@@ -536,10 +538,10 @@ export default function RoomPage() {
                               htmlFor="auto-play"
                               className="text-sm font-medium"
                             >
-                              Auto-Play Timer
+                              {t('room.autoPlayTimer')}
                             </Label>
                             <div className="text-xs text-gray-500">
-                              Automatically play random cards when time runs out
+                              {t('room.autoPlayTimerDescription')}
                             </div>
                           </div>
                           <Switch
@@ -560,7 +562,7 @@ export default function RoomPage() {
                         {timerSlideEnabled && (
                           <div className="space-y-2 pt-2 border-t">
                             <Label htmlFor="timer-duration" className="text-sm">
-                              Timer Duration (seconds)
+                              {t('room.timerDuration')}
                             </Label>
                             <div className="flex items-center gap-2">
                               <Input
@@ -597,10 +599,10 @@ export default function RoomPage() {
                     >
                       {canStartGame ? (
                         <span className="flex items-center gap-2">
-                          <Rocket className="w-5 h-5" /> Start Game
+                          <Rocket className="w-5 h-5" /> {t('room.startGame')}
                         </span>
                       ) : (
-                        "Waiting for players..."
+                        t('room.waiting')
                       )}
                     </Button>
                   </>
@@ -611,7 +613,7 @@ export default function RoomPage() {
                   onClick={handleLeaveRoom}
                   className="w-full"
                 >
-                  Leave Room
+                  {t('room.leaveRoom')}
                 </Button>
               </CardContent>
             </Card>
@@ -623,19 +625,19 @@ export default function RoomPage() {
             {/* Game Info */}
             <Card>
               <CardHeader>
-                <CardTitle>Game Requirements</CardTitle>
+                <CardTitle>{t('room.gameRequirements')}</CardTitle>
               </CardHeader>
               <CardContent className="text-sm space-y-2">
                 <div className="flex justify-between">
-                  <span>Min Players:</span>
+                  <span>{t('room.minPlayers')}:</span>
                   <span className="font-medium">3</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Max Players:</span>
+                  <span>{t('room.maxPlayers')}:</span>
                   <span className="font-medium">10</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Cards per deck:</span>
+                  <span>{t('room.cardsPerDeck')}:</span>
                   <span className="font-medium">108</span>
                 </div>
                 <div className="text-xs text-gray-500 mt-3">
