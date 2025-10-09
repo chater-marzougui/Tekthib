@@ -1,0 +1,38 @@
+{
+  "common": {
+    "welcome": "Bienvenue",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "close": "Fermer",
+    "save": "Sauvegarder",
+    "delete": "Supprimer",
+    "edit": "Modifier"
+  },
+  "nav": {
+    "toggleDarkMode": "Basculer le mode sombre",
+    "language": "Langue"
+  },
+  "languages": {
+    "english": "Anglais",
+    "french": "Français",
+    "arabic": "Arabe"
+  },
+  "home": {
+    "title": "Bienvenue à Tekthib",
+    "description": "Jouez au jeu de cartes classique en ligne avec des amis",
+    "createRoom": "Créer une salle",
+    "joinRoom": "Rejoindre une salle"
+  },
+  "game": {
+    "yourTurn": "Votre tour",
+    "waiting": "En attente des autres joueurs...",
+    "gameOver": "Partie terminée",
+    "winner": "Gagnant",
+    "playCard": "Jouer une carte",
+    "challenge": "Défi",
+    "pass": "Passer"
+  }
+}

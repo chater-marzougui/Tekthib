@@ -1,0 +1,38 @@
+{
+  "common": {
+    "welcome": "مرحبا",
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "success": "نجاح",
+    "cancel": "إلغاء",
+    "confirm": "تأكيد",
+    "close": "إغلاق",
+    "save": "حفظ",
+    "delete": "حذف",
+    "edit": "تعديل"
+  },
+  "nav": {
+    "toggleDarkMode": "تبديل الوضع الداكن",
+    "language": "اللغة"
+  },
+  "languages": {
+    "english": "الإنجليزية",
+    "french": "الفرنسية",
+    "arabic": "العربية"
+  },
+  "home": {
+    "title": "مرحبا بك في تكذيب",
+    "description": "العب لعبة الورق الكلاسيكية عبر الإنترنت مع الأصدقاء",
+    "createRoom": "إنشاء غرفة",
+    "joinRoom": "الانضمام إلى غرفة"
+  },
+  "game": {
+    "yourTurn": "دورك",
+    "waiting": "في انتظار اللاعبين الآخرين...",
+    "gameOver": "انتهت اللعبة",
+    "winner": "الفائز",
+    "playCard": "العب بطاقة",
+    "challenge": "تحدي",
+    "pass": "تمرير"
+  }
+}

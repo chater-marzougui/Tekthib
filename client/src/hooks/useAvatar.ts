@@ -1,21 +1,20 @@
 import { useMemo } from "react";
 import { createAvatar } from "@dicebear/core";
 import { lorelei } from "@dicebear/collection";
-import type { Player } from "shared";
 
 // Hook to get a deterministic avatar SVG per player
-export function useAvatar(player: Player) {
+export function useAvatar(playerId: string | null) {
   const avatarSvg = useMemo(() => {
-    if (!player?.id) return null;
+    if (!playerId) return null;
 
     const svg = createAvatar(lorelei, {
-      seed: player.id,
+      seed: playerId,
       size: 64, // optional, default 64
       backgroundColor: ["transparent"], // optional
     }).toString();
 
     return svg;
-  }, [player?.id]);
+  }, [playerId]);
 
   return avatarSvg;
 }
