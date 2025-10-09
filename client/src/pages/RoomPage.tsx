@@ -25,11 +25,12 @@ import type { Player } from "shared";
 import { toast } from "sonner";
 import { VoiceChatProvider } from "@/context/VoiceChatContext";
 import VoiceChat from "@/components/chat/VoiceChat";
-import { Trash, Gamepad2, Bot, Check, Rocket } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { PlayerBadge } from "@/components/PlayerBadge";
 import { QRCodeCard } from "@/components/QRCodeDialog";
 import { Switch } from "@/components/ui/switch";
 import { useHeader } from "@/context/HeaderContext";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 function isDuplicatePlayer(players: Player[], newPlayer: Player): boolean {
   return players.some((p) => p.id === newPlayer.id);
@@ -51,6 +52,7 @@ export default function RoomPage() {
   const [nameInput, setNameInput] = useState("");
   const [timerSlideEnabled, setTimerSlideEnabled] = useState(true);
   const [autoPlayTimeout, setAutoPlayTimeout] = useState(45);
+  const [showLeaveDialog, setShowLeaveDialog] = useState(false);
 
   const playerName = localStorage.getItem("playerName") || "";
   const playerId = localStorage.getItem("clientId") || "";
@@ -242,7 +244,7 @@ export default function RoomPage() {
     setHeaderConfig({
       actionButton: {
         label: t('room.leaveRoom'),
-        onClick: () => handleLeaveRoom(),
+        onClick: () => setShowLeaveDialog(true),
         variant: "destructive",
         color: "default",
       },
@@ -320,6 +322,18 @@ export default function RoomPage() {
   // Wrap content with VoiceChatProvider if we have a room
   const content = (
     <div className="min-h-screen p-4">
+      {/* Confirm leave dialog */}
+      <ConfirmDialog
+        open={showLeaveDialog}
+        onOpenChange={setShowLeaveDialog}
+        onConfirm={handleLeaveRoom}
+        title={t('confirmDialog.leaveRoomTitle')}
+        description={t('confirmDialog.leaveRoomDescription')}
+        confirmText={t('confirmDialog.leave')}
+        cancelText={t('confirmDialog.cancel')}
+        variant="destructive"
+      />
+
       {/* Name prompt dialog */}
       <Dialog open={showNameDialog} onOpenChange={() => {}}>
         <DialogContent
@@ -360,7 +374,7 @@ export default function RoomPage() {
         {/* Header */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold flex items-center justify-center gap-2">
-            <Gamepad2 className="w-8 h-8" /> Game Lobby
+            <Icon icon="mdi:gamepad-variant" className="w-8 h-8" /> Game Lobby
           </h1>
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
@@ -412,7 +426,7 @@ export default function RoomPage() {
                             {player.name}
                             {player.id === playerId && " (You)"}
                             {player.isBot && (
-                              <Bot className="w-4 h-4 inline-block ml-1" />
+                              <Icon icon="mdi:robot" className="w-4 h-4 inline-block ml-1" />
                             )}
                           </div>
                           {player.id === players[0]?.id && (
@@ -433,7 +447,7 @@ export default function RoomPage() {
                               )
                             }
                           >
-                            <Trash className="w-4 h-4" />
+                            <Icon icon="mdi:delete" className="w-4 h-4" />
                           </Button>
                         )}
                         <Button
@@ -444,7 +458,7 @@ export default function RoomPage() {
                         >
                           {player.isReady || player.isBot ? (
                             <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium flex items-center gap-1">
-                              {t('room.ready')} <Check className="w-3 h-3" />
+                              {t('room.ready')} <Icon icon="mdi:check" className="w-3 h-3" />
                             </span>
                           ) : (
                             <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
@@ -500,7 +514,7 @@ export default function RoomPage() {
                 >
                   {isReady ? (
                     <span className="flex items-center gap-2">
-                      <Check className="w-4 h-4" /> {t('room.youAreReady')}
+                      <Icon icon="mdi:check" className="w-4 h-4" /> {t('room.youAreReady')}
                     </span>
                   ) : (
                     t('room.youAreNotReady')
@@ -599,7 +613,7 @@ export default function RoomPage() {
                     >
                       {canStartGame ? (
                         <span className="flex items-center gap-2">
-                          <Rocket className="w-5 h-5" /> {t('room.startGame')}
+                          <Icon icon="mdi:rocket-launch" className="w-5 h-5" /> {t('room.startGame')}
                         </span>
                       ) : (
                         t('room.waiting')
@@ -610,7 +624,7 @@ export default function RoomPage() {
 
                 <Button
                   variant="outline"
-                  onClick={handleLeaveRoom}
+                  onClick={() => setShowLeaveDialog(true)}
                   className="w-full"
                 >
                   {t('room.leaveRoom')}

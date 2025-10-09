@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Gamepad2, DoorOpen, Globe, Lock, Users, Target, Layers, Frown, Trophy, Spade } from "lucide-react";
+import { Icon } from "@iconify/react";
 
 const SERVER_URL = import.meta.env.VITE_API_URL || "https://takthib-a00f145250bc.herokuapp.com";
 
@@ -173,7 +173,7 @@ export default function HomePage() {
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="text-center flex items-center justify-center gap-2">
-                  <Gamepad2 className="w-5 h-5" /> {t('home.createRoom')}
+                  <Icon icon="mdi:gamepad-variant" className="w-5 h-5" /> {t('home.createRoom')}
                 </CardTitle>
                 <CardDescription className="text-center">
                   {t('home.createRoomDescription')}
@@ -198,7 +198,7 @@ export default function HomePage() {
                       onClick={() => setIsPublicRoom(true)}
                       className="flex-1"
                     >
-                      <Globe className="w-4 h-4 mr-2" /> {t('home.public')}
+                      <Icon icon="mdi:web" className="w-4 h-4 mr-2" /> {t('home.public')}
                     </Button>
                     <Button
                       type="button"
@@ -206,7 +206,7 @@ export default function HomePage() {
                       onClick={() => setIsPublicRoom(false)}
                       className="flex-1"
                     >
-                      <Lock className="w-4 h-4 mr-2" /> {t('home.private')}
+                      <Icon icon="mdi:lock" className="w-4 h-4 mr-2" /> {t('home.private')}
                     </Button>
                   </div>
                   <p className="text-xs text-gray-500">
@@ -229,7 +229,7 @@ export default function HomePage() {
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="text-center flex items-center justify-center gap-2">
-                  <DoorOpen className="w-5 h-5" /> {t('home.joinRoom')}
+                  <Icon icon="mdi:door-open" className="w-5 h-5" /> {t('home.joinRoom')}
                 </CardTitle>
                 <CardDescription className="text-center">
                   {t('home.joinRoomDescription')}
@@ -272,7 +272,7 @@ export default function HomePage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-center flex items-center justify-center gap-2">
-                  <Gamepad2 className="w-5 h-5" /> {t('home.availableRooms')}
+                  <Icon icon="mdi:gamepad-variant" className="w-5 h-5" /> {t('home.availableRooms')}
                 </CardTitle>
                 <CardDescription className="text-center">
                   {t('home.availableRoomsDescription')}
@@ -293,11 +293,11 @@ export default function HomePage() {
                           <span className="font-semibold">{t('home.hostRoom', { name: room.hostName })}</span>
                           {room.isPublic ? (
                             <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded flex items-center gap-1">
-                              <Globe className="w-3 h-3" /> {t('home.public')}
+                              <Icon icon="mdi:web" className="w-3 h-3" /> {t('home.public')}
                             </span>
                           ) : (
                             <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded flex items-center gap-1">
-                              <Lock className="w-3 h-3" /> {t('home.private')}
+                              <Icon icon="mdi:lock" className="w-3 h-3" /> {t('home.private')}
                             </span>
                           )}
                           {room.inProgress && (
@@ -307,7 +307,7 @@ export default function HomePage() {
                           )}
                         </div>
                         <div className="flex items-center gap-1 text-sm text-gray-600">
-                          <Users className="w-4 h-4" /> {room.playerCount}/{room.maxPlayers}
+                          <Icon icon="mdi:account-group" className="w-4 h-4" /> {room.playerCount}/{room.maxPlayers}
                         </div>
                       </div>
                     </div>
@@ -321,14 +321,14 @@ export default function HomePage() {
           <Card className="border-dashed">
             <CardHeader>
               <CardTitle className="text-center flex items-center justify-center gap-2">
-                <Layers className="w-5 h-5" /> {t('home.quickRules')}
+                <Icon icon="mdi:layers" className="w-5 h-5" /> {t('home.quickRules')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-4 text-sm">
                 <div>
                   <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <Target className="w-4 h-4" /> {t('home.goal')}
+                    <Icon icon="mdi:target" className="w-4 h-4" /> {t('home.goal')}
                   </h4>
                   <p className="text-gray-600">
                     {t('home.goalDescription')}
@@ -336,7 +336,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <Spade className="w-4 h-4" /> {t('home.gameplay')}
+                    <Icon icon="mdi:cards-spade" className="w-4 h-4" /> {t('home.gameplay')}
                   </h4>
                   <p className="text-gray-600">
                     {t('home.gameplayDescription')}
@@ -344,7 +344,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <Frown className="w-4 h-4" /> {t('home.bluffing')}
+                    <Icon icon="mdi:emoticon-sad" className="w-4 h-4" /> {t('home.bluffing')}
                   </h4>
                   <p className="text-gray-600">
                     {t('home.bluffingDescription')}
@@ -352,7 +352,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <Trophy className="w-4 h-4" /> {t('home.specialRule')}
+                    <Icon icon="mdi:trophy" className="w-4 h-4" /> {t('home.specialRule')}
                   </h4>
                   <p className="text-gray-600">
                     {t('home.specialRuleDescription')}
