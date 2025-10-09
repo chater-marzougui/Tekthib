@@ -1,0 +1,45 @@
+{
+  "dialog": {
+    "title": "🎉 Partie Terminée !",
+    "description": "La partie est terminée. Voici les résultats :"
+  },
+  "winners": {
+    "title": "🏆 Gagnants :"
+  },
+  "loser": {
+    "title": "😢 Perdant :",
+    "message": "Meilleure chance la prochaine fois ! 🎯"
+  },
+  "statistics": {
+    "title": "📊 Statistiques des Joueurs",
+    "labels": {
+      "you": "Vous",
+      "loser": "Perdant",
+      "caughtBluffing": "🤥 Pris en Flagrant Délit :",
+      "successfulBluffs": "😎 Bluffs Réussis :",
+      "falseAccusations": "❌ Fausses Accusations :",
+      "toldTruth": "✅ Dit la Vérité :"
+    }
+  },
+  "titles": {
+    "rookie": "🎲 Débutant",
+    "clown": "🤡 Clown du Tour",
+    "coClown": "🤡 Co-Clown du Tour",
+    "masterLiar": "😈 Maître Menteur",
+    "masterDeceiver": "😈 Maître Trompeur",
+    "saint": "👼 Saint",
+    "coSaint": "👼 Co-Saint",
+    "detective": "🔍 Détective",
+    "coDetective": "🔍 Co-Détective",
+    "transparentPlayer": "🎭 Joueur Transparent",
+    "professionalGuesser": "🎪 Devineur Professionnel",
+    "lastOneStanding": "💀 Dernier Debout (À peine)",
+    "perfectPokerFace": "🎩 Visage de Poker Parfait",
+    "openBook": "📖 Livre Ouvert",
+    "riskTaker": "🎲 Preneur de Risques"
+  },
+  "buttons": {
+    "playAgain": "🔄 Rejouer",
+    "returnHome": "Retour à l'Accueil"
+  }
+}

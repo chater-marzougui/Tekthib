@@ -524,7 +524,7 @@ export default function RoomPage() {
                   className={`w-full ${
                     isReady ? "bg-green-600 hover:bg-green-700" : ""
                   }`}
-                  variant={isReady ? "default" : "outline"}
+                  variant={isReady ? "default" : "destructive"}
                 >
                   {isReady ? (
                     <span className="flex items-center gap-2">

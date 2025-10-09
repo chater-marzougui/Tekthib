@@ -1,0 +1,45 @@
+{
+  "dialog": {
+    "title": "🎉 انتهت اللعبة!",
+    "description": "انتهت اللعبة. إليك النتائج:"
+  },
+  "winners": {
+    "title": "🏆 الفائزون:"
+  },
+  "loser": {
+    "title": "😢 الخاسر:",
+    "message": "حظ أفضل في المرة القادمة! 🎯"
+  },
+  "statistics": {
+    "title": "📊 إحصائيات اللاعبين",
+    "labels": {
+      "you": "أنت",
+      "loser": "الخاسر",
+      "caughtBluffing": "🤥 تم ضبطه يخادع:",
+      "successfulBluffs": "😎 خدع ناجحة:",
+      "falseAccusations": "❌ اتهامات كاذبة:",
+      "toldTruth": "✅ قال الحقيقة:"
+    }
+  },
+  "titles": {
+    "rookie": "🎲 مبتدئ",
+    "clown": "🤡 مهرج الجولة",
+    "coClown": "🤡 مهرج مشارك",
+    "masterLiar": "😈 كذاب محترف",
+    "masterDeceiver": "😈 خداع محترف",
+    "saint": "👼 قديس",
+    "coSaint": "👼 قديس مشارك",
+    "detective": "🔍 محقق",
+    "coDetective": "🔍 محقق مشارك",
+    "transparentPlayer": "🎭 لاعب شفاف",
+    "professionalGuesser": "🎪 خبير تخمين",
+    "lastOneStanding": "💀 آخر من بقي (بالكاد)",
+    "perfectPokerFace": "🎩 وجه بوكر مثالي",
+    "openBook": "📖 كتاب مفتوح",
+    "riskTaker": "🎲 مغامر"
+  },
+  "buttons": {
+    "playAgain": "🔄 العب مرة أخرى",
+    "returnHome": "العودة للرئيسية"
+  }
+}

@@ -7,15 +7,23 @@ import translationEN from "../public/locales/en/translation.json";
 import translationFR from "../public/locales/fr/translation.json";
 import translationAR from "../public/locales/ar/translation.json";
 
+// Import endgame translation files
+import endgameEN from "../public/locales/en/endgame.json";
+import endgameFR from "../public/locales/fr/endgame.json";
+import endgameAR from "../public/locales/ar/endgame.json";
+
 const resources = {
   en: {
     translation: translationEN,
+    endgame: endgameEN,
   },
   fr: {
     translation: translationFR,
+    endgame: endgameFR,
   },
   ar: {
     translation: translationAR,
+    endgame: endgameAR,
   },
 };
 

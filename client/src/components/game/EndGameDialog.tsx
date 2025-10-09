@@ -8,6 +8,7 @@ import {
 } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type { PlayerStats } from "shared";
 import type { GameState } from "@/types";
 
@@ -25,12 +26,13 @@ interface EndGameDialogProps {
 function calculateTitles(
   playerStats: Record<string, PlayerStats>,
   playerId: string,
-  isLoser: boolean
+  isLoser: boolean,
+  t: (key: string) => string
 ): string[] {
   const titles: string[] = [];
   const stats = playerStats[playerId];
 
-  if (!stats) return ["🎲 Rookie"];
+  if (!stats) return [t("endgame:titles.rookie")];
 
   // Find the maximum values across all players for each stat
   const allStats = Object.values(playerStats);
@@ -65,9 +67,9 @@ function calculateTitles(
     maxFalseAccusations > 0
   ) {
     if (falseAccusersCount > 1) {
-      titles.push("🤡 Co-Clown of the Round");
+      titles.push(t("endgame:titles.coClown"));
     } else {
-      titles.push("🤡 Clown of the Round");
+      titles.push(t("endgame:titles.clown"));
     }
   }
 
@@ -76,17 +78,17 @@ function calculateTitles(
     maxSuccessfulBluffs > 0
   ) {
     if (masterLiarsCount > 1) {
-      titles.push("😈 Master Deceiver");
+      titles.push(t("endgame:titles.masterDeceiver"));
     } else {
-      titles.push("😈 Master Liar");
+      titles.push(t("endgame:titles.masterLiar"));
     }
   }
 
   if (stats.timesToldTruth === maxTruthful && maxTruthful > 0) {
     if (saintsCount > 1) {
-      titles.push("👼 Co-Saint");
+      titles.push(t("endgame:titles.coSaint"));
     } else {
-      titles.push("👼 Saint");
+      titles.push(t("endgame:titles.saint"));
     }
   }
 
@@ -95,30 +97,30 @@ function calculateTitles(
     maxCaughtBluffing > 0
   ) {
     if (detectivesCount > 1) {
-      titles.push("🔍 Co-Detective");
+      titles.push(t("endgame:titles.coDetective"));
     } else {
-      titles.push("🔍 Detective");
+      titles.push(t("endgame:titles.detective"));
     }
   }
 
   // Special loser titles with extra harassment
   if (isLoser) {
     if (stats.timesCaughtBluffing >= 3) {
-      titles.push("🎭 Transparent Player");
+      titles.push(t("endgame:titles.transparentPlayer"));
     }
     if (stats.timesFalselyAccused >= 3) {
-      titles.push("🎪 Professional Guesser");
+      titles.push(t("endgame:titles.professionalGuesser"));
     }
-    titles.push("💀 Last One Standing (Barely)");
+    titles.push(t("endgame:titles.lastOneStanding"));
   }
 
   // Additional achievement titles
   if (stats.timesBluffedSuccessfully >= 5 && stats.timesCaughtBluffing === 0) {
-    titles.push("🎩 Perfect Poker Face");
+    titles.push(t("endgame:titles.perfectPokerFace"));
   }
 
   if (stats.timesToldTruth >= 8 && stats.timesBluffedSuccessfully === 0) {
-    titles.push("📖 Open Book");
+    titles.push(t("endgame:titles.openBook"));
   }
 
   if (
@@ -126,12 +128,12 @@ function calculateTitles(
     stats.timesFalselyAccused >= 2 &&
     !isLoser
   ) {
-    titles.push("🎲 Risk Taker");
+    titles.push(t("endgame:titles.riskTaker"));
   }
 
   // Default title if no achievements
   if (titles.length === 0) {
-    titles.push("🎲 Rookie");
+    titles.push(t("endgame:titles.rookie"));
   }
 
   return titles;
@@ -148,6 +150,7 @@ export const EndGameDialog = ({
   handlePlayAgain,
 }: EndGameDialogProps) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleClose = () => {
     onClose();
@@ -158,14 +161,16 @@ export const EndGameDialog = ({
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>🎉 Game Over!</DialogTitle>
+          <DialogTitle>{t("endgame:dialog.title")}</DialogTitle>
           <DialogDescription>
-            The game has ended. Here are the results:
+            {t("endgame:dialog.description")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div>
-            <h3 className="font-semibold text-green-600 mb-2">🏆 Winners:</h3>
+            <h3 className="font-semibold text-green-600 mb-2">
+              {t("endgame:winners.title")}
+            </h3>
             <ul className="list-disc list-inside space-y-1">
               {winners.map((winner, idx) => (
                 <li key={idx} className="text-lg">
@@ -175,10 +180,12 @@ export const EndGameDialog = ({
             </ul>
           </div>
           <div>
-            <h3 className="font-semibold text-red-600 mb-2">😢 Loser:</h3>
+            <h3 className="font-semibold text-red-600 mb-2">
+              {t("endgame:loser.title")}
+            </h3>
             <p className="text-lg font-bold">{loser}</p>
             <p className="text-sm text-gray-600 italic mt-1">
-              Better luck next time! 🎯
+              {t("endgame:loser.message")}
             </p>
           </div>
 
@@ -186,7 +193,7 @@ export const EndGameDialog = ({
           {playerStats && gameState && (
             <div className="mt-6">
               <h3 className="font-semibold text-blue-600 mb-3">
-                📊 Player Statistics
+                {t("endgame:statistics.title")}
               </h3>
               <div className="space-y-3">
                 {gameState.players.map((player) => {
@@ -200,37 +207,38 @@ export const EndGameDialog = ({
                   const titles = calculateTitles(
                     playerStats,
                     player.id,
-                    isLoserPlayer
+                    isLoserPlayer,
+                    t
                   );
 
                   return (
                     <div
                       key={player.id}
-                      className={`border rounded-lg p-3 ${
+                      className={`bg-card/50 border rounded-lg p-3 ${
                         isLoserPlayer
-                          ? "bg-red-50 border-red-300"
+                          ? " border-red-300"
                           : isCurrentPlayer
-                            ? "bg-blue-50 border-blue-300"
-                            : "bg-gray-50"
+                            ? " border-blue-300"
+                            : ""
                       }`}
                     >
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-semibold">{player.name}</h4>
                         {isCurrentPlayer && (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500 text-white">
-                            You
+                            {t("endgame:statistics.labels.you")}
                           </span>
                         )}
                         {isLoserPlayer && (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-red-500 text-white">
-                            Loser
+                            {t("endgame:statistics.labels.loser")}
                           </span>
                         )}
                       </div>
                       <div className="flex flex-wrap gap-2 mb-2">
                         {titles.map((title, idx) => (
                           <span
-                            key={idx}
+                            key={idx + 1}
                             className={`px-2 py-1 text-xs rounded-full font-medium ${
                               isLoserPlayer
                                 ? "bg-red-200 text-red-900"
@@ -245,7 +253,7 @@ export const EndGameDialog = ({
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-600">
-                            🤥 Caught Bluffing:
+                            {t("endgame:statistics.labels.caughtBluffing")}
                           </span>
                           <span className="font-semibold">
                             {stats.timesCaughtBluffing}
@@ -253,7 +261,7 @@ export const EndGameDialog = ({
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">
-                            😎 Successful Bluffs:
+                            {t("endgame:statistics.labels.successfulBluffs")}
                           </span>
                           <span className="font-semibold">
                             {stats.timesBluffedSuccessfully}
@@ -261,14 +269,16 @@ export const EndGameDialog = ({
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">
-                            ❌ False Accusations:
+                            {t("endgame:statistics.labels.falseAccusations")}
                           </span>
                           <span className="font-semibold">
                             {stats.timesFalselyAccused}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-600">✅ Told Truth:</span>
+                          <span className="text-gray-600">
+                            {t("endgame:statistics.labels.toldTruth")}
+                          </span>
                           <span className="font-semibold">
                             {stats.timesToldTruth}
                           </span>
@@ -283,10 +293,10 @@ export const EndGameDialog = ({
         </div>
         <DialogFooter className="gap-2 sm:gap-0">
           <Button onClick={handlePlayAgain} variant="default">
-            🔄 Play Again
+            {t("endgame:buttons.playAgain")}
           </Button>
           <Button variant="outline" onClick={handleClose}>
-            Return to Home
+            {t("endgame:buttons.returnHome")}
           </Button>
         </DialogFooter>
       </DialogContent>

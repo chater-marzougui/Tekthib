@@ -1,0 +1,45 @@
+{
+  "dialog": {
+    "title": "🎉 Game Over!",
+    "description": "The game has ended. Here are the results:"
+  },
+  "winners": {
+    "title": "🏆 Winners:"
+  },
+  "loser": {
+    "title": "😢 Loser:",
+    "message": "Better luck next time! 🎯"
+  },
+  "statistics": {
+    "title": "📊 Player Statistics",
+    "labels": {
+      "you": "You",
+      "loser": "Loser",
+      "caughtBluffing": "🤥 Caught Bluffing:",
+      "successfulBluffs": "😎 Successful Bluffs:",
+      "falseAccusations": "❌ False Accusations:",
+      "toldTruth": "✅ Told Truth:"
+    }
+  },
+  "titles": {
+    "rookie": "🎲 Rookie",
+    "clown": "🤡 Clown of the Round",
+    "coClown": "🤡 Co-Clown of the Round",
+    "masterLiar": "😈 Master Liar",
+    "masterDeceiver": "😈 Master Deceiver",
+    "saint": "👼 Saint",
+    "coSaint": "👼 Co-Saint",
+    "detective": "🔍 Detective",
+    "coDetective": "🔍 Co-Detective",
+    "transparentPlayer": "🎭 Transparent Player",
+    "professionalGuesser": "🎪 Professional Guesser",
+    "lastOneStanding": "💀 Last One Standing (Barely)",
+    "perfectPokerFace": "🎩 Perfect Poker Face",
+    "openBook": "📖 Open Book",
+    "riskTaker": "🎲 Risk Taker"
+  },
+  "buttons": {
+    "playAgain": "🔄 Play Again",
+    "returnHome": "Return to Home"
+  }
+}
