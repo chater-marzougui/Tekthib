@@ -18,13 +18,6 @@ import { useAvatar } from "@/hooks/useAvatar";
 
 const countryOptions = [
   {
-    value: "france",
-    name: "France",
-    code: "fr",
-    flagUrl: "/Tekthib/flags/fr.webp",
-    altText: "France Flag",
-  },
-  {
     value: "english",
     name: "English",
     code: "en",
@@ -38,6 +31,13 @@ const countryOptions = [
     flagUrl: "/Tekthib/flags/tn.webp",
     altText: "Tunisia Flag",
   },
+  {
+    value: "france",
+    name: "France",
+    code: "fr",
+    flagUrl: "/Tekthib/flags/fr.webp",
+    altText: "France Flag",
+  }
 ];
 
 export function NavUser() {
@@ -46,7 +46,7 @@ export function NavUser() {
   const playerId = localStorage.getItem("clientId");
   const randomStr = Math.random().toString(36).substring(2, 15);
 
-  const avatarSvg = useAvatar(playerId || randomStr, 122, theme === "dark" ? "white" : "transparent");
+  const avatarSvg = useAvatar(playerId || randomStr);
 
   const handleLanguageChange = (language: string) => {
     i18n.changeLanguage(language);
@@ -61,7 +61,7 @@ export function NavUser() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <div
-                className={`w-10 h-10 ring-2 ring-blue-500 rounded-full overflow-hidden flex items-center justify-center`}
+                className={`w-10 h-10 ring-2 ring-blue-500 rounded-full overflow-hidden flex items-center justify-center bg-gray-300`}
                 dangerouslySetInnerHTML={{ __html: avatarSvg! }}
               />
             </DropdownMenuTrigger>
@@ -102,7 +102,7 @@ export function NavUser() {
                             onClick={() => handleLanguageChange(country.code)}
                           >
                             <img
-                              className="aspect-[3/2] w-auto rounded-sm border-[1px]"
+                              className="w-8 aspect-[3/2] rounded-sm border-[1px]"
                               src={country.flagUrl}
                               alt={country.altText}
                             />

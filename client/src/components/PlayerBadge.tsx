@@ -30,7 +30,7 @@ export const PlayerBadge = ({ player, playerId }: PlayerBadgeProps) => {
   if (avatarSvg) {
     return (
       <div
-        className={`w-8 h-8 ring-2 ${getRingColor(player, playerId)} rounded-full overflow-hidden flex items-center justify-center`}
+        className={`w-8 h-8 ring-2 ${getRingColor(player, playerId)} rounded-full overflow-hidden flex items-center justify-center bg-gray-300`}
         dangerouslySetInnerHTML={{ __html: avatarSvg }}
       />
     );

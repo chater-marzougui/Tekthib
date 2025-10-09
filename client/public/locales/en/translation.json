@@ -133,11 +133,68 @@
     "playerCompleted": "{{player}} finished! No cards left.",
     "youWon": "Congratulations! You won!",
     "youLost": "Game Over! You lost.",
-    "playerWon": "{{player}} won the game!"
+    "playerWon": "{{player}} won the game!",
+    "gameReset": "Game reset! Return to room to start again.",
+    "outOfGame": "Out of Game",
+    "sets": "sets"
+  },
+  "chat": {
+    "title": "Chat",
+    "noMessages": "No messages yet. Start the conversation!",
+    "typeMessage": "Type a message...",
+    "sendMessage": "Send message"
+  },
+  "voiceChat": {
+    "title": "Voice Chat",
+    "joinVoiceChat": "Join Voice Chat",
+    "leaveVoiceChat": "Leave Voice Chat",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "mutedByHost": "Muted by Host",
+    "voiceChatActive": "Voice chat active",
+    "yourMicMuted": "Your microphone is muted",
+    "hostDisabledMic": "Host has disabled your microphone",
+    "connectedPlayers": "Connected Players ({{count}})",
+    "mutePlayer": "Mute {{player}}",
+    "unmutePlayer": "Unmute {{player}}",
+    "mutePlayerMic": "Mute {{player}}'s microphone",
+    "kickPlayer": "Kick {{player}}",
+    "connectedToPlayers": "Connected to {{count}} player(s)",
+    "joinToTalk": "Join to talk with other players",
+    "hostControls": "ℹ️ As host, you can mute players or kick them"
+  },
+  "errors": {
+    "roomNotFound": "Room not found. Redirecting to home...",
+    "notInGame": "You are not in this game. Redirecting..."
+  },
+  "quickRules": {
+    "title": "Quick Rules",
+    "rule1": "Play cards face-down and claim a rank",
+    "rule2": "You can bluff (lie about the rank)",
+    "rule3": "Others can challenge by calling \"Liar!\"",
+    "rule4": "Wrong challenger takes the pile",
+    "rule5": "First to empty hand wins!"
+  },
+  "stateCard": {
+    "you": "You",
+    "waiting": "Waiting...",
+    "current": "Current",
+    "time": "Time",
+    "claim": "Claim",
+    "card": "card",
+    "cards": "cards"
+  },
+  "playerList": {
+    "title": "Players ({{count}})",
+    "you": "You",
+    "card": "card",
+    "cards": "cards",
+    "currentTurn": "Current Turn",
+    "winner": "Winner!"
   },
   "confirmDialog": {
     "leaveRoomTitle": "Leave Room?",
-    "leaveRoomDescription": "Are you sure you want to leave the room? Your progress will be lost.",
+    "leaveRoomDescription": "Are you sure you want to leave the room?",
     "leaveGameTitle": "Leave Game?",
     "leaveGameDescription": "Are you sure you want to leave the game? You will forfeit the match.",
     "leave": "Leave",

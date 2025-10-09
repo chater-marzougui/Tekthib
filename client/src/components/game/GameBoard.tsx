@@ -10,6 +10,7 @@ import PlayerControls from "./board/PlayerControls";
 import StateCard from "./board/StateCard";
 import CenterPile from "./board/CenterPile";
 import { Icon } from "@iconify/react";
+import { t } from "i18next";
 
 interface MergedGameBoardProps {
   lastPlay: LastPlay | null;
@@ -170,7 +171,7 @@ export default function GameBoard({
             <div className="relative flex items-center justify-center p-0 m-0 mb-3">
               <div className="flex-1 border-t border-border"></div>
               <div className="px-4 text-sm font-semibold text-muted-foreground bg-background">
-                Your Cards ({playerCards.length})
+                {t('game.yourCards', { count: playerCards.length })}
               </div>
               <div className="flex-1 border-t border-border"></div>
             </div>

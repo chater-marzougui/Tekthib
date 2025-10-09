@@ -7,7 +7,7 @@ export function Header() {
   const { actionButton, showLogo, logoUrl, showName, appName } = headerState;
   return (
     <header
-      className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+      className="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60"
     >
       <div className="container flex h-16 items-center justify-between px-4 md:px-6">
         {/* Left Side - Logo and Name */}
@@ -25,7 +25,7 @@ export function Header() {
         </div>
 
         {/* Right Side - Action Button and NavUser */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-10">
           {actionButton && (
             <Button
               onClick={actionButton.onClick}

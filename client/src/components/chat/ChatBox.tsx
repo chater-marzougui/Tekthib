@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -73,6 +74,7 @@ export default function ChatBox({
   playerId,
   systemMessages = [],
 }: Readonly<ChatBoxProps>) {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -145,7 +147,7 @@ export default function ChatBox({
   return (
     <Card className="h-96 flex flex-col">
       <CardHeader className="flex-shrink-0">
-        <CardTitle>Chat</CardTitle>
+        <CardTitle>{t('chat.title')}</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col p-0 min-h-0">
         {/* Messages Area */}
@@ -155,15 +157,15 @@ export default function ChatBox({
         >
           {allMessages.length === 0 ? (
             <div className="flex items-center justify-center h-full text-muted-foreground">
-              No messages yet. Start the conversation!
+              {t('chat.noMessages')}
             </div>
           ) : (
             allMessages.map((msg) => {
               if (msg.isSystem) {
                 const { containerClass, textColor, timeColor } = getSystemMessageStyleClass(msg.systemMessageColor);
                 return (
-                  <div key={msg.id} className={`flex justify-center rounded-lg my-2 ${containerClass}`}>
-                    <div className={`px-4 py-2 max-w-md ${containerClass}`}>
+                  <div key={msg.id} className={`flex p-1 justify-center rounded-lg my-2 ${containerClass}`}>
+                    <div className={`p-2 max-w-md ${containerClass}`}>
                       <div className={`text-sm text-center ${textColor} font-medium`}>
                         {msg.message}
                       </div>
@@ -235,7 +237,7 @@ export default function ChatBox({
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyUp={handleKeyPress}
-            placeholder="Type a message..."
+            placeholder={t('chat.typeMessage')}
             className="flex-1 border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
             autoComplete="off"
           />
@@ -246,7 +248,7 @@ export default function ChatBox({
             className="flex-shrink-0"
           >
             <Icon icon="mdi:send" className="h-4 w-4" />
-            <span className="sr-only">Send message</span>
+            <span className="sr-only">{t('chat.sendMessage')}</span>
           </Button>
         </div>
       </CardContent>

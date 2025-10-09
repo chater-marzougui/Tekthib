@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Card } from "@shared";
 import { RenderCard } from "../RenderCard";
@@ -9,6 +10,8 @@ interface CenterPileProps {
 }
 
 const WastedPile: React.FC<CenterPileProps> = ({ removedCards }) => {
+  const { t } = useTranslation();
+  
   // Get unique ranks from removed cards (one card per four-of-a-kind)
   const uniqueRemovedRanks = useMemo(() => {
     return getUniqueRemovedRanks(removedCards);
@@ -52,7 +55,7 @@ const WastedPile: React.FC<CenterPileProps> = ({ removedCards }) => {
     <div className="flex-shrink-0 flex justify-center md:justify-end md:w-[200px]">
       <div>
         <p className="text-xs font-semibold text-gray-600 mb-2 text-center">
-          Out of Game
+          {t('game.outOfGame')}
         </p>
         <div className="relative h-32 w-32 md:h-40 md:w-40">
           {uniqueRemovedRanks.slice(0, 12).map((card, i) => {
@@ -114,7 +117,7 @@ const WastedPile: React.FC<CenterPileProps> = ({ removedCards }) => {
                 {uniqueRemovedRanks.length}
               </div>
               <div className="text-[8px] md:text-[10px] leading-none opacity-90">
-                sets
+                {t('game.sets')}
               </div>
             </div>
           </motion.div>

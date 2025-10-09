@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Player as BasePlayer } from "shared";
 import { PlayerBadge } from "../PlayerBadge";
@@ -16,10 +17,12 @@ export default function PlayerList({
   players,
   currentPlayerId,
 }: Readonly<PlayerListProps>) {
+  const { t } = useTranslation();
+  
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Players ({players.length})</CardTitle>
+        <CardTitle>{t('playerList.title', { count: players.length })}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
@@ -43,12 +46,12 @@ export default function PlayerList({
                       )}
                       {player.id === currentPlayerId && (
                         <span className="text-xs text-green-600 ml-2">
-                          (You)
+                          ({t('playerList.you')})
                         </span>
                       )}
                     </div>
                     <div className="text-sm text-gray-600">
-                      {player.cardCount} card{player.cardCount !== 1 ? "s" : ""}
+                      {player.cardCount} {player.cardCount !== 1 ? t('playerList.cards') : t('playerList.card')}
                     </div>
                   </div>
                 </div>
@@ -56,12 +59,12 @@ export default function PlayerList({
                 <div className="text-right">
                   {player.isCurrentTurn && (
                     <div className="text-blue-600 font-semibold text-sm animate-pulse">
-                      Current Turn
+                      {t('playerList.currentTurn')}
                     </div>
                   )}
                   {player.cardCount === 0 && (
                     <div className="flex items-center gap-1 text-green-600 font-semibold text-sm">
-                      <Icon icon="mdi:trophy" className="w-4 h-4" /> Winner!
+                      <Icon icon="mdi:trophy" className="w-4 h-4" /> {t('playerList.winner')}
                     </div>
                   )}
                 </div>

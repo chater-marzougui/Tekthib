@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useVoiceChatContext } from "@/context/VoiceChatContext";
@@ -13,6 +14,7 @@ export default function VoiceChat({
   players,
   localPlayerId,
 }: Readonly<VoiceChatProps>) {
+  const { t } = useTranslation();
   const {
     isVoiceEnabled,
     isMuted,
@@ -48,7 +50,7 @@ export default function VoiceChat({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Icon icon="mdi:phone" className="w-5 h-5" />
-          Voice Chat
+          {t('voiceChat.title')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -67,12 +69,12 @@ export default function VoiceChat({
             {isVoiceEnabled ? (
               <>
                 <Icon icon="mdi:phone-off" className="w-4 h-4 mr-2" />
-                Leave Voice Chat
+                {t('voiceChat.leaveVoiceChat')}
               </>
             ) : (
               <>
                 <Icon icon="mdi:phone" className="w-4 h-4 mr-2" />
-                Join Voice Chat
+                {t('voiceChat.joinVoiceChat')}
               </>
             )}
           </Button>
@@ -88,12 +90,12 @@ export default function VoiceChat({
               {isMuted ? (
                 <>
                   <Icon icon="mdi:microphone-off" className="w-4 h-4 mr-2" />
-                  {hostMuted ? "Muted by Host" : "Unmute"}
+                  {hostMuted ? t('voiceChat.mutedByHost') : t('voiceChat.unmute')}
                 </>
               ) : (
                 <>
                   <Icon icon="mdi:microphone" className="w-4 h-4 mr-2" />
-                  Mute
+                  {t('voiceChat.mute')}
                 </>
               )}
             </Button>
@@ -104,18 +106,18 @@ export default function VoiceChat({
           <div className="text-xs text-gray-600 space-y-1">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span>Voice chat active</span>
+              <span>{t('voiceChat.voiceChatActive')}</span>
             </div>
             {isMuted && (
               <div className="flex items-center gap-2 text-red-600">
                 <Icon icon="mdi:microphone-off" className="w-3 h-3" />
-                <span>Your microphone is muted</span>
+                <span>{t('voiceChat.yourMicMuted')}</span>
               </div>
             )}
             {hostMuted && (
               <div className="flex items-center gap-2 text-orange-600">
                 <Icon icon="mdi:microphone-off" className="w-3 h-3" />
-                <span>Host has disabled your microphone</span>
+                <span>{t('voiceChat.hostDisabledMic')}</span>
               </div>
             )}
           </div>
@@ -125,7 +127,7 @@ export default function VoiceChat({
         {isVoiceEnabled && otherPlayers.length > 0 && (
           <div className="pt-3 border-t space-y-2">
             <div className="text-xs font-semibold text-gray-700">
-              Connected Players ({otherPlayers.length})
+              {t('voiceChat.connectedPlayers', { count: otherPlayers.length })}
             </div>
             <div className="space-y-1 max-h-48 overflow-y-auto">
               {otherPlayers.map((player) => {
@@ -152,8 +154,8 @@ export default function VoiceChat({
                           onClick={() => togglePlayerMute(player.id)}
                           title={
                             isPlayerMuted
-                              ? `Unmute ${player.name}`
-                              : `Mute ${player.name}`
+                              ? t('voiceChat.unmutePlayer', { player: player.name })
+                              : t('voiceChat.mutePlayer', { player: player.name })
                           }
                         >
                           {isPlayerMuted ? (
@@ -173,7 +175,7 @@ export default function VoiceChat({
                               onClick={() =>
                                 mutePlayerMic(player.id, !isPlayerHostMuted)
                               }
-                              title={`Mute ${player.name}'s microphone`}
+                              title={t('voiceChat.mutePlayerMic', { player: player.name })}
                             >
                               {isPlayerHostMuted ? (
                                 <Icon icon="mdi:microphone-off" className="w-4 h-4 text-orange-600" />
@@ -186,7 +188,7 @@ export default function VoiceChat({
                               variant="ghost"
                               className="h-7 w-7 p-0"
                               onClick={() => kickPlayer(player.id)}
-                              title={`Kick ${player.name}`}
+                              title={t('voiceChat.kickPlayer', { player: player.name })}
                             >
                               <Icon icon="mdi:account-off" className="w-4 h-4 text-red-600" />
                             </Button>
@@ -213,13 +215,13 @@ export default function VoiceChat({
 
         <div className="text-xs text-gray-500 pt-2 border-t">
           {isVoiceEnabled
-            ? `Connected to ${otherPlayers.length} player(s)`
-            : "Join to talk with other players"}
+            ? t('voiceChat.connectedToPlayers', { count: otherPlayers.length })
+            : t('voiceChat.joinToTalk')}
         </div>
 
         {isHost && isVoiceEnabled && (
           <div className="text-xs text-blue-600 pt-1">
-            ℹ️ As host, you can mute players or kick them
+            {t('voiceChat.hostControls')}
           </div>
         )}
       </CardContent>

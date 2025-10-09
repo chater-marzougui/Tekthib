@@ -27,6 +27,7 @@ import { motion } from "framer-motion";
 import { RenderCard } from "@/components/game/RenderCard";
 import { useHeader } from "@/context/HeaderContext";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import QuickRules from "@/components/game/QuickRules";
 
 interface GamePlayer extends Player {
   isCurrentTurn: boolean;
@@ -359,14 +360,14 @@ export default function GamePage() {
           errorCode === "ROOM_NOT_FOUND" ||
           errorMessage === "Room not found"
         ) {
-          toast.error("Room not found. Redirecting to home...");
+          toast.error(t('errors.roomNotFound'));
           navigate("/");
           return;
         }
 
         // If player not in room, redirect to room page if it exists
         if (errorMessage === "Player not in room") {
-          toast.error("You are not in this game. Redirecting...");
+          toast.error(t('errors.notInGame'));
           navigate("/");
           return;
         }
@@ -378,7 +379,7 @@ export default function GamePage() {
 
     const unregisterGameReset = registerHandler("game-reset", (message) => {
       if (message.type === "GAME_RESET") {
-        toast.success("Game reset! Return to room to start again.");
+        toast.success(t('game.gameReset'));
         navigate(`/room/${roomId}`);
       }
     });
@@ -790,18 +791,7 @@ export default function GamePage() {
               <VoiceChat players={playersForVoice} localPlayerId={playerId} />
             )}
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Rules</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm space-y-2">
-                <div>• Play cards face-down and claim a rank</div>
-                <div>• You can bluff (lie about the rank)</div>
-                <div>• Others can challenge by calling "Liar!"</div>
-                <div>• Wrong challenger takes the pile</div>
-                <div>• First to empty hand wins!</div>
-              </CardContent>
-            </Card>
+            <QuickRules />
           </div>
 
           <div className="space-y-4">

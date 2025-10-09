@@ -133,11 +133,68 @@
     "playerCompleted": "{{player}} انتهى! لا توجد أوراق متبقية.",
     "youWon": "تهانينا! لقد فزت!",
     "youLost": "انتهت اللعبة! لقد خسرت.",
-    "playerWon": "{{player}} فاز باللعبة!"
+    "playerWon": "{{player}} فاز باللعبة!",
+    "gameReset": "تم إعادة تعيين اللعبة! عد إلى الغرفة لبدء اللعب مرة أخرى.",
+    "outOfGame": "خارج اللعبة",
+    "sets": "مجموعات"
+  },
+  "chat": {
+    "title": "الدردشة",
+    "noMessages": "لا توجد رسائل حتى الآن. ابدأ المحادثة!",
+    "typeMessage": "اكتب رسالة...",
+    "sendMessage": "إرسال رسالة"
+  },
+  "voiceChat": {
+    "title": "الدردشة الصوتية",
+    "joinVoiceChat": "الانضمام إلى الدردشة الصوتية",
+    "leaveVoiceChat": "مغادرة الدردشة الصوتية",
+    "mute": "كتم الصوت",
+    "unmute": "إلغاء الكتم",
+    "mutedByHost": "تم كتمه من قبل المضيف",
+    "voiceChatActive": "الدردشة الصوتية نشطة",
+    "yourMicMuted": "الميكروفون الخاص بك مكتوم",
+    "hostDisabledMic": "المضيف قد عطل الميكروفون الخاص بك",
+    "connectedPlayers": "اللاعبون المتصلون ({{count}})",
+    "mutePlayer": "كتم {{player}}",
+    "unmutePlayer": "إلغاء كتم {{player}}",
+    "mutePlayerMic": "كتم ميكروفون {{player}}",
+    "kickPlayer": "طرد {{player}}",
+    "connectedToPlayers": "متصل بـ {{count}} لاعب",
+    "joinToTalk": "انضم للتحدث مع اللاعبين الآخرين",
+    "hostControls": "ℹ️ بصفتك المضيف، يمكنك كتم اللاعبين أو طردهم"
+  },
+  "errors": {
+    "roomNotFound": "الغرفة غير موجودة. إعادة التوجيه إلى الصفحة الرئيسية...",
+    "notInGame": "أنت لست في هذه اللعبة. إعادة التوجيه..."
+  },
+  "quickRules": {
+    "title": "القواعد",
+    "rule1": "العب الأوراق مقلوبة وأعلن عن رتبة",
+    "rule2": "يمكنك الخداع (الكذب بشأن الرتبة)",
+    "rule3": "يمكن للآخرين التحدي بالصراخ \"كاذب!\"",
+    "rule4": "المتحدي الخاطئ يأخذ الكومة",
+    "rule5": "الأول الذي يفرغ يده يفوز!"
+  },
+  "stateCard": {
+    "you": "أنت",
+    "waiting": "في الانتظار...",
+    "current": "الحالي",
+    "time": "الوقت",
+    "claim": "الادعاء",
+    "card": "ورقة",
+    "cards": "أوراق"
+  },
+  "playerList": {
+    "title": "اللاعبون ({{count}})",
+    "you": "أنت",
+    "card": "ورقة",
+    "cards": "ورقة",
+    "currentTurn": "الدور الحالي",
+    "winner": "فائز!"
   },
   "confirmDialog": {
     "leaveRoomTitle": "مغادرة الغرفة؟",
-    "leaveRoomDescription": "هل أنت متأكد من أنك تريد مغادرة الغرفة؟ سيتم فقدان تقدمك.",
+    "leaveRoomDescription": "هل أنت متأكد من أنك تريد مغادرة الغرفة؟",
     "leaveGameTitle": "مغادرة اللعبة؟",
     "leaveGameDescription": "هل أنت متأكد من أنك تريد مغادرة اللعبة؟ ستخسر المباراة.",
     "leave": "مغادرة",

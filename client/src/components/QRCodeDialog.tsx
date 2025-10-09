@@ -45,9 +45,9 @@ interface QRCodeCardProps {
   baseUrl?: string;
 }
 
-export const QRCodeCard: React.FC<QRCodeCardProps> = ({ 
+export const QRCodeCard: React.FC<QRCodeCardProps> = ({
   roomCode,
-  baseUrl = window.location.origin 
+  baseUrl = window.location.origin,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const roomUrl = `${baseUrl}/room/${roomCode}`;
@@ -55,6 +55,13 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({
   const copyRoomUrl = () => {
     navigator.clipboard.writeText(roomUrl);
     toast.success("Room link copied to clipboard!");
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLParagraphElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      copyRoomUrl();
+    }
   };
 
   return (
@@ -84,9 +91,12 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({
             </div>
             <div className="text-center w-full">
               <p className="text-sm text-gray-600 mb-2">Scan to join room</p>
-              <p className="font-mono text-xs bg-gray-100 px-4 py-2 rounded break-all">
+              <button
+                className="font-mono text-xs bg-background px-4 py-2 rounded break-all cursor-pointer"
+                onClick={copyRoomUrl}
+              >
                 {roomUrl}
-              </p>
+              </button>
             </div>
             <Button
               onClick={copyRoomUrl}

@@ -1,3 +1,6 @@
+import i18n from "@/i18n";
+import { useTranslation } from "react-i18next";
+
 interface StateCardProps {
   isMyTurn: boolean;
   currentPlayer: string | null;
@@ -10,12 +13,14 @@ interface StateCardProps {
 
 function CurrentPlayerName(
   playerName: string | null,
-  isMyTurn: boolean
+  isMyTurn: boolean,
+  t: (key: string) => string
 ): React.ReactNode {
   if (isMyTurn)
     return (
       <span className="text-green-400 flex items-center gap-1.5 font-semibold text-sm">
-        <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" /> You
+        <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />{" "}
+        {t("stateCard.you")}
       </span>
     );
   if (playerName)
@@ -24,7 +29,9 @@ function CurrentPlayerName(
         {playerName}
       </span>
     );
-  return <span className="text-slate-500 text-sm">Waiting...</span>;
+  return (
+    <span className="text-slate-500 text-sm">{t("stateCard.waiting")}</span>
+  );
 }
 
 function TimerStyle(timer: number, isMyTurn: boolean): string {
@@ -39,19 +46,25 @@ const StateCard: React.FC<StateCardProps> = ({
   timer,
   lastPlay,
 }) => {
+  const { t } = useTranslation();
+  const currentLang = i18n.language || window.navigator.language;
+  const direction = ["ar", "he", "fa", "ur"].includes(currentLang.split("-")[0])
+    ? "rtl"
+    : "ltr";
+
   return (
-    <div className="md:flex-shrink-0  max-w-[150px]  md:max-w-[200px]">
-      <div className="bg-foreground backdrop-blur-sm border border-slate-700 rounded-lg px-4 md:px-6 py-3 md:min-w-[200px]">
+    <div className="md:flex-shrink-0 max-w-[150px] md:max-w-[200px] " dir={direction}>
+      <div className="bg-background backdrop-blur-sm border border-slate-700 rounded-lg px-4 md:px-6 py-3 md:min-w-[200px]">
         {/* Current player indicator */}
         <div className="flex items-center justify-between gap-2 md:gap-4 mb-2">
-          <p className="text-xs text-slate-400">Current</p>
-          {CurrentPlayerName(currentPlayer, isMyTurn)}
+          <p className="text-xs text-slate-400">{t("stateCard.current")}</p>
+          {CurrentPlayerName(currentPlayer, isMyTurn, t)}
         </div>
 
         {/* Timer */}
         {timer !== null && timer !== undefined && (
           <div className="flex items-center justify-between gap-2 md:gap-4 mb-2">
-            <p className="text-xs text-slate-400">Time</p>
+            <p className="text-xs text-slate-400">{t("stateCard.time")}</p>
             <div
               className={`font-bold text-lg md:text-xl ${TimerStyle(timer, isMyTurn)}`}
             >
@@ -61,13 +74,16 @@ const StateCard: React.FC<StateCardProps> = ({
         )}
         <div className="border-t border-slate-700 my-2" />
         <div className="flex items-center justify-between gap-2 md:gap-4">
-          <p className="text-xs text-slate-400">Claim</p>
+          <p className="text-xs text-slate-400">{t("stateCard.claim")}</p>
           <div className="text-right">
-            <p className="text-xl md:text-2xl font-bold text-background leading-none">
+            <p className="text-xl md:text-2xl font-bold text-foreground leading-none">
               {lastPlay?.claimedRank || "-"}
             </p>
             <p className="text-xs text-slate-500 mt-0.5">
-              {lastPlay?.cardCount || 0} {lastPlay?.cardCount === 1 ? "card" : "cards"}
+              {lastPlay?.cardCount || 0}{" "}
+              {lastPlay?.cardCount === 1
+                ? t("stateCard.card")
+                : t("stateCard.cards")}
             </p>
           </div>
         </div>
