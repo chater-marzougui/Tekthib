@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { QrCode } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { QRCodeSVG } from "qrcode.react";
 import { Card } from "./ui/card";
 import { toast } from "sonner";
@@ -66,7 +66,7 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({
         className="cursor-pointer"
         title="Show QR Code"
       >
-        <QrCode className="w-8 h-8" />
+        <Icon icon="mdi:qrcode" className="w-8 h-8" />
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>

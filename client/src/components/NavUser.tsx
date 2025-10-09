@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuItem } from "@/components/ui/sidebar";
-import { Moon, Sun, Languages } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/context/ThemeProvider";
 import { useAvatar } from "@/hooks/useAvatar";
@@ -78,9 +78,9 @@ export function NavUser() {
                   <div className="flex w-full justify-between">
                     <span>{t("nav.toggleDarkMode")}</span>
                     {theme === "light" ? (
-                      <Moon className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 dark:-rotate-90 dark:scale-0" />
+                      <Icon icon="mdi:moon-waning-crescent" className="h-[1.2rem] w-[1.2rem]" />
                     ) : (
-                      <Sun className="h-[1.2rem] w-[1.2rem] rotate-90 scale-0 dark:rotate-0 dark:scale-100" />
+                      <Icon icon="mdi:white-balance-sunny" className="h-[1.2rem] w-[1.2rem]" />
                     )}
                   </div>
                 </DropdownMenuItem>
@@ -90,7 +90,7 @@ export function NavUser() {
                   <DropdownMenuSubTrigger className="dark:hover:text-accent-foreground">
                     <span className="flex flex-1 items-center gap-2">
                       {t("nav.language")}
-                      <Languages className="ml-auto h-[1.2rem] w-[1.2rem]" />
+                      <Icon icon="mdi:translate" className="ml-auto h-[1.2rem] w-[1.2rem]" />
                     </span>
                   </DropdownMenuSubTrigger>
                   <DropdownMenuPortal>

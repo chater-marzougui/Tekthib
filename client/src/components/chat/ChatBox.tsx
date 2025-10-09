@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useWebSocketContext } from "@/context/WebSocketContext";
 import type { WSMessage } from "shared";
-import { SendHorizonal } from "lucide-react";
+import { Icon } from "@iconify/react";
 
 interface ChatMessage {
   id: string;
@@ -245,7 +245,7 @@ export default function ChatBox({
             size="icon"
             className="flex-shrink-0"
           >
-            <SendHorizonal className="h-4 w-4" />
+            <Icon icon="mdi:send" className="h-4 w-4" />
             <span className="sr-only">Send message</span>
           </Button>
         </div>

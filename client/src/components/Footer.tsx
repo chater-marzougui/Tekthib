@@ -1,5 +1,5 @@
 import React from "react";
-import { Heart, Code, ExternalLink, Github, Gamepad2 } from "lucide-react";
+import { Icon } from "@iconify/react";
 
 const MinimalFooter: React.FC = () => {
   return (
@@ -8,9 +8,9 @@ const MinimalFooter: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-background/60">
           {/* Left section - Creator */}
           <div className="flex items-center gap-2">
-            <Code className="w-3.5 h-3.5 text-green-500" />
+            <Icon icon="mdi:code-tags" className="w-3.5 h-3.5 text-green-500" />
             <span>Built with</span>
-            <Heart className="w-3 h-3 fill-red-500 text-red-500 animate-pulse" />
+            <Icon icon="mdi:heart" className="w-3 h-3 text-red-500 animate-pulse" />
             <span>by</span>
             <a
               href="https://chater-marzougui.me"
@@ -19,13 +19,13 @@ const MinimalFooter: React.FC = () => {
               className="text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1 font-medium"
             >
               Chater Marzougui
-              <ExternalLink className="w-3 h-3" />
+              <Icon icon="mdi:open-in-new" className="w-3 h-3" />
             </a>
           </div>
 
           {/* Center section - Copyright */}
           <div className="flex items-center gap-2">
-            <Gamepad2 className="w-3.5 h-3.5 text-orange-500" />
+            <Icon icon="mdi:gamepad-variant" className="w-3.5 h-3.5 text-orange-500" />
             <span className="font-medium text-background/70">
               Tekthib © {new Date().getFullYear()}
             </span>
@@ -39,7 +39,7 @@ const MinimalFooter: React.FC = () => {
               rel="noopener noreferrer"
               className="flex items-center gap-1 text-background/50 hover:text-background/80 transition-colors"
             >
-              <Github className="w-3.5 h-3.5" />
+              <Icon icon="mdi:github" className="w-3.5 h-3.5" />
               <span>Source</span>
             </a>
             <span className="text-background/30">•</span>

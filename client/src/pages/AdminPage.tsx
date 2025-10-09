@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import type { Room as BaseRoom, GameState } from "@/types";
-import { Trash, Lock, Gamepad2, Home, Users, RotateCw, Pause, Circle, Check, Clock } from "lucide-react";
+import { Icon } from "@iconify/react";
 
 interface Room extends BaseRoom {
   gameState: GameState | null;
@@ -133,7 +133,7 @@ export default function AdminPage() {
         <Card className="w-96">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Lock className="w-5 h-5" /> Admin Login
+              <Icon icon="mdi:lock" className="w-5 h-5" /> Admin Login
             </CardTitle>
             <CardDescription>
               Enter admin password to view system state
@@ -179,7 +179,7 @@ export default function AdminPage() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-              <Gamepad2 className="w-8 h-8" /> System Admin Dashboard
+              <Icon icon="mdi:gamepad-variant" className="w-8 h-8" /> System Admin Dashboard
             </h1>
             <p className="text-gray-600">Real-time system state monitoring</p>
           </div>
@@ -191,11 +191,11 @@ export default function AdminPage() {
             >
               {autoRefresh ? (
                 <>
-                  <RotateCw className="w-4 h-4 mr-2" /> Auto-refresh ON
+                  <Icon icon="mdi:refresh" className="w-4 h-4 mr-2" /> Auto-refresh ON
                 </>
               ) : (
                 <>
-                  <Pause className="w-4 h-4 mr-2" /> Auto-refresh OFF
+                  <Icon icon="mdi:pause" className="w-4 h-4 mr-2" /> Auto-refresh OFF
                 </>
               )}
             </Button>
@@ -207,7 +207,7 @@ export default function AdminPage() {
                 "Refreshing..."
               ) : (
                 <>
-                  <RotateCw className="w-4 h-4 mr-2" /> Refresh
+                  <Icon icon="mdi:refresh" className="w-4 h-4 mr-2" /> Refresh
                 </>
               )}
             </Button>
@@ -229,7 +229,7 @@ export default function AdminPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Home className="w-5 h-5" /> Total Active Rooms
+                <Icon icon="mdi:home" className="w-5 h-5" /> Total Active Rooms
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -241,7 +241,7 @@ export default function AdminPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5" /> Total Players Online
+                <Icon icon="mdi:account-group" className="w-5 h-5" /> Total Players Online
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -289,14 +289,14 @@ export default function AdminPage() {
                             onClick={() => deleteRoom(room.id)}
                             title="Delete Room"
                           >
-                            <Trash className="text-red-500 cursor-pointer" />
+                            <Icon icon="mdi:delete" className="text-red-500 cursor-pointer" />
                           </Button>
                           <div className="text-sm font-medium">
                             Players: {room.playerCount}/{room.maxPlayers}
                           </div>
                           {room.gameState && (
                             <div className="flex items-center gap-1 text-xs text-green-600 font-medium">
-                              <Gamepad2 className="w-3 h-3" /> Game in Progress
+                              <Icon icon="mdi:gamepad-variant" className="w-3 h-3" /> Game in Progress
                             </div>
                           )}
                         </div>
@@ -362,7 +362,8 @@ export default function AdminPage() {
                                       : "text-red-600 flex items-center gap-1"
                                   }
                                 >
-                                  <Circle
+                                  <Icon
+                                    icon="mdi:circle"
                                     className={`w-2 h-2 fill-current ${
                                       player.isConnected
                                         ? "text-green-600"
@@ -380,11 +381,11 @@ export default function AdminPage() {
                                 >
                                   {player.isReady ? (
                                     <>
-                                      <Check className="w-3 h-3" /> Ready
+                                      <Icon icon="mdi:check" className="w-3 h-3" /> Ready
                                     </>
                                   ) : (
                                     <>
-                                      <Clock className="w-3 h-3" /> Not Ready
+                                      <Icon icon="mdi:clock-outline" className="w-3 h-3" /> Not Ready
                                     </>
                                   )}
                                 </span>

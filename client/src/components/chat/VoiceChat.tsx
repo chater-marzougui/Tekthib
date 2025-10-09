@@ -1,12 +1,4 @@
-import {
-  Mic,
-  MicOff,
-  Phone,
-  PhoneOff,
-  Volume2,
-  VolumeX,
-  UserX,
-} from "lucide-react";
+import { Icon } from "@iconify/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useVoiceChatContext } from "@/context/VoiceChatContext";
@@ -55,7 +47,7 @@ export default function VoiceChat({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Phone className="w-5 h-5" />
+          <Icon icon="mdi:phone" className="w-5 h-5" />
           Voice Chat
         </CardTitle>
       </CardHeader>
@@ -74,12 +66,12 @@ export default function VoiceChat({
           >
             {isVoiceEnabled ? (
               <>
-                <PhoneOff className="w-4 h-4 mr-2" />
+                <Icon icon="mdi:phone-off" className="w-4 h-4 mr-2" />
                 Leave Voice Chat
               </>
             ) : (
               <>
-                <Phone className="w-4 h-4 mr-2" />
+                <Icon icon="mdi:phone" className="w-4 h-4 mr-2" />
                 Join Voice Chat
               </>
             )}
@@ -95,12 +87,12 @@ export default function VoiceChat({
             >
               {isMuted ? (
                 <>
-                  <MicOff className="w-4 h-4 mr-2" />
+                  <Icon icon="mdi:microphone-off" className="w-4 h-4 mr-2" />
                   {hostMuted ? "Muted by Host" : "Unmute"}
                 </>
               ) : (
                 <>
-                  <Mic className="w-4 h-4 mr-2" />
+                  <Icon icon="mdi:microphone" className="w-4 h-4 mr-2" />
                   Mute
                 </>
               )}
@@ -116,13 +108,13 @@ export default function VoiceChat({
             </div>
             {isMuted && (
               <div className="flex items-center gap-2 text-red-600">
-                <MicOff className="w-3 h-3" />
+                <Icon icon="mdi:microphone-off" className="w-3 h-3" />
                 <span>Your microphone is muted</span>
               </div>
             )}
             {hostMuted && (
               <div className="flex items-center gap-2 text-orange-600">
-                <MicOff className="w-3 h-3" />
+                <Icon icon="mdi:microphone-off" className="w-3 h-3" />
                 <span>Host has disabled your microphone</span>
               </div>
             )}
@@ -165,9 +157,9 @@ export default function VoiceChat({
                           }
                         >
                           {isPlayerMuted ? (
-                            <VolumeX className="w-4 h-4 text-red-600" />
+                            <Icon icon="mdi:volume-off" className="w-4 h-4 text-red-600" />
                           ) : (
-                            <Volume2 className="w-4 h-4 text-gray-600" />
+                            <Icon icon="mdi:volume-high" className="w-4 h-4 text-gray-600" />
                           )}
                         </Button>
 
@@ -184,9 +176,9 @@ export default function VoiceChat({
                               title={`Mute ${player.name}'s microphone`}
                             >
                               {isPlayerHostMuted ? (
-                                <MicOff className="w-4 h-4 text-orange-600" />
+                                <Icon icon="mdi:microphone-off" className="w-4 h-4 text-orange-600" />
                               ) : (
-                                <Mic className="w-4 h-4 text-gray-600" />
+                                <Icon icon="mdi:microphone" className="w-4 h-4 text-gray-600" />
                               )}
                             </Button>
                             <Button
@@ -196,7 +188,7 @@ export default function VoiceChat({
                               onClick={() => kickPlayer(player.id)}
                               title={`Kick ${player.name}`}
                             >
-                              <UserX className="w-4 h-4 text-red-600" />
+                              <Icon icon="mdi:account-off" className="w-4 h-4 text-red-600" />
                             </Button>
                           </>
                         )}

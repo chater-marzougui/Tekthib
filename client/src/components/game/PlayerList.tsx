@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Player as BasePlayer } from "shared";
 import { PlayerBadge } from "../PlayerBadge";
-import { Bot, Trophy } from "lucide-react";
+import { Icon } from "@iconify/react";
 
 interface Player extends BasePlayer {
   isCurrentTurn: boolean;
@@ -39,7 +39,7 @@ export default function PlayerList({
                     <div className="font-medium">
                       {player.name}
                       {player.isBot && (
-                        <Bot className="w-4 h-4 inline-block ml-1" />
+                        <Icon icon="mdi:robot" className="w-4 h-4 inline-block ml-1" />
                       )}
                       {player.id === currentPlayerId && (
                         <span className="text-xs text-green-600 ml-2">
@@ -61,7 +61,7 @@ export default function PlayerList({
                   )}
                   {player.cardCount === 0 && (
                     <div className="flex items-center gap-1 text-green-600 font-semibold text-sm">
-                      <Trophy className="w-4 h-4" /> Winner!
+                      <Icon icon="mdi:trophy" className="w-4 h-4" /> Winner!
                     </div>
                   )}
                 </div>

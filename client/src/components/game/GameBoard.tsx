@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import PlayerControls from "./board/PlayerControls";
 import StateCard from "./board/StateCard";
 import CenterPile from "./board/CenterPile";
-import { HelpCircle } from "lucide-react";
+import { Icon } from "@iconify/react";
 
 interface MergedGameBoardProps {
   lastPlay: LastPlay | null;
@@ -140,7 +140,7 @@ export default function GameBoard({
                       size="lg"
                       className="animate-pulse"
                     >
-                      <HelpCircle className="w-5 h-5 mr-2" />
+                      <Icon icon="mdi:help-circle" className="w-5 h-5 mr-2" />
                       Challenge (Call Liar!)
                     </Button>
                   </div>

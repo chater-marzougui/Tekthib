@@ -1,7 +1,7 @@
 import type { Player } from "shared";
 import { Badge } from "./ui/badge";
 import { useAvatar } from "@/hooks/useAvatar";
-import { Bot } from "lucide-react";
+import { Icon } from "@iconify/react";
 
 interface PlayerBadgeProps {
   player: Player;
@@ -40,7 +40,7 @@ export const PlayerBadge = ({ player, playerId }: PlayerBadgeProps) => {
       className={`w-8 h-8 ${getBadgeClasses(player, playerId)} flex items-center justify-center rounded-full text-lg font-bold`}
     >
       {isBot ? (
-        <Bot className="w-5 h-5" />
+        <Icon icon="mdi:robot" className="w-5 h-5" />
       ) : (
         player.name.charAt(0).toUpperCase()
       )}
