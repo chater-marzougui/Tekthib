@@ -569,7 +569,7 @@ export default function GamePage() {
   }
 
   const content = (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 p-4">
+    <div className="min-h-screen p-4">
       <Dialog open={showNameDialog} onOpenChange={() => {}}>
         <DialogContent
           className="sm:max-w-md"

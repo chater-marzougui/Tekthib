@@ -46,7 +46,7 @@ export function NavUser() {
   const playerId = localStorage.getItem("clientId");
   const randomStr = Math.random().toString(36).substring(2, 15);
 
-  const avatarSvg = useAvatar(playerId || randomStr, 122);
+  const avatarSvg = useAvatar(playerId || randomStr, 122, theme === "dark" ? "white" : "transparent");
 
   const handleLanguageChange = (language: string) => {
     i18n.changeLanguage(language);

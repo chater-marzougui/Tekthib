@@ -28,7 +28,7 @@ export default function PlayerList({
               key={player.id}
               className={`
                 p-3 rounded-lg border-2 transition-all
-                ${player.isCurrentTurn ? "border-blue-500 bg-blue-50 shadow-md" : "border-gray-200 bg-gray-50"}
+                ${player.isCurrentTurn ? "border-blue-500 shadow-md" : "border-gray-200"}
                 ${player.id === currentPlayerId ? "ring-2 ring-green-300" : ""}
               `}
             >

@@ -162,8 +162,8 @@ export default function ChatBox({
               if (msg.isSystem) {
                 const { containerClass, textColor, timeColor } = getSystemMessageStyleClass(msg.systemMessageColor);
                 return (
-                  <div key={msg.id} className={`flex justify-center my-2 ${containerClass}`}>
-                    <div className={`rounded-lg px-4 py-2 max-w-md ${containerClass}`}>
+                  <div key={msg.id} className={`flex justify-center rounded-lg my-2 ${containerClass}`}>
+                    <div className={`px-4 py-2 max-w-md ${containerClass}`}>
                       <div className={`text-sm text-center ${textColor} font-medium`}>
                         {msg.message}
                       </div>

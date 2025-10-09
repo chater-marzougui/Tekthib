@@ -317,7 +317,7 @@ export default function RoomPage() {
 
   // Wrap content with VoiceChatProvider if we have a room
   const content = (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 p-4">
+    <div className="min-h-screen p-4">
       {/* Name prompt dialog */}
       <Dialog open={showNameDialog} onOpenChange={() => {}}>
         <DialogContent
@@ -357,7 +357,7 @@ export default function RoomPage() {
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center justify-center gap-2">
+          <h1 className="text-3xl font-bold flex items-center justify-center gap-2">
             <Gamepad2 className="w-8 h-8" /> Game Lobby
           </h1>
           {error && (
@@ -459,7 +459,7 @@ export default function RoomPage() {
                     (_, index) => (
                       <div
                         key={`empty-${index + 1}-slot`}
-                        className="flex items-center p-3 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300"
+                        className="flex items-center p-3 bg-card rounded-lg border-2 border-dashed border-gray-300"
                       >
                         <div className="text-gray-400">
                           Waiting for player...
@@ -528,7 +528,7 @@ export default function RoomPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <div className="p-4 bg-gray-50 rounded-lg space-y-4">
+                      <div className="p-4 rounded-lg space-y-4">
                         {/* Auto-play toggle */}
                         <div className="flex items-center justify-between">
                           <div className="space-y-0.5">

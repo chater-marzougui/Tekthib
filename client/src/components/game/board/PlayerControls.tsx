@@ -22,7 +22,7 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
 }) => {
   if (!isMyTurn || !canPlay) return null;
   return (
-    <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-0 space-y-4">
+    <div className="flex flex-col justify-center items-center border-white/20 rounded-lg p-0 space-y-4 align-center">
       {!lastPlay && (
         <div className="space-y-3">
           <label
@@ -52,7 +52,7 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
         </div>
       )}
 
-      <div className="flex justify-center">
+      <div className="flex justify-center w-fit">
         <Button
           onClick={handlePlayCards}
           disabled={selectedCards.length === 0 || (!lastPlay && !claimedRank)}

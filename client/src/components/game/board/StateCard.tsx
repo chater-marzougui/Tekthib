@@ -63,7 +63,7 @@ const StateCard: React.FC<StateCardProps> = ({
         <div className="flex items-center justify-between gap-2 md:gap-4">
           <p className="text-xs text-slate-400">Claim</p>
           <div className="text-right">
-            <p className="text-xl md:text-2xl font-bold text-white leading-none">
+            <p className="text-xl md:text-2xl font-bold text-background leading-none">
               {lastPlay?.claimedRank || "-"}
             </p>
             <p className="text-xs text-slate-500 mt-0.5">

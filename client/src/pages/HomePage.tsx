@@ -153,7 +153,7 @@ export default function HomePage() {
         image="/og-image.png"
         url="https://chater-marzougui.me"
       />
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="flex items-center justify-center py-4">
         <div className="w-full max-w-2xl space-y-8">
           {/* Game Title and Description */}
           <div className="text-center space-y-4">
@@ -284,7 +284,7 @@ export default function HomePage() {
                     <div
                       key={room.id}
                       onClick={() => handleRoomClick(room)}
-                      className={`p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${
+                      className={`p-3 border rounded-lg cursor-pointer hover:bg-background/50 transition-colors ${
                         room.inProgress ? "opacity-50 cursor-not-allowed" : ""
                       }`}
                     >

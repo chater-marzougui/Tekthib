@@ -44,7 +44,7 @@ const MinimalFooter: React.FC = () => {
             </a>
             <span className="text-background/30">•</span>
             <span className="flex items-center gap-1 text-background/50">
-              Made in Tunisia <img src="./flags/tn.webp" alt="Tunisia Flag" className="w-4.5 h-3" />
+              Made in Tunisia <img src="/Tekthib/flags/tn.webp" alt="Tunisia Flag" className="w-4.5 h-3" />
             </span>
           </div>
         </div>

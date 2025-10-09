@@ -8,9 +8,11 @@ import GamePage from "./pages/GamePage";
 import AdminPage from "./pages/AdminPage";
 import { Toaster } from "sonner";
 import { SoundProvider } from "./context/SoundPlayerContext";
+import { ThemeProvider } from "./context/ThemeProvider";
 function App() {
   return (
     <Router basename="/Tekthib/">
+      <ThemeProvider>
       <HeaderProvider>
         <Header />
         <Toaster
@@ -45,6 +47,7 @@ function App() {
         />
       </Routes>
       </HeaderProvider>
+      </ThemeProvider>
     </Router>
   );
 }
