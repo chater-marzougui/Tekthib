@@ -491,7 +491,7 @@ export default function GamePage() {
     setTimeout(updatePositions, 100);
 
     return () => window.removeEventListener("resize", updatePositions);
-  }, []);
+  }, [lastPlay]);
 
   const handleCardSelect = (cardId: string) => {
     setPlayerHand((prev) =>

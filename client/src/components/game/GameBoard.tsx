@@ -154,7 +154,6 @@ export default function GameBoard({
               <WastedPile removedCards={removedCards} />
             </div>
           </div>
-        <div className="player-hand-container"></div>
         </CardHeader>
         {/* Play Controls */}
         <PlayerControls
@@ -166,11 +165,13 @@ export default function GameBoard({
           handlePlayCards={handlePlayCards}
           lastPlay={lastPlay}
         />
+        
+        <div className="player-hand-container"></div>
         {playerCards.length > 0 && (
           <CardContent className="p-6 space-y-6 px-0">
             <div className="relative flex items-center justify-center p-0 m-0 mb-3">
               <div className="flex-1 border-t border-border"></div>
-              <div className="px-4 text-sm font-semibold text-muted-foreground bg-background">
+              <div className="px-4 text-sm font-semibold text-muted-foreground bg-transparent">
                 {t('game.yourCards', { count: playerCards.length })}
               </div>
               <div className="flex-1 border-t border-border"></div>
