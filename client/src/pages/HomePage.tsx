@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -35,6 +36,7 @@ interface RoomInfo {
 }
 
 export default function HomePage() {
+  const { t } = useTranslation();
   const [playerName, setPlayerName] = useState(
     localStorage.getItem("playerName") || "",
   );
@@ -96,12 +98,12 @@ export default function HomePage() {
 
   const handleRoomClick = (room: RoomInfo) => {
     if (!playerName.trim()) {
-      toast.error("Please enter your name first");
+      toast.error(t('home.pleaseEnterName'));
       return;
     }
     
     if (room.inProgress) {
-      toast.error("Game already in progress");
+      toast.error(t('home.gameInProgress'));
       return;
     }
 
@@ -118,7 +120,7 @@ export default function HomePage() {
 
   const handlePrivateRoomJoin = () => {
     if (!roomPassword.trim()) {
-      toast.error("Please enter the room password");
+      toast.error(t('home.pleaseEnterPassword'));
       return;
     }
 
@@ -127,10 +129,10 @@ export default function HomePage() {
       .then(async (response) => {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          throw new Error(data.error || "Invalid password");
+          throw new Error(data.error || t('home.invalidPassword'));
         }
         if (data.inProgress) {
-          throw new Error("Cannot join, game already in progress");
+          throw new Error(t('home.cannotJoinInProgress'));
         }
         return data;
       })
@@ -158,12 +160,10 @@ export default function HomePage() {
           {/* Game Title and Description */}
           <div className="text-center space-y-4">
             <p className="text-xl text-gray-600 mb-4">
-              Tunisian Online Card Game
+              {t('home.subtitle')}
             </p>
             <p className="text-lg text-gray-500 max-w-lg mx-auto">
-              Play smart, bluff well, and be the first to get rid of all your
-              cards. Challenge your friends in this exciting game of deception
-              and strategy!
+              {t('home.description')}
             </p>
           </div>
 
@@ -173,24 +173,24 @@ export default function HomePage() {
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="text-center flex items-center justify-center gap-2">
-                  <Gamepad2 className="w-5 h-5" /> Create Room
+                  <Gamepad2 className="w-5 h-5" /> {t('home.createRoom')}
                 </CardTitle>
                 <CardDescription className="text-center">
-                  Start a new game and invite friends
+                  {t('home.createRoomDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="create-name">Your Name</Label>
+                  <Label htmlFor="create-name">{t('home.yourName')}</Label>
                   <Input
                     id="create-name"
                     value={playerName}
                     onChange={(e) => setPlayerName(e.target.value)}
-                    placeholder="Enter your name"
+                    placeholder={t('home.enterYourName')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Room Visibility</Label>
+                  <Label>{t('home.roomVisibility')}</Label>
                   <div className="flex gap-2">
                     <Button
                       type="button"
@@ -198,7 +198,7 @@ export default function HomePage() {
                       onClick={() => setIsPublicRoom(true)}
                       className="flex-1"
                     >
-                      <Globe className="w-4 h-4 mr-2" /> Public
+                      <Globe className="w-4 h-4 mr-2" /> {t('home.public')}
                     </Button>
                     <Button
                       type="button"
@@ -206,13 +206,13 @@ export default function HomePage() {
                       onClick={() => setIsPublicRoom(false)}
                       className="flex-1"
                     >
-                      <Lock className="w-4 h-4 mr-2" /> Private
+                      <Lock className="w-4 h-4 mr-2" /> {t('home.private')}
                     </Button>
                   </div>
                   <p className="text-xs text-gray-500">
                     {isPublicRoom 
-                      ? "Anyone can see and join your room" 
-                      : "Players need the room code to join"}
+                      ? t('home.publicRoomDesc')
+                      : t('home.privateRoomDesc')}
                   </p>
                 </div>
                 <Button
@@ -220,7 +220,7 @@ export default function HomePage() {
                   onClick={handleCreateRoom}
                   disabled={!playerName.trim()}
                 >
-                  Create New Room
+                  {t('home.createNewRoom')}
                 </Button>
               </CardContent>
             </Card>
@@ -229,29 +229,29 @@ export default function HomePage() {
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="text-center flex items-center justify-center gap-2">
-                  <DoorOpen className="w-5 h-5" /> Join Room
+                  <DoorOpen className="w-5 h-5" /> {t('home.joinRoom')}
                 </CardTitle>
                 <CardDescription className="text-center">
-                  Join an existing game with a room code
+                  {t('home.joinRoomDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="join-name">Your Name</Label>
+                  <Label htmlFor="join-name">{t('home.yourName')}</Label>
                   <Input
                     id="join-name"
                     value={playerName}
                     onChange={(e) => setPlayerName(e.target.value)}
-                    placeholder="Enter your name"
+                    placeholder={t('home.enterYourName')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="room-code">Room Code</Label>
+                  <Label htmlFor="room-code">{t('home.roomCode')}</Label>
                   <Input
                     id="room-code"
                     value={roomCode}
                     onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                    placeholder="ABCD1234"
+                    placeholder={t('home.roomCodePlaceholder')}
                     maxLength={8}
                   />
                 </div>
@@ -261,7 +261,7 @@ export default function HomePage() {
                   onClick={handleJoinRoom}
                   disabled={!playerName.trim() || !roomCode.trim()}
                 >
-                  Join Room
+                  {t('home.joinRoom')}
                 </Button>
               </CardContent>
             </Card>
@@ -272,10 +272,10 @@ export default function HomePage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-center flex items-center justify-center gap-2">
-                  <Gamepad2 className="w-5 h-5" /> Available Rooms
+                  <Gamepad2 className="w-5 h-5" /> {t('home.availableRooms')}
                 </CardTitle>
                 <CardDescription className="text-center">
-                  Click on a room to join
+                  {t('home.availableRoomsDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -290,19 +290,19 @@ export default function HomePage() {
                     >
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold">{room.hostName}'s Room</span>
+                          <span className="font-semibold">{t('home.hostRoom', { name: room.hostName })}</span>
                           {room.isPublic ? (
                             <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded flex items-center gap-1">
-                              <Globe className="w-3 h-3" /> Public
+                              <Globe className="w-3 h-3" /> {t('home.public')}
                             </span>
                           ) : (
                             <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded flex items-center gap-1">
-                              <Lock className="w-3 h-3" /> Private
+                              <Lock className="w-3 h-3" /> {t('home.private')}
                             </span>
                           )}
                           {room.inProgress && (
                             <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                              In Progress
+                              {t('home.inProgress')}
                             </span>
                           )}
                         </div>
@@ -321,44 +321,41 @@ export default function HomePage() {
           <Card className="border-dashed">
             <CardHeader>
               <CardTitle className="text-center flex items-center justify-center gap-2">
-                <Layers className="w-5 h-5" /> Quick Rules
+                <Layers className="w-5 h-5" /> {t('home.quickRules')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-4 text-sm">
                 <div>
                   <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <Target className="w-4 h-4" /> Goal
+                    <Target className="w-4 h-4" /> {t('home.goal')}
                   </h4>
                   <p className="text-gray-600">
-                    Be the first to get rid of all your cards. Last player with
-                    cards loses.
+                    {t('home.goalDescription')}
                   </p>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <Spade className="w-4 h-4" /> Gameplay
+                    <Spade className="w-4 h-4" /> {t('home.gameplay')}
                   </h4>
                   <p className="text-gray-600">
-                    Play cards face-down and announce a rank. Others can
-                    challenge if they think you're lying!
+                    {t('home.gameplayDescription')}
                   </p>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <Frown className="w-4 h-4" /> Bluffing
+                    <Frown className="w-4 h-4" /> {t('home.bluffing')}
                   </h4>
                   <p className="text-gray-600">
-                    You don't need the cards you claim to have. Bluff wisely!
+                    {t('home.bluffingDescription')}
                   </p>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <Trophy className="w-4 h-4" /> Special Rule
+                    <Trophy className="w-4 h-4" /> {t('home.specialRule')}
                   </h4>
                   <p className="text-gray-600">
-                    Collect all 4 cards of the same rank to remove them
-                    permanently.
+                    {t('home.specialRuleDescription')}
                   </p>
                 </div>
               </div>
@@ -371,19 +368,19 @@ export default function HomePage() {
       <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Join Private Room</DialogTitle>
+            <DialogTitle>{t('home.joinPrivateRoom')}</DialogTitle>
             <DialogDescription>
-              This is a private room. Please enter the room code (password) to join.
+              {t('home.joinPrivateRoomDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="room-password">Room Code</Label>
+              <Label htmlFor="room-password">{t('home.roomCode')}</Label>
               <Input
                 id="room-password"
                 value={roomPassword}
                 onChange={(e) => setRoomPassword(e.target.value.toUpperCase())}
-                placeholder="Enter room code"
+                placeholder={t('home.enterRoomCode')}
                 maxLength={8}
                 onKeyPress={(e) => {
                   if (e.key === 'Enter') {
@@ -398,10 +395,10 @@ export default function HomePage() {
               setShowPasswordDialog(false);
               setRoomPassword("");
             }}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button onClick={handlePrivateRoomJoin}>
-              Join Room
+              {t('home.joinRoom')}
             </Button>
           </DialogFooter>
         </DialogContent>
