@@ -45,7 +45,9 @@ export default function GameBoard({
   const [timer, setTimer] = useState(autoPlayTimeout);
 
   // Create a unique turn identifier based on current player and last play
-  const currentTurnId = lastPlay ? lastPlay.player + "-" + lastPlay.cardCount + "-" + lastPlay.claimedRank : "start";
+  const currentTurnId = lastPlay
+    ? lastPlay.player + "-" + lastPlay.cardCount + "-" + lastPlay.claimedRank
+    : "start";
 
   // Timer effect for auto-play
   useEffect(() => {
@@ -229,6 +231,7 @@ export default function GameBoard({
               <WastedPile removedCards={removedCards} />
             </div>
           </div>
+        <div className="player-hand-container"></div>
         </CardHeader>
         {/* Play Controls */}
         <PlayerControls

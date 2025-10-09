@@ -20,7 +20,7 @@ const CenterPile: React.FC<CenterPileProps> = ({ pileCount, lastPlay }) => {
   }
 
   return (
-    <div className="flex justify-center">
+    <div className="flex justify-center center-pile-container">
       <div className="flex-shrink-0">
         <p className="text-xs font-semibold text-gray-600 mb-2 text-center">
           Center Pile

@@ -59,6 +59,8 @@ export default function GamePage() {
   const [showNameDialog, setShowNameDialog] = useState(false);
   const [nameInput, setNameInput] = useState("");
   const [autoPlayTimeout, setAutoPlayTimeout] = useState(45);
+  const [pilePosition, setPilePosition] = useState({ x: 0, y: 0 });
+  const [handPosition, setHandPosition] = useState({ x: 0, y: 0 });
 
   const playerName = localStorage.getItem("playerName") || "";
   const playerId = localStorage.getItem("clientId") || "";
@@ -423,6 +425,37 @@ export default function GamePage() {
     setPlayers(updatedPlayers);
   }, [gameState]);
 
+  useEffect(() => {
+    const updatePositions = () => {
+      // Find the center pile element - you'll need to add an id to CenterPile component
+      const pileEl = document.querySelector(".center-pile-container"); // or use an ID
+      // Find the player hand element - you'll need to add an id to the hand section
+      const handEl = document.querySelector(".player-hand-container"); // or use an ID
+
+      if (pileEl) {
+        const rect = pileEl.getBoundingClientRect();
+        setPilePosition({
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2,
+        });
+      }
+
+      if (handEl) {
+        const rect = handEl.getBoundingClientRect();
+        setHandPosition({
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2,
+        });
+      }
+    };
+
+    updatePositions();
+    window.addEventListener("resize", updatePositions);
+    setTimeout(updatePositions, 100);
+
+    return () => window.removeEventListener("resize", updatePositions);
+  }, []);
+
   const handleCardSelect = (cardId: string) => {
     setPlayerHand((prev) =>
       prev.map((card) =>
@@ -555,121 +588,37 @@ export default function GamePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {revealedCardsAnimation?.show && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="relative">
-            <div className="relative w-[600px] h-[400px]">
-              {revealedCardsAnimation.cards.map((card, index) => {
-                const totalCards = revealedCardsAnimation.cards.length;
-                const centerX = 300;
-                const centerY = 200;
-
-                const startX = centerX + (Math.random() - 0.5) * 40;
-                const startY = centerY + (Math.random() - 0.5) * 40;
-
-                // Dynamic spread based on card count
-                const cardWidth = 96; // w-24 = 96px
-                const maxSpreadWidth = 500; // Maximum spread width
-                const minSpacing = 20; // Minimum spacing between cards
-                const idealSpacing = 30; // Ideal spacing when there's room
-
-                // Calculate spacing: use ideal spacing but don't exceed max width
-                const totalIdealWidth =
-                  totalCards * cardWidth + (totalCards - 1) * idealSpacing;
-                const spreadWidth = Math.min(totalIdealWidth, maxSpreadWidth);
-                const cardSpacing =
-                  (spreadWidth - cardWidth) / Math.max(totalCards - 1, 1);
-
-                // Center the spread horizontally
-                const startOffset = centerX - spreadWidth / 2 + cardWidth / 2;
-                const endX = startOffset + index * cardSpacing;
-                const endY = 350;
-
-                // Adaptive animation duration
-                const baseDuration = 0.6;
-                const duration = Math.max(
-                  0.4,
-                  Math.min(baseDuration, totalCards * 0.08)
-                );
-
-                // Adaptive delay - faster for many cards
-                const baseDelay =
-                  totalCards > 10 ? 0.05 : totalCards > 5 ? 0.08 : 0.1;
-                const delay = index * baseDelay;
-
-                return (
-                  <motion.div
-                    key={`reveal-${card.id}-${index}`}
-                    initial={{
-                      x: startX,
-                      y: startY,
-                      rotateY: 180,
-                      scale: 0.8,
-                      opacity: 0,
-                    }}
-                    animate={{
-                      x: endX,
-                      y: endY,
-                      rotateY: 0,
-                      scale: 1,
-                      opacity: 1,
-                    }}
-                    transition={{
-                      duration: duration,
-                      delay: delay,
-                      ease: "easeOut",
-                    }}
-                    className="absolute w-24 h-36"
-                    style={{
-                      transformStyle: "preserve-3d",
-                    }}
-                  >
-                    {RenderCard(card, false, () => {}, false, 1, "medium")}
-                  </motion.div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {playingCardsAnimation?.show && (
-        <div className="fixed inset-0 z-40 pointer-events-none flex items-center justify-center">
-          <div className="relative w-full h-full">
+      {playingCardsAnimation?.show &&
+        pilePosition.x > 0 &&
+        handPosition.x > 0 && (
+          <div className="fixed inset-0 z-40 pointer-events-none">
             {playingCardsAnimation.cards.map((card, index) => {
               const totalCards = playingCardsAnimation.cards.length;
+              const cardWidth = 80;
 
-              // Card dimensions
-              const cardWidth = 80; // w-20 = 80px
-
-              // Adaptive spacing in hand
-              const maxHandSpread = window.innerWidth * 0.6; // Max 60% of screen width
-              const idealSpacing = 40;
+              const maxHandSpread = window.innerWidth * 0.6;
+              const idealSpacing = 20;
               const totalIdealWidth =
                 totalCards * cardWidth + (totalCards - 1) * idealSpacing;
               const handSpread = Math.min(totalIdealWidth, maxHandSpread);
-              const cardSpacing =
-                totalCards > 1
-                  ? (handSpread - cardWidth) / (totalCards - 1)
-                  : 0;
+              const cardSpacing = (handSpread - cardWidth) / (totalCards - 1);
 
-              // Start from bottom of screen (player's hand position) - centered
               const handStartX =
-                (window.innerWidth - handSpread) / 2 + cardWidth / 2;
-              const startX = handStartX + index * cardSpacing;
-              const startY = window.innerHeight - 150;
+                handPosition.x -
+                handSpread / 2 +
+                cardWidth / 2 +
+                index * cardSpacing;
+              const startX = handStartX;
+              const startY = handPosition.y;
 
-              // End at center (pile position) with slight stacking offset
-              const stackOffset = 2; // Slight offset for visual stacking effect
+              const stackOffset = 2;
               const endX =
-                window.innerWidth / 2 + (index - totalCards / 2) * stackOffset;
-              const endY = window.innerHeight / 2 - 50 + index * stackOffset;
+                pilePosition.x + (index - totalCards / 2) * stackOffset;
+              const endY = pilePosition.y + index * stackOffset;
 
-              // More varied rotation for visual interest
               const rotation =
                 (index - totalCards / 2) * 3 + (Math.random() - 0.5) * 5;
 
-              // Adaptive timing
               const baseDuration = 0.6;
               const duration = Math.min(baseDuration, 0.4 + totalCards * 0.02);
               const baseDelay =
@@ -693,12 +642,9 @@ export default function GamePage() {
                     opacity: 0.8,
                     rotate: rotation,
                   }}
-                  transition={{
-                    duration: duration,
-                    delay: delay,
-                    ease: "easeInOut",
-                  }}
+                  transition={{ duration, delay, ease: "easeInOut" }}
                   className="absolute w-20 h-28"
+                  style={{ left: 0, top: 0 }}
                 >
                   <div className="w-full h-full bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg border-2 border-purple-300 shadow-2xl flex items-center justify-center">
                     <div className="text-white font-bold text-4xl opacity-70">
@@ -709,8 +655,67 @@ export default function GamePage() {
               );
             })}
           </div>
-        </div>
-      )}
+        )}
+
+      {revealedCardsAnimation?.show &&
+        pilePosition.x > 0 &&
+        handPosition.x > 0 && (
+          <div className="fixed inset-0 z-50 pointer-events-none">
+            {revealedCardsAnimation.cards.map((card, index) => {
+              const totalCards = revealedCardsAnimation.cards.length;
+              const cardWidth = 96;
+
+              const startX = pilePosition.x + (Math.random() - 0.5) * 40;
+              const startY = pilePosition.y + (Math.random() - 0.5) * 40;
+
+              const maxSpreadWidth = Math.min(window.innerWidth * 0.8, 600);
+              console.log("Total cards to reveal:", totalCards, cardWidth);
+              const totalIdealWidth = totalCards * cardWidth;
+              const spreadWidth = Math.min(totalIdealWidth, maxSpreadWidth);
+              const cardSpacing =
+                (spreadWidth - cardWidth) / Math.max(totalCards - 1, 1);
+
+              const handStartX =
+                handPosition.x - spreadWidth / 2 + cardWidth / 2;
+              const endX = handStartX + index * cardSpacing;
+              const endY = handPosition.y;
+
+              const baseDuration = 0.6;
+              const duration = Math.max(
+                0.4,
+                Math.min(baseDuration, totalCards * 0.08)
+              );
+              const baseDelay =
+                totalCards > 10 ? 0.05 : totalCards > 5 ? 0.08 : 0.1;
+              const delay = index * baseDelay;
+
+              return (
+                <motion.div
+                  key={`reveal-${card.id}-${index}`}
+                  initial={{
+                    x: startX,
+                    y: startY,
+                    rotateY: 180,
+                    scale: 0.8,
+                    opacity: 0,
+                  }}
+                  animate={{
+                    x: endX,
+                    y: endY,
+                    rotateY: 0,
+                    scale: 1,
+                    opacity: 1,
+                  }}
+                  transition={{ duration, delay, ease: "easeOut" }}
+                  className="absolute w-24 h-36"
+                  style={{ transformStyle: "preserve-3d", left: 0, top: 0 }}
+                >
+                  {RenderCard(card, false, () => {}, false, 1, "medium")}
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
 
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
