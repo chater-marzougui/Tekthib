@@ -44,10 +44,38 @@ export function triggerBotTurn(
 ): void {
   const gameEngine = roomManager.getGameEngine(roomId);
   if (gameEngine) {
+    // Set up timer callback for broadcasting
+    gameEngine.setTimerCallback((remainingTime: number) => {
+      broadcastToRoom(clients, roomId, {
+        type: 'TIMER_UPDATE',
+        payload: { remainingTime },
+      });
+    });
+
     setTimeout(() => {
       processBotTurn(clients, roomId, gameEngine);
     }, 3500); // Give players time to see the initial state
   }
+}
+
+/**
+ * Start timer for the current turn and broadcast updates
+ */
+function startTimerForRoom(
+  clients: Map<WebSocket, ClientInfo>,
+  roomId: string,
+  gameEngine: GameEngine,
+): void {
+  // Set up timer callback to broadcast remaining time
+  gameEngine.setTimerCallback((remainingTime: number) => {
+    broadcastToRoom(clients, roomId, {
+      type: 'TIMER_UPDATE',
+      payload: { remainingTime },
+    });
+  });
+
+  // Start the timer
+  gameEngine.startTurnTimer();
 }
 
 function handleGetGameState(
@@ -198,6 +226,7 @@ function handlePlayCards(
 
   // Check if game ended
   if (publicGameState.phase === 'ended') {
+    gameEngine.stopTurnTimer();
     broadcastToRoom(clients, clientInfo.roomId, {
       type: 'GAME_ENDED',
       payload: {
@@ -208,6 +237,9 @@ function handlePlayCards(
     });
     return;
   }
+
+  // Start timer for next turn
+  startTimerForRoom(clients, clientInfo.roomId, gameEngine);
 
   // After a human plays, check if any bot wants to challenge
   setTimeout(() => {
@@ -292,6 +324,9 @@ function handleChallenge(
     }
   });
 
+  // Start timer for next turn
+  startTimerForRoom(clients, clientInfo.roomId, gameEngine);
+
   // After human challenges, trigger bot turn if needed
   setTimeout(() => {
     processBotTurn(clients, clientInfo.roomId!, gameEngine);
@@ -356,6 +391,8 @@ function processBotChallenge(
     }
   } else {
     // No bot challenged, proceed to next turn (might be a bot)
+    // Start timer for the next turn
+    startTimerForRoom(clients, roomId, gameEngine);
     setTimeout(() => {
       processBotTurn(clients, roomId, gameEngine);
     }, 1500);
@@ -388,8 +425,9 @@ function processBotTurn(
   }
 
   if (!gameEngine.isCurrentPlayerBot()) {
-    // Current player is human, trigger random bot chat
+    // Current player is human, trigger random bot chat and start timer
     gameEngine.triggerRandomBotChat();
+    startTimerForRoom(clients, roomId, gameEngine);
     return;
   }
 

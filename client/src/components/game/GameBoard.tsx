@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { DisplayGameCard, playableRanks, RankTypes } from "@shared";
+import { DisplayGameCard, RankTypes } from "@shared";
 import RenderOneHand from "./RenderCard";
 import type { Card as GameCard, LastPlay } from "shared";
 import WastedPile from "./board/WastedPile";
@@ -24,6 +24,7 @@ interface MergedGameBoardProps {
   isMyTurn: boolean;
   selectedCards: string[];
   autoPlayTimeout: number;
+  serverTimer?: number;
 }
 
 export default function GameBoard({
@@ -39,105 +40,24 @@ export default function GameBoard({
   isMyTurn,
   selectedCards,
   autoPlayTimeout,
+  serverTimer,
 }: Readonly<MergedGameBoardProps>) {
   const [claimedRank, setClaimedRank] = useState(
     lastPlay ? lastPlay.claimedRank : ""
   );
   const [timer, setTimer] = useState(autoPlayTimeout);
 
-  // Create a unique turn identifier based on current player and last play
-  const currentTurnId = lastPlay
-    ? lastPlay.player + "-" + lastPlay.cardCount + "-" + lastPlay.claimedRank
-    : "start";
-
-  // Timer effect for auto-play
+  // Update timer when server sends updates
   useEffect(() => {
-    // If timer is disabled, don't run the timer logic
-    if (autoPlayTimeout < 10) {
-      setTimer(0);
-      return;
+    if (serverTimer !== undefined) {
+      setTimer(serverTimer);
     }
-
-    // Get stored turn info
-    const storedTurnId = localStorage.getItem("currentTurnId");
-    const storedRemainingTime = localStorage.getItem("remainingTime");
-    const storedLastUpdate = localStorage.getItem("lastUpdateTime");
-
-    let initialRemaining: number;
-
-    // Check if this is the same turn or a new turn
-    if (
-      storedTurnId === currentTurnId &&
-      storedRemainingTime &&
-      storedLastUpdate
-    ) {
-      // Same turn - calculate remaining time based on stored value and time passed
-      const lastUpdate = parseInt(storedLastUpdate);
-      const timePassed = Math.floor((Date.now() - lastUpdate) / 1000);
-      initialRemaining = Math.max(
-        0,
-        parseInt(storedRemainingTime) - timePassed
-      );
-    } else {
-      // New turn - reset the timer
-      initialRemaining = autoPlayTimeout;
-      localStorage.setItem("currentTurnId", currentTurnId);
-      localStorage.setItem("remainingTime", autoPlayTimeout.toString());
-      localStorage.setItem("lastUpdateTime", Date.now().toString());
-    }
-
-    setTimer(initialRemaining);
-
-    const interval = setInterval(() => {
-      setTimer((prevTimer) => {
-        const newTimer = Math.max(0, prevTimer - 1);
-
-        // Update localStorage with new remaining time
-        localStorage.setItem("remainingTime", newTimer.toString());
-        localStorage.setItem("lastUpdateTime", Date.now().toString());
-
-        if (newTimer === 0 && isMyTurn) {
-          // Time's up - auto-play random cards
-          const numCards = Math.floor(Math.random() * 4) + 1; // 1-4 cards
-          const availableCards = playerCards.slice(
-            0,
-            Math.min(numCards, playerCards.length)
-          );
-          const autoSelectedCards = availableCards.map((c) => c.id);
-
-          // Determine the rank to claim
-          const rankToClaim = lastPlay
-            ? lastPlay.claimedRank
-            : playableRanks[Math.floor(Math.random() * playableRanks.length)];
-
-          onPlayCards(autoSelectedCards, rankToClaim);
-        }
-
-        return newTimer;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [
-    isMyTurn,
-    playerCards,
-    lastPlay,
-    onPlayCards,
-    autoPlayTimeout,
-    currentPlayer,
-    currentTurnId,
-  ]);
+  }, [serverTimer]);
 
   const handlePlayCards = () => {
     if (selectedCards.length > 0 && (claimedRank || lastPlay)) {
       onPlayCards(selectedCards, lastPlay ? lastPlay.claimedRank : claimedRank);
-
-      // Clear turn tracking since we're playing cards (turn will change)
-      localStorage.removeItem("turnStartTime");
-      localStorage.removeItem("currentTurnId");
-
       window.scrollTo({ top: 0, behavior: "smooth" });
-      setTimer(autoPlayTimeout);
       setClaimedRank("");
     }
   };

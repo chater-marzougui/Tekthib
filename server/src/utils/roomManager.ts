@@ -314,7 +314,7 @@ class RoomManager {
     const room = this.rooms.get(roomId);
     if (!room) return null;
 
-    const gameEngine = new GameEngine(room.players);
+    const gameEngine = new GameEngine(room.players, room.autoPlayTimeout);
 
     // Set up bot chat callback if provided
     if (botChatCallback) {
@@ -376,6 +376,12 @@ class RoomManager {
     const room = this.rooms.get(roomId);
     if (!room) return false;
 
+    // Clean up game engine resources
+    const gameEngine = this.gameEngines.get(roomId);
+    if (gameEngine) {
+      gameEngine.cleanup();
+    }
+
     this.rooms.delete(roomId);
     this.gameEngines.delete(roomId);
     return true;
@@ -388,6 +394,11 @@ class RoomManager {
       ).every((player) => player.isBot || !player.isConnected);
       // Delete old inactive rooms
       if (allPlayerBotsOrDisconnected) {
+        // Clean up game engine resources
+        const gameEngine = this.gameEngines.get(roomId);
+        if (gameEngine) {
+          gameEngine.cleanup();
+        }
         this.rooms.delete(roomId);
         this.gameEngines.delete(roomId);
       }

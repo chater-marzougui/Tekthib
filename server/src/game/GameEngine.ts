@@ -29,9 +29,14 @@ export class GameEngine {
   private readonly players: Map<string, PlayerWithHand>;
   private readonly botPlayers: Map<string, BotPlayer> = new Map();
   private botChatCallback?: (botId: string, message: string) => void;
+  private turnTimer: NodeJS.Timeout | null = null;
+  private turnStartTime: number = 0;
+  private autoPlayTimeout: number = 0;
+  private timerCallback?: (remainingTime: number) => void;
 
-  constructor(players: Map<string, PlayerWithHand>) {
+  constructor(players: Map<string, PlayerWithHand>, autoPlayTimeout: number = 0) {
     this.players = players;
+    this.autoPlayTimeout = autoPlayTimeout;
     this.gameState = this.initializeGame();
 
     // Initialize bot players with their personalities
@@ -564,5 +569,134 @@ export class GameEngine {
         bot.maybeRandomChat();
       }
     });
+  }
+
+  /**
+   * Set callback for timer updates
+   */
+  setTimerCallback(callback: (remainingTime: number) => void): void {
+    this.timerCallback = callback;
+  }
+
+  /**
+   * Start or reset the turn timer
+   */
+  startTurnTimer(): void {
+    // Clear existing timer
+    if (this.turnTimer) {
+      clearInterval(this.turnTimer);
+      this.turnTimer = null;
+    }
+
+    // Only start timer if autoPlayTimeout is enabled (>= 10 seconds)
+    if (this.autoPlayTimeout < 10) {
+      return;
+    }
+
+    // Check if there's at least one connected human player
+    const hasHumanPlayers = Array.from(this.players.values()).some(
+      (p) => !p.isBot && p.isConnected
+    );
+
+    if (!hasHumanPlayers) {
+      // Don't start timer if no human players connected
+      return;
+    }
+
+    this.turnStartTime = Date.now();
+
+    // Set up interval to notify clients every second
+    this.turnTimer = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - this.turnStartTime) / 1000);
+      const remaining = Math.max(0, this.autoPlayTimeout - elapsed);
+
+      // Notify clients of remaining time
+      if (this.timerCallback) {
+        this.timerCallback(remaining);
+      }
+
+      // Auto-play when timer expires
+      if (remaining === 0) {
+        this.handleAutoPlay();
+      }
+    }, 1000);
+  }
+
+  /**
+   * Stop the turn timer
+   */
+  stopTurnTimer(): void {
+    if (this.turnTimer) {
+      clearInterval(this.turnTimer);
+      this.turnTimer = null;
+    }
+  }
+
+  /**
+   * Get remaining time for current turn
+   */
+  getRemainingTime(): number {
+    if (this.autoPlayTimeout < 10 || this.turnStartTime === 0) {
+      return 0;
+    }
+    const elapsed = Math.floor((Date.now() - this.turnStartTime) / 1000);
+    return Math.max(0, this.autoPlayTimeout - elapsed);
+  }
+
+  /**
+   * Handle auto-play when timer expires
+   */
+  private handleAutoPlay(): void {
+    this.stopTurnTimer();
+
+    const currentPlayerId =
+      this.gameState.playerOrder[this.gameState.currentPlayerIndex];
+    const player = this.players.get(currentPlayerId);
+
+    if (!player || player.isBot) {
+      // Don't auto-play for bots
+      return;
+    }
+
+    // Check if player is still connected
+    if (!player.isConnected) {
+      // Player disconnected, skip turn
+      this.advanceTurn();
+      this.startTurnTimer();
+      return;
+    }
+
+    // Auto-play random cards for the human player
+    const numCards = Math.min(
+      Math.floor(Math.random() * 4) + 1,
+      player.hand.length
+    );
+    const cardIds = player.hand.slice(0, numCards).map((c) => c.id);
+
+    // Determine rank to claim
+    const rankToClaim = this.gameState.currentRank || 
+      this.getRandomPlayableRank();
+
+    // Execute the play
+    const result = this.playCards(currentPlayerId, cardIds, rankToClaim);
+
+    if (result.success) {
+      // Timer will be restarted by the handler after broadcasting the play
+    }
+  }
+
+  /**
+   * Get a random playable rank
+   */
+  private getRandomPlayableRank(): Rank {
+    const playableRanks: Rank[] = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+    return playableRanks[Math.floor(Math.random() * playableRanks.length)];
+  }
+
+  /**
+   * Clean up resources when game ends
+   */
+  cleanup(): void {
+    this.stopTurnTimer();
   }
 }
