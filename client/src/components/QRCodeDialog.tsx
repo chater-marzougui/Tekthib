@@ -57,13 +57,6 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({
     toast.success("Room link copied to clipboard!");
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLParagraphElement>) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      copyRoomUrl();
-    }
-  };
-
   return (
     <Card className="w-fit h-fit p-0 m-0">
       <Button
