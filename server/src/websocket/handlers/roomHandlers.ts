@@ -12,7 +12,7 @@ import {
 } from 'shared';
 import { roomManager } from '../../utils/roomManager';
 import { sendToClient, broadcastToRoom, sendToPlayer } from '../index';
-import { triggerBotTurn } from './gameHandlers';
+import { triggerBotTurn, setupGameEngineCallbacks } from './gameHandlers';
 
 interface ClientInfo {
   id: string;
@@ -421,6 +421,9 @@ function handleStartGame(
     });
     return;
   }
+
+  // Setup game engine callbacks for timer and auto-play
+  setupGameEngineCallbacks(clients, clientInfo.roomId, gameEngine);
 
   // Start the turn timer for the first player BEFORE getting public game state
   if (!gameEngine.isCurrentPlayerBot()) {
