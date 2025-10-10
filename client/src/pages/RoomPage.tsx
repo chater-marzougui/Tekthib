@@ -3,13 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -20,18 +13,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useWebSocketContext } from "@/context/WebSocketContext";
-import ChatBox from "@/components/chat/ChatBox";
 import type { Player } from "shared";
 import { toast } from "sonner";
 import { VoiceChatProvider } from "@/context/VoiceChatContext";
-import VoiceChat from "@/components/chat/VoiceChat";
 import { Icon } from "@iconify/react";
-import { PlayerBadge } from "@/components/PlayerBadge";
 import { QRCodeCard } from "@/components/QRCodeDialog";
-import { Switch } from "@/components/ui/switch";
 import { useHeader } from "@/context/HeaderContext";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useTextDirection } from "@/hooks/useTextDirection";
+import RoomControls from "@/components/room/RoomControls";
+import RoomPlayerList from "@/components/room/RoomPlayerList";
 
 function isDuplicatePlayer(players: Player[], newPlayer: Player): boolean {
   return players.some((p) => p.id === newPlayer.id);
@@ -390,7 +381,7 @@ export default function RoomPage() {
               {t("room.connectingToServer")}
             </div>
           )}
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center justify-center gap-4" dir={direction}>
             <div className="flex items-center gap-2">
               <span className="text-lg font-semibold">
                 {t("room.roomCode")}:
@@ -410,272 +401,32 @@ export default function RoomPage() {
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Players List */}
-          <div className="lg:col-span-2 space-y-6">
-            <Card dir={direction}>
-              <CardHeader>
-                <CardTitle>
-                  {t("room.playersCount", { current: players.length, max: 10 })}
-                </CardTitle>
-                <CardDescription>{t("room.waitingForPlayers")}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {players.map((player) => (
-                    <div
-                      key={player.id}
-                      className="flex items-center justify-between p-3 bg-background rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        <PlayerBadge player={player} playerId={player.id} />
-                        <div>
-                          <div className="font-medium">
-                            {player.name}
-                            {player.id === playerId && ` (${t("room.you")})`}
-                            {player.isBot && (
-                              <Icon
-                                icon="mdi:robot"
-                                className="w-4 h-4 inline-block ml-1"
-                              />
-                            )}
-                          </div>
-                          {player.id === players[0]?.id && (
-                            <div className="text-xs text-gray-500">
-                              {t("room.youAreHost")}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center">
-                        {isHost && player.id !== playerId && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-600 cursor-pointer"
-                            onClick={() =>
-                              handleRemovePlayer(
-                                player.id,
-                                player.isBot || false
-                              )
-                            }
-                          >
-                            <Icon icon="mdi:delete" className="w-4 h-4" />
-                          </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          className="flex items-center gap-2 cursor-pointer"
-                          onClick={handleReadyToggle}
-                          disabled={player.id !== playerId}
-                        >
-                          {player.isReady || player.isBot ? (
-                            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium flex items-center gap-1">
-                              {t("room.ready")}{" "}
-                              <Icon icon="mdi:check" className="w-3 h-3" />
-                            </span>
-                          ) : (
-                            <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
-                              {t("room.notReady")}
-                            </span>
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+          <RoomPlayerList
+            players={players}
+            playerId={playerId}
+            playerName={playerName}
+            isHost={isHost}
+            handleRemovePlayer={handleRemovePlayer}
+            handleReadyToggle={handleReadyToggle}
+          />
 
-                  {/* Empty slots */}
-                  {Array.from({ length: Math.max(0, 6 - players.length) }).map(
-                    (_, index) => (
-                      <div
-                        key={`empty-${index + 1}-slot`}
-                        className="flex items-center p-3 bg-card rounded-lg border-2 border-dashed border-gray-300"
-                      >
-                        <div className="text-gray-400">
-                          {t("room.emptySlot")}
-                        </div>
-                      </div>
-                    )
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Chat Box */}
-            {playerId && playerName && (
-              <ChatBox playerName={playerName} playerId={playerId} />
-            )}
-          </div>
-
-          {/* Game Controls */}
-          <div className="space-y-6" dir={direction}>
-            {/* Ready Status */}
-            <Card>
-              <CardHeader>
-                <CardTitle>{t("room.yourStatus")}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="text-center">
-                  <div className="text-sm text-gray-600 mb-1">
-                    {t("room.playingAs")}:
-                  </div>
-                  <div className="font-semibold text-lg">{playerName}</div>
-                </div>
-                <Button
-                  onClick={handleReadyToggle}
-                  className={`w-full ${
-                    isReady ? "bg-green-600 hover:bg-green-700" : ""
-                  }`}
-                  variant={isReady ? "default" : "destructive"}
-                >
-                  {isReady ? (
-                    <span className="flex items-center gap-2">
-                      <Icon icon="mdi:check" className="w-4 h-4" />{" "}
-                      {t("room.youAreReady")}
-                    </span>
-                  ) : (
-                    t("room.youAreNotReady")
-                  )}
-                </Button>
-
-                {isHost && (
-                  <>
-                    <div className="space-y-2">
-                      <div className="text-sm font-medium text-gray-700">
-                        {t("room.addBots")}
-                      </div>
-                      <div className="flex gap-2">
-                        {Array.from({ length: 3 }).map((_, index) => (
-                          <Button
-                            key={`add-bot-${index + 1}`}
-                            onClick={() => handleAddBots(index + 1)}
-                            disabled={players.length >= 10 - (index + 1)}
-                            variant="outline"
-                            size="sm"
-                            className="flex-1"
-                          >
-                            +{index + 1} Bot
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="p-4 rounded-lg space-y-4">
-                        {/* Auto-play toggle */}
-                        <div className="flex items-center justify-between">
-                          <div className="space-y-0.5">
-                            <Label
-                              htmlFor="auto-play"
-                              className="text-sm font-medium"
-                            >
-                              {t("room.autoPlayTimer")}
-                            </Label>
-                            <div className="text-xs text-gray-500">
-                              {t("room.autoPlayTimerDescription")}
-                            </div>
-                          </div>
-                          <Switch
-                            id="auto-play"
-                            checked={timerSlideEnabled}
-                            onCheckedChange={(checked) => {
-                              setTimerSlideEnabled(checked);
-                              if (!checked) {
-                                setAutoPlayTimeout(0);
-                              } else {
-                                setAutoPlayTimeout(45);
-                              }
-                            }}
-                          />
-                        </div>
-
-                        {/* Timer input - only shown when enabled */}
-                        {timerSlideEnabled && (
-                          <div className="space-y-2 pt-2 border-t">
-                            <Label htmlFor="timer-duration" className="text-sm">
-                              {t("room.timerDuration")}
-                            </Label>
-                            <div className="flex items-center gap-2">
-                              <Input
-                                id="timer-duration"
-                                type="number"
-                                min="10"
-                                max="300"
-                                value={autoPlayTimeout}
-                                onChange={(e) => {
-                                  const value = parseInt(e.target.value) || 0;
-                                  setAutoPlayTimeout(
-                                    Math.max(10, Math.min(300, value))
-                                  );
-                                }}
-                                className="w-24"
-                              />
-                              <span className="text-sm text-gray-500">
-                                {t("room.secondsPerTurn")}
-                              </span>
-                            </div>
-                            <div className="text-xs text-gray-400">
-                              {t("room.timerRange")}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <Button
-                      onClick={handleStartGame}
-                      disabled={!canStartGame}
-                      className="w-full cursor-pointer"
-                      size="lg"
-                    >
-                      {canStartGame ? (
-                        <span className="flex items-center gap-2">
-                          <Icon icon="mdi:rocket-launch" className="w-5 h-5" />{" "}
-                          {t("room.startGame")}
-                        </span>
-                      ) : (
-                        t("room.waiting")
-                      )}
-                    </Button>
-                  </>
-                )}
-
-                <Button
-                  variant="outline"
-                  onClick={() => setShowLeaveDialog(true)}
-                  className="w-full"
-                >
-                  {t("room.leaveRoom")}
-                </Button>
-              </CardContent>
-            </Card>
-
-            {roomCode && playerId && (
-              <VoiceChat players={players} localPlayerId={playerId} />
-            )}
-
-            {/* Game Info */}
-            <Card dir={direction}>
-              <CardHeader>
-                <CardTitle>{t("room.gameRequirements")}</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm space-y-2">
-                <div className="flex justify-between">
-                  <span>{t("room.minPlayers")}:</span>
-                  <span className="font-medium">3</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>{t("room.maxPlayers")}:</span>
-                  <span className="font-medium">10</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>{t("room.cardsPerDeck")}:</span>
-                  <span className="font-medium">108</span>
-                </div>
-                <div className="text-xs text-gray-500 mt-3">
-                  {t("room.allPlayersReady")}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <RoomControls
+            playerName={playerName}
+            isReady={isReady}
+            isHost={isHost}
+            playerId={playerId}
+            roomCode={roomCode}
+            players={players}
+            canStartGame={canStartGame}
+            autoPlayTimeout={autoPlayTimeout}
+            setAutoPlayTimeout={setAutoPlayTimeout}
+            timerSlideEnabled={timerSlideEnabled}
+            setTimerSlideEnabled={setTimerSlideEnabled}
+            handleReadyToggle={handleReadyToggle}
+            handleStartGame={handleStartGame}
+            handleAddBots={handleAddBots}
+            setShowLeaveDialog={setShowLeaveDialog}
+          />
         </div>
       </div>
     </div>

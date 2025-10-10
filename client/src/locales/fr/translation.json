@@ -1,0 +1,94 @@
+{
+  "common": {
+    "welcome": "Bienvenue",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "close": "Fermer",
+    "save": "Sauvegarder",
+    "delete": "Supprimer",
+    "edit": "Modifier"
+  },
+  "nav": {
+    "toggleDarkMode": "Basculer le mode sombre",
+    "language": "Langue"
+  },
+  "languages": {
+    "english": "Anglais",
+    "french": "Français",
+    "arabic": "Arabe"
+  },
+  "chat": {
+    "title": "Discussion",
+    "noMessages": "Pas encore de messages. Commencez la conversation !",
+    "typeMessage": "Tapez un message...",
+    "sendMessage": "Envoyer le message"
+  },
+  "voiceChat": {
+    "title": "Chat Vocal",
+    "joinVoiceChat": "Rejoindre le Chat Vocal",
+    "leaveVoiceChat": "Quitter le Chat Vocal",
+    "mute": "Couper le micro",
+    "unmute": "Activer le micro",
+    "mutedByHost": "Muet par l'hôte",
+    "voiceChatActive": "Chat vocal actif",
+    "yourMicMuted": "Votre microphone est coupé",
+    "hostDisabledMic": "L'hôte a désactivé votre microphone",
+    "connectedPlayers": "Joueurs connectés ({{count}})",
+    "mutePlayer": "Muet {{player}}",
+    "unmutePlayer": "Activer {{player}}",
+    "mutePlayerMic": "Couper le micro de {{player}}",
+    "kickPlayer": "Expulser {{player}}",
+    "connectedToPlayers": "Connecté à {{count}} joueur(s)",
+    "joinToTalk": "Rejoignez pour parler avec d'autres joueurs",
+    "hostControls": "ℹ️ En tant qu'hôte, vous pouvez couper le micro des joueurs ou les expulser"
+  },
+  "errors": {
+    "roomNotFound": "Salle introuvable. Redirection vers l'accueil...",
+    "notInGame": "Vous n'êtes pas dans cette partie. Redirection..."
+  },
+  "quickRules": {
+    "title": "Règles Rapides",
+    "rule1": "Jouez des cartes face cachée et annoncez un rang",
+    "rule2": "Vous pouvez bluffer (mentir sur le rang)",
+    "rule3": "Les autres peuvent défier en criant \"Menteur !\"",
+    "rule4": "Le mauvais challenger prend la pile",
+    "rule5": "Le premier à vider sa main gagne !"
+  },
+  "stateCard": {
+    "you": "Vous",
+    "waiting": "En attente...",
+    "current": "Actuel",
+    "time": "Temps",
+    "claim": "Annonce",
+    "card": "carte",
+    "cards": "cartes"
+  },
+  "playerList": {
+    "title": "Joueurs ({{count}})",
+    "you": "Vous",
+    "card": "carte",
+    "cards": "cartes",
+    "currentTurn": "Tour Actuel",
+    "winner": "Gagnant !"
+  },
+  "playerControls": {
+    "claimThisRank": "Annoncez ce rang",
+    "playCards": "Jouer les Cartes"
+  },
+  "centerPile": {
+    "title": "Pile Centrale",
+    "waitingForFirstPlay": "En attente du premier coup...",
+    "gameWillBegin": "La partie commencera une fois que quelqu'un aura joué ses premières cartes"
+  },
+  "confirmDialog": {
+    "leaveRoomTitle": "Quitter la salle ?",
+    "leaveRoomDescription": "Êtes-vous sûr de vouloir quitter la salle ?",
+    "leaveGameTitle": "Quitter la partie ?",
+    "leaveGameDescription": "Êtes-vous sûr de vouloir quitter la partie ? Vous abandonnerez le match.",
+    "leave": "Quitter",
+    "cancel": "Annuler"
+  }
+}

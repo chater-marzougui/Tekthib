@@ -32,7 +32,7 @@ function calculateTitles(
   const titles: string[] = [];
   const stats = playerStats[playerId];
 
-  if (!stats) return [t("endgame:titles.rookie")];
+  if (!stats) return [t("titles.rookie")];
 
   // Find the maximum values across all players for each stat
   const allStats = Object.values(playerStats);
@@ -67,9 +67,9 @@ function calculateTitles(
     maxFalseAccusations > 0
   ) {
     if (falseAccusersCount > 1) {
-      titles.push(t("endgame:titles.coClown"));
+      titles.push(t("titles.coClown"));
     } else {
-      titles.push(t("endgame:titles.clown"));
+      titles.push(t("titles.clown"));
     }
   }
 
@@ -78,17 +78,17 @@ function calculateTitles(
     maxSuccessfulBluffs > 0
   ) {
     if (masterLiarsCount > 1) {
-      titles.push(t("endgame:titles.masterDeceiver"));
+      titles.push(t("titles.masterDeceiver"));
     } else {
-      titles.push(t("endgame:titles.masterLiar"));
+      titles.push(t("titles.masterLiar"));
     }
   }
 
   if (stats.timesToldTruth === maxTruthful && maxTruthful > 0) {
     if (saintsCount > 1) {
-      titles.push(t("endgame:titles.coSaint"));
+      titles.push(t("titles.coSaint"));
     } else {
-      titles.push(t("endgame:titles.saint"));
+      titles.push(t("titles.saint"));
     }
   }
 
@@ -97,30 +97,30 @@ function calculateTitles(
     maxCaughtBluffing > 0
   ) {
     if (detectivesCount > 1) {
-      titles.push(t("endgame:titles.coDetective"));
+      titles.push(t("titles.coDetective"));
     } else {
-      titles.push(t("endgame:titles.detective"));
+      titles.push(t("titles.detective"));
     }
   }
 
   // Special loser titles with extra harassment
   if (isLoser) {
     if (stats.timesCaughtBluffing >= 3) {
-      titles.push(t("endgame:titles.transparentPlayer"));
+      titles.push(t("titles.transparentPlayer"));
     }
     if (stats.timesFalselyAccused >= 3) {
-      titles.push(t("endgame:titles.professionalGuesser"));
+      titles.push(t("titles.professionalGuesser"));
     }
-    titles.push(t("endgame:titles.lastOneStanding"));
+    titles.push(t("titles.lastOneStanding"));
   }
 
   // Additional achievement titles
   if (stats.timesBluffedSuccessfully >= 5 && stats.timesCaughtBluffing === 0) {
-    titles.push(t("endgame:titles.perfectPokerFace"));
+    titles.push(t("titles.perfectPokerFace"));
   }
 
   if (stats.timesToldTruth >= 8 && stats.timesBluffedSuccessfully === 0) {
-    titles.push(t("endgame:titles.openBook"));
+    titles.push(t("titles.openBook"));
   }
 
   if (
@@ -128,12 +128,12 @@ function calculateTitles(
     stats.timesFalselyAccused >= 2 &&
     !isLoser
   ) {
-    titles.push(t("endgame:titles.riskTaker"));
+    titles.push(t("titles.riskTaker"));
   }
 
   // Default title if no achievements
   if (titles.length === 0) {
-    titles.push(t("endgame:titles.rookie"));
+    titles.push(t("titles.rookie"));
   }
 
   return titles;
@@ -161,19 +161,19 @@ export const EndGameDialog = ({
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{t("endgame:dialog.title")}</DialogTitle>
+          <DialogTitle>{t("dialog.title")}</DialogTitle>
           <DialogDescription>
-            {t("endgame:dialog.description")}
+            {t("dialog.description")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div>
             <h3 className="font-semibold text-green-600 mb-2">
-              {t("endgame:winners.title")}
+              {t("winners.title")}
             </h3>
             <ul className="list-disc list-inside space-y-1">
               {winners.map((winner, idx) => (
-                <li key={idx} className="text-lg">
+                <li key={winner + idx} className="text-lg">
                   {winner}
                 </li>
               ))}
@@ -181,11 +181,11 @@ export const EndGameDialog = ({
           </div>
           <div>
             <h3 className="font-semibold text-red-600 mb-2">
-              {t("endgame:loser.title")}
+              {t("loser.title")}
             </h3>
             <p className="text-lg font-bold">{loser}</p>
             <p className="text-sm text-gray-600 italic mt-1">
-              {t("endgame:loser.message")}
+              {t("loser.message")}
             </p>
           </div>
 
@@ -193,7 +193,7 @@ export const EndGameDialog = ({
           {playerStats && gameState && (
             <div className="mt-6">
               <h3 className="font-semibold text-blue-600 mb-3">
-                {t("endgame:statistics.title")}
+                {t("statistics.title")}
               </h3>
               <div className="space-y-3">
                 {gameState.players.map((player) => {
@@ -226,12 +226,12 @@ export const EndGameDialog = ({
                         <h4 className="font-semibold">{player.name}</h4>
                         {isCurrentPlayer && (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500 text-white">
-                            {t("endgame:statistics.labels.you")}
+                            {t("statistics.labels.you")}
                           </span>
                         )}
                         {isLoserPlayer && (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-red-500 text-white">
-                            {t("endgame:statistics.labels.loser")}
+                            {t("statistics.labels.loser")}
                           </span>
                         )}
                       </div>
@@ -253,7 +253,7 @@ export const EndGameDialog = ({
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-600">
-                            {t("endgame:statistics.labels.caughtBluffing")}
+                            {t("statistics.labels.caughtBluffing")}
                           </span>
                           <span className="font-semibold">
                             {stats.timesCaughtBluffing}
@@ -261,7 +261,7 @@ export const EndGameDialog = ({
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">
-                            {t("endgame:statistics.labels.successfulBluffs")}
+                            {t("statistics.labels.successfulBluffs")}
                           </span>
                           <span className="font-semibold">
                             {stats.timesBluffedSuccessfully}
@@ -269,7 +269,7 @@ export const EndGameDialog = ({
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">
-                            {t("endgame:statistics.labels.falseAccusations")}
+                            {t("statistics.labels.falseAccusations")}
                           </span>
                           <span className="font-semibold">
                             {stats.timesFalselyAccused}
@@ -277,7 +277,7 @@ export const EndGameDialog = ({
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">
-                            {t("endgame:statistics.labels.toldTruth")}
+                            {t("statistics.labels.toldTruth")}
                           </span>
                           <span className="font-semibold">
                             {stats.timesToldTruth}
@@ -293,10 +293,10 @@ export const EndGameDialog = ({
         </div>
         <DialogFooter className="gap-2 sm:gap-0">
           <Button onClick={handlePlayAgain} variant="default">
-            {t("endgame:buttons.playAgain")}
+            {t("buttons.playAgain")}
           </Button>
           <Button variant="outline" onClick={handleClose}>
-            {t("endgame:buttons.returnHome")}
+            {t("buttons.returnHome")}
           </Button>
         </DialogFooter>
       </DialogContent>
