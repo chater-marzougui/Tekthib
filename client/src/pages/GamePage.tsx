@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Card, CardContent } from "@/components/ui/card";
 import { useWebSocketContext } from "@/context/WebSocketContext";
 import GameBoard from "../components/game/GameBoard";
 import PlayerList from "../components/game/PlayerList";
@@ -18,6 +17,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import QuickRules from "@/components/game/QuickRules";
 import { getToastMessage } from "@/lib/utils";
 import PlayerNameDialog from "@/components/room/PlayerNameDialog";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 interface GamePlayer extends Player {
   isCurrentTurn: boolean;
@@ -218,10 +218,10 @@ export default function GamePage() {
         // Show notification if it was an auto-play
         if (wasAutoPlayed) {
           toast.info(
-            t("game.autoPlayed", { 
-              playerName: pName, 
-              cardCount, 
-              rank: claimedRank 
+            t("game.autoPlayed", {
+              playerName: pName,
+              cardCount,
+              rank: claimedRank,
             }) || `${pName} timed out - ${cardCount} cards were auto-played`
           );
         }
@@ -377,7 +377,7 @@ export default function GamePage() {
     const unregisterTimerUpdate = registerHandler("timer-update", (message) => {
       if (message.type === "TIMER_UPDATE") {
         const { remainingTime } = message.payload;
-        
+
         // Update game state with new remaining time
         setGameState((prevState) => {
           if (!prevState) return prevState;
@@ -545,23 +545,11 @@ export default function GamePage() {
   };
 
   if (isLoading || !gameState) {
-    return (
-      <div className="h-full w-full bg-background flex items-center justify-center">
-        <Card className="w-96 mx-auto">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto"></div>
-              <p className="text-foreground">{t("game.loadingGame")}</p>
-              {!isConnected && (
-                <p className="text-yellow-600 text-sm">
-                  {t("game.connectingToServer")}
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+      return (
+        <div className="h-[98vh]">
+          <LoadingSpinner isConnected={isConnected} />
+        </div>
+      );
   }
 
   const content = (
