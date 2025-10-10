@@ -1,4 +1,3 @@
-import "webrtc-adapter";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useWebSocketContext } from "../context/WebSocketContext";
@@ -39,11 +38,11 @@ export function useVoiceChat({
     new Map()
   );
 
-  // Check if voice was previously enabled (persist across page navigation)
-  const wasVoiceEnabled = sessionStorage.getItem("voiceChatEnabled") === "true";
+  // NOTE: Removed session storage check to prevent auto-joining voice chat
+  // Voice chat now requires explicit user consent via button click
 
   const [isMuted, setIsMuted] = useState(false);
-  const [isVoiceEnabled, setIsVoiceEnabled] = useState(wasVoiceEnabled);
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
   const [audioError, setAudioError] = useState<string | null>(null);
   const [mutedPlayers, setMutedPlayers] = useState<Set<string>>(new Set());
   const [hostMutedPlayers, setHostMutedPlayers] = useState<Set<string>>(
@@ -437,6 +436,12 @@ export function useVoiceChat({
   // Handle incoming offer
   const handleOffer = useCallback(
     async (fromPlayerId: string, offer: RTCSessionDescriptionInit) => {
+      // Only respond to offers if we've joined voice chat
+      if (!isVoiceEnabled || !localStreamRef.current) {
+        console.log("Ignoring offer from", fromPlayerId, "- voice chat not enabled");
+        return;
+      }
+
       let pc = peerConnectionsRef.current.get(fromPlayerId)?.connection;
 
       // If connection exists but in wrong state, close and recreate
@@ -491,7 +496,7 @@ export function useVoiceChat({
         console.error("Error handling offer:", error);
       }
     },
-    [sendMessage]
+    [sendMessage, isVoiceEnabled]
   );
 
   // Handle incoming answer
@@ -578,7 +583,6 @@ export function useVoiceChat({
     localStreamRef.current = stream;
 
     setIsVoiceEnabled(true);
-    sessionStorage.setItem("voiceChatEnabled", "true");
 
     // Wait longer for WebSocket to be fully ready
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -650,7 +654,6 @@ export function useVoiceChat({
     isNegotiatingRef.current.clear();
 
     setIsVoiceEnabled(false);
-    sessionStorage.removeItem("voiceChatEnabled");
     setIsMuted(false);
   }, []);
 
@@ -876,16 +879,8 @@ export function useVoiceChat({
     });
   }, [players, localPlayerId, isVoiceEnabled, createOffer]);
 
-  // Auto-reconnect voice chat if it was enabled before page transition
-  useEffect(() => {
-    if (wasVoiceEnabled && !isVoiceEnabled && players.length > 0) {
-      // Small delay to ensure page is fully loaded
-      const timer = setTimeout(() => {
-        enableVoiceChat();
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [wasVoiceEnabled, isVoiceEnabled, players.length, enableVoiceChat]);
+  // NOTE: Removed auto-reconnect to prevent browsers from blocking microphone access
+  // without explicit user consent. Users must manually click "Join Voice Chat" button.
 
   return {
     isVoiceEnabled,
