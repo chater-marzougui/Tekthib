@@ -207,6 +207,7 @@ export default function GamePage() {
           cardCount,
           claimedRank,
           gameState: newGameState,
+          wasAutoPlayed,
         } = message.payload;
 
         setLastPlay({
@@ -214,6 +215,17 @@ export default function GamePage() {
           cardCount,
           claimedRank,
         });
+
+        // Show notification if it was an auto-play
+        if (wasAutoPlayed) {
+          toast.info(
+            t("game.autoPlayed", { 
+              playerName: pName, 
+              cardCount, 
+              rank: claimedRank 
+            }) || `${pName} timed out - ${cardCount} cards were auto-played`
+          );
+        }
 
         if (newGameState) {
           setGameState(newGameState);
@@ -363,6 +375,21 @@ export default function GamePage() {
       }
     });
 
+    const unregisterTimerUpdate = registerHandler("timer-update", (message) => {
+      if (message.type === "TIMER_UPDATE") {
+        const { remainingTime } = message.payload;
+        
+        // Update game state with new remaining time
+        setGameState((prevState) => {
+          if (!prevState) return prevState;
+          return {
+            ...prevState,
+            remainingTime,
+          };
+        });
+      }
+    });
+
     return () => {
       unregisterInitialState();
       unregisterRoomJoined();
@@ -372,6 +399,7 @@ export default function GamePage() {
       unregisterGameEnded();
       unregisterError();
       unregisterGameReset();
+      unregisterTimerUpdate();
     };
   }, [registerHandler, navigate, playerId, playerName, lastPlay, roomId]);
 

@@ -33,6 +33,9 @@ export class GameEngine {
   private turnTimer: NodeJS.Timeout | null = null;
   private turnStartTime: number = 0;
   private autoPlayTimeout: number = 0;
+  private timerBroadcastInterval: NodeJS.Timeout | null = null;
+  private timerBroadcastCallback?: () => void;
+  private autoPlayCallback?: (playerId: string, cardIds: string[], claimedRank: Rank) => void;
 
   constructor(players: Map<string, PlayerWithHand>, autoPlayTimeout: number = 0) {
     this.players = players;
@@ -61,6 +64,20 @@ export class GameEngine {
         callback(botId, message);
       });
     });
+  }
+
+  /**
+   * Set callback for timer broadcasts
+   */
+  setTimerBroadcastCallback(callback: () => void): void {
+    this.timerBroadcastCallback = callback;
+  }
+
+  /**
+   * Set callback for auto-play events
+   */
+  setAutoPlayCallback(callback: (playerId: string, cardIds: string[], claimedRank: Rank) => void): void {
+    this.autoPlayCallback = callback;
   }
 
   /**
@@ -247,7 +264,6 @@ export class GameEngine {
 
     // Move to next player (skip winners)
     this.advanceTurn();
-    this.startTurnTimer();
 
     return { success: true, newRank: claimedRank };
   }
@@ -469,7 +485,6 @@ export class GameEngine {
     }
 
     this.gameState.currentPlayerIndex = nextIndex;
-    this.startTurnTimer();
   }
 
   getPlayerHand(playerId: string): Card[] {
@@ -578,11 +593,8 @@ export class GameEngine {
    * Start or reset the turn timer
    */
   startTurnTimer(): void {
-    // Clear existing timer
-    if (this.turnTimer) {
-      clearInterval(this.turnTimer);
-      this.turnTimer = null;
-    }
+    // Clear existing timer and broadcast interval
+    this.stopTurnTimer();
 
     // Only start timer if autoPlayTimeout is enabled (>= 10 seconds)
     if (this.autoPlayTimeout < 10) {
@@ -608,6 +620,13 @@ export class GameEngine {
     this.turnTimer = setTimeout(() => {
       this.handleAutoPlay();
     }, this.autoPlayTimeout * 1000);
+
+    // Set up periodic broadcast (every 1 second) to keep clients updated
+    this.timerBroadcastInterval = setInterval(() => {
+      if (this.timerBroadcastCallback) {
+        this.timerBroadcastCallback();
+      }
+    }, 1000);
   }
 
   /**
@@ -617,6 +636,10 @@ export class GameEngine {
     if (this.turnTimer) {
       clearTimeout(this.turnTimer);
       this.turnTimer = null;
+    }
+    if (this.timerBroadcastInterval) {
+      clearInterval(this.timerBroadcastInterval);
+      this.timerBroadcastInterval = null;
     }
   }
 
@@ -636,8 +659,9 @@ export class GameEngine {
 
   /**
    * Handle auto-play when timer expires
+   * Returns the play details if successful, null otherwise
    */
-  private handleAutoPlay(): void {
+  handleAutoPlay(): { playerId: string; cardIds: string[]; claimedRank: Rank } | null {
     this.stopTurnTimer();
 
     const currentPlayerId =
@@ -646,15 +670,14 @@ export class GameEngine {
 
     if (!player || player.isBot) {
       // Don't auto-play for bots
-      return;
+      return null;
     }
 
     // Check if player is still connected
     if (!player.isConnected) {
-      // Player disconnected, skip turn
+      // Player disconnected, skip turn (handler will restart timer)
       this.advanceTurn();
-      this.startTurnTimer();
-      return;
+      return null;
     }
 
     // Auto-play random cards for the human player
@@ -668,12 +691,22 @@ export class GameEngine {
     const rankToClaim = this.gameState.currentRank || 
       this.getRandomPlayableRank();
 
+    console.log(`GameEngine: Auto-playing for player ${currentPlayerId} - ${numCards} cards`);
+
     // Execute the play
     const result = this.playCards(currentPlayerId, cardIds, rankToClaim);
 
     if (result.success) {
-      // Timer will be restarted by the handler after broadcasting the play
+      // Trigger auto-play callback to notify handlers
+      if (this.autoPlayCallback) {
+        this.autoPlayCallback(currentPlayerId, cardIds, rankToClaim);
+      }
+      
+      // Return the auto-play details
+      return { playerId: currentPlayerId, cardIds, claimedRank: rankToClaim };
     }
+
+    return null;
   }
 
   /**

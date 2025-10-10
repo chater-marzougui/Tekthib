@@ -51,14 +51,93 @@ export function triggerBotTurn(
 }
 
 /**
- * Start timer for the current turn
+ * Exported function to setup game engine callbacks
+ */
+export function setupGameEngineCallbacks(
+  clients: Map<WebSocket, ClientInfo>,
+  roomId: string,
+  gameEngine: GameEngine,
+): void {
+  // Set up timer broadcast callback to keep clients updated
+  gameEngine.setTimerBroadcastCallback(() => {
+    const publicGameState = gameEngine.getPublicGameState();
+    
+    // Broadcast updated timer to all clients in the room
+    broadcastToRoom(clients, roomId, {
+      type: 'TIMER_UPDATE',
+      payload: {
+        remainingTime: publicGameState.remainingTime,
+      },
+    });
+  });
+
+  // Set up auto-play callback to notify when a player times out
+  gameEngine.setAutoPlayCallback((playerId: string, cardIds: string[], claimedRank: string) => {
+    const room = roomManager.getRoom(roomId);
+    const player = room?.players.get(playerId);
+    const publicGameState = gameEngine.getPublicGameState();
+
+    console.log(`Auto-play triggered for player ${playerId}`);
+
+    // Broadcast the auto-played cards
+    broadcastToRoom(clients, roomId, {
+      type: 'CARDS_PLAYED',
+      payload: {
+        playerId: playerId,
+        playerName: player?.name || 'Unknown',
+        cardCount: cardIds.length,
+        claimedRank: claimedRank,
+        gameState: publicGameState,
+        wasAutoPlayed: true, // Flag to indicate this was an auto-play
+      },
+    });
+
+    // Send updated hands to all players
+    clients.forEach((client, clientWs) => {
+      if (client.roomId === roomId) {
+        sendToClient(clientWs, {
+          type: 'GAME_STATE_UPDATE',
+          payload: {
+            hand: gameEngine.getPlayerHand(client.id),
+            gameState: publicGameState,
+          },
+        });
+      }
+    });
+
+    // Check if game ended
+    if (publicGameState.phase === 'ended') {
+      gameEngine.stopTurnTimer();
+      broadcastToRoom(clients, roomId, {
+        type: 'GAME_ENDED',
+        payload: {
+          winners: publicGameState.winners,
+          loser: publicGameState.loser,
+          gameState: publicGameState,
+        },
+      });
+      return;
+    }
+
+    // Start timer for next turn
+    startTimerForRoom(clients, roomId, gameEngine);
+
+    // After auto-play, check if any bot wants to challenge
+    setTimeout(() => {
+      processBotChallenge(clients, roomId, gameEngine);
+    }, 3000);
+  });
+}
+
+/**
+ * Start timer for the current turn (simpler version - callbacks already set)
  */
 function startTimerForRoom(
   clients: Map<WebSocket, ClientInfo>,
   roomId: string,
   gameEngine: GameEngine,
 ): void {
-  // Start the timer
+  // Just start the timer - callbacks are already configured
   gameEngine.startTurnTimer();
 }
 
