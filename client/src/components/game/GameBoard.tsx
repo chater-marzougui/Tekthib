@@ -58,12 +58,6 @@ export default function GameBoard({
     }
 
     if (serverTimer !== undefined && serverTimer !== null) {
-      console.log(
-        "GameBoard: Received serverTimer:",
-        serverTimer,
-        "autoPlayTimeout:",
-        autoPlayTimeout
-      );
       setTimer(serverTimer);
 
       // Set up local countdown from server time

@@ -47,6 +47,8 @@
     "gameReset": "تم إعادة تعيين اللعبة! عد إلى الغرفة لبدء اللعب مرة أخرى.",
     "outOfGame": "خارج اللعبة",
     "sets": "مجموعات",
-    "claimed": "أعلن"
+    "claimed": "أعلن",
+    "autoPlayed": "{{pName}} لعب تلقائيًا {{cardCount}} ورقة كـ {{claimedRank}}",
+    "autoPlayWarning": "تم اللعب تلقائيًا بسبب عدم النشاط."
   }
 }

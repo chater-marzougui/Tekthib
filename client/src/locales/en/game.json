@@ -47,6 +47,8 @@
     "gameReset": "Game reset! Return to room to start again.",
     "outOfGame": "Out of Game",
     "sets": "sets",
-    "claimed": "claimed"
+    "claimed": "claimed",
+    "autoPlayed": "{{pName}} Auto-played {{cardCount}} card(s) as {{claimedRank}}",
+    "autoPlayWarning": "You were auto-played due to inactivity."
   }
 }

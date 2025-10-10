@@ -77,8 +77,6 @@ export function setupGameEngineCallbacks(
     const player = room?.players.get(playerId);
     const publicGameState = gameEngine.getPublicGameState();
 
-    console.log(`Auto-play triggered for player ${playerId}`);
-
     // Broadcast the auto-played cards
     broadcastToRoom(clients, roomId, {
       type: 'CARDS_PLAYED',

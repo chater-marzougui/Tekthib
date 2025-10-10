@@ -47,6 +47,8 @@
     "gameReset": "Partie réinitialisée ! Retournez dans la salle pour recommencer.",
     "outOfGame": "Hors Jeu",
     "sets": "séries",
-    "claimed": "a déclaré"
+    "claimed": "a déclaré",
+    "autoPlayed": "{{pName}} a joué automatiquement {{cardCount}} carte(s) en tant que {{claimedRank}}",
+    "autoPlayWarning": "Vous avez été joué automatiquement en raison de l'inactivité."
   }
 }

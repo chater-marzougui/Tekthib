@@ -55,7 +55,7 @@ export function NavUser() {
   };
 
   const handleChangeTheme = (
-    e: React.MouseEvent<HTMLDivElement>,
+    e: React.MouseEvent<HTMLButtonElement>,
     newTheme: "dark" | "light"
   ) => {
     e.stopPropagation();
@@ -84,7 +84,7 @@ export function NavUser() {
                 <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
                   <label className="flex w-full items-center justify-between">
                     <span>{t("nav.toggleDarkMode")}</span>
-                    <div
+                    <button
                       className="relative inline-block w-10 h-6"
                       onClick={(e) =>
                         handleChangeTheme(
@@ -111,7 +111,7 @@ export function NavUser() {
                           />
                         )}
                       </span>
-                    </div>
+                    </button>
                   </label>
                 </DropdownMenuItem>
 

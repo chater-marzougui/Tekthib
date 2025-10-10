@@ -108,6 +108,7 @@ export default function GamePage() {
   }, [isConnected, roomId, playerId, sendMessage, t]);
 
   useEffect(() => {
+    if (!isConnected) return;
     const unregisterInitialState = registerHandler(
       "initial-game-state",
       (message) => {
@@ -117,19 +118,12 @@ export default function GamePage() {
           // Set auto play timeout from room settings
           if (room && room.autoPlayTimeout !== undefined) {
             setAutoPlayTimeout(room.autoPlayTimeout);
-            console.log(
-              "GamePage: autoPlayTimeout from room:",
-              room.autoPlayTimeout
-            );
           } else {
             setAutoPlayTimeout(45);
           }
 
           if (initialGameState) {
-            console.log(
-              "GamePage: Initial game state remainingTime:",
-              initialGameState.remainingTime
-            );
+            setIsLoading(false);
             setGameState(initialGameState);
             setIsMyTurn(initialGameState.currentPlayerId === playerId);
 
@@ -219,9 +213,9 @@ export default function GamePage() {
         if (wasAutoPlayed) {
           toast.info(
             t("game.autoPlayed", {
-              playerName: pName,
+              pName,
               cardCount,
-              rank: claimedRank,
+              claimedRank,
             }) || `${pName} timed out - ${cardCount} cards were auto-played`
           );
         }
@@ -400,7 +394,15 @@ export default function GamePage() {
       unregisterGameReset();
       unregisterTimerUpdate();
     };
-  }, [registerHandler, navigate, playerId, playerName, lastPlay, roomId]);
+  }, [
+    registerHandler,
+    navigate,
+    playerId,
+    playerName,
+    lastPlay,
+    roomId,
+    isConnected,
+  ]);
 
   useEffect(() => {
     if (!gameState) return;
@@ -425,7 +427,8 @@ export default function GamePage() {
     setHeaderConfig({
       actionButton: {
         label: t("game.leaveGame"),
-        onClick: () => setShowLeaveDialog(true),
+        onClick: () =>
+          isLoading ? handleLeaveGame() : setShowLeaveDialog(true),
         variant: "destructive",
         color: "default",
       },
@@ -435,7 +438,7 @@ export default function GamePage() {
         actionButton: undefined,
       });
     };
-  }, [t]);
+  }, [t, isLoading]);
 
   useEffect(() => {
     const updatePositions = () => {
@@ -545,14 +548,14 @@ export default function GamePage() {
   };
 
   if (isLoading || !gameState) {
-      return (
-        <div className="h-[98vh]">
-          <LoadingSpinner isConnected={isConnected} />
-        </div>
-      );
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <LoadingSpinner isConnected={isConnected} />
+      </div>
+    );
   }
 
-  const content = (
+  return (
     <div className="min-h-screen p-4">
       {/* Confirm leave dialog */}
       <ConfirmDialog
@@ -773,6 +776,4 @@ export default function GamePage() {
       </div>
     </div>
   );
-
-  return content;
 }

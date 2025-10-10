@@ -379,7 +379,6 @@ function handleStartGame(
 
   const room = roomManager.getRoom(clientInfo.roomId);
   roomManager.setAutoPlayTimeout(clientInfo.roomId, payload.autoPlayTimeout);
-  console.log('Auto-play timeout set to:', payload.autoPlayTimeout);
   if (!room || room.hostId !== clientInfo.id) {
     sendToClient(ws, {
       type: 'ERROR',
@@ -432,8 +431,6 @@ function handleStartGame(
 
   // Send game started event to all players
   const publicGameState = gameEngine.getPublicGameState();
-  console.log('Game started:', publicGameState.remainingTime);
-
   broadcastToRoom(clients, clientInfo.roomId, {
     type: 'GAME_STARTED',
     payload: { gameState: publicGameState },

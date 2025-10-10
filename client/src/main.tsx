@@ -9,7 +9,9 @@ import MinimalFooter from "./components/Footer";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
-    <MinimalFooter />
-  </StrictMode>,
+    <div className="flex flex-col min-h-screen">
+      <App />
+      <MinimalFooter />
+    </div>
+  </StrictMode>
 );

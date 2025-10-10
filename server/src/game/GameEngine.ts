@@ -29,10 +29,10 @@ export class GameEngine {
   private readonly gameState: GameState;
   private readonly players: Map<string, PlayerWithHand>;
   private readonly botPlayers: Map<string, BotPlayer> = new Map();
+  private readonly autoPlayTimeout: number = 0;
   private botChatCallback?: (botId: string, message: string) => void;
   private turnTimer: NodeJS.Timeout | null = null;
   private turnStartTime: number = 0;
-  private autoPlayTimeout: number = 0;
   private timerBroadcastInterval: NodeJS.Timeout | null = null;
   private timerBroadcastCallback?: () => void;
   private autoPlayCallback?: (playerId: string, cardIds: string[], claimedRank: Rank) => void;
@@ -598,7 +598,6 @@ export class GameEngine {
 
     // Only start timer if autoPlayTimeout is enabled (>= 10 seconds)
     if (this.autoPlayTimeout < 10) {
-      console.log('GameEngine: Timer not started - autoPlayTimeout is', this.autoPlayTimeout);
       return;
     }
 
@@ -609,12 +608,10 @@ export class GameEngine {
 
     if (!hasHumanPlayers) {
       // Don't start timer if no human players connected
-      console.log('GameEngine: Timer not started - no human players');
       return;
     }
 
     this.turnStartTime = Date.now();
-    console.log('GameEngine: Timer started - autoPlayTimeout:', this.autoPlayTimeout, 'turnStartTime:', this.turnStartTime);
 
     // Set up timeout to auto-play when timer expires
     this.turnTimer = setTimeout(() => {
@@ -648,12 +645,10 @@ export class GameEngine {
    */
   getRemainingTime(): number {
     if (this.autoPlayTimeout < 10 || this.turnStartTime === 0) {
-      console.log('GameEngine: getRemainingTime returning 0 - autoPlayTimeout:', this.autoPlayTimeout, 'turnStartTime:', this.turnStartTime);
       return 0;
     }
     const elapsed = Math.floor((Date.now() - this.turnStartTime) / 1000);
     const remaining = Math.max(0, this.autoPlayTimeout - elapsed);
-    console.log('GameEngine: getRemainingTime -', remaining, 'seconds (elapsed:', elapsed, ')');
     return remaining;
   }
 
@@ -690,8 +685,6 @@ export class GameEngine {
     // Determine rank to claim
     const rankToClaim = this.gameState.currentRank || 
       this.getRandomPlayableRank();
-
-    console.log(`GameEngine: Auto-playing for player ${currentPlayerId} - ${numCards} cards`);
 
     // Execute the play
     const result = this.playCards(currentPlayerId, cardIds, rankToClaim);
