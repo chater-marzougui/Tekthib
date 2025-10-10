@@ -41,6 +41,7 @@
     "yourStatus": "Votre statut",
     "playingAs": "Vous jouez en tant que",
     "secondsPerTurn": "secondes par tour",
-    "timerRange": "Plage : 10-300 secondes"
+    "timerRange": "Plage : 10-300 secondes",
+    "bot": "Bot"
   }
 }

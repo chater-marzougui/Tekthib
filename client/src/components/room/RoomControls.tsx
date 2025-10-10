@@ -86,7 +86,7 @@ const RoomControls = ({
                     size="sm"
                     className="flex-1"
                   >
-                    +{index + 1} Bot
+                    +{index + 1} {t("room.bot")}
                   </Button>
                 ))}
               </div>

@@ -41,6 +41,7 @@
     "yourStatus": "Your Status",
     "playingAs": "Playing as",
     "secondsPerTurn": "seconds per turn",
-    "timerRange": "Range: 10-300 seconds"
+    "timerRange": "Range: 10-300 seconds",
+    "bot": "Bot"
   }
 }

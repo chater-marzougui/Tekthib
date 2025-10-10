@@ -49,9 +49,24 @@ export function VoiceChatProvider({
 export function useVoiceChatContext() {
   const context = useContext(VoiceChatContext);
   if (!context) {
-    throw new Error(
-      "useVoiceChatContext must be used within a VoiceChatProvider",
-    );
+    // Return a default context when not within provider
+    // This allows components to render without errors while provider is initializing
+    return {
+      isVoiceEnabled: false,
+      isMuted: false,
+      audioError: null,
+      mutedPlayers: new Set<string>(),
+      hostMutedPlayers: new Set<string>(),
+      hostMuted: false,
+      isHost: false,
+      audioLevels: new Map<string, number>(),
+      enableVoiceChat: async () => {},
+      disableVoiceChat: () => {},
+      toggleMute: () => {},
+      togglePlayerMute: () => {},
+      kickPlayer: () => {},
+      mutePlayerMic: () => {},
+    };
   }
   return context;
 }

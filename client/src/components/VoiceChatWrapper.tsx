@@ -138,7 +138,7 @@ export function VoiceChatWrapper({ children }: VoiceChatWrapperProps) {
   }, [registerHandler, roomId, playerId, isInRoomOrGame]);
 
   // Only wrap with VoiceChatProvider if we're in a room/game and have the necessary data
-  if (isInRoomOrGame && roomId && playerId && players.length > 0) {
+  if (isInRoomOrGame && roomId && playerId) {
     return (
       <VoiceChatProvider
         roomId={roomId}

@@ -41,6 +41,7 @@
     "yourStatus": "حالتك",
     "playingAs": "تلعب باسم",
     "secondsPerTurn": "ثانية لكل دور",
-    "timerRange": "المدى: 10-300 ثانية"
+    "timerRange": "المدى: 10-300 ثانية",
+    "bot": "روبو"
   }
 }
