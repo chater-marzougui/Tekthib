@@ -1,0 +1,243 @@
+First scenario:
+
+pc1: using brave browser
+pc2: using chrome browser
+full scenario:
+pc1 created the room, voice chat was desactivated
+pc2 joined the roo, his voice chat element activated automatically and gave this error:
+Cannot create offer - no local stream
+pc1: clicked on join voice chat
+
+now both on voice chat stream this happened:
+pc1 logs:
+Cannot create peer connection - no local stream available
+overrideMethod @ hook.js:608
+(anonymous) @ index-CbxiiJxt.js:138
+(anonymous) @ index-CbxiiJxt.js:138
+(anonymous) @ index-CbxiiJxt.js:138
+(anonymous) @ index-CbxiiJxt.js:60
+p.onmessage @ index-CbxiiJxt.js:60Understand this error
+index-CbxiiJxt.js:138 Uncaught (in promise) Error: Local stream not initialized
+    at Object.current (index-CbxiiJxt.js:138:4193)
+    at index-CbxiiJxt.js:138:8291
+    at index-CbxiiJxt.js:138:11606
+    at index-CbxiiJxt.js:60:21383
+    at Map.forEach (<anonymous>)
+    at p.onmessage (index-CbxiiJxt.js:60:21371)
+(anonymous) @ index-CbxiiJxt.js:138
+(anonymous) @ index-CbxiiJxt.js:138
+(anonymous) @ index-CbxiiJxt.js:138
+(anonymous) @ index-CbxiiJxt.js:60
+p.onmessage @ index-CbxiiJxt.js:60Understand this error
+6index-CbxiiJxt.js:138 Stored ICE candidate for later: client_1759577457034_419eijy3o
+index-CbxiiJxt.js:138 Local stream initialized with tracks: 1
+index-CbxiiJxt.js:138 Creating new peer connection for: client_1759577457034_419eijy3o
+index-CbxiiJxt.js:138 Adding track to peer connection: client_1759577457034_419eijy3o audio enabled: true
+index-CbxiiJxt.js:138 Negotiation needed with: client_1759577457034_419eijy3o
+index-CbxiiJxt.js:138 Skipping auto-negotiation - already in progress or not stable
+index-CbxiiJxt.js:138 Offer sent to: client_1759577457034_419eijy3o
+index-CbxiiJxt.js:138 Received remote track from: client_1759577457034_419eijy3o
+index-CbxiiJxt.js:138 Answer processed from: client_1759577457034_419eijy3o
+
+pc2 logs:
+Local stream initialized with tracks: 1
+index-CbxiiJxt.js:138 Creating new peer connection for: client_1760120754777_hblzvh1us
+index-CbxiiJxt.js:138 Adding track to peer connection: client_1760120754777_hblzvh1us audio enabled: true
+index-CbxiiJxt.js:138 Negotiation needed with: client_1760120754777_hblzvh1us
+index-CbxiiJxt.js:138 Skipping auto-negotiation - already in progress or not stable
+index-CbxiiJxt.js:138 Offer sent to: client_1760120754777_hblzvh1us
+index-CbxiiJxt.js:138 Creating offer for: client_1760120754777_hblzvh1us
+index-CbxiiJxt.js:138 Already negotiating with: client_1760120754777_hblzvh1us
+index-CbxiiJxt.js:138 Closing existing connection in state: have-local-offer
+index-CbxiiJxt.js:138 Adding track to peer connection: client_1760120754777_hblzvh1us audio enabled: true
+4index-CbxiiJxt.js:138 Stored ICE candidate (no remote desc yet): client_1760120754777_hblzvh1us
+index-CbxiiJxt.js:138 Received remote track from: client_1760120754777_hblzvh1us
+index-CbxiiJxt.js:138 Added ICE candidate from: client_1760120754777_hblzvh1us
+index-CbxiiJxt.js:138 Audio playing for: client_1760120754777_hblzvh1us
+2index-CbxiiJxt.js:138 Added ICE candidate from: client_1760120754777_hblzvh1us
+index-CbxiiJxt.js:138 Answer sent to: client_1760120754777_hblzvh1us
+index-CbxiiJxt.js:138 ICE connection state with client_1760120754777_hblzvh1us: checking
+index-CbxiiJxt.js:138 Connection state with client_1760120754777_hblzvh1us: connecting
+index-CbxiiJxt.js:138 Answer sent to: client_1760120754777_hblzvh1us
+index-CbxiiJxt.js:138 ICE connection state with client_1760120754777_hblzvh1us: connected
+index-CbxiiJxt.js:138 Connection state with client_1760120754777_hblzvh1us: connected
+
+pc1 had to leave voice chat (which was opened automatically), then rejoin, it gave this:
+Audio playing for: client_1759577457034_419eijy3o
+index-CbxiiJxt.js:138 Added ICE candidate from: client_1759577457034_419eijy3o
+index-CbxiiJxt.js:138 ICE connection state with client_1759577457034_419eijy3o: checking
+5index-CbxiiJxt.js:138 Added ICE candidate from: client_1759577457034_419eijy3o
+index-CbxiiJxt.js:138 Connection state with client_1759577457034_419eijy3o: connecting
+index-CbxiiJxt.js:138 Creating offer for: client_1759577457034_419eijy3o
+index-CbxiiJxt.js:138 Offer sent to: client_1759577457034_419eijy3o
+index-CbxiiJxt.js:138 Answer processed from: client_1759577457034_419eijy3o
+index-CbxiiJxt.js:138 ICE connection state with client_1759577457034_419eijy3o: connected
+index-CbxiiJxt.js:138 Connection state with client_1759577457034_419eijy3o: connected
+
+
+and it worked; but the process was bad we need to fix it and don't make auto join , user has to click to join
+
+
+
+second scenario:
+pc1: firefox browser 
+pc2: chrome browser
+
+pc1: 
+create's a room, voice chat is disabled
+pc2 enters voice chat was disabled
+pc2 clicks join voice chat
+pc2 logs after clicking:
+ocal stream initialized with tracks: 1
+index-CbxiiJxt.js:138 Creating new peer connection for: client_1759577280865_v9khkfm3r
+index-CbxiiJxt.js:138 Adding track to peer connection: client_1759577280865_v9khkfm3r audio enabled: true
+index-CbxiiJxt.js:138 Negotiation needed with: client_1759577280865_v9khkfm3r
+index-CbxiiJxt.js:138 Skipping auto-negotiation - already in progress or not stable
+index-CbxiiJxt.js:138 Offer sent to: client_1759577280865_v9khkfm3r
+index-CbxiiJxt.js:138 Creating offer for: client_1759577280865_v9khkfm3r
+index-CbxiiJxt.js:138 Already negotiating with: client_1759577280865_v9khkfm3r
+pc1 after pc2 clicked on the join (he was dragged into it without consent):
+
+Cannot create offer - no local stream index-CbxiiJxt.js:138:7146
+V https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+mP https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+mP https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+ro https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+I3 https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+ia https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+...
+X3 https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+K3 https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+hp https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+It is https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:25
+Cannot create peer connection - no local stream available index-CbxiiJxt.js:138:4126
+Uncaught (in promise) Error: Local stream not initialized
+H https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+In https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+In https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+onmessage https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:60
+onmessage https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:60
+d https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:60
+rT https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:60
+ro https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+...
+K3 https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+hp https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+It is https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:25
+index-CbxiiJxt.js:138:4193
+
+voice didn't work
+pc1 exits and enters again logs:
+Cannot create offer - no local stream index-CbxiiJxt.js:138:7146
+V https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+mP https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+mP https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+ro https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+...
+X3 https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+K3 https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+hp https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+It is https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:25
+Cannot create peer connection - no local stream available index-CbxiiJxt.js:138:4126
+
+Uncaught (in promise) Error: Local stream not initialized
+H https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+In https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+In https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+onmessage https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:60
+onmessage https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:60
+d https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:60
+rT https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:60
+ro https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+...
+X3 https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+K3 https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+hp https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+It is https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:25
+index-CbxiiJxt.js:138:4193
+Uncaught (in promise) ReferenceError: RTCIceCandidate is not defined
+And https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+ie https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+onmessage https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:60
+onmessage https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:60
+d https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:60
+rT https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:60
+ro https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+I3 https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+...
+I3 https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+ia https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+I3 https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+    ia https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+    ...
+    se https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:25
+7 index-CbxiiJxt.js:138:9315
+
+pc2 after clicking again:
+Local stream initialized with tracks: 1
+index-CbxiiJxt.js:138 Creating new peer connection for: client_1759577280865_v9khkfm3r
+index-CbxiiJxt.js:138 Adding track to peer connection: client_1759577280865_v9khkfm3r audio enabled: true
+index-CbxiiJxt.js:138 Negotiation needed with: client_1759577280865_v9khkfm3r
+index-CbxiiJxt.js:138 Skipping auto-negotiation - already in progress or not stable
+index-CbxiiJxt.js:138 Offer sent to: client_1759577280865_v9khkfm3r
+index-CbxiiJxt.js:138 Creating offer for: client_1759577280865_v9khkfm3r
+index-CbxiiJxt.js:138 Already negotiating with: client_1759577280865_v9khkfm3r
+
+pc1 logs after pc2 rejoined voice chat;
+Local stream initialized with tracks: 1 index-CbxiiJxt.js:138:3810
+Creating new peer connection for: client_1760120754777_hblzvh1us index-CbxiiJxt.js:138:7323
+Failed to create peer connection: ReferenceError: RTCPeerConnection is not defined
+    H https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+    V https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+    mP https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+    mP https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+    ro https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+    I3 https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+    ....
+    ap https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+    se https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:25
+index-CbxiiJxt.js:138:7422
+Pre-creating peer connection for: client_1760120754777_hblzvh1us index-CbxiiJxt.js:138:10105
+Uncaught (in promise) ReferenceError: RTCPeerConnection is not defined
+    H https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+    re https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+    re https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+    N https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:149
+    vp https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+    Bd https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+    Th https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+    Bd https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+    Wd https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:49
+    Fb https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:49
+index-CbxiiJxt.js:138:4244
+Uncaught (in promise) ReferenceError: RTCPeerConnection is not defined
+    H https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+    W https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+    U https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+    onmessage https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:60
+    onmessage https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:60
+    d https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:60
+    rT https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:60
+    ro https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+    ...
+    X3 https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+    K3 https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+    hp https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+    se https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:25
+index-CbxiiJxt.js:138:4244
+Uncaught (in promise) ReferenceError: RTCIceCandidate is not defined
+    Y https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+    ie https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:138
+    onmessage https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:60
+    onmessage https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:60
+    d https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:60
+    rT https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:60
+    ro https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+    I3 https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+    ...
+    hp https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:48
+    se https://chater-marzougui.me/Tekthib/assets/index-CbxiiJxt.js:25
+7 index-CbxiiJxt.js:138:9315
+
+
+voice didn't work even after all that

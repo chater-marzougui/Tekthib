@@ -138,7 +138,7 @@ export default function VoiceChat({
                 const isPlayerHostMuted = hostMutedPlayers.has(player.id);
                 const audioLevel = audioLevels.get(player.id) || 0;
                 return (
-                  <div key={player.id} className="bg-gray-50 rounded">
+                  <div key={player.id} className="bg-transparent rounded">
                     <div className="flex items-center justify-between p-2 text-sm">
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <div
