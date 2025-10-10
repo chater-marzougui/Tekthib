@@ -1,3 +1,4 @@
+import "webrtc-adapter";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useWebSocketContext } from "../context/WebSocketContext";
@@ -22,7 +23,9 @@ const ICE_SERVERS = {
   iceServers: [
     { urls: "stun:stun.l.google.com:19302" },
     { urls: "stun:stun1.l.google.com:19302" },
+    { urls: "stun:stun2.l.google.com:19302" }, // Add more STUN servers
   ],
+  iceCandidatePoolSize: 10, // Better ICE gathering
 };
 
 export function useVoiceChat({
@@ -37,8 +40,8 @@ export function useVoiceChat({
   );
 
   // Check if voice was previously enabled (persist across page navigation)
-  const wasVoiceEnabled = sessionStorage.getItem('voiceChatEnabled') === 'true';
-  
+  const wasVoiceEnabled = sessionStorage.getItem("voiceChatEnabled") === "true";
+
   const [isMuted, setIsMuted] = useState(false);
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(wasVoiceEnabled);
   const [audioError, setAudioError] = useState<string | null>(null);
@@ -121,76 +124,150 @@ export function useVoiceChat({
         const [remoteStream] = event.streams;
 
         const peerConn = peerConnectionsRef.current.get(remotePlayerId);
-        if (peerConn) {
-          peerConn.stream = remoteStream;
+        if (!peerConn) {
+          console.warn(
+            "No peer connection found for ontrack event:",
+            remotePlayerId
+          );
+          return;
+        }
 
-          // Create audio element and play - Firefox compatible
-          const audioElement = new Audio();
-          audioElement.srcObject = remoteStream;
-          audioElement.autoplay = true;
-          audioElement.volume = mutedPlayers.has(remotePlayerId) ? 0 : 1;
+        peerConn.stream = remoteStream;
 
-          // CRITICAL for Firefox: attach to DOM temporarily
-          audioElement.style.display = "none";
-          document.body.appendChild(audioElement);
+        // Create audio element and play - Firefox compatible
+        const audioElement = new Audio();
+        audioElement.srcObject = remoteStream;
+        audioElement.autoplay = true;
+        audioElement.volume = mutedPlayers.has(remotePlayerId) ? 0 : 1;
 
-          peerConn.audioElement = audioElement;
+        // CRITICAL for Firefox: attach to DOM
+        audioElement.style.display = "none";
+        document.body.appendChild(audioElement);
 
-          // Setup audio level detection
-          try {
-            const audioContext = new AudioContext();
+        peerConn.audioElement = audioElement;
 
-            // FIREFOX FIX: Ensure AudioContext is running
-            await ensureAudioContextRunning(audioContext);
+        // Setup audio level detection
+        try {
+          const audioContext = new AudioContext();
 
-            const source = audioContext.createMediaStreamSource(remoteStream);
-            const analyser = audioContext.createAnalyser();
-            analyser.fftSize = 256;
-            analyser.smoothingTimeConstant = 0.8;
-            source.connect(analyser);
+          // FIREFOX FIX: Ensure AudioContext is running
+          await ensureAudioContextRunning(audioContext);
 
-            audioContextsRef.current.set(remotePlayerId, audioContext);
-            analysersRef.current.set(remotePlayerId, analyser);
+          const source = audioContext.createMediaStreamSource(remoteStream);
+          const analyser = audioContext.createAnalyser();
+          analyser.fftSize = 256;
+          analyser.smoothingTimeConstant = 0.8;
+          source.connect(analyser);
 
-            // Start monitoring audio levels
-            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+          audioContextsRef.current.set(remotePlayerId, audioContext);
+          analysersRef.current.set(remotePlayerId, analyser);
 
-            const updateLevel = () => {
-              analyser.getByteFrequencyData(dataArray);
-              const average =
-                dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-              const level = Math.min(100, (average / 128) * 100);
+          // Start monitoring audio levels
+          const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-              setAudioLevels((prev) => {
-                const newMap = new Map(prev);
-                newMap.set(remotePlayerId, level);
-                return newMap;
-              });
+          const updateLevel = () => {
+            analyser.getByteFrequencyData(dataArray);
+            const average =
+              dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+            const level = Math.min(100, (average / 128) * 100);
 
-              const frameId = requestAnimationFrame(updateLevel);
-              animationFramesRef.current.set(remotePlayerId, frameId);
-            };
+            setAudioLevels((prev) => {
+              const newMap = new Map(prev);
+              newMap.set(remotePlayerId, level);
+              return newMap;
+            });
 
-            updateLevel();
-          } catch (error) {
-            console.error("Error setting up audio analysis:", error);
-          }
+            const frameId = requestAnimationFrame(updateLevel);
+            animationFramesRef.current.set(remotePlayerId, frameId);
+          };
 
-          // Firefox requires explicit play() call with error handling
+          updateLevel();
+        } catch (error) {
+          console.error("Error setting up audio analysis:", error);
+        }
+
+        // Better play handling with retry logic
+        const playAudio = async () => {
           try {
             await audioElement.play();
             console.log("Audio playing for:", remotePlayerId);
-          } catch (err) {
-            console.error("Error playing remote audio:", err);
-            // Retry with user interaction if needed
-            setTimeout(async () => {
-              try {
-                await audioElement.play();
-              } catch (e) {
-                console.error("Retry failed:", e);
+          } catch (err: any) {
+            console.warn("Audio play failed, retrying:", err.message);
+
+            // Handle autoplay policy - Firefox sometimes needs user interaction
+            if (
+              err.name === "NotAllowedError" ||
+              err.name === "NotSupportedError"
+            ) {
+              // Retry with exponential backoff
+              const retryDelays = [500, 1000, 2000];
+
+              for (const delay of retryDelays) {
+                await new Promise((resolve) => setTimeout(resolve, delay));
+                try {
+                  await audioElement.play();
+                  console.log(
+                    "Audio play retry succeeded for:",
+                    remotePlayerId
+                  );
+                  return; // Success, exit retry loop
+                } catch (retryErr: any) {
+                  console.warn(
+                    `Retry after ${delay}ms failed:`,
+                    retryErr.message
+                  );
+                }
               }
-            }, 500);
+
+              // Final attempt failed
+              console.error(
+                "All audio play retries failed for:",
+                remotePlayerId
+              );
+
+              // Optionally show user notification that they need to interact
+              setAudioError(
+                t("voiceChat.audioPlaybackFailed", {
+                  player: remotePlayerId,
+                }) || `Audio playback blocked. Click anywhere to enable.`
+              );
+
+              // Try to play on next user interaction
+              const playOnInteraction = async () => {
+                try {
+                  await audioElement.play();
+                  console.log(
+                    "Audio playing after user interaction:",
+                    remotePlayerId
+                  );
+                  setAudioError(null);
+                  // Remove listeners after successful play
+                  document.removeEventListener("click", playOnInteraction);
+                  document.removeEventListener("keydown", playOnInteraction);
+                } catch (e) {
+                  console.error("Still failed after user interaction:", e);
+                }
+              };
+
+              document.addEventListener("click", playOnInteraction, {
+                once: true,
+              });
+              document.addEventListener("keydown", playOnInteraction, {
+                once: true,
+              });
+            }
           }
+        };
+
+        playAudio();
+      };
+
+      pc.onnegotiationneeded = async () => {
+        try {
+          console.log("Negotiation needed with:", remotePlayerId);
+          await createOffer(remotePlayerId);
+        } catch (error) {
+          console.error("Error in negotiation:", error);
         }
       };
 
@@ -245,16 +322,26 @@ export function useVoiceChat({
   // Create and send offer to a remote player
   const createOffer = useCallback(
     async (remotePlayerId: string) => {
-      const pc =
-        peerConnectionsRef.current.get(remotePlayerId)?.connection ||
-        createPeerConnection(remotePlayerId);
+      const peerData = peerConnectionsRef.current.get(remotePlayerId);
+      if (!peerData) {
+        console.warn("No peer connection found for:", remotePlayerId);
+        return;
+      }
+
+      const pc = peerData.connection;
+
+      // Don't create offer if we're already in a stable state with remote description
+      if (
+        pc.signalingState !== "stable" &&
+        pc.signalingState !== "have-local-offer"
+      ) {
+        console.log("Skipping offer, signaling state is:", pc.signalingState);
+        return;
+      }
 
       try {
-        // Firefox-compatible offer options
-        const offer = await pc.createOffer({
-          offerToReceiveAudio: true,
-          offerToReceiveVideo: false,
-        });
+        // Remove deprecated options - adapter.js will handle this
+        const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
 
         sendMessage({
@@ -268,15 +355,22 @@ export function useVoiceChat({
         console.error("Error creating offer:", error);
       }
     },
-    [createPeerConnection, sendMessage]
+    [sendMessage]
   );
 
   // Handle incoming offer
   const handleOffer = useCallback(
     async (fromPlayerId: string, offer: RTCSessionDescriptionInit) => {
-      const pc =
-        peerConnectionsRef.current.get(fromPlayerId)?.connection ||
-        createPeerConnection(fromPlayerId);
+      let pc = peerConnectionsRef.current.get(fromPlayerId)?.connection;
+
+      // If connection exists but in wrong state, close and recreate
+      if (pc && pc.signalingState !== "stable") {
+        console.log("Closing existing connection in state:", pc.signalingState);
+        pc.close();
+        pc = createPeerConnection(fromPlayerId);
+      } else if (!pc) {
+        pc = createPeerConnection(fromPlayerId);
+      }
 
       try {
         await pc.setRemoteDescription(new RTCSessionDescription(offer));
@@ -285,7 +379,11 @@ export function useVoiceChat({
         const pendingCandidates =
           pendingCandidatesRef.current.get(fromPlayerId) || [];
         for (const candidate of pendingCandidates) {
-          await pc.addIceCandidate(candidate);
+          try {
+            await pc.addIceCandidate(candidate);
+          } catch (err) {
+            console.warn("Failed to add pending ICE candidate:", err);
+          }
         }
         pendingCandidatesRef.current.delete(fromPlayerId);
 
@@ -342,19 +440,29 @@ export function useVoiceChat({
         const pending = pendingCandidatesRef.current.get(fromPlayerId) || [];
         pending.push(new RTCIceCandidate(candidate));
         pendingCandidatesRef.current.set(fromPlayerId, pending);
+        console.log("Stored ICE candidate for later:", fromPlayerId);
         return;
       }
 
       try {
-        if (peerConn.connection.remoteDescription) {
+        // Only add if we have remote description AND signaling state is appropriate
+        if (
+          peerConn.connection.remoteDescription &&
+          peerConn.connection.signalingState !== "closed"
+        ) {
           await peerConn.connection.addIceCandidate(
             new RTCIceCandidate(candidate)
           );
+          console.log("Added ICE candidate from:", fromPlayerId);
         } else {
-          // Store for later if remote description isn't set yet
+          // Store for later
           const pending = pendingCandidatesRef.current.get(fromPlayerId) || [];
           pending.push(new RTCIceCandidate(candidate));
           pendingCandidatesRef.current.set(fromPlayerId, pending);
+          console.log(
+            "Stored ICE candidate (no remote desc yet):",
+            fromPlayerId
+          );
         }
       } catch (error) {
         console.error("Error adding ICE candidate:", error);
@@ -371,16 +479,20 @@ export function useVoiceChat({
     if (!stream) return;
 
     setIsVoiceEnabled(true);
-    sessionStorage.setItem('voiceChatEnabled', 'true');
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    sessionStorage.setItem("voiceChatEnabled", "true");
+
+    // Wait longer for WebSocket to be fully ready
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Create connections to all other players (except bots)
     const otherPlayers = players.filter(
       (p) => p.id !== localPlayerId && !p.isBot && p.isConnected
     );
 
+    // Create connections sequentially with small delays (more reliable)
     for (const player of otherPlayers) {
       await createOffer(player.id);
+      await new Promise((resolve) => setTimeout(resolve, 100)); // Small delay between offers
     }
   }, [isVoiceEnabled, initializeAudio, players, localPlayerId, createOffer]);
 
@@ -424,7 +536,7 @@ export function useVoiceChat({
     pendingCandidatesRef.current.clear();
 
     setIsVoiceEnabled(false);
-    sessionStorage.removeItem('voiceChatEnabled');
+    sessionStorage.removeItem("voiceChatEnabled");
     setIsMuted(false);
   }, []);
 
