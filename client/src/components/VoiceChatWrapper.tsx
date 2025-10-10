@@ -140,23 +140,11 @@ export function VoiceChatWrapper({ children }: VoiceChatWrapperProps) {
       unregisterBotsAdded();
       unregisterBotRemoved();
     };
-  }, [registerHandler, roomId, playerId, isInRoomOrGame]);
-
-  // Debug logging
-  useEffect(() => {
-    console.log("VoiceChatWrapper - isInRoomOrGame:", isInRoomOrGame);
-    console.log("VoiceChatWrapper - roomId:", roomId);
-    console.log("VoiceChatWrapper - playerId:", playerId);
-    console.log("VoiceChatWrapper - players:", players);
-    console.log("VoiceChatWrapper - isHost:", isHost);
-  }, [isInRoomOrGame, roomId, playerId, players, isHost]);
-
-  const shouldRenderProvider = isInRoomOrGame && roomId && playerId;
-  console.log("VoiceChatWrapper - shouldRenderProvider:", shouldRenderProvider);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId, playerId, isInRoomOrGame]); // Removed registerHandler from dependencies to prevent re-render loop
 
   // Only wrap with VoiceChatProvider if we're in a room/game and have the necessary data
-  if (shouldRenderProvider) {
-    console.log("VoiceChatWrapper - Rendering VoiceChatProvider with:", { roomId, localPlayerId: playerId, playersCount: players.length, isHost });
+  if (isInRoomOrGame && roomId && playerId) {
     return (
       <VoiceChatProvider
         roomId={roomId}
@@ -169,6 +157,5 @@ export function VoiceChatWrapper({ children }: VoiceChatWrapperProps) {
     );
   }
 
-  console.log("VoiceChatWrapper - NOT rendering provider, returning plain children");
   return <>{children}</>;
 }

@@ -546,12 +546,12 @@ export default function GamePage() {
 
   if (isLoading || !gameState) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 flex items-center justify-center">
-        <Card className="w-96">
+      <div className="h-full w-full bg-background flex items-center justify-center">
+        <Card className="w-96 mx-auto">
           <CardContent className="pt-6">
             <div className="text-center space-y-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-              <p className="text-gray-600">{t("game.loadingGame")}</p>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto"></div>
+              <p className="text-foreground">{t("game.loadingGame")}</p>
               {!isConnected && (
                 <p className="text-yellow-600 text-sm">
                   {t("game.connectingToServer")}

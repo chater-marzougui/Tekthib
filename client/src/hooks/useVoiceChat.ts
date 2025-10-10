@@ -574,10 +574,6 @@ export function useVoiceChat({
 
   // Enable voice chat
   const enableVoiceChat = useCallback(async () => {
-    console.log("enableVoiceChat called, isVoiceEnabled:", isVoiceEnabled);
-    console.log("Current players:", players);
-    console.log("localPlayerId:", localPlayerId);
-    
     if (isVoiceEnabled) return;
 
     const stream = await initializeAudio();
@@ -595,8 +591,6 @@ export function useVoiceChat({
     const otherPlayers = players.filter(
       (p) => p.id !== localPlayerId && !p.isBot && p.isConnected
     );
-
-    console.log("Other players to connect to:", otherPlayers);
 
     // Pre-create peer connections with the local stream
     otherPlayers.forEach((player) => {
