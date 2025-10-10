@@ -99,8 +99,10 @@ export function useVoiceChat({
     }
   }, []);
 
-  // Forward ref for createOffer to break circular dependency
+  // Forward refs to break circular dependencies
   const createOfferRef = useRef<(remotePlayerId: string) => Promise<void>>(null);
+  const createPeerConnectionRef =
+    useRef<(remotePlayerId: string) => RTCPeerConnection>(null);
 
   // Create peer connection for a remote player
   const createPeerConnection = useCallback(
@@ -322,21 +324,29 @@ export function useVoiceChat({
       peerConnectionsRef.current.set(remotePlayerId, { connection: pc });
       return pc;
     },
-    [sendMessage, mutedPlayers, ensureAudioContextRunning, t] // Removed createOffer dependency
+    [sendMessage, mutedPlayers, ensureAudioContextRunning, t]
   );
 
   // Create and send offer to a remote player
   const createOffer = useCallback(
     async (remotePlayerId: string) => {
-      const peerData = peerConnectionsRef.current.get(remotePlayerId);
+      // Get existing connection OR create new one
+      let peerData = peerConnectionsRef.current.get(remotePlayerId);
+
+      if (!peerData && createPeerConnectionRef.current) {
+        console.log("Creating new peer connection for:", remotePlayerId);
+        createPeerConnectionRef.current(remotePlayerId);
+        peerData = peerConnectionsRef.current.get(remotePlayerId);
+      }
+
       if (!peerData) {
-        console.warn("No peer connection found for:", remotePlayerId);
+        console.error("No peer connection available for:", remotePlayerId);
         return;
       }
 
       const pc = peerData.connection;
 
-      // Don't create offer if we're already in a stable state with remote description
+      // Don't create offer if we're not in the right state
       if (
         pc.signalingState !== "stable" &&
         pc.signalingState !== "have-local-offer"
@@ -346,7 +356,6 @@ export function useVoiceChat({
       }
 
       try {
-        // Remove deprecated options - adapter.js will handle this
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
 
@@ -357,6 +366,8 @@ export function useVoiceChat({
             signal: offer,
           },
         });
+
+        console.log("Offer sent to:", remotePlayerId);
       } catch (error) {
         console.error("Error creating offer:", error);
       }
@@ -364,10 +375,14 @@ export function useVoiceChat({
     [sendMessage]
   );
 
-  // Update the ref whenever createOffer changes
+  // Update the refs whenever functions change
   useEffect(() => {
     createOfferRef.current = createOffer;
   }, [createOffer]);
+
+  useEffect(() => {
+    createPeerConnectionRef.current = createPeerConnection;
+  }, [createPeerConnection]);
 
   // Handle incoming offer
   const handleOffer = useCallback(
