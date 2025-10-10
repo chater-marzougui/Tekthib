@@ -51,6 +51,7 @@ export function useVoiceChat({
   );
   const [hostMuted, setHostMuted] = useState(false);
 
+  const isNegotiatingRef = useRef<Map<string, boolean>>(new Map());
   const audioContextsRef = useRef<Map<string, AudioContext>>(new Map());
   const analysersRef = useRef<Map<string, AnalyserNode>>(new Map());
   const animationFramesRef = useRef<Map<string, number>>(new Map());
@@ -100,7 +101,8 @@ export function useVoiceChat({
   }, []);
 
   // Forward refs to break circular dependencies
-  const createOfferRef = useRef<(remotePlayerId: string) => Promise<void>>(null);
+  const createOfferRef =
+    useRef<(remotePlayerId: string) => Promise<void>>(null);
   const createPeerConnectionRef =
     useRef<(remotePlayerId: string) => RTCPeerConnection>(null);
 
@@ -267,12 +269,24 @@ export function useVoiceChat({
         playAudio();
       };
 
+      // Replace the existing pc.onnegotiationneeded with this:
       pc.onnegotiationneeded = async () => {
         try {
           console.log("Negotiation needed with:", remotePlayerId);
-          // Use the ref instead of direct call
-          if (createOfferRef.current) {
-            await createOfferRef.current(remotePlayerId);
+
+          // Only auto-negotiate if we're not already negotiating
+          // and if this wasn't triggered by our manual createOffer call
+          if (
+            !isNegotiatingRef.current.get(remotePlayerId) &&
+            pc.signalingState === "stable"
+          ) {
+            if (createOfferRef.current) {
+              await createOfferRef.current(remotePlayerId);
+            }
+          } else {
+            console.log(
+              "Skipping auto-negotiation - already in progress or not stable"
+            );
           }
         } catch (error) {
           console.error("Error in negotiation:", error);
@@ -330,6 +344,12 @@ export function useVoiceChat({
   // Create and send offer to a remote player
   const createOffer = useCallback(
     async (remotePlayerId: string) => {
+      // Check if already negotiating
+      if (isNegotiatingRef.current.get(remotePlayerId)) {
+        console.log("Already negotiating with:", remotePlayerId);
+        return;
+      }
+
       // Get existing connection OR create new one
       let peerData = peerConnectionsRef.current.get(remotePlayerId);
 
@@ -346,14 +366,19 @@ export function useVoiceChat({
 
       const pc = peerData.connection;
 
-      // Don't create offer if we're not in the right state
-      if (
-        pc.signalingState !== "stable" &&
-        pc.signalingState !== "have-local-offer"
-      ) {
-        console.log("Skipping offer, signaling state is:", pc.signalingState);
+      // Check signaling state more strictly
+      if (pc.signalingState !== "stable") {
+        console.log(
+          "Cannot create offer, signaling state is:",
+          pc.signalingState,
+          "for player:",
+          remotePlayerId
+        );
         return;
       }
+
+      // Set negotiating flag
+      isNegotiatingRef.current.set(remotePlayerId, true);
 
       try {
         const offer = await pc.createOffer();
@@ -370,7 +395,10 @@ export function useVoiceChat({
         console.log("Offer sent to:", remotePlayerId);
       } catch (error) {
         console.error("Error creating offer:", error);
+        // Reset negotiating flag on error
+        isNegotiatingRef.current.set(remotePlayerId, false);
       }
+      // Don't clear the flag here - it will be cleared when we get an answer
     },
     [sendMessage]
   );
@@ -393,9 +421,20 @@ export function useVoiceChat({
       if (pc && pc.signalingState !== "stable") {
         console.log("Closing existing connection in state:", pc.signalingState);
         pc.close();
-        pc = createPeerConnection(fromPlayerId);
-      } else if (!pc) {
-        pc = createPeerConnection(fromPlayerId);
+
+        // Clear negotiating flag for this player
+        isNegotiatingRef.current.set(fromPlayerId, false);
+
+        if (createPeerConnectionRef.current) {
+          pc = createPeerConnectionRef.current(fromPlayerId);
+        }
+      } else if (!pc && createPeerConnectionRef.current) {
+        pc = createPeerConnectionRef.current(fromPlayerId);
+      }
+
+      if (!pc) {
+        console.error("Failed to get peer connection for:", fromPlayerId);
+        return;
       }
 
       try {
@@ -424,11 +463,13 @@ export function useVoiceChat({
             signal: answer,
           },
         });
+
+        console.log("Answer sent to:", fromPlayerId);
       } catch (error) {
         console.error("Error handling offer:", error);
       }
     },
-    [createPeerConnection, sendMessage]
+    [sendMessage]
   );
 
   // Handle incoming answer
@@ -442,6 +483,9 @@ export function useVoiceChat({
           new RTCSessionDescription(answer)
         );
 
+        // Clear negotiating flag
+        isNegotiatingRef.current.set(fromPlayerId, false);
+
         // Add any pending ICE candidates
         const pendingCandidates =
           pendingCandidatesRef.current.get(fromPlayerId) || [];
@@ -449,8 +493,12 @@ export function useVoiceChat({
           await peerConn.connection.addIceCandidate(candidate);
         }
         pendingCandidatesRef.current.delete(fromPlayerId);
+
+        console.log("Answer processed from:", fromPlayerId);
       } catch (error) {
         console.error("Error handling answer:", error);
+        // Clear negotiating flag on error too
+        isNegotiatingRef.current.set(fromPlayerId, false);
       }
     },
     []
@@ -560,6 +608,7 @@ export function useVoiceChat({
     });
     peerConnectionsRef.current.clear();
     pendingCandidatesRef.current.clear();
+    isNegotiatingRef.current.clear();
 
     setIsVoiceEnabled(false);
     sessionStorage.removeItem("voiceChatEnabled");
