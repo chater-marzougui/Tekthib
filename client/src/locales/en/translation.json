@@ -43,7 +43,10 @@
     "kickPlayer": "Kick {{player}}",
     "connectedToPlayers": "Connected to {{count}} player(s)",
     "joinToTalk": "Join to talk with other players",
-    "hostControls": "ℹ️ As host, you can mute players or kick them"
+    "hostControls": "ℹ️ As host, you can mute players or kick them",
+    "hostMutedYou": "Host has muted your microphone",
+    "hostUnmutedYou": "Host has unmuted your microphone",
+    "kickedByHost": "You have been kicked by the host"
   },
   "errors": {
     "roomNotFound": "Room not found. Redirecting to home...",
@@ -111,10 +114,5 @@
     "botRemovedSuccess": "Bot removed successfully!",
     "gameResetSuccess": "Game has been reset! Get ready to play again.",
     "roomCodeCopied": "Room code copied to clipboard!"
-  },
-  "voiceChat": {
-    "hostMutedYou": "Host has muted your microphone",
-    "hostUnmutedYou": "Host has unmuted your microphone",
-    "kickedByHost": "You have been kicked by the host"
   }
 }

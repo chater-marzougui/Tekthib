@@ -43,7 +43,10 @@
     "kickPlayer": "Expulser {{player}}",
     "connectedToPlayers": "Connecté à {{count}} joueur(s)",
     "joinToTalk": "Rejoignez pour parler avec d'autres joueurs",
-    "hostControls": "ℹ️ En tant qu'hôte, vous pouvez couper le micro des joueurs ou les expulser"
+    "hostControls": "ℹ️ En tant qu'hôte, vous pouvez couper le micro des joueurs ou les expulser",
+    "hostMutedYou": "L'hôte a coupé votre microphone",
+    "hostUnmutedYou": "L'hôte a activé votre microphone",
+    "kickedByHost": "Vous avez été expulsé par l'hôte"
   },
   "errors": {
     "roomNotFound": "Salle introuvable. Redirection vers l'accueil...",
@@ -111,10 +114,5 @@
     "botRemovedSuccess": "Bot retiré avec succès !",
     "gameResetSuccess": "La partie a été réinitialisée ! Préparez-vous à jouer à nouveau.",
     "roomCodeCopied": "Code de la salle copié dans le presse-papiers !"
-  },
-  "voiceChat": {
-    "hostMutedYou": "L'hôte a coupé votre microphone",
-    "hostUnmutedYou": "L'hôte a activé votre microphone",
-    "kickedByHost": "Vous avez été expulsé par l'hôte"
   }
 }
