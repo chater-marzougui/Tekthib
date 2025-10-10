@@ -52,7 +52,7 @@ export default function VoiceChat({
     <Card  dir={direction}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Icon icon="mdi:phone" className="w-5 h-5" />
+          <Icon icon="mdi:phone" className="w-5 h-5" style={{ color: '#10b981' }} />
           {t('voiceChat.title')}
         </CardTitle>
       </CardHeader>
@@ -71,12 +71,12 @@ export default function VoiceChat({
           >
             {isVoiceEnabled ? (
               <>
-                <Icon icon="mdi:phone-off" className="w-4 h-4 mr-2" />
+                <Icon icon="mdi:phone-off" className="w-4 h-4 mr-2" style={{ color: '#ffffff' }} />
                 {t('voiceChat.leaveVoiceChat')}
               </>
             ) : (
               <>
-                <Icon icon="mdi:phone" className="w-4 h-4 mr-2" />
+                <Icon icon="mdi:phone" className="w-4 h-4 mr-2" style={{ color: '#ffffff' }} />
                 {t('voiceChat.joinVoiceChat')}
               </>
             )}
@@ -92,12 +92,12 @@ export default function VoiceChat({
             >
               {isMuted ? (
                 <>
-                  <Icon icon="mdi:microphone-off" className="w-4 h-4 mr-2" />
+                  <Icon icon="mdi:microphone-off" className="w-4 h-4 mr-2" style={{ color: '#ef4444' }} />
                   {hostMuted ? t('voiceChat.mutedByHost') : t('voiceChat.unmute')}
                 </>
               ) : (
                 <>
-                  <Icon icon="mdi:microphone" className="w-4 h-4 mr-2" />
+                  <Icon icon="mdi:microphone" className="w-4 h-4 mr-2" style={{ color: '#10b981' }} />
                   {t('voiceChat.mute')}
                 </>
               )}
@@ -113,13 +113,13 @@ export default function VoiceChat({
             </div>
             {isMuted && (
               <div className="flex items-center gap-2 text-red-600">
-                <Icon icon="mdi:microphone-off" className="w-3 h-3" />
+                <Icon icon="mdi:microphone-off" className="w-3 h-3" style={{ color: '#ef4444' }} />
                 <span>{t('voiceChat.yourMicMuted')}</span>
               </div>
             )}
             {hostMuted && (
               <div className="flex items-center gap-2 text-orange-600">
-                <Icon icon="mdi:microphone-off" className="w-3 h-3" />
+                <Icon icon="mdi:microphone-off" className="w-3 h-3" style={{ color: '#f97316' }} />
                 <span>{t('voiceChat.hostDisabledMic')}</span>
               </div>
             )}
@@ -162,9 +162,9 @@ export default function VoiceChat({
                           }
                         >
                           {isPlayerMuted ? (
-                            <Icon icon="mdi:volume-off" className="w-4 h-4 text-red-600" />
+                            <Icon icon="mdi:volume-off" className="w-4 h-4" style={{ color: '#ef4444' }} />
                           ) : (
-                            <Icon icon="mdi:volume-high" className="w-4 h-4 text-gray-600" />
+                            <Icon icon="mdi:volume-high" className="w-4 h-4" style={{ color: '#6b7280' }} />
                           )}
                         </Button>
 
@@ -181,9 +181,9 @@ export default function VoiceChat({
                               title={t('voiceChat.mutePlayerMic', { player: player.name })}
                             >
                               {isPlayerHostMuted ? (
-                                <Icon icon="mdi:microphone-off" className="w-4 h-4 text-orange-600" />
+                                <Icon icon="mdi:microphone-off" className="w-4 h-4" style={{ color: '#f97316' }} />
                               ) : (
-                                <Icon icon="mdi:microphone" className="w-4 h-4 text-gray-600" />
+                                <Icon icon="mdi:microphone" className="w-4 h-4" style={{ color: '#6b7280' }} />
                               )}
                             </Button>
                             <Button
@@ -193,7 +193,7 @@ export default function VoiceChat({
                               onClick={() => kickPlayer(player.id)}
                               title={t('voiceChat.kickPlayer', { player: player.name })}
                             >
-                              <Icon icon="mdi:account-off" className="w-4 h-4 text-red-600" />
+                              <Icon icon="mdi:account-off" className="w-4 h-4" style={{ color: '#ef4444' }} />
                             </Button>
                           </>
                         )}

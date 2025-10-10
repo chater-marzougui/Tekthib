@@ -22,6 +22,7 @@ interface ReturnGameState
     [k: string]: number;
   };
   playerStats: { [k: string]: PlayerStats };
+  remainingTime: number;
 }
 
 export class GameEngine {
@@ -32,7 +33,6 @@ export class GameEngine {
   private turnTimer: NodeJS.Timeout | null = null;
   private turnStartTime: number = 0;
   private autoPlayTimeout: number = 0;
-  private timerCallback?: (remainingTime: number) => void;
 
   constructor(players: Map<string, PlayerWithHand>, autoPlayTimeout: number = 0) {
     this.players = players;
@@ -498,6 +498,7 @@ export class GameEngine {
       consecutivePasses: this.gameState.consecutivePasses,
       playerStats: Object.fromEntries(this.gameState.playerStats),
       removedCards: [...this.gameState.removedCards],
+      remainingTime: this.getRemainingTime(),
     };
   }
 
@@ -572,13 +573,6 @@ export class GameEngine {
   }
 
   /**
-   * Set callback for timer updates
-   */
-  setTimerCallback(callback: (remainingTime: number) => void): void {
-    this.timerCallback = callback;
-  }
-
-  /**
    * Start or reset the turn timer
    */
   startTurnTimer(): void {
@@ -605,21 +599,10 @@ export class GameEngine {
 
     this.turnStartTime = Date.now();
 
-    // Set up interval to notify clients every second
-    this.turnTimer = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - this.turnStartTime) / 1000);
-      const remaining = Math.max(0, this.autoPlayTimeout - elapsed);
-
-      // Notify clients of remaining time
-      if (this.timerCallback) {
-        this.timerCallback(remaining);
-      }
-
-      // Auto-play when timer expires
-      if (remaining === 0) {
-        this.handleAutoPlay();
-      }
-    }, 1000);
+    // Set up timeout to auto-play when timer expires
+    this.turnTimer = setTimeout(() => {
+      this.handleAutoPlay();
+    }, this.autoPlayTimeout * 1000);
   }
 
   /**
@@ -627,7 +610,7 @@ export class GameEngine {
    */
   stopTurnTimer(): void {
     if (this.turnTimer) {
-      clearInterval(this.turnTimer);
+      clearTimeout(this.turnTimer);
       this.turnTimer = null;
     }
   }

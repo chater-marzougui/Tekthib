@@ -65,7 +65,6 @@ export default function GamePage() {
   const [showNameDialog, setShowNameDialog] = useState(false);
   const [nameInput, setNameInput] = useState("");
   const [autoPlayTimeout, setAutoPlayTimeout] = useState(45);
-  const [serverTimer, setServerTimer] = useState<number | undefined>(undefined);
   const [pilePosition, setPilePosition] = useState({ x: 0, y: 0 });
   const [handPosition, setHandPosition] = useState({ x: 0, y: 0 });
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
@@ -392,12 +391,6 @@ export default function GamePage() {
       }
     });
 
-    const unregisterTimerUpdate = registerHandler("timer-update", (message) => {
-      if (message.type === "TIMER_UPDATE") {
-        setServerTimer(message.payload.remainingTime);
-      }
-    });
-
     return () => {
       unregisterInitialState();
       unregisterRoomJoined();
@@ -407,7 +400,6 @@ export default function GamePage() {
       unregisterGameEnded();
       unregisterError();
       unregisterGameReset();
-      unregisterTimerUpdate();
     };
   }, [registerHandler, navigate, playerId, playerName, lastPlay, roomId]);
 
@@ -792,7 +784,7 @@ export default function GamePage() {
               onCardSelect={handleCardSelect}
               playerCards={playerHand}
               autoPlayTimeout={autoPlayTimeout}
-              serverTimer={serverTimer}
+              serverTimer={gameState.remainingTime}
             />
 
             {roomId && playerId && (

@@ -175,7 +175,7 @@ export default function HomePage() {
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="text-center flex items-center justify-center gap-2">
-                  <Icon icon="mdi:gamepad-variant" className="w-5 h-5" /> {t('home.createRoom')}
+                  <Icon icon="mdi:gamepad-variant" className="w-5 h-5" style={{ color: '#3b82f6' }} /> {t('home.createRoom')}
                 </CardTitle>
                 <CardDescription className="text-center">
                   {t('home.createRoomDescription')}
@@ -200,7 +200,7 @@ export default function HomePage() {
                       onClick={() => setIsPublicRoom(true)}
                       className="flex-1"
                     >
-                      <Icon icon="mdi:web" className="w-4 h-4 mr-2" /> {t('home.public')}
+                      <Icon icon="mdi:web" className="w-4 h-4 mr-2" style={{ color: isPublicRoom ? '#ffffff' : '#10b981' }} /> {t('home.public')}
                     </Button>
                     <Button
                       type="button"
@@ -208,7 +208,7 @@ export default function HomePage() {
                       onClick={() => setIsPublicRoom(false)}
                       className="flex-1"
                     >
-                      <Icon icon="mdi:lock" className="w-4 h-4 mr-2" /> {t('home.private')}
+                      <Icon icon="mdi:lock" className="w-4 h-4 mr-2" style={{ color: !isPublicRoom ? '#ffffff' : '#ef4444' }} /> {t('home.private')}
                     </Button>
                   </div>
                   <p className="text-xs text-gray-500">
@@ -231,7 +231,7 @@ export default function HomePage() {
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="text-center flex items-center justify-center gap-2">
-                  <Icon icon="mdi:door-open" className="w-5 h-5" /> {t('home.joinRoom')}
+                  <Icon icon="mdi:door-open" className="w-5 h-5" style={{ color: '#3b82f6' }} /> {t('home.joinRoom')}
                 </CardTitle>
                 <CardDescription className="text-center">
                   {t('home.joinRoomDescription')}
@@ -274,7 +274,7 @@ export default function HomePage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-center flex items-center justify-center gap-2">
-                  <Icon icon="mdi:gamepad-variant" className="w-5 h-5" /> {t('home.availableRooms')}
+                  <Icon icon="mdi:gamepad-variant" className="w-5 h-5" style={{ color: '#3b82f6' }} /> {t('home.availableRooms')}
                 </CardTitle>
                 <CardDescription className="text-center">
                   {t('home.availableRoomsDescription')}
@@ -295,11 +295,11 @@ export default function HomePage() {
                           <span className="font-semibold">{t('home.hostRoom', { name: room.hostName })}</span>
                           {room.isPublic ? (
                             <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded flex items-center gap-1">
-                              <Icon icon="mdi:web" className="w-3 h-3" /> {t('home.public')}
+                              <Icon icon="mdi:web" className="w-3 h-3" style={{ color: '#10b981' }} /> {t('home.public')}
                             </span>
                           ) : (
                             <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded flex items-center gap-1">
-                              <Icon icon="mdi:lock" className="w-3 h-3" /> {t('home.private')}
+                              <Icon icon="mdi:lock" className="w-3 h-3" style={{ color: '#ef4444' }} /> {t('home.private')}
                             </span>
                           )}
                           {room.inProgress && (
@@ -309,7 +309,7 @@ export default function HomePage() {
                           )}
                         </div>
                         <div className="flex items-center gap-1 text-sm text-gray-600">
-                          <Icon icon="mdi:account-group" className="w-4 h-4" /> {room.playerCount}/{room.maxPlayers}
+                          <Icon icon="mdi:account-group" className="w-4 h-4" style={{ color: '#3b82f6' }} /> {room.playerCount}/{room.maxPlayers}
                         </div>
                       </div>
                     </div>
@@ -323,14 +323,14 @@ export default function HomePage() {
           <Card className="border-dashed">
             <CardHeader>
               <CardTitle className="text-center flex items-center justify-center gap-2">
-                <Icon icon="mdi:layers" className="w-5 h-5" /> {t('home.quickRules')}
+                <Icon icon="mdi:layers" className="w-5 h-5" style={{ color: '#6b7280' }} /> {t('home.quickRules')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-4 text-sm">
                 <div>
                   <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <Icon icon="mdi:target" className="w-4 h-4" /> {t('home.goal')}
+                    <Icon icon="mdi:target" className="w-4 h-4" style={{ color: '#ef4444' }} /> {t('home.goal')}
                   </h4>
                   <p className="text-gray-600">
                     {t('home.goalDescription')}
@@ -338,7 +338,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <Icon icon="mdi:cards-spade" className="w-4 h-4" /> {t('home.gameplay')}
+                    <Icon icon="mdi:cards-spade" className="w-4 h-4" style={{ color: '#3b82f6' }} /> {t('home.gameplay')}
                   </h4>
                   <p className="text-gray-600">
                     {t('home.gameplayDescription')}
@@ -346,7 +346,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <Icon icon="mdi:emoticon-sad" className="w-4 h-4" /> {t('home.bluffing')}
+                    <Icon icon="mdi:emoticon-sad" className="w-4 h-4" style={{ color: '#f59e0b' }} /> {t('home.bluffing')}
                   </h4>
                   <p className="text-gray-600">
                     {t('home.bluffingDescription')}
@@ -354,7 +354,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <Icon icon="mdi:trophy" className="w-4 h-4" /> {t('home.specialRule')}
+                    <Icon icon="mdi:trophy" className="w-4 h-4" style={{ color: '#eab308' }} /> {t('home.specialRule')}
                   </h4>
                   <p className="text-gray-600">
                     {t('home.specialRuleDescription')}

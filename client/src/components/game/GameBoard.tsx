@@ -48,10 +48,23 @@ export default function GameBoard({
   );
   const [timer, setTimer] = useState(autoPlayTimeout);
 
-  // Update timer when server sends updates
+  // Update timer when server sends updates and start local countdown
   useEffect(() => {
     if (serverTimer !== undefined) {
       setTimer(serverTimer);
+      
+      // Set up local countdown from server time
+      const intervalId = setInterval(() => {
+        setTimer((prev) => {
+          if (prev <= 0) {
+            clearInterval(intervalId);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(intervalId);
     }
   }, [serverTimer]);
 
@@ -141,7 +154,7 @@ export default function GameBoard({
                       size="lg"
                       className="animate-pulse"
                     >
-                      <Icon icon="mdi:help-circle" className="w-5 h-5 mr-2" />
+                      <Icon icon="mdi:help-circle" className="w-5 h-5 mr-2" style={{ color: '#ffffff' }} />
                       Challenge (Call Liar!)
                     </Button>
                   </div>

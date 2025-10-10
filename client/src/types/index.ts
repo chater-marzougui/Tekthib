@@ -25,4 +25,5 @@ export interface GameState {
   playerHandCounts: Record<string, number>;
   playerStats: Record<string, PlayerStats>;
   removedCards: Card[];
+  remainingTime: number;
 }
