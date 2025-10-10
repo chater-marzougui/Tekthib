@@ -44,14 +44,6 @@ export function triggerBotTurn(
 ): void {
   const gameEngine = roomManager.getGameEngine(roomId);
   if (gameEngine) {
-    // Set up timer callback for broadcasting
-    gameEngine.setTimerCallback((remainingTime: number) => {
-      broadcastToRoom(clients, roomId, {
-        type: 'TIMER_UPDATE',
-        payload: { remainingTime },
-      });
-    });
-
     setTimeout(() => {
       processBotTurn(clients, roomId, gameEngine);
     }, 3500); // Give players time to see the initial state
@@ -59,21 +51,13 @@ export function triggerBotTurn(
 }
 
 /**
- * Start timer for the current turn and broadcast updates
+ * Start timer for the current turn
  */
 function startTimerForRoom(
   clients: Map<WebSocket, ClientInfo>,
   roomId: string,
   gameEngine: GameEngine,
 ): void {
-  // Set up timer callback to broadcast remaining time
-  gameEngine.setTimerCallback((remainingTime: number) => {
-    broadcastToRoom(clients, roomId, {
-      type: 'TIMER_UPDATE',
-      payload: { remainingTime },
-    });
-  });
-
   // Start the timer
   gameEngine.startTurnTimer();
 }
