@@ -42,7 +42,7 @@ export default function PlayerList({
                     <div className="font-medium">
                       {player.name}
                       {player.isBot && (
-                        <Icon icon="mdi:robot" className="w-4 h-4 inline-block ml-1" />
+                        <Icon icon="mdi:robot" className="w-4 h-4 inline-block ml-1" style={{ color: '#8b5cf6' }} />
                       )}
                       {player.id === currentPlayerId && (
                         <span className="text-xs text-green-600 ml-2">
@@ -64,7 +64,7 @@ export default function PlayerList({
                   )}
                   {player.cardCount === 0 && (
                     <div className="flex items-center gap-1 text-green-600 font-semibold text-sm">
-                      <Icon icon="mdi:trophy" className="w-4 h-4" /> {t('playerList.winner')}
+                      <Icon icon="mdi:trophy" className="w-4 h-4" style={{ color: '#eab308' }} /> {t('playerList.winner')}
                     </div>
                   )}
                 </div>

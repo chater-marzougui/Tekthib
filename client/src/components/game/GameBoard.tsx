@@ -154,7 +154,7 @@ export default function GameBoard({
                       size="lg"
                       className="animate-pulse"
                     >
-                      <Icon icon="mdi:help-circle" className="w-5 h-5 mr-2" />
+                      <Icon icon="mdi:help-circle" className="w-5 h-5 mr-2" style={{ color: '#ffffff' }} />
                       Challenge (Call Liar!)
                     </Button>
                   </div>
