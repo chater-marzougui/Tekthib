@@ -368,6 +368,23 @@ function processBotChallenge(
         }
       });
 
+      // Check if game ended after challenge
+      if (publicGameState.phase === 'ended') {
+        gameEngine.stopTurnTimer();
+        broadcastToRoom(clients, roomId, {
+          type: 'GAME_ENDED',
+          payload: {
+            winners: publicGameState.winners,
+            loser: publicGameState.loser,
+            gameState: publicGameState,
+          },
+        });
+        return;
+      }
+
+      // Start timer for next turn after challenge
+      startTimerForRoom(clients, roomId, gameEngine);
+      
       // After challenge, trigger next bot turn if needed
       setTimeout(() => {
         processBotTurn(clients, roomId, gameEngine);
@@ -375,8 +392,6 @@ function processBotChallenge(
     }
   } else {
     // No bot challenged, proceed to next turn (might be a bot)
-    // Start timer for the next turn
-    startTimerForRoom(clients, roomId, gameEngine);
     setTimeout(() => {
       processBotTurn(clients, roomId, gameEngine);
     }, 1500);
@@ -459,6 +474,7 @@ function processBotTurn(
 
     // Check if game ended
     if (updatedGameState.phase === 'ended') {
+      gameEngine.stopTurnTimer();
       broadcastToRoom(clients, roomId, {
         type: 'GAME_ENDED',
         payload: {
@@ -469,6 +485,9 @@ function processBotTurn(
       });
       return;
     }
+
+    // Start timer for next turn after bot plays
+    startTimerForRoom(clients, roomId, gameEngine);
 
     // After bot plays, check if any bot wants to challenge
     setTimeout(() => {

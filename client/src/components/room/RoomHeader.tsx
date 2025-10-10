@@ -20,7 +20,7 @@ export default function RoomHeader({
   
   const copyRoomCode = () => {
     navigator.clipboard.writeText(roomCode);
-    toast.success("Room code copied to clipboard!");
+    toast.success(t("room.roomCodeCopied"));
   };
   
   return (

@@ -97,5 +97,24 @@
     "joinRoom": "Join Room",
     "scanToJoin": "Scan to join room",
     "copyLink": "Copy Link"
+  },
+  "admin": {
+    "invalidPassword": "Invalid admin password",
+    "failedToFetch": "Failed to fetch system state",
+    "passwordRequired": "Admin password is required",
+    "roomNotFound": "Room not found",
+    "roomDeleted": "Room {{roomId}} deleted",
+    "failedToDelete": "Failed to delete room"
+  },
+  "room": {
+    "botsAddedSuccess": "Bots added successfully!",
+    "botRemovedSuccess": "Bot removed successfully!",
+    "gameResetSuccess": "Game has been reset! Get ready to play again.",
+    "roomCodeCopied": "Room code copied to clipboard!"
+  },
+  "voiceChat": {
+    "hostMutedYou": "Host has muted your microphone",
+    "hostUnmutedYou": "Host has unmuted your microphone",
+    "kickedByHost": "You have been kicked by the host"
   }
 }

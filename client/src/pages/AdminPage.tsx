@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -31,6 +32,7 @@ const baseUrl =
 
 export default function AdminPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [password, setPassword] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [systemState, setSystemState] = useState<SystemState | null>(null);
@@ -45,7 +47,7 @@ export default function AdminPage() {
       );
 
       if (response.status === 401) {
-        toast.error("Invalid admin password");
+        toast.error(t("admin.invalidPassword"));
         setIsAuthenticated(false);
         return;
       }
@@ -59,7 +61,7 @@ export default function AdminPage() {
       setIsAuthenticated(true);
     } catch (error) {
       console.error("Error fetching system state:", error);
-      toast.error("Failed to fetch system state");
+      toast.error(t("admin.failedToFetch"));
     } finally {
       setIsLoading(false);
     }
@@ -67,7 +69,7 @@ export default function AdminPage() {
 
   const deleteRoom = async (roomId: string) => {
     if (!password) {
-      toast.error("Admin password is required");
+      toast.error(t("admin.passwordRequired"));
       return;
     }
 
@@ -85,13 +87,13 @@ export default function AdminPage() {
       });
 
       if (response.status === 401) {
-        toast.error("Invalid admin password");
+        toast.error(t("admin.invalidPassword"));
         setIsAuthenticated(false);
         return;
       }
 
       if (response.status === 404) {
-        toast.error("Room not found");
+        toast.error(t("admin.roomNotFound"));
         return;
       }
 
@@ -99,12 +101,12 @@ export default function AdminPage() {
         throw new Error("Failed to delete room");
       }
 
-      toast.success(`Room ${roomId} deleted`);
+      toast.success(t("admin.roomDeleted", { roomId }));
       // Refresh system state
       fetchSystemState(password);
     } catch (error) {
       console.error("Error deleting room:", error);
-      toast.error("Failed to delete room");
+      toast.error(t("admin.failedToDelete"));
     }
   };
 

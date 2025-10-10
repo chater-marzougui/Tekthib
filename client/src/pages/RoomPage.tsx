@@ -162,7 +162,7 @@ export default function RoomPage() {
       if (message.type === "BOTS_ADDED") {
         const { players: updatedPlayers } = message.payload;
         setPlayers(updatedPlayers);
-        toast.success("Bots added successfully!");
+        toast.success(t("room.botsAddedSuccess"));
       }
     });
 
@@ -170,7 +170,7 @@ export default function RoomPage() {
       if (message.type === "BOT_REMOVED") {
         const { players: updatedPlayers } = message.payload;
         setPlayers(updatedPlayers);
-        toast.success("Bot removed successfully!");
+        toast.success(t("room.botRemovedSuccess"));
       }
     });
 
@@ -181,7 +181,7 @@ export default function RoomPage() {
         setPlayers(room.players);
         setIsHost(room.hostId === playerId);
         setIsReady(false);
-        toast.success("Game has been reset! Get ready to play again.");
+        toast.success(t("room.gameResetSuccess"));
       }
     });
 
@@ -282,7 +282,7 @@ export default function RoomPage() {
       // Reload the page to use the new name
       window.location.reload();
     } else {
-      toast.error("Please enter a valid name");
+      toast.error(t("game.pleaseEnterValidName"));
     }
   };
 

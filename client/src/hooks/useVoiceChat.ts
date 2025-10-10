@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useWebSocketContext } from "../context/WebSocketContext";
 import type { Player } from "shared";
 import { useNavigate } from "react-router-dom";
@@ -30,6 +31,7 @@ export function useVoiceChat({
   isHost = false,
 }: VoiceChatConfig) {
   const { sendMessage, registerHandler } = useWebSocketContext();
+  const { t } = useTranslation();
   const [audioLevels, setAudioLevels] = useState<Map<string, number>>(
     new Map()
   );
@@ -546,9 +548,9 @@ export function useVoiceChat({
 
               // Show toast notification
               if (mute) {
-                toast.warning("Host has muted your microphone");
+                toast.warning(t("voiceChat.hostMutedYou"));
               } else {
-                toast.success("Host has unmuted your microphone");
+                toast.success(t("voiceChat.hostUnmutedYou"));
               }
             }
           }
@@ -564,7 +566,7 @@ export function useVoiceChat({
           // If we're the one being kicked, clean up and disable voice
           if (playerId === localPlayerId) {
             disableVoiceChat();
-            toast.error("You have been kicked by the host");
+            toast.error(t("voiceChat.kickedByHost"));
             navigate("/");
           }
         }

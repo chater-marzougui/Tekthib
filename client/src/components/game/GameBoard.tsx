@@ -46,12 +46,18 @@ export default function GameBoard({
   const [claimedRank, setClaimedRank] = useState(
     lastPlay ? lastPlay.claimedRank : ""
   );
-  const [timer, setTimer] = useState(autoPlayTimeout);
+  const [timer, setTimer] = useState<number | null>(null);
   const { t } = useTranslation();
 
   // Update timer when server sends updates and start local countdown
   useEffect(() => {
-    if (serverTimer !== undefined) {
+    // Only show timer if autoPlayTimeout is enabled (>= 10 seconds)
+    if (autoPlayTimeout < 10) {
+      setTimer(null);
+      return;
+    }
+
+    if (serverTimer !== undefined && serverTimer !== null) {
       console.log(
         "GameBoard: Received serverTimer:",
         serverTimer,
@@ -63,7 +69,7 @@ export default function GameBoard({
       // Set up local countdown from server time
       const intervalId = setInterval(() => {
         setTimer((prev) => {
-          if (prev <= 0) {
+          if (prev === null || prev <= 0) {
             clearInterval(intervalId);
             return 0;
           }
@@ -73,7 +79,7 @@ export default function GameBoard({
 
       return () => clearInterval(intervalId);
     }
-  }, [serverTimer]);
+  }, [serverTimer, autoPlayTimeout]);
 
   const handlePlayCards = () => {
     if (selectedCards.length > 0 && (claimedRank || lastPlay)) {

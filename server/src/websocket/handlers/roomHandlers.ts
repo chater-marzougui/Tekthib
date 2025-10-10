@@ -422,14 +422,14 @@ function handleStartGame(
     return;
   }
 
-  // Send game started event to all players
-  const publicGameState = gameEngine.getPublicGameState();
-  console.log('Game started:', publicGameState.remainingTime);
-
-  // Start the turn timer for the first player
+  // Start the turn timer for the first player BEFORE getting public game state
   if (!gameEngine.isCurrentPlayerBot()) {
     gameEngine.startTurnTimer();
   }
+
+  // Send game started event to all players
+  const publicGameState = gameEngine.getPublicGameState();
+  console.log('Game started:', publicGameState.remainingTime);
 
   broadcastToRoom(clients, clientInfo.roomId, {
     type: 'GAME_STARTED',

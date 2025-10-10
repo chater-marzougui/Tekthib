@@ -97,5 +97,24 @@
     "joinRoom": "Rejoindre la salle",
     "scanToJoin": "Scannez pour rejoindre la salle",
     "copyLink": "Copier le lien"
+  },
+  "admin": {
+    "invalidPassword": "Mot de passe administrateur invalide",
+    "failedToFetch": "Échec de la récupération de l'état du système",
+    "passwordRequired": "Le mot de passe administrateur est requis",
+    "roomNotFound": "Salle introuvable",
+    "roomDeleted": "Salle {{roomId}} supprimée",
+    "failedToDelete": "Échec de la suppression de la salle"
+  },
+  "room": {
+    "botsAddedSuccess": "Bots ajoutés avec succès !",
+    "botRemovedSuccess": "Bot retiré avec succès !",
+    "gameResetSuccess": "La partie a été réinitialisée ! Préparez-vous à jouer à nouveau.",
+    "roomCodeCopied": "Code de la salle copié dans le presse-papiers !"
+  },
+  "voiceChat": {
+    "hostMutedYou": "L'hôte a coupé votre microphone",
+    "hostUnmutedYou": "L'hôte a activé votre microphone",
+    "kickedByHost": "Vous avez été expulsé par l'hôte"
   }
 }
