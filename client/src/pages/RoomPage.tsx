@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { useWebSocketContext } from "@/context/WebSocketContext";
 import type { Player } from "shared";
 import { toast } from "sonner";
-import { VoiceChatProvider } from "@/context/VoiceChatContext";
 import { Icon } from "@iconify/react";
 import { useHeader } from "@/context/HeaderContext";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -307,8 +306,7 @@ export default function RoomPage() {
   const canStartGame =
     isHost && players.length >= 3 && players.every((p) => p.isReady || p.isBot);
 
-  // Wrap content with VoiceChatProvider if we have a room
-  const content = (
+  return (
     <div className="min-h-screen p-4">
       {/* Confirm leave dialog */}
       <ConfirmDialog
@@ -378,20 +376,4 @@ export default function RoomPage() {
       </div>
     </div>
   );
-
-  // Wrap with VoiceChatProvider if room is active
-  if (roomCode && playerId) {
-    return (
-      <VoiceChatProvider
-        roomId={roomCode}
-        localPlayerId={playerId}
-        players={players}
-        isHost={isHost}
-      >
-        {content}
-      </VoiceChatProvider>
-    );
-  }
-
-  return content;
 }

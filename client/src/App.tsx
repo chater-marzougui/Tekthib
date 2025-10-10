@@ -9,6 +9,7 @@ import AdminPage from "./pages/AdminPage";
 import { Toaster } from "sonner";
 import { SoundProvider } from "./context/SoundPlayerContext";
 import { ThemeProvider } from "./context/ThemeProvider";
+import { VoiceChatWrapper } from "./components/VoiceChatWrapper";
 function App() {
   return (
     <Router basename="/Tekthib/">
@@ -37,10 +38,12 @@ function App() {
           element={
             <WebSocketProvider>
               <SoundProvider>
-                <Routes>
-                  <Route path="/room/:roomId" element={<RoomPage />} />
-                  <Route path="/game/:roomId" element={<GamePage />} />
-                </Routes>
+                <VoiceChatWrapper>
+                  <Routes>
+                    <Route path="/room/:roomId" element={<RoomPage />} />
+                    <Route path="/game/:roomId" element={<GamePage />} />
+                  </Routes>
+                </VoiceChatWrapper>
               </SoundProvider>
             </WebSocketProvider>
           }

@@ -3,7 +3,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { useWebSocketContext } from "@/context/WebSocketContext";
-import { VoiceChatProvider } from "@/context/VoiceChatContext";
 import GameBoard from "../components/game/GameBoard";
 import PlayerList from "../components/game/PlayerList";
 import ChatBox from "../components/chat/ChatBox";
@@ -403,22 +402,6 @@ export default function GamePage() {
     };
   }, [registerHandler, navigate, playerId, playerName, lastPlay, roomId]);
 
-  const playersForVoice: Player[] = gameState
-    ? gameState.players.map((p) => ({
-        id: p.id,
-        name: p.name,
-        isReady: true,
-        isConnected: p.isConnected,
-        isBot: p.isBot,
-      }))
-    : [];
-
-  const isHost = !!(
-    gameState &&
-    gameState.players.length > 0 &&
-    gameState.players[0].id === playerId
-  );
-
   useEffect(() => {
     if (!gameState) return;
 
@@ -795,26 +778,13 @@ export default function GamePage() {
             <QuickRules />
 
             {roomId && playerId && (
-              <VoiceChat players={playersForVoice} localPlayerId={playerId} />
+              <VoiceChat players={players} localPlayerId={playerId} />
             )}
           </div>
         </div>
       </div>
     </div>
   );
-
-  if (roomId && playerId) {
-    return (
-      <VoiceChatProvider
-        roomId={roomId}
-        localPlayerId={playerId}
-        players={playersForVoice}
-        isHost={isHost}
-      >
-        {content}
-      </VoiceChatProvider>
-    );
-  }
 
   return content;
 }
