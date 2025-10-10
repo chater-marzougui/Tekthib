@@ -78,6 +78,7 @@ export function useVoiceChat({
   );
 
   // Initialize audio stream
+  // Initialize audio stream
   const initializeAudio = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -90,6 +91,12 @@ export function useVoiceChat({
 
       localStreamRef.current = stream;
       setAudioError(null);
+
+      console.log(
+        "Local stream initialized with tracks:",
+        stream.getTracks().length
+      );
+
       return stream;
     } catch (error) {
       const errorMessage =
@@ -109,21 +116,26 @@ export function useVoiceChat({
   // Create peer connection for a remote player
   const createPeerConnection = useCallback(
     (remotePlayerId: string): RTCPeerConnection => {
+      if (!localStreamRef.current) {
+        console.error(
+          "Cannot create peer connection - no local stream available"
+        );
+        throw new Error("Local stream not initialized");
+      }
+
       const pc = new RTCPeerConnection(ICE_SERVERS);
 
       // Add local stream tracks to the connection
-      if (localStreamRef.current) {
-        localStreamRef.current.getTracks().forEach((track) => {
-          console.log(
-            "Adding track to peer connection:",
-            remotePlayerId,
-            track.kind
-          );
-          pc.addTrack(track, localStreamRef.current!);
-        });
-      } else {
-        console.warn("No local stream available when creating peer connection");
-      }
+      localStreamRef.current.getTracks().forEach((track) => {
+        console.log(
+          "Adding track to peer connection:",
+          remotePlayerId,
+          track.kind,
+          "enabled:",
+          track.enabled
+        );
+        pc.addTrack(track, localStreamRef.current!);
+      });
 
       // Handle incoming remote stream
       pc.ontrack = async (event) => {
@@ -344,6 +356,12 @@ export function useVoiceChat({
   // Create and send offer to a remote player
   const createOffer = useCallback(
     async (remotePlayerId: string) => {
+      // Ensure we have a local stream
+      if (!localStreamRef.current) {
+        console.error("Cannot create offer - no local stream");
+        return;
+      }
+
       // Check if already negotiating
       if (isNegotiatingRef.current.get(remotePlayerId)) {
         console.log("Already negotiating with:", remotePlayerId);
@@ -355,8 +373,13 @@ export function useVoiceChat({
 
       if (!peerData && createPeerConnectionRef.current) {
         console.log("Creating new peer connection for:", remotePlayerId);
-        createPeerConnectionRef.current(remotePlayerId);
-        peerData = peerConnectionsRef.current.get(remotePlayerId);
+        try {
+          createPeerConnectionRef.current(remotePlayerId);
+          peerData = peerConnectionsRef.current.get(remotePlayerId);
+        } catch (error) {
+          console.error("Failed to create peer connection:", error);
+          return;
+        }
       }
 
       if (!peerData) {
@@ -398,7 +421,6 @@ export function useVoiceChat({
         // Reset negotiating flag on error
         isNegotiatingRef.current.set(remotePlayerId, false);
       }
-      // Don't clear the flag here - it will be cleared when we get an answer
     },
     [sendMessage]
   );
@@ -552,6 +574,9 @@ export function useVoiceChat({
     const stream = await initializeAudio();
     if (!stream) return;
 
+    // CRITICAL: Ensure localStreamRef is set
+    localStreamRef.current = stream;
+
     setIsVoiceEnabled(true);
     sessionStorage.setItem("voiceChatEnabled", "true");
 
@@ -563,10 +588,24 @@ export function useVoiceChat({
       (p) => p.id !== localPlayerId && !p.isBot && p.isConnected
     );
 
-    // Create connections sequentially with small delays (more reliable)
+    // Pre-create peer connections with the local stream
+    otherPlayers.forEach((player) => {
+      if (!peerConnectionsRef.current.has(player.id)) {
+        console.log("Pre-creating peer connection for:", player.id);
+        if (createPeerConnectionRef.current) {
+          createPeerConnectionRef.current(player.id);
+        }
+      }
+    });
+
+    // Small delay to ensure peer connections are ready
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Now create offers sequentially
     for (const player of otherPlayers) {
+      console.log("Creating offer for:", player.id);
       await createOffer(player.id);
-      await new Promise((resolve) => setTimeout(resolve, 100)); // Small delay between offers
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
   }, [isVoiceEnabled, initializeAudio, players, localPlayerId, createOffer]);
 
