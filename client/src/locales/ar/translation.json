@@ -97,5 +97,24 @@
     "joinRoom": "انضم إلى الغرفة",
     "scanToJoin": "امسح للانضمام إلى الغرفة",
     "copyLink": "نسخ الرابط"
+  },
+  "admin": {
+    "invalidPassword": "كلمة مرور المسؤول غير صحيحة",
+    "failedToFetch": "فشل في جلب حالة النظام",
+    "passwordRequired": "كلمة مرور المسؤول مطلوبة",
+    "roomNotFound": "الغرفة غير موجودة",
+    "roomDeleted": "تم حذف الغرفة {{roomId}}",
+    "failedToDelete": "فشل في حذف الغرفة"
+  },
+  "room": {
+    "botsAddedSuccess": "تمت إضافة البوتات بنجاح!",
+    "botRemovedSuccess": "تم إزالة البوت بنجاح!",
+    "gameResetSuccess": "تمت إعادة تعيين اللعبة! استعد للعب مرة أخرى.",
+    "roomCodeCopied": "تم نسخ رمز الغرفة إلى الحافظة!"
+  },
+  "voiceChat": {
+    "hostMutedYou": "قام المضيف بكتم الميكروفون الخاص بك",
+    "hostUnmutedYou": "قام المضيف بإلغاء كتم الميكروفون الخاص بك",
+    "kickedByHost": "تم طردك من قبل المضيف"
   }
 }
