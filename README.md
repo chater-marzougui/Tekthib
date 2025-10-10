@@ -88,6 +88,9 @@ Play smart, bluff well, and be the first to get rid of all your cards. The last 
 - ✅ Full routing system (HomePage, RoomPage, GamePage, AdminPage)
 - ✅ WebSocket context provider for global state management
 - ✅ SEO optimization with dynamic meta tags
+- ✅ **i18n Support**: Full internationalization with Arabic, English, and French translations
+- ✅ **Theme System**: Dark/light theme toggle with persistent local storage
+- ✅ **Iconify Integration**: Modern, colorful icons across the entire application
 
 #### Room Management
 - ✅ Create room with unique 6-character code
@@ -111,6 +114,11 @@ Play smart, bluff well, and be the first to get rid of all your cards. The last 
 - ✅ Winner/loser detection
 - ✅ Real-time game state synchronization
 - ✅ AI bot players with strategic decision-making
+- ✅ **Auto-play Timer**: Configurable server-side timer (10-120 seconds) that auto-plays for inactive players
+- ✅ **Timer Synchronization**: Real-time timer updates broadcast to all clients every second
+- ✅ **Bot Personalities**: Three distinct bot personalities (aggressive, truthful, unpredictable)
+- ✅ **Bot Learning**: Bots track player behavior and adapt their strategies
+- ✅ **Bot Chat**: 40+ contextual chat messages based on game events and bot personality
 
 #### User Interface
 - ✅ Responsive design with Tailwind CSS
@@ -123,6 +131,13 @@ Play smart, bluff well, and be the first to get rid of all your cards. The last 
 - ✅ End game dialog with player statistics and titles
 - ✅ Player badges with avatars (DiceBear integration)
 - ✅ Enhanced footer with GitHub link and creator info
+- ✅ **Visual Timer Display**: Countdown timer shown to all players during their turn
+- ✅ **Auto-play Notifications**: Toast notifications when a player times out
+- ✅ **Custom Scrollbars**: Styled scrollbars for improved UI consistency
+- ✅ **Confirm Dialogs**: Confirmation dialogs for important actions (leaving game, etc.)
+- ✅ **Header Context**: Dynamic header with customizable action buttons
+- ✅ **Quick Rules Dialog**: In-game access to game rules without leaving
+- ✅ **Player Name Dialog**: Prompt for players without a saved name
 
 #### Communication
 - ✅ Text chat in both lobby and game
@@ -130,15 +145,25 @@ Play smart, bluff well, and be the first to get rid of all your cards. The last 
 - ✅ XSS protection for chat messages
 - ✅ **WebRTC voice chat with peer-to-peer audio**
 - ✅ **Cross-browser voice chat support (Chrome, Firefox, Brave, Edge)**
-- ✅ Voice chat persists seamlessly from lobby to game
-- ✅ Host controls: kick players and mute player microphones
-- ✅ Per-player mute: mute specific players locally without affecting others
+- ✅ **Voice chat persists seamlessly from lobby to game**
+- ✅ **Host controls**: kick players and mute player microphones
+- ✅ **Per-player mute**: mute specific players locally without affecting others
+- ✅ **Audio Level Monitoring**: Visual indicators for voice activity
+- ✅ **Bot Chat Messages**: Bots send contextual messages based on game events
+- ✅ **System Messages**: Colored system notifications for important events
 
 #### Admin & Monitoring
 - ✅ Admin dashboard for system monitoring
 - ✅ Real-time room and player statistics
 - ✅ Room management and monitoring tools
 - ✅ Auto-refresh system state
+- ✅ **Delete Room**: Admin capability to remove specific rooms
+
+#### Sound & Audio
+- ✅ **Sound Management System**: Centralized sound player with volume control
+- ✅ **Mute/Unmute Functionality**: Global sound muting capability
+- ✅ **Volume Control**: Adjustable sound effects volume
+- ✅ **Audio Context Handling**: Proper audio context management for cross-browser compatibility
 
 ### 🚧 Future Work
 
@@ -147,13 +172,11 @@ Play smart, bluff well, and be the first to get rid of all your cards. The last 
 - ⏳ **Avatar Customization**: Custom avatar selection and profile pictures
 - ⏳ **Enhanced Voice Features**: 
   - Spatial audio positioning based on player order
-  - Voice activity indicators (speaking animations)
   - Voice recording and playback for highlights
 - ⏳ **Spectator Mode**: Allow users to watch ongoing games
 - ⏳ **Persistent Statistics**: Database integration for long-term player statistics tracking
 - ⏳ **Tournament System**: Organized tournaments with brackets and leaderboards
-- ⏳ **Advanced Bot AI**: Enhanced bot strategies with different personality types (aggressive, conservative, adaptive)
-- ⏳ **Sound Effects & Animations**: Card flip sounds, challenge animations, celebration effects
+- ⏳ **Sound Effects & Animations**: More card flip sounds, challenge animations, celebration effects
 - ⏳ **Mobile Optimization**: Native mobile app and improved touch controls
 - ⏳ **Replay System**: Record and replay games for analysis or entertainment
 - ⏳ **Custom Game Modes**: Variations on rules, speed rounds, team play
@@ -237,20 +260,27 @@ npx shadcn@latest add [component-name]
 
 ### Creating a Game
 1. Open the app in your browser
-2. Enter your name on the home page
+2. Enter your name on the home page (supports multiple languages)
 3. Click "Create New Room"
-4. Share the room code with friends
-5. Wait for at least 3 players to join
-6. All players mark themselves as ready
-7. Host clicks "Start Game"
+4. Configure game settings:
+   - Set auto-play timer (optional, 10-120 seconds)
+   - Adjust max players (3-10)
+5. Share the room code or QR code with friends
+6. Wait for at least 3 players to join
+7. All players mark themselves as ready
+8. Host clicks "Start Game"
 
 ### During the Game
 1. **Your Turn**: Select cards from your hand and claim a rank
+   - Watch the countdown timer if enabled (shows remaining time)
+   - If time runs out, cards are automatically played for you
 2. **Bluffing**: You can claim any rank, even if you don't have those cards
 3. **Other Players' Turns**: Watch what they play, decide if you trust them
 4. **Challenge**: Click "Challenge (Call Liar!)" if you think someone is bluffing
 5. **Winning**: First player to empty their hand wins
 6. **Special Rule**: If you collect all 4 cards of the same rank, they're removed
+7. **Bot Interactions**: Bots will chat and react to game events
+8. **Language**: Switch between English, French, and Arabic anytime
 
 ### Chat & Voice
 - Use the chat box to communicate with other players
@@ -266,7 +296,15 @@ npx shadcn@latest add [component-name]
 ### Bot Players
 - Add AI bot players to fill your room if you don't have enough human players
 - Bots make strategic decisions based on game state
-- Bots can bluff, challenge, and play just like human players
+- **Three Bot Personalities**:
+  - **Aggressive**: Bluffs frequently and challenges often
+  - **Truthful**: Plays honestly most of the time, rarely bluffs
+  - **Unpredictable**: Mixed strategy that keeps players guessing
+- **Bot Learning**: Bots track player behavior and adapt their strategies over time
+- **Bot Chat**: Bots send contextual messages during the game:
+  - React to successful bluffs and caught lies
+  - Comment on big plays and challenges
+  - Send random banter during gameplay
 - Perfect for testing or playing with fewer friends
 
 ### End Game Statistics
@@ -282,8 +320,11 @@ npx shadcn@latest add [component-name]
 - **Real-time Communication**: WebSocket for chat + signaling
 - **Voice Chat**: WebRTC for peer-to-peer audio (cross-browser compatible)
 - **UI Framework**: Shadcn UI components with Radix UI primitives
+- **Icons**: Iconify for modern, colorful icons across the application
 - **State Management**: React hooks + Context API
-- **Styling**: Tailwind CSS with custom animations
+- **Internationalization**: i18next with support for Arabic, English, and French
+- **Theme**: Dark/light theme toggle with local storage persistence
+- **Styling**: Tailwind CSS with custom animations and scrollbars
 - **Avatar Generation**: DiceBear library for player avatars
 - **QR Code**: QRCode.react for easy room sharing
 - **SEO**: Dynamic meta tags for better discoverability
@@ -294,7 +335,12 @@ npx shadcn@latest add [component-name]
 - **Communication**: WebSocket server (ws library)
 - **Signaling**: WebRTC connection coordination
 - **Game Logic**: Server-authoritative game engine
-- **Bot AI**: Strategic bot player implementation
+- **Bot AI**: Strategic bot player implementation with:
+  - Three distinct personalities (aggressive, truthful, unpredictable)
+  - Learning system that tracks and adapts to player behavior
+  - Context-aware chat system with 40+ unique messages
+- **Timer System**: Server-managed turn timer with auto-play functionality
+- **Admin API**: Room management and monitoring endpoints
 
 ### Architecture Flow
 ```
@@ -314,8 +360,14 @@ npx shadcn@latest add [component-name]
 ## 📁 Project Structure
 ```
 Tekthib/
-├── README.md
-├── SETUP.md                     # New setup instructions
+├── README.md                     # Main project documentation
+├── SETUP.md                      # Setup instructions
+├── DEPLOYMENT.md                 # Deployment guide
+├── BOT_AI_ENHANCEMENT_SUMMARY.md # Bot AI features documentation
+├── BOT_AI_QUICK_START.md        # Quick start guide for bot AI
+├── VOICE_CHAT_IMPLEMENTATION.md # Voice chat technical details
+├── ENDGAME_TRANSLATIONS.md      # End game translations guide
+├── EMOJI_TO_ICON_MIGRATION.md   # Icon migration documentation
 ├── package.json
 ├── .gitignore
 ├── .env.example
