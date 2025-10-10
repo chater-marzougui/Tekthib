@@ -16,6 +16,11 @@ export default function VoiceChat({
   localPlayerId,
 }: Readonly<VoiceChatProps>) {
   const { t } = useTranslation();
+  const voiceChatContext = useVoiceChatContext();
+  
+  console.log("VoiceChat - voiceChatContext:", voiceChatContext);
+  console.log("VoiceChat - enableVoiceChat function:", voiceChatContext.enableVoiceChat);
+  
   const {
     isVoiceEnabled,
     isMuted,
@@ -31,15 +36,23 @@ export default function VoiceChat({
     togglePlayerMute,
     kickPlayer,
     mutePlayerMic,
-  } = useVoiceChatContext();
+  } = voiceChatContext;
 
   const direction = useTextDirection();
 
-  const handleToggleVoice = () => {
+  console.log("VoiceChat component - players:", players);
+  console.log("VoiceChat component - localPlayerId:", localPlayerId);
+
+  const handleToggleVoice = async () => {
+    console.log("handleToggleVoice clicked, isVoiceEnabled:", isVoiceEnabled);
+    console.log("enableVoiceChat function:", enableVoiceChat);
+    console.log("Is it the no-op function?", enableVoiceChat.toString().includes("{}"));
+    
     if (isVoiceEnabled) {
       disableVoiceChat();
     } else {
-      enableVoiceChat();
+      await enableVoiceChat();
+      console.log("enableVoiceChat finished");
     }
   };
 

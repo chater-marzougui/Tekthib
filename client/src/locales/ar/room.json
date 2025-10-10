@@ -42,6 +42,10 @@
     "playingAs": "تلعب باسم",
     "secondsPerTurn": "ثانية لكل دور",
     "timerRange": "المدى: 10-300 ثانية",
-    "bot": "روبو"
+    "bot": "روبو",
+    "botsAddedSuccess": "تمت إضافة البوتات بنجاح!",
+    "botRemovedSuccess": "تم إزالة البوت بنجاح!",
+    "gameResetSuccess": "تمت إعادة تعيين اللعبة! استعد للعب مرة أخرى.",
+    "roomCodeCopied": "تم نسخ رمز الغرفة إلى الحافظة!"
   }
 }

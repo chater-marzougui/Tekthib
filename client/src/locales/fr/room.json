@@ -42,6 +42,10 @@
     "playingAs": "Vous jouez en tant que",
     "secondsPerTurn": "secondes par tour",
     "timerRange": "Plage : 10-300 secondes",
-    "bot": "Bot"
+    "bot": "Bot",
+    "botsAddedSuccess": "Bots ajoutés avec succès !",
+    "botRemovedSuccess": "Bot retiré avec succès !",
+    "gameResetSuccess": "La partie a été réinitialisée ! Préparez-vous à jouer à nouveau.",
+    "roomCodeCopied": "Code de la salle copié dans le presse-papiers !"
   }
 }

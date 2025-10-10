@@ -108,11 +108,5 @@
     "roomNotFound": "الغرفة غير موجودة",
     "roomDeleted": "تم حذف الغرفة {{roomId}}",
     "failedToDelete": "فشل في حذف الغرفة"
-  },
-  "room": {
-    "botsAddedSuccess": "تمت إضافة البوتات بنجاح!",
-    "botRemovedSuccess": "تم إزالة البوت بنجاح!",
-    "gameResetSuccess": "تمت إعادة تعيين اللعبة! استعد للعب مرة أخرى.",
-    "roomCodeCopied": "تم نسخ رمز الغرفة إلى الحافظة!"
   }
 }

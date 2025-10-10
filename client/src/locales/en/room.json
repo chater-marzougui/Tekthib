@@ -42,6 +42,10 @@
     "playingAs": "Playing as",
     "secondsPerTurn": "seconds per turn",
     "timerRange": "Range: 10-300 seconds",
-    "bot": "Bot"
+    "bot": "Bot",
+    "botsAddedSuccess": "Bots added successfully!",
+    "botRemovedSuccess": "Bot removed successfully!",
+    "gameResetSuccess": "Game has been reset! Get ready to play again.",
+    "roomCodeCopied": "Room code copied to clipboard!"
   }
 }

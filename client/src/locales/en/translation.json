@@ -108,11 +108,5 @@
     "roomNotFound": "Room not found",
     "roomDeleted": "Room {{roomId}} deleted",
     "failedToDelete": "Failed to delete room"
-  },
-  "room": {
-    "botsAddedSuccess": "Bots added successfully!",
-    "botRemovedSuccess": "Bot removed successfully!",
-    "gameResetSuccess": "Game has been reset! Get ready to play again.",
-    "roomCodeCopied": "Room code copied to clipboard!"
   }
 }

@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { VoiceChatProvider } from "@/context/VoiceChatContext";
 import { useWebSocketContext } from "@/context/WebSocketContext";
 import type { Player } from "shared";
@@ -9,13 +9,18 @@ interface VoiceChatWrapperProps {
 }
 
 export function VoiceChatWrapper({ children }: VoiceChatWrapperProps) {
-  const { roomId } = useParams<{ roomId: string }>();
   const location = useLocation();
   const { registerHandler } = useWebSocketContext();
   const [players, setPlayers] = useState<Player[]>([]);
   const [isHost, setIsHost] = useState(false);
 
   const playerId = localStorage.getItem("clientId") || "";
+
+  // Extract roomId from pathname instead of useParams (since we're outside the Route)
+  const roomId = (() => {
+    const match = location.pathname.match(/\/(room|game)\/([^/]+)/);
+    return match ? match[2] : undefined;
+  })();
 
   // Determine if we're in a room/game page
   const isInRoomOrGame =
@@ -137,8 +142,21 @@ export function VoiceChatWrapper({ children }: VoiceChatWrapperProps) {
     };
   }, [registerHandler, roomId, playerId, isInRoomOrGame]);
 
+  // Debug logging
+  useEffect(() => {
+    console.log("VoiceChatWrapper - isInRoomOrGame:", isInRoomOrGame);
+    console.log("VoiceChatWrapper - roomId:", roomId);
+    console.log("VoiceChatWrapper - playerId:", playerId);
+    console.log("VoiceChatWrapper - players:", players);
+    console.log("VoiceChatWrapper - isHost:", isHost);
+  }, [isInRoomOrGame, roomId, playerId, players, isHost]);
+
+  const shouldRenderProvider = isInRoomOrGame && roomId && playerId;
+  console.log("VoiceChatWrapper - shouldRenderProvider:", shouldRenderProvider);
+
   // Only wrap with VoiceChatProvider if we're in a room/game and have the necessary data
-  if (isInRoomOrGame && roomId && playerId) {
+  if (shouldRenderProvider) {
+    console.log("VoiceChatWrapper - Rendering VoiceChatProvider with:", { roomId, localPlayerId: playerId, playersCount: players.length, isHost });
     return (
       <VoiceChatProvider
         roomId={roomId}
@@ -151,5 +169,6 @@ export function VoiceChatWrapper({ children }: VoiceChatWrapperProps) {
     );
   }
 
+  console.log("VoiceChatWrapper - NOT rendering provider, returning plain children");
   return <>{children}</>;
 }
