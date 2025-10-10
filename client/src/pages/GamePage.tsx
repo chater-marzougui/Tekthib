@@ -1,18 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useWebSocketContext } from "@/context/WebSocketContext";
 import { VoiceChatProvider } from "@/context/VoiceChatContext";
 import GameBoard from "../components/game/GameBoard";
@@ -29,6 +18,7 @@ import { useHeader } from "@/context/HeaderContext";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import QuickRules from "@/components/game/QuickRules";
 import { getToastMessage } from "@/lib/utils";
+import PlayerNameDialog from "@/components/room/PlayerNameDialog";
 
 interface GamePlayer extends Player {
   isCurrentTurn: boolean;
@@ -128,13 +118,19 @@ export default function GamePage() {
           // Set auto play timeout from room settings
           if (room && room.autoPlayTimeout !== undefined) {
             setAutoPlayTimeout(room.autoPlayTimeout);
-            console.log('GamePage: autoPlayTimeout from room:', room.autoPlayTimeout);
+            console.log(
+              "GamePage: autoPlayTimeout from room:",
+              room.autoPlayTimeout
+            );
           } else {
             setAutoPlayTimeout(45);
           }
 
           if (initialGameState) {
-            console.log('GamePage: Initial game state remainingTime:', initialGameState.remainingTime);
+            console.log(
+              "GamePage: Initial game state remainingTime:",
+              initialGameState.remainingTime
+            );
             setGameState(initialGameState);
             setIsMyTurn(initialGameState.currentPlayerId === playerId);
 
@@ -571,40 +567,24 @@ export default function GamePage() {
         variant="destructive"
       />
 
-      <Dialog open={showNameDialog} onOpenChange={() => {}}>
-        <DialogContent
-          className="sm:max-w-md"
-          onInteractOutside={(e) => e.preventDefault()}
-        >
-          <DialogHeader>
-            <DialogTitle>{t("game.enterYourName")}</DialogTitle>
-            <DialogDescription>
-              {t("game.enterNameDescription")}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="player-name">{t("game.yourName")}</Label>
-              <Input
-                id="player-name"
-                value={nameInput}
-                onChange={(e) => setNameInput(e.target.value)}
-                placeholder={t("game.enterNamePlaceholder")}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleNameSubmit();
-                  }
-                }}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={handleNameSubmit} disabled={!nameInput.trim()}>
-              {t("game.continue")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <PlayerNameDialog
+        nameInput={nameInput}
+        setNameInput={setNameInput}
+        showNameDialog={showNameDialog}
+        handleNameSubmit={handleNameSubmit}
+      />
+
+      <EndGameDialog
+        open={gameEndedDialog.open}
+        winners={gameEndedDialog.winners}
+        loser={gameEndedDialog.loser}
+        playerStats={gameEndedDialog.playerStats}
+        gameState={gameState}
+        currentPlayerId={playerId}
+        onClose={() => setGameEndedDialog({ ...gameEndedDialog, open: false })}
+        handlePlayAgain={handlePlayAgain}
+      />
+
       {playingCardsAnimation?.show &&
         pilePosition.x > 0 &&
         handPosition.x > 0 && (
@@ -753,8 +733,8 @@ export default function GamePage() {
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-3 space-y-6">
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col lg:flex-row gap-6">
             <GameBoard
               lastPlay={lastPlay}
               pileCount={gameState.pileCount}
@@ -771,35 +751,27 @@ export default function GamePage() {
               serverTimer={gameState.remainingTime}
             />
 
+            <div className="gap-4 flex flex-row w-full lg:flex-col lg:w-96">
+              <PlayerList players={players} currentPlayerId={playerId} />
+              {playerId && playerName && (
+                <ChatBox
+                  playerName={playerName}
+                  playerId={playerId}
+                  systemMessages={systemMessages}
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-4 flex-wrap w-full">
+            <QuickRules />
+
             {roomId && playerId && (
               <VoiceChat players={playersForVoice} localPlayerId={playerId} />
             )}
-
-            <QuickRules />
-          </div>
-
-          <div className="space-y-4">
-            {playerId && playerName && (
-              <ChatBox
-                playerName={playerName}
-                playerId={playerId}
-                systemMessages={systemMessages}
-              />
-            )}
-            <PlayerList players={players} currentPlayerId={playerId} />
           </div>
         </div>
       </div>
-      <EndGameDialog
-        open={gameEndedDialog.open}
-        winners={gameEndedDialog.winners}
-        loser={gameEndedDialog.loser}
-        playerStats={gameEndedDialog.playerStats}
-        gameState={gameState}
-        currentPlayerId={playerId}
-        onClose={() => setGameEndedDialog({ ...gameEndedDialog, open: false })}
-        handlePlayAgain={handlePlayAgain}
-      />
     </div>
   );
 

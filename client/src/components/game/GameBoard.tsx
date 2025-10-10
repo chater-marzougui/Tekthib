@@ -52,9 +52,14 @@ export default function GameBoard({
   // Update timer when server sends updates and start local countdown
   useEffect(() => {
     if (serverTimer !== undefined) {
-      console.log('GameBoard: Received serverTimer:', serverTimer, 'autoPlayTimeout:', autoPlayTimeout);
+      console.log(
+        "GameBoard: Received serverTimer:",
+        serverTimer,
+        "autoPlayTimeout:",
+        autoPlayTimeout
+      );
       setTimer(serverTimer);
-      
+
       // Set up local countdown from server time
       const intervalId = setInterval(() => {
         setTimer((prev) => {
@@ -89,126 +94,126 @@ export default function GameBoard({
   const numberOfHands = Math.ceil(sortedCards.length / maxCardsPerHand);
 
   return (
-    <div className="space-y-4">
-      {/* Main Game Board */}
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col md:flex-row items-stretch md:items-start gap-4 md:gap-6">
-            {/* Mobile: Top row wrapper for StateCard + WastedPile */}
-            <div className="flex md:hidden flex-row justify-between items-start gap-4 w-full">
-              <StateCard
-                isMyTurn={isMyTurn}
-                currentPlayer={currentPlayer}
-                timer={autoPlayTimeout >= 10 ? timer : null}
-                lastPlay={lastPlay}
-              />
-              <WastedPile removedCards={removedCards} />
-            </div>
+    <Card className="flex-1">
+      <CardHeader>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-4 sm:gap-6">
+          {/* Mobile: Top row wrapper for StateCard + WastedPile */}
+          <div className="flex sm:hidden flex-row justify-between items-start gap-4 w-full">
+            <StateCard
+              isMyTurn={isMyTurn}
+              currentPlayer={currentPlayer}
+              timer={autoPlayTimeout >= 10 ? timer : null}
+              lastPlay={lastPlay}
+            />
+            <WastedPile removedCards={removedCards} />
+          </div>
 
-            {/* Desktop: Left side - StateCard only */}
-            <div className="hidden md:block">
-              <StateCard
-                isMyTurn={isMyTurn}
-                currentPlayer={currentPlayer}
-                timer={autoPlayTimeout >= 10 ? timer : null}
-                lastPlay={lastPlay}
-              />
-            </div>
+          {/* Desktop: Left side - StateCard only */}
+          <div className="hidden sm:block">
+            <StateCard
+              isMyTurn={isMyTurn}
+              currentPlayer={currentPlayer}
+              timer={autoPlayTimeout >= 10 ? timer : null}
+              lastPlay={lastPlay}
+            />
+          </div>
 
-            {/* Center - Game board (both mobile and desktop) */}
-            <div className="flex-1 flex flex-col items-center justify-center min-w-0">
-              <div className="w-full space-y-4">
-                {lastPlay && (
-                  <div className="relative">
-                    {/* Decorative background blur */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 rounded-lg blur-xl" />
+          {/* Center - Game board (both mobile and desktop) */}
+          <div className="flex-1 flex flex-col items-center justify-center min-w-0">
+            <div className="w-full space-y-4">
+              {lastPlay && (
+                <div className="relative">
+                  {/* Decorative background blur */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 rounded-lg blur-xl" />
 
-                    {/* Content */}
-                    <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-lg px-4 py-3 shadow-sm">
-                      <div className="flex items-center justify-center gap-2 flex-wrap">
-                        <span className="font-bold text-foreground">
-                          {lastPlay.player}
-                        </span>
-                        <span className="text-sm md:text-base text-muted-foreground">
-                          {t('game.claimed')}
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          {lastPlay.cardCount}×
-                          <Badge
-                            variant={isMyTurn ? "destructive" : "default"}
-                            className="text-base md:text-lg font-bold px-3 py-1"
-                          >
-                            {lastPlay.claimedRank}
-                          </Badge>
-                        </div>
+                  {/* Content */}
+                  <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-lg px-4 py-3 shadow-sm">
+                    <div className="flex items-center justify-center gap-2 flex-wrap">
+                      <span className="font-bold text-foreground">
+                        {lastPlay.player}
+                      </span>
+                      <span className="text-sm sm:text-base text-muted-foreground">
+                        {t("game.claimed")}
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        {lastPlay.cardCount}×
+                        <Badge
+                          variant={isMyTurn ? "destructive" : "default"}
+                          className="text-base sm:text-lg font-bold px-3 py-1"
+                        >
+                          {lastPlay.claimedRank}
+                        </Badge>
                       </div>
                     </div>
                   </div>
-                )}
+                </div>
+              )}
 
-                <CenterPile pileCount={pileCount} lastPlay={lastPlay} />
+              <CenterPile pileCount={pileCount} lastPlay={lastPlay} />
 
-                {canChallenge && lastPlay && (
-                  <div className="flex justify-center">
-                    <Button
-                      onClick={onChallenge}
-                      variant="destructive"
-                      size="lg"
-                      className="animate-pulse"
-                    >
-                      <Icon icon="mdi:sword-cross" className="w-5 h-5 mr-2 text-white"/>
-                      {t('game.challengeCallLiar')}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Desktop: Right side - WastedPile only */}
-            <div className="hidden md:block">
-              <WastedPile removedCards={removedCards} />
+              {canChallenge && lastPlay && (
+                <div className="flex justify-center">
+                  <Button
+                    onClick={onChallenge}
+                    variant="destructive"
+                    size="lg"
+                    className="animate-pulse"
+                  >
+                    <Icon
+                      icon="mdi:sword-cross"
+                      className="w-5 h-5 mr-2 text-white"
+                    />
+                    {t("game.challengeCallLiar")}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
-        </CardHeader>
-        {/* Play Controls */}
-        <PlayerControls
-          isMyTurn={isMyTurn}
-          canPlay={playerCards.length > 0}
-          setClaimedRank={setClaimedRank}
-          claimedRank={claimedRank}
-          selectedCards={selectedCards}
-          handlePlayCards={handlePlayCards}
-          lastPlay={lastPlay}
-        />
-        
-        <div className="player-hand-container"></div>
-        {playerCards.length > 0 && (
-          <CardContent className="p-6 space-y-6 px-0">
-            <div className="relative flex items-center justify-center p-0 m-0 mb-3">
-              <div className="flex-1 border-t border-border"></div>
-              <div className="px-4 text-sm font-semibold text-muted-foreground bg-transparent">
-                {t('game.yourCards', { count: playerCards.length })}
-              </div>
-              <div className="flex-1 border-t border-border"></div>
+
+          {/* Desktop: Right side - WastedPile only */}
+          <div className="hidden sm:block">
+            <WastedPile removedCards={removedCards} />
+          </div>
+        </div>
+      </CardHeader>
+      {/* Play Controls */}
+      <PlayerControls
+        isMyTurn={isMyTurn}
+        canPlay={playerCards.length > 0}
+        setClaimedRank={setClaimedRank}
+        claimedRank={claimedRank}
+        selectedCards={selectedCards}
+        handlePlayCards={handlePlayCards}
+        lastPlay={lastPlay}
+      />
+
+      <div className="player-hand-container"></div>
+      {playerCards.length > 0 && (
+        <CardContent className="p-6 space-y-6 px-0">
+          <div className="relative flex items-center justify-center p-0 m-0 mb-3">
+            <div className="flex-1 border-t border-border"></div>
+            <div className="px-4 text-sm font-semibold text-muted-foreground bg-transparent">
+              {t("game.yourCards", { count: playerCards.length })}
             </div>
-            {/* Cards Display */}
-            <div className="relative py-4">
-              <div className="flex flex-col items-center gap-2">
-                {Array.from({ length: numberOfHands }, (_, handIndex) =>
-                  RenderOneHand(
-                    sortedCards,
-                    handIndex * maxCardsPerHand,
-                    isMyTurn,
-                    onCardSelect,
-                    selectedCards,
-                    maxCardsPerHand
-                  )
-                )}
-              </div>
+            <div className="flex-1 border-t border-border"></div>
+          </div>
+          {/* Cards Display */}
+          <div className="relative py-4">
+            <div className="flex flex-col items-center gap-2">
+              {Array.from({ length: numberOfHands }, (_, handIndex) =>
+                RenderOneHand(
+                  sortedCards,
+                  handIndex * maxCardsPerHand,
+                  isMyTurn,
+                  onCardSelect,
+                  selectedCards,
+                  maxCardsPerHand
+                )
+              )}
             </div>
-          </CardContent>
-        )}
-      </Card>
-    </div>
+          </div>
+        </CardContent>
+      )}
+    </Card>
   );
 }

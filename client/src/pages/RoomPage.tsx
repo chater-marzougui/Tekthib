@@ -1,28 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useWebSocketContext } from "@/context/WebSocketContext";
 import type { Player } from "shared";
 import { toast } from "sonner";
 import { VoiceChatProvider } from "@/context/VoiceChatContext";
 import { Icon } from "@iconify/react";
-import { QRCodeCard } from "@/components/QRCodeDialog";
 import { useHeader } from "@/context/HeaderContext";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useTextDirection } from "@/hooks/useTextDirection";
 import RoomControls from "@/components/room/RoomControls";
 import RoomPlayerList from "@/components/room/RoomPlayerList";
+import VoiceChat from "@/components/chat/VoiceChat";
+import PlayerNameDialog from "@/components/room/PlayerNameDialog";
+import RoomGameInfo from "@/components/room/GameInfo";
+import RoomHeader from "@/components/room/RoomHeader";
 
 function isDuplicatePlayer(players: Player[], newPlayer: Player): boolean {
   return players.some((p) => p.id === newPlayer.id);
@@ -294,11 +286,6 @@ export default function RoomPage() {
     }
   };
 
-  const copyRoomCode = () => {
-    navigator.clipboard.writeText(roomCode);
-    toast.success("Room code copied to clipboard!");
-  };
-
   const handleAddBots = (count: number) => {
     if (isHost) {
       sendMessage({
@@ -336,74 +323,23 @@ export default function RoomPage() {
       />
 
       {/* Name prompt dialog */}
-      <Dialog open={showNameDialog} onOpenChange={() => {}}>
-        <DialogContent
-          className="sm:max-w-md"
-          onInteractOutside={(e) => e.preventDefault()}
-        >
-          <DialogHeader>
-            <DialogTitle>{t("room.enterYourName")}</DialogTitle>
-            <DialogDescription>{t("room.enterNameToJoin")}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="player-name">{t("room.yourName")}</Label>
-              <Input
-                id="player-name"
-                value={nameInput}
-                onChange={(e) => setNameInput(e.target.value)}
-                placeholder={t("room.enterYourName")}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleNameSubmit();
-                  }
-                }}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={handleNameSubmit} disabled={!nameInput.trim()}>
-              {t("room.joinRoom")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <PlayerNameDialog
+        nameInput={nameInput}
+        setNameInput={setNameInput}
+        handleNameSubmit={handleNameSubmit}
+        showNameDialog={showNameDialog}
+      />
 
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-full p-4 lg:max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className="text-center space-y-2">
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-              {error}
-            </div>
-          )}
-          {!isConnected && (
-            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative">
-              {t("room.connectingToServer")}
-            </div>
-          )}
-          <div
-            className="flex items-center justify-center gap-4"
-            dir={direction}
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-semibold">
-                {t("room.roomCode")}:
-              </span>
-              <Button
-                variant="outline"
-                onClick={copyRoomCode}
-                className="font-mono text-lg px-4 cursor-pointer"
-                disabled={!roomCode}
-              >
-                {roomCode || t("common.loading")}
-              </Button>
-              {roomCode && <QRCodeCard roomCode={roomCode} />}
-            </div>
-          </div>
-        </div>
+        <RoomHeader
+          roomCode={roomCode}
+          isConnected={isConnected}
+          error={error || undefined}
+          direction={direction}
+        />
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Players List */}
           <RoomPlayerList
             players={players}
@@ -414,23 +350,30 @@ export default function RoomPage() {
             handleReadyToggle={handleReadyToggle}
           />
 
-          <RoomControls
-            playerName={playerName}
-            isReady={isReady}
-            isHost={isHost}
-            playerId={playerId}
-            roomCode={roomCode}
-            players={players}
-            canStartGame={canStartGame}
-            autoPlayTimeout={autoPlayTimeout}
-            setAutoPlayTimeout={setAutoPlayTimeout}
-            timerSlideEnabled={timerSlideEnabled}
-            setTimerSlideEnabled={setTimerSlideEnabled}
-            handleReadyToggle={handleReadyToggle}
-            handleStartGame={handleStartGame}
-            handleAddBots={handleAddBots}
-            setShowLeaveDialog={setShowLeaveDialog}
-          />
+          <div className="space-y-6" dir={direction}>
+            <RoomControls
+              playerName={playerName}
+              isReady={isReady}
+              isHost={isHost}
+              players={players}
+              canStartGame={canStartGame}
+              autoPlayTimeout={autoPlayTimeout}
+              setAutoPlayTimeout={setAutoPlayTimeout}
+              timerSlideEnabled={timerSlideEnabled}
+              setTimerSlideEnabled={setTimerSlideEnabled}
+              handleReadyToggle={handleReadyToggle}
+              handleStartGame={handleStartGame}
+              handleAddBots={handleAddBots}
+              setShowLeaveDialog={setShowLeaveDialog}
+            />
+
+            {roomCode && playerId && (
+              <VoiceChat players={players} localPlayerId={playerId} />
+            )}
+
+            {/* Game Info */}
+            <RoomGameInfo direction={direction} />
+          </div>
         </div>
       </div>
     </div>

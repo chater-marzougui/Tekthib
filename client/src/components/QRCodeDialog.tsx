@@ -43,15 +43,13 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
 
 interface QRCodeCardProps {
   roomCode: string;
-  baseUrl?: string;
 }
 
-export const QRCodeCard: React.FC<QRCodeCardProps> = ({
-  roomCode,
-  baseUrl = window.location.origin,
-}) => {
+export const QRCodeCard: React.FC<QRCodeCardProps> = ({ roomCode }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { t } = useTranslation();
+  const pathname = window.location.pathname.split("/")[1]; // 'Tekthib'
+  const baseUrl = `${window.location.origin}${pathname ? `/${pathname}` : ""}`;
   const roomUrl = `${baseUrl}/room/${roomCode}`;
 
   const copyRoomUrl = () => {
@@ -80,7 +78,11 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({
           </DialogHeader>
           <div className="flex flex-col items-center space-y-4 py-4">
             <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
-              <QRCodeGenerator value={roomUrl} size={256} includeMargin={true} />
+              <QRCodeGenerator
+                value={roomUrl}
+                size={256}
+                includeMargin={true}
+              />
             </div>
             <div className="text-center w-full">
               <p className="text-sm text-gray-600 mb-2">{t("qr.scanToJoin")}</p>

@@ -7,7 +7,7 @@ const QuickRules = () => {
   const direction = useTextDirection();
 
   return (
-    <Card dir={direction}>
+    <Card dir={direction} className="lg:max-w-sm min-w-32">
       <CardHeader>
         <CardTitle>{t("quickRules.title")}</CardTitle>
       </CardHeader>

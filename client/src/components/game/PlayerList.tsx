@@ -20,7 +20,7 @@ export default function PlayerList({
   const { t } = useTranslation();
   
   return (
-    <Card>
+    <Card className="m-0 lg:max-w-md min-w-32 w-full">
       <CardHeader>
         <CardTitle>{t('playerList.title', { count: players.length })}</CardTitle>
       </CardHeader>

@@ -8,6 +8,7 @@ import { useWebSocketContext } from "@/context/WebSocketContext";
 import type { WSMessage } from "shared";
 import { Icon } from "@iconify/react";
 import { useTextDirection } from "@/hooks/useTextDirection";
+import { Separator } from "../ui/separator";
 
 interface ChatMessage {
   id: string;
@@ -147,9 +148,10 @@ export default function ChatBox({
   }, [allMessages]);
 
   return (
-    <Card className="h-96 flex flex-col" dir={direction}>
+    <Card className="h-96 flex flex-col w-full pt-3 pb-1" dir={direction}>
       <CardHeader className="flex-shrink-0">
         <CardTitle>{t('chat.title')}</CardTitle>
+        <Separator className="!h-0.5" />
       </CardHeader>
       <CardContent className="flex-1 flex flex-col p-0 min-h-0">
         {/* Messages Area */}

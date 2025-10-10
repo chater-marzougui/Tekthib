@@ -49,7 +49,7 @@ export default function VoiceChat({
   );
 
   return (
-    <Card  dir={direction}>
+    <Card  dir={direction} className="flex-1 min-w-32 max-w-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Icon icon="mdi:phone" className="w-5 h-5" style={{ color: '#10b981' }} />
