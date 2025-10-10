@@ -247,6 +247,7 @@ export class GameEngine {
 
     // Move to next player (skip winners)
     this.advanceTurn();
+    this.startTurnTimer();
 
     return { success: true, newRank: claimedRank };
   }
@@ -468,6 +469,7 @@ export class GameEngine {
     }
 
     this.gameState.currentPlayerIndex = nextIndex;
+    this.startTurnTimer();
   }
 
   getPlayerHand(playerId: string): Card[] {
@@ -584,6 +586,7 @@ export class GameEngine {
 
     // Only start timer if autoPlayTimeout is enabled (>= 10 seconds)
     if (this.autoPlayTimeout < 10) {
+      console.log('GameEngine: Timer not started - autoPlayTimeout is', this.autoPlayTimeout);
       return;
     }
 
@@ -594,10 +597,12 @@ export class GameEngine {
 
     if (!hasHumanPlayers) {
       // Don't start timer if no human players connected
+      console.log('GameEngine: Timer not started - no human players');
       return;
     }
 
     this.turnStartTime = Date.now();
+    console.log('GameEngine: Timer started - autoPlayTimeout:', this.autoPlayTimeout, 'turnStartTime:', this.turnStartTime);
 
     // Set up timeout to auto-play when timer expires
     this.turnTimer = setTimeout(() => {
@@ -620,10 +625,13 @@ export class GameEngine {
    */
   getRemainingTime(): number {
     if (this.autoPlayTimeout < 10 || this.turnStartTime === 0) {
+      console.log('GameEngine: getRemainingTime returning 0 - autoPlayTimeout:', this.autoPlayTimeout, 'turnStartTime:', this.turnStartTime);
       return 0;
     }
     const elapsed = Math.floor((Date.now() - this.turnStartTime) / 1000);
-    return Math.max(0, this.autoPlayTimeout - elapsed);
+    const remaining = Math.max(0, this.autoPlayTimeout - elapsed);
+    console.log('GameEngine: getRemainingTime -', remaining, 'seconds (elapsed:', elapsed, ')');
+    return remaining;
   }
 
   /**

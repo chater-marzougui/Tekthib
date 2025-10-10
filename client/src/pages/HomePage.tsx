@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Seo from "@/components/SEO";
 import { toast } from "sonner";
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -24,7 +24,8 @@ import {
 import { Icon } from "@iconify/react";
 import { useTextDirection } from "@/hooks/useTextDirection";
 
-const SERVER_URL = import.meta.env.VITE_API_URL || "https://takthib-a00f145250bc.herokuapp.com";
+const SERVER_URL =
+  import.meta.env.VITE_API_URL || "https://takthib-a00f145250bc.herokuapp.com";
 
 interface RoomInfo {
   id: string;
@@ -39,7 +40,7 @@ interface RoomInfo {
 export default function HomePage() {
   const { t } = useTranslation();
   const [playerName, setPlayerName] = useState(
-    localStorage.getItem("playerName") || "",
+    localStorage.getItem("playerName") || ""
   );
   const [roomCode, setRoomCode] = useState("");
   const [rooms, setRooms] = useState<RoomInfo[]>([]);
@@ -100,17 +101,17 @@ export default function HomePage() {
 
   const handleRoomClick = (room: RoomInfo) => {
     if (!playerName.trim()) {
-      toast.error(t('home.pleaseEnterName'));
+      toast.error(t("home.pleaseEnterName"));
       return;
     }
-    
+
     if (room.inProgress) {
-      toast.error(t('home.gameInProgress'));
+      toast.error(t("home.gameInProgress"));
       return;
     }
 
     localStorage.setItem("playerName", playerName);
-    
+
     if (room.isPublic && room.code) {
       // Public room - join directly
       navigate(`/room/${room.code}`);
@@ -122,7 +123,7 @@ export default function HomePage() {
 
   const handlePrivateRoomJoin = () => {
     if (!roomPassword.trim()) {
-      toast.error(t('home.pleaseEnterPassword'));
+      toast.error(t("home.pleaseEnterPassword"));
       return;
     }
 
@@ -131,10 +132,10 @@ export default function HomePage() {
       .then(async (response) => {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          throw new Error(data.error || t('home.invalidPassword'));
+          throw new Error(data.error || t("home.invalidPassword"));
         }
         if (data.inProgress) {
-          throw new Error(t('home.cannotJoinInProgress'));
+          throw new Error(t("home.cannotJoinInProgress"));
         }
         return data;
       })
@@ -161,11 +162,9 @@ export default function HomePage() {
         <div className="w-full max-w-2xl space-y-8">
           {/* Game Title and Description */}
           <div className="text-center space-y-4">
-            <p className="text-xl text-gray-600 mb-4">
-              {t('home.subtitle')}
-            </p>
+            <p className="text-xl text-gray-600 mb-4">{t("home.subtitle")}</p>
             <p className="text-lg text-gray-500 max-w-lg mx-auto">
-              {t('home.description')}
+              {t("home.description")}
             </p>
           </div>
 
@@ -175,24 +174,29 @@ export default function HomePage() {
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="text-center flex items-center justify-center gap-2">
-                  <Icon icon="mdi:gamepad-variant" className="w-5 h-5" style={{ color: '#3b82f6' }} /> {t('home.createRoom')}
+                  <Icon
+                    icon="mdi:gamepad-variant"
+                    className="w-5 h-5"
+                    style={{ color: "#3b82f6" }}
+                  />{" "}
+                  {t("home.createRoom")}
                 </CardTitle>
                 <CardDescription className="text-center">
-                  {t('home.createRoomDescription')}
+                  {t("home.createRoomDescription")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="create-name">{t('home.yourName')}</Label>
+                  <Label htmlFor="create-name">{t("home.yourName")}</Label>
                   <Input
                     id="create-name"
                     value={playerName}
                     onChange={(e) => setPlayerName(e.target.value)}
-                    placeholder={t('home.enterYourName')}
+                    placeholder={t("home.enterYourName")}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{t('home.roomVisibility')}</Label>
+                  <Label>{t("home.roomVisibility")}</Label>
                   <div className="flex gap-2">
                     <Button
                       type="button"
@@ -200,7 +204,12 @@ export default function HomePage() {
                       onClick={() => setIsPublicRoom(true)}
                       className="flex-1"
                     >
-                      <Icon icon="mdi:web" className="w-4 h-4 mr-2" style={{ color: isPublicRoom ? '#ffffff' : '#10b981' }} /> {t('home.public')}
+                      <Icon
+                        icon="mdi:web"
+                        className="w-4 h-4 mr-2"
+                        style={{ color: "#10b981" }}
+                      />{" "}
+                      {t("home.public")}
                     </Button>
                     <Button
                       type="button"
@@ -208,13 +217,18 @@ export default function HomePage() {
                       onClick={() => setIsPublicRoom(false)}
                       className="flex-1"
                     >
-                      <Icon icon="mdi:lock" className="w-4 h-4 mr-2" style={{ color: !isPublicRoom ? '#ffffff' : '#ef4444' }} /> {t('home.private')}
+                      <Icon
+                        icon="mdi:lock"
+                        className="w-4 h-4 mr-2"
+                        style={{ color: "#ef4444" }}
+                      />{" "}
+                      {t("home.private")}
                     </Button>
                   </div>
                   <p className="text-xs text-gray-500">
-                    {isPublicRoom 
-                      ? t('home.publicRoomDesc')
-                      : t('home.privateRoomDesc')}
+                    {isPublicRoom
+                      ? t("home.publicRoomDesc")
+                      : t("home.privateRoomDesc")}
                   </p>
                 </div>
                 <Button
@@ -222,7 +236,7 @@ export default function HomePage() {
                   onClick={handleCreateRoom}
                   disabled={!playerName.trim()}
                 >
-                  {t('home.createNewRoom')}
+                  {t("home.createNewRoom")}
                 </Button>
               </CardContent>
             </Card>
@@ -231,29 +245,34 @@ export default function HomePage() {
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="text-center flex items-center justify-center gap-2">
-                  <Icon icon="mdi:door-open" className="w-5 h-5" style={{ color: '#3b82f6' }} /> {t('home.joinRoom')}
+                  <Icon
+                    icon="mdi:door-open"
+                    className="w-5 h-5"
+                    style={{ color: "#3b82f6" }}
+                  />{" "}
+                  {t("home.joinRoom")}
                 </CardTitle>
                 <CardDescription className="text-center">
-                  {t('home.joinRoomDescription')}
+                  {t("home.joinRoomDescription")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="join-name">{t('home.yourName')}</Label>
+                  <Label htmlFor="join-name">{t("home.yourName")}</Label>
                   <Input
                     id="join-name"
                     value={playerName}
                     onChange={(e) => setPlayerName(e.target.value)}
-                    placeholder={t('home.enterYourName')}
+                    placeholder={t("home.enterYourName")}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="room-code">{t('home.roomCode')}</Label>
+                  <Label htmlFor="room-code">{t("home.roomCode")}</Label>
                   <Input
                     id="room-code"
                     value={roomCode}
                     onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                    placeholder={t('home.roomCodePlaceholder')}
+                    placeholder={t("home.roomCodePlaceholder")}
                     maxLength={8}
                   />
                 </div>
@@ -263,7 +282,7 @@ export default function HomePage() {
                   onClick={handleJoinRoom}
                   disabled={!playerName.trim() || !roomCode.trim()}
                 >
-                  {t('home.joinRoom')}
+                  {t("home.joinRoom")}
                 </Button>
               </CardContent>
             </Card>
@@ -274,10 +293,15 @@ export default function HomePage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-center flex items-center justify-center gap-2">
-                  <Icon icon="mdi:gamepad-variant" className="w-5 h-5" style={{ color: '#3b82f6' }} /> {t('home.availableRooms')}
+                  <Icon
+                    icon="mdi:gamepad-variant"
+                    className="w-5 h-5"
+                    style={{ color: "#3b82f6" }}
+                  />{" "}
+                  {t("home.availableRooms")}
                 </CardTitle>
                 <CardDescription className="text-center">
-                  {t('home.availableRoomsDescription')}
+                  {t("home.availableRoomsDescription")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -292,24 +316,41 @@ export default function HomePage() {
                     >
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold">{t('home.hostRoom', { name: room.hostName })}</span>
+                          <span className="font-semibold">
+                            {t("home.hostRoom", { name: room.hostName })}
+                          </span>
                           {room.isPublic ? (
                             <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded flex items-center gap-1">
-                              <Icon icon="mdi:web" className="w-3 h-3" style={{ color: '#10b981' }} /> {t('home.public')}
+                              <Icon
+                                icon="mdi:web"
+                                className="w-3 h-3"
+                                style={{ color: "#10b981" }}
+                              />{" "}
+                              {t("home.public")}
                             </span>
                           ) : (
                             <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded flex items-center gap-1">
-                              <Icon icon="mdi:lock" className="w-3 h-3" style={{ color: '#ef4444' }} /> {t('home.private')}
+                              <Icon
+                                icon="mdi:lock"
+                                className="w-3 h-3"
+                                style={{ color: "#ef4444" }}
+                              />{" "}
+                              {t("home.private")}
                             </span>
                           )}
                           {room.inProgress && (
                             <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                              {t('home.inProgress')}
+                              {t("home.inProgress")}
                             </span>
                           )}
                         </div>
                         <div className="flex items-center gap-1 text-sm text-gray-600">
-                          <Icon icon="mdi:account-group" className="w-4 h-4" style={{ color: '#3b82f6' }} /> {room.playerCount}/{room.maxPlayers}
+                          <Icon
+                            icon="mdi:account-group"
+                            className="w-4 h-4"
+                            style={{ color: "#3b82f6" }}
+                          />{" "}
+                          {room.playerCount}/{room.maxPlayers}
                         </div>
                       </div>
                     </div>
@@ -323,41 +364,64 @@ export default function HomePage() {
           <Card className="border-dashed">
             <CardHeader>
               <CardTitle className="text-center flex items-center justify-center gap-2">
-                <Icon icon="mdi:layers" className="w-5 h-5" style={{ color: '#6b7280' }} /> {t('home.quickRules')}
+                <Icon
+                  icon="mdi:layers"
+                  className="w-5 h-5"
+                  style={{ color: "#6b7280" }}
+                />{" "}
+                {t("home.quickRules")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-4 text-sm">
                 <div>
                   <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <Icon icon="mdi:target" className="w-4 h-4" style={{ color: '#ef4444' }} /> {t('home.goal')}
+                    <Icon
+                      icon="mdi:target"
+                      className="w-4 h-4"
+                      style={{ color: "#ef4444" }}
+                    />{" "}
+                    {t("home.goal")}
+                  </h4>
+                  <p className="text-gray-600">{t("home.goalDescription")}</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <Icon
+                      icon="mdi:cards-spade"
+                      className="w-4 h-4"
+                      style={{ color: "#3b82f6" }}
+                    />{" "}
+                    {t("home.gameplay")}
                   </h4>
                   <p className="text-gray-600">
-                    {t('home.goalDescription')}
+                    {t("home.gameplayDescription")}
                   </p>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <Icon icon="mdi:cards-spade" className="w-4 h-4" style={{ color: '#3b82f6' }} /> {t('home.gameplay')}
+                    <Icon
+                      icon="mdi:emoticon-sad"
+                      className="w-4 h-4"
+                      style={{ color: "#f59e0b" }}
+                    />{" "}
+                    {t("home.bluffing")}
                   </h4>
                   <p className="text-gray-600">
-                    {t('home.gameplayDescription')}
+                    {t("home.bluffingDescription")}
                   </p>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <Icon icon="mdi:emoticon-sad" className="w-4 h-4" style={{ color: '#f59e0b' }} /> {t('home.bluffing')}
+                    <Icon
+                      icon="mdi:trophy"
+                      className="w-4 h-4"
+                      style={{ color: "#eab308" }}
+                    />{" "}
+                    {t("home.specialRule")}
                   </h4>
                   <p className="text-gray-600">
-                    {t('home.bluffingDescription')}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <Icon icon="mdi:trophy" className="w-4 h-4" style={{ color: '#eab308' }} /> {t('home.specialRule')}
-                  </h4>
-                  <p className="text-gray-600">
-                    {t('home.specialRuleDescription')}
+                    {t("home.specialRuleDescription")}
                   </p>
                 </div>
               </div>
@@ -370,22 +434,22 @@ export default function HomePage() {
       <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('home.joinPrivateRoom')}</DialogTitle>
+            <DialogTitle>{t("home.joinPrivateRoom")}</DialogTitle>
             <DialogDescription>
-              {t('home.joinPrivateRoomDescription')}
+              {t("home.joinPrivateRoomDescription")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="room-password">{t('home.roomCode')}</Label>
+              <Label htmlFor="room-password">{t("home.roomCode")}</Label>
               <Input
                 id="room-password"
                 value={roomPassword}
                 onChange={(e) => setRoomPassword(e.target.value.toUpperCase())}
-                placeholder={t('home.enterRoomCode')}
+                placeholder={t("home.enterRoomCode")}
                 maxLength={8}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === "Enter") {
                     handlePrivateRoomJoin();
                   }
                 }}
@@ -393,14 +457,17 @@ export default function HomePage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setShowPasswordDialog(false);
-              setRoomPassword("");
-            }}>
-              {t('common.cancel')}
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowPasswordDialog(false);
+                setRoomPassword("");
+              }}
+            >
+              {t("common.cancel")}
             </Button>
             <Button onClick={handlePrivateRoomJoin}>
-              {t('home.joinRoom')}
+              {t("home.joinRoom")}
             </Button>
           </DialogFooter>
         </DialogContent>

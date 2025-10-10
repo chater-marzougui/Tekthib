@@ -37,7 +37,7 @@ const countryOptions = [
     code: "fr",
     flagUrl: "/Tekthib/flags/fr.webp",
     altText: "France Flag",
-  }
+  },
 ];
 
 export function NavUser() {
@@ -49,10 +49,18 @@ export function NavUser() {
   const avatarSvg = useAvatar(playerId || randomStr);
 
   const handleLanguageChange = (language: string) => {
-    if(i18n.language === language) return;
+    if (i18n.language === language) return;
     i18n.changeLanguage(language);
     localStorage.setItem("locale", language);
-    // window.location.reload();
+  };
+
+  const handleChangeTheme = (
+    e: React.MouseEvent<HTMLDivElement>,
+    newTheme: "dark" | "light"
+  ) => {
+    e.stopPropagation();
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
   };
 
   return (
@@ -73,17 +81,38 @@ export function NavUser() {
               sideOffset={4}
             >
               <DropdownMenuGroup>
-                <DropdownMenuItem
-                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                >
-                  <div className="flex w-full justify-between">
+                <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
+                  <label className="flex w-full items-center justify-between">
                     <span>{t("nav.toggleDarkMode")}</span>
-                    {theme === "light" ? (
-                      <Icon icon="mdi:moon-waning-crescent" className="h-[1.2rem] w-[1.2rem]" />
-                    ) : (
-                      <Icon icon="mdi:white-balance-sunny" className="h-[1.2rem] w-[1.2rem]" />
-                    )}
-                  </div>
+                    <div
+                      className="relative inline-block w-10 h-6"
+                      onClick={(e) =>
+                        handleChangeTheme(
+                          e,
+                          theme === "dark" ? "light" : "dark"
+                        )
+                      }
+                    >
+                      <span className="absolute inset-0 bg-gray-300 rounded-full transition-colors duration-200" />
+                      <span
+                        className={`absolute left-0 top-0 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
+                          theme === "dark" ? "translate-x-4" : "translate-x-0"
+                        } flex items-center justify-center`}
+                      >
+                        {theme === "dark" ? (
+                          <Icon
+                            icon="mdi:white-balance-sunny"
+                            className="h-4 w-4"
+                          />
+                        ) : (
+                          <Icon
+                            icon="mdi:moon-waning-crescent"
+                            className="h-4 w-4"
+                          />
+                        )}
+                      </span>
+                    </div>
+                  </label>
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator />
@@ -91,7 +120,10 @@ export function NavUser() {
                   <DropdownMenuSubTrigger className="dark:hover:text-accent-foreground">
                     <span className="flex flex-1 items-center gap-2">
                       {t("nav.language")}
-                      <Icon icon="mdi:translate" className="ml-auto h-[1.2rem] w-[1.2rem]" />
+                      <Icon
+                        icon="mdi:translate"
+                        className="ml-auto h-[1.2rem] w-[1.2rem]"
+                      />
                     </span>
                   </DropdownMenuSubTrigger>
                   <DropdownMenuPortal>

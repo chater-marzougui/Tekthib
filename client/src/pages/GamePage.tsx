@@ -128,11 +128,13 @@ export default function GamePage() {
           // Set auto play timeout from room settings
           if (room && room.autoPlayTimeout !== undefined) {
             setAutoPlayTimeout(room.autoPlayTimeout);
+            console.log('GamePage: autoPlayTimeout from room:', room.autoPlayTimeout);
           } else {
             setAutoPlayTimeout(45);
           }
 
           if (initialGameState) {
+            console.log('GamePage: Initial game state remainingTime:', initialGameState.remainingTime);
             setGameState(initialGameState);
             setIsMyTurn(initialGameState.currentPlayerId === playerId);
 

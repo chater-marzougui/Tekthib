@@ -52,6 +52,7 @@ export default function GameBoard({
   // Update timer when server sends updates and start local countdown
   useEffect(() => {
     if (serverTimer !== undefined) {
+      console.log('GameBoard: Received serverTimer:', serverTimer, 'autoPlayTimeout:', autoPlayTimeout);
       setTimer(serverTimer);
       
       // Set up local countdown from server time
