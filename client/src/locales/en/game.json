@@ -46,6 +46,7 @@
     "playerWon": "{{player}} won the game!",
     "gameReset": "Game reset! Return to room to start again.",
     "outOfGame": "Out of Game",
-    "sets": "sets"
+    "sets": "sets",
+    "claimed": "claimed"
   }
 }

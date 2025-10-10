@@ -11,6 +11,7 @@ import { Icon } from "@iconify/react";
 import { QRCodeSVG } from "qrcode.react";
 import { Card } from "./ui/card";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface QRCodeGeneratorProps {
   value: string | number;
@@ -50,11 +51,12 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({
   baseUrl = window.location.origin,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useTranslation();
   const roomUrl = `${baseUrl}/room/${roomCode}`;
 
   const copyRoomUrl = () => {
     navigator.clipboard.writeText(roomUrl);
-    toast.success("Room link copied to clipboard!");
+    toast.success(t("qr.linkCopied"));
   };
 
   return (
@@ -64,7 +66,7 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({
         size="icon"
         onClick={() => setIsOpen(true)}
         className="cursor-pointer"
-        title="Show QR Code"
+        title={t("qr.showCode")}
       >
         <Icon icon="mdi:qrcode" className="w-8 h-8" />
       </Button>
@@ -72,18 +74,16 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Join Room - {roomCode}</DialogTitle>
+            <DialogTitle>
+              {t("qr.joinRoom")} - {roomCode}
+            </DialogTitle>
           </DialogHeader>
           <div className="flex flex-col items-center space-y-4 py-4">
             <div className="bg-white p-4 rounded-lg border-2 border-gray-200">
-              <QRCodeGenerator
-                value={roomUrl}
-                size={256}
-                includeMargin={true}
-              />
+              <QRCodeGenerator value={roomUrl} size={256} includeMargin={true} />
             </div>
             <div className="text-center w-full">
-              <p className="text-sm text-gray-600 mb-2">Scan to join room</p>
+              <p className="text-sm text-gray-600 mb-2">{t("qr.scanToJoin")}</p>
               <button
                 className="font-mono text-xs bg-background px-4 py-2 rounded break-all cursor-pointer"
                 onClick={copyRoomUrl}
@@ -96,7 +96,7 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({
               variant="outline"
               className="w-full cursor-pointer"
             >
-              Copy Link
+              {t("qr.copyLink")}
             </Button>
           </div>
         </DialogContent>

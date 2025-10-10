@@ -46,6 +46,7 @@
     "playerWon": "{{player}} a gagné la partie !",
     "gameReset": "Partie réinitialisée ! Retournez dans la salle pour recommencer.",
     "outOfGame": "Hors Jeu",
-    "sets": "séries"
+    "sets": "séries",
+    "claimed": "a déclaré"
   }
 }

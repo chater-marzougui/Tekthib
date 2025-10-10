@@ -10,7 +10,7 @@ import PlayerControls from "./board/PlayerControls";
 import StateCard from "./board/StateCard";
 import CenterPile from "./board/CenterPile";
 import { Icon } from "@iconify/react";
-import { t } from "i18next";
+import { useTranslation } from "react-i18next";
 
 interface MergedGameBoardProps {
   lastPlay: LastPlay | null;
@@ -47,6 +47,7 @@ export default function GameBoard({
     lastPlay ? lastPlay.claimedRank : ""
   );
   const [timer, setTimer] = useState(autoPlayTimeout);
+  const { t } = useTranslation();
 
   // Update timer when server sends updates and start local countdown
   useEffect(() => {
@@ -128,7 +129,7 @@ export default function GameBoard({
                           {lastPlay.player}
                         </span>
                         <span className="text-sm md:text-base text-muted-foreground">
-                          claimed
+                          {t('game.claimed')}
                         </span>
                         <div className="flex items-center gap-1.5">
                           {lastPlay.cardCount}×
@@ -154,8 +155,8 @@ export default function GameBoard({
                       size="lg"
                       className="animate-pulse"
                     >
-                      <Icon icon="mdi:help-circle" className="w-5 h-5 mr-2" style={{ color: '#ffffff' }} />
-                      Challenge (Call Liar!)
+                      <Icon icon="mdi:sword-cross" className="w-5 h-5 mr-2 text-white"/>
+                      {t('game.challengeCallLiar')}
                     </Button>
                   </div>
                 )}

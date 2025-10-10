@@ -114,7 +114,11 @@ const RoomControls = ({
                     <Switch
                       id="auto-play"
                       checked={timerSlideEnabled}
-                      dir={direction}
+                      dir="ltr"
+                      className={`
+                        ${direction === "rtl" ? "transform rotate-180" : ""} 
+                        ${timerSlideEnabled ? "!bg-blue-600" : ""}
+                        `}
                       onCheckedChange={(checked) => {
                         setTimerSlideEnabled(checked);
                         if (!checked) {

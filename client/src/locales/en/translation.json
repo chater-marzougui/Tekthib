@@ -90,5 +90,12 @@
     "leaveGameDescription": "Are you sure you want to leave the game? You will forfeit the match.",
     "leave": "Leave",
     "cancel": "Cancel"
+  },
+  "qr": {
+    "linkCopied": "Room link copied to clipboard!",
+    "showCode": "Show QR Code",
+    "joinRoom": "Join Room",
+    "scanToJoin": "Scan to join room",
+    "copyLink": "Copy Link"
   }
 }

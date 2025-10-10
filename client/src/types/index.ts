@@ -27,3 +27,9 @@ export interface GameState {
   removedCards: Card[];
   remainingTime: number;
 }
+
+export interface ToastMessage {
+  message: string;
+  description: string;
+  color: "green" | "red" | "blue";
+}

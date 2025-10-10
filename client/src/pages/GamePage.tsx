@@ -28,6 +28,7 @@ import { RenderCard } from "@/components/game/RenderCard";
 import { useHeader } from "@/context/HeaderContext";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import QuickRules from "@/components/game/QuickRules";
+import { getToastMessage } from "@/lib/utils";
 
 interface GamePlayer extends Player {
   isCurrentTurn: boolean;
@@ -228,133 +229,106 @@ export default function GamePage() {
     const unregisterChallengeResult = registerHandler(
       "challenge-result",
       (message) => {
-        if (message.type === "CHALLENGE_RESULT") {
-          const {
-            challengerName,
-            wasLying,
-            playerName: lastPlayerName,
-            gameState: newGameState,
-            revealedCards,
-          } = message.payload;
-          let toastColor = "blue";
+        if (message.type !== "CHALLENGE_RESULT") {
+          return;
+        }
+        const {
+          challengerName,
+          wasLying,
+          playerName: lastPlayerName,
+          gameState: newGameState,
+          revealedCards,
+        } = message.payload;
 
-          let resultMessage = "";
-          let resultDescription = "";
-          if (wasLying && lastPlayerName === playerName) {
-            resultMessage = t("game.caughtLying", {
-              challenger: challengerName,
-            });
-            resultDescription = t("game.learnToPlay");
-            toastColor = "red";
-          } else if (wasLying && challengerName === playerName) {
-            resultMessage = t("game.youAreRight", { player: lastPlayerName });
-            toastColor = "green";
-          } else if (!wasLying && lastPlayerName === playerName) {
-            resultMessage = t("game.wellPlayed", {
-              challenger: challengerName,
-            });
-            resultDescription = t("game.tellingTheTruth");
-            toastColor = "green";
-          } else if (!wasLying && challengerName === playerName) {
-            resultMessage = t("game.wrongChallenge", {
-              player: lastPlayerName,
-            });
-            resultDescription = t("game.penaltyCards", {
-              count: revealedCards?.length || 0,
-            });
-            toastColor = "red";
-          } else {
-            resultMessage = wasLying
-              ? t("game.playerWasLying", { player: lastPlayerName })
-              : t("game.playerWasTruthful", { player: lastPlayerName });
+        const result = getToastMessage(
+          wasLying,
+          playerName,
+          challengerName,
+          lastPlayerName,
+          revealedCards?.length || 0
+        );
 
-            resultDescription = t("game.playerChallenged", {
-              challenger: challengerName,
-              player: lastPlayerName,
-            });
-          }
+        const toastColor = result.color;
+        const resultMessage = result.message;
+        const resultDescription = result.description;
 
-          if (toastColor === "red") {
-            toast.error(resultMessage, { description: resultDescription });
-          } else if (toastColor === "green") {
-            toast.success(resultMessage, { description: resultDescription });
-          } else {
-            toast.info(resultMessage, { description: resultDescription });
-          }
+        if (toastColor === "red") {
+          toast.error(resultMessage, { description: resultDescription });
+        } else if (toastColor === "green") {
+          toast.success(resultMessage, { description: resultDescription });
+        } else {
+          toast.info(resultMessage, { description: resultDescription });
+        }
 
-          const shouldShowCardReveal =
-            (wasLying && lastPlayerName === playerName) ||
-            (!wasLying && challengerName === playerName);
+        const shouldShowCardReveal =
+          (wasLying && lastPlayerName === playerName) ||
+          (!wasLying && challengerName === playerName);
 
-          if (
-            shouldShowCardReveal &&
-            revealedCards &&
-            revealedCards.length > 0
-          ) {
-            setRevealedCardsAnimation({ show: true, cards: revealedCards });
+        if (shouldShowCardReveal && revealedCards && revealedCards.length > 0) {
+          setRevealedCardsAnimation({ show: true, cards: revealedCards });
 
-            setTimeout(() => {
-              setRevealedCardsAnimation(null);
-            }, 2500);
-          }
+          setTimeout(() => {
+            setRevealedCardsAnimation(null);
+          }, 2500);
+        }
 
-          const systemMessage: SystemMessage = {
-            id: `system-${Date.now()}${Math.random()}`,
-            playerId: "system",
-            playerName: "System",
-            message: resultMessage,
-            timestamp: Date.now(),
-            isSystem: true,
-            systemMessageColor: toastColor,
-          };
-          setSystemMessages((prev) => [...prev, systemMessage]);
+        const systemMessage: SystemMessage = {
+          id: `system-${Date.now()}${Math.random()}`,
+          playerId: "system",
+          playerName: "System",
+          message: resultMessage,
+          timestamp: Date.now(),
+          isSystem: true,
+          systemMessageColor: toastColor,
+        };
+        setSystemMessages((prev) => [...prev, systemMessage]);
 
-          setLastPlay(null);
-          setCanChallenge(false);
+        setLastPlay(null);
+        setCanChallenge(false);
 
-          if (newGameState) {
-            setGameState(newGameState);
-            setIsMyTurn(newGameState.currentPlayerId === playerId);
-          }
+        if (newGameState) {
+          setGameState(newGameState);
+          setIsMyTurn(newGameState.currentPlayerId === playerId);
         }
       }
     );
 
     const unregisterGameEnded = registerHandler("game-ended", (message) => {
-      if (message.type === "GAME_ENDED") {
-        const { winners, loser, gameState: finalState } = message.payload;
-
-        const winnerNames = winners
-          .map(
-            (id: string) =>
-              finalState?.players?.find((p: Player) => p.id === id)?.name ||
-              "Unknown"
-          )
-          .join(", ");
-
-        const loserName =
-          finalState?.players?.find((p: Player) => p.id === loser)?.name ||
-          "Unknown";
-
-        setGameEndedDialog({
-          open: true,
-          winners: winnerNames.split(", "),
-          loser: loserName,
-          playerStats: finalState?.playerStats,
-        });
-
-        toast.success(`Game Over! Winners: ${winnerNames}`);
-
-        const systemMessage: SystemMessage = {
-          id: `system-${Date.now()}`,
-          playerId: "system",
-          playerName: "System",
-          message: `Game Over! Winners: ${winnerNames}. Loser: ${loserName}`,
-          timestamp: Date.now(),
-          isSystem: true,
-        };
-        setSystemMessages((prev) => [...prev, systemMessage]);
+      if (message.type !== "GAME_ENDED") {
+        return;
       }
+      const { winners, loser, gameState: finalState } = message.payload;
+
+      const winnerNames = winners
+        .map(
+          (id: string) =>
+            finalState?.players?.find((p: Player) => p.id === id)?.name ||
+            "Unknown"
+        )
+        .join(", ");
+
+      const loserName =
+        finalState?.players?.find((p: Player) => p.id === loser)?.name ||
+        "Unknown";
+
+      setGameEndedDialog({
+        open: true,
+        winners: winnerNames.split(", "),
+        loser: loserName,
+        playerStats: finalState?.playerStats,
+      });
+
+      toast.success(`Game Over! Winners: ${winnerNames}`);
+
+      const systemMessage: SystemMessage = {
+        id: `system-${Date.now()}`,
+        playerId: "system",
+        playerName: "System",
+        message: `Game Over! Winners: ${winnerNames}. Loser: ${loserName}`,
+        timestamp: Date.now(),
+        isSystem: true,
+      };
+      setSystemMessages((prev) => [...prev, systemMessage]);
     });
 
     const unregisterError = registerHandler("error", (message) => {
@@ -662,8 +636,12 @@ export default function GamePage() {
 
               const baseDuration = 0.6;
               const duration = Math.min(baseDuration, 0.4 + totalCards * 0.02);
-              const baseDelay =
-                totalCards > 8 ? 0.05 : totalCards > 4 ? 0.07 : 0.08;
+              const getBaseDelay = () => {
+                if (totalCards <= 4) return 0.09;
+                if (totalCards <= 8) return 0.07;
+                return 0.05;
+              };
+              const baseDelay = getBaseDelay();
               const delay = index * baseDelay;
 
               return (
@@ -725,8 +703,12 @@ export default function GamePage() {
                 0.4,
                 Math.min(baseDuration, totalCards * 0.08)
               );
-              const baseDelay =
-                totalCards > 10 ? 0.05 : totalCards > 5 ? 0.08 : 0.1;
+              const getBaseDelay = () => {
+                if (totalCards <= 5) return 0.1;
+                if (totalCards <= 10) return 0.08;
+                return 0.05;
+              };
+              const baseDelay = getBaseDelay();
               const delay = index * baseDelay;
 
               return (

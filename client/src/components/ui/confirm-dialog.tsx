@@ -28,7 +28,7 @@ export function ConfirmDialog({
   confirmText = "Confirm",
   cancelText = "Cancel",
   variant = "default",
-}: ConfirmDialogProps) {
+}: Readonly<ConfirmDialogProps>) {
   const handleConfirm = () => {
     onConfirm();
     onOpenChange(false);

@@ -90,5 +90,12 @@
     "leaveGameDescription": "Êtes-vous sûr de vouloir quitter la partie ? Vous abandonnerez le match.",
     "leave": "Quitter",
     "cancel": "Annuler"
+  },
+  "qr": {
+    "linkCopied": "Lien de la salle copié dans le presse-papiers !",
+    "showCode": "Afficher le code QR",
+    "joinRoom": "Rejoindre la salle",
+    "scanToJoin": "Scannez pour rejoindre la salle",
+    "copyLink": "Copier le lien"
   }
 }

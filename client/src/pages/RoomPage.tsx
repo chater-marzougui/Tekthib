@@ -119,12 +119,13 @@ export default function RoomPage() {
     );
 
     const unregisterPlayerLeft = registerHandler("player-left", (message) => {
-      if (message.type === "PLAYER_LEFT") {
-        const { playerId: leftPlayerId, newHostId } = message.payload;
-        setPlayers((prev) => prev.filter((p) => p.id !== leftPlayerId));
-        if (newHostId && newHostId === playerId) {
-          setIsHost(true);
-        }
+      if (message.type !== "PLAYER_LEFT") {
+        return;
+      }
+      const { playerId: leftPlayerId, newHostId } = message.payload;
+      setPlayers((prev) => prev.filter((p) => p.id !== leftPlayerId));
+      if (newHostId && newHostId === playerId) {
+        setIsHost(true);
       }
     });
 
@@ -381,7 +382,10 @@ export default function RoomPage() {
               {t("room.connectingToServer")}
             </div>
           )}
-          <div className="flex items-center justify-center gap-4" dir={direction}>
+          <div
+            className="flex items-center justify-center gap-4"
+            dir={direction}
+          >
             <div className="flex items-center gap-2">
               <span className="text-lg font-semibold">
                 {t("room.roomCode")}:
