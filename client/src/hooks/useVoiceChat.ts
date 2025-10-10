@@ -99,6 +99,9 @@ export function useVoiceChat({
     }
   }, []);
 
+  // Forward ref for createOffer to break circular dependency
+  const createOfferRef = useRef<(remotePlayerId: string) => Promise<void>>(null);
+
   // Create peer connection for a remote player
   const createPeerConnection = useCallback(
     (remotePlayerId: string): RTCPeerConnection => {
@@ -265,7 +268,10 @@ export function useVoiceChat({
       pc.onnegotiationneeded = async () => {
         try {
           console.log("Negotiation needed with:", remotePlayerId);
-          await createOffer(remotePlayerId);
+          // Use the ref instead of direct call
+          if (createOfferRef.current) {
+            await createOfferRef.current(remotePlayerId);
+          }
         } catch (error) {
           console.error("Error in negotiation:", error);
         }
@@ -298,8 +304,8 @@ export function useVoiceChat({
           console.log(`Attempting to reconnect to ${remotePlayerId}`);
           // Attempt to reconnect
           setTimeout(() => {
-            if (pc.connectionState !== "connected") {
-              createOffer(remotePlayerId);
+            if (pc.connectionState !== "connected" && createOfferRef.current) {
+              createOfferRef.current(remotePlayerId);
             }
           }, 3000);
         }
@@ -316,7 +322,7 @@ export function useVoiceChat({
       peerConnectionsRef.current.set(remotePlayerId, { connection: pc });
       return pc;
     },
-    [sendMessage, mutedPlayers, ensureAudioContextRunning]
+    [sendMessage, mutedPlayers, ensureAudioContextRunning, t] // Removed createOffer dependency
   );
 
   // Create and send offer to a remote player
@@ -357,6 +363,11 @@ export function useVoiceChat({
     },
     [sendMessage]
   );
+
+  // Update the ref whenever createOffer changes
+  useEffect(() => {
+    createOfferRef.current = createOffer;
+  }, [createOffer]);
 
   // Handle incoming offer
   const handleOffer = useCallback(
