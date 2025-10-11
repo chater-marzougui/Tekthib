@@ -114,6 +114,7 @@ export default function GamePage() {
       (message) => {
         if (message.type === "INITIAL_GAME_STATE") {
           const { hand, gameState: initialGameState, room } = message.payload;
+          if ((initialGameState || hand) && isLoading) setIsLoading(false);
 
           // Set auto play timeout from room settings
           if (room && room.autoPlayTimeout !== undefined) {
@@ -372,6 +373,8 @@ export default function GamePage() {
     const unregisterTimerUpdate = registerHandler("timer-update", (message) => {
       if (message.type === "TIMER_UPDATE") {
         const { remainingTime } = message.payload;
+        if (!gameState) return;
+        if (isLoading) return;
 
         // Update game state with new remaining time
         setGameState((prevState) => {
