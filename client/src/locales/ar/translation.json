@@ -13,7 +13,8 @@
   },
   "nav": {
     "toggleDarkMode": "تبديل الوضع الداكن",
-    "language": "اللغة"
+    "language": "اللغة",
+    "fullscreen": "ملء الشاشة"
   },
   "languages": {
     "english": "الإنجليزية",

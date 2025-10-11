@@ -13,7 +13,8 @@
   },
   "nav": {
     "toggleDarkMode": "Basculer le mode sombre",
-    "language": "Langue"
+    "language": "Langue",
+    "fullscreen": "Plein écran"
   },
   "languages": {
     "english": "Anglais",

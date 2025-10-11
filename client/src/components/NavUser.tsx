@@ -15,6 +15,7 @@ import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/context/ThemeProvider";
 import { useAvatar } from "@/hooks/useAvatar";
+import React from "react";
 
 const countryOptions = [
   {
@@ -45,6 +46,7 @@ export function NavUser() {
   const { t, i18n } = useTranslation();
   const playerId = localStorage.getItem("clientId");
   const randomStr = Math.random().toString(36).substring(2, 15);
+  const [isFullscreen, setIsFullscreen] = React.useState(false);
 
   const avatarSvg = useAvatar(playerId || randomStr);
 
@@ -62,6 +64,34 @@ export function NavUser() {
     setTheme(newTheme);
     localStorage.setItem("theme", newTheme);
   };
+
+  const toggleFullscreen = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().then(() => {
+        setIsFullscreen(true);
+      }).catch((err) => {
+        console.error("Error attempting to enable fullscreen:", err);
+      });
+    } else {
+      document.exitFullscreen().then(() => {
+        setIsFullscreen(false);
+      }).catch((err) => {
+        console.error("Error attempting to exit fullscreen:", err);
+      });
+    }
+  };
+
+  React.useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, []);
 
   return (
     <div className="sticky flex items-center gap-2 cursor-pointer">
@@ -107,6 +137,37 @@ export function NavUser() {
                         ) : (
                           <Icon
                             icon="mdi:moon-waning-crescent"
+                            className="h-4 w-4"
+                          />
+                        )}
+                      </span>
+                    </button>
+                  </label>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
+                  <label className="flex w-full items-center justify-between">
+                    <span>{t("nav.fullscreen")}</span>
+                    <button
+                      className="relative inline-block w-10 h-6"
+                      onClick={toggleFullscreen}
+                    >
+                      <span className="absolute inset-0 bg-gray-300 rounded-full transition-colors duration-200" />
+                      <span
+                        className={`absolute left-0 top-0 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
+                          isFullscreen ? "translate-x-4" : "translate-x-0"
+                        } flex items-center justify-center`}
+                      >
+                        {isFullscreen ? (
+                          <Icon
+                            icon="mdi:fullscreen-exit"
+                            className="h-4 w-4"
+                          />
+                        ) : (
+                          <Icon
+                            icon="mdi:fullscreen"
                             className="h-4 w-4"
                           />
                         )}
