@@ -410,6 +410,7 @@ export default function GamePage() {
 
   useEffect(() => {
     if (!gameState) return;
+    if (isLoading) setIsLoading(false);
 
     const updatedPlayers: GamePlayer[] = gameState.playerOrder.map((id) => {
       const playerData = gameState.players.find((p) => p.id === id);
