@@ -178,13 +178,14 @@ export default function GamePage() {
       (message) => {
         if (message.type === "GAME_STATE_UPDATE") {
           const { hand, gameState: newGameState } = message.payload;
-
+          if (isLoading && (hand || newGameState)) setIsLoading(false);
+          
           if (hand) {
             setPlayerHand(
               hand.map((card: GameCard) => ({ ...card, selected: false }))
             );
           }
-
+          
           if (newGameState) {
             setGameState(newGameState);
             setIsMyTurn(newGameState.currentPlayerId === playerId);
@@ -548,6 +549,7 @@ export default function GamePage() {
   };
 
   if (isLoading || !gameState) {
+    console.log("Loading or no game state:", { isLoading, gameState });
     return (
       <div className="flex-1 flex items-center justify-center">
         <LoadingSpinner isConnected={isConnected} />
