@@ -6,6 +6,7 @@ import { Icon } from "@iconify/react";
 interface PlayerBadgeProps {
   player: Player;
   playerId: string;
+  size?: "sm" | "md";
 }
 
 function getRingColor(player: Player, playerId: string) {
@@ -24,23 +25,27 @@ function getBadgeClasses(player: Player, playerId: string) {
     : "bg-gray-200 text-gray-800";
 }
 
-export const PlayerBadge = ({ player, playerId }: PlayerBadgeProps) => {
+export const PlayerBadge = ({ player, playerId, size = "md" }: PlayerBadgeProps) => {
   const avatarSvg = useAvatar(playerId);
   const isBot = player.isBot || false;
+  const sizeClasses = size === "sm" ? "w-6 h-6" : "w-8 h-8";
+  const iconSize = size === "sm" ? "w-4 h-4" : "w-5 h-5";
+  const textSize = size === "sm" ? "text-sm" : "text-lg";
+  
   if (avatarSvg) {
     return (
       <div
-        className={`w-8 h-8 ring-2 ${getRingColor(player, playerId)} rounded-full overflow-hidden flex items-center justify-center bg-gray-300`}
+        className={`${sizeClasses} ring-2 ${getRingColor(player, playerId)} rounded-full overflow-hidden flex items-center justify-center bg-gray-300`}
         dangerouslySetInnerHTML={{ __html: avatarSvg }}
       />
     );
   }
   return (
     <Badge
-      className={`w-8 h-8 ${getBadgeClasses(player, playerId)} flex items-center justify-center rounded-full text-lg font-bold`}
+      className={`${sizeClasses} ${getBadgeClasses(player, playerId)} flex items-center justify-center rounded-full ${textSize} font-bold`}
     >
       {isBot ? (
-        <Icon icon="mdi:robot" className="w-5 h-5" />
+        <Icon icon="mdi:robot" className={iconSize} />
       ) : (
         player.name.charAt(0).toUpperCase()
       )}

@@ -79,6 +79,12 @@ export default function GamePage() {
   const [playingCardsAnimation, setPlayingCardsAnimation] = useState<{
     show: boolean;
     cards: GameCard[];
+    fromPlayerId?: string;
+  } | null>(null);
+  const [takingCardsAnimation, setTakingCardsAnimation] = useState<{
+    show: boolean;
+    cardCount: number;
+    toPlayerId?: string;
   } | null>(null);
   const [gameEndedDialog, setGameEndedDialog] = useState<{
     open: boolean;
@@ -198,6 +204,7 @@ export default function GamePage() {
     const unregisterCardsPlayed = registerHandler("cards-played", (message) => {
       if (message.type === "CARDS_PLAYED") {
         const {
+          playerId: playedPlayerId,
           playerName: pName,
           cardCount,
           claimedRank,
@@ -222,6 +229,26 @@ export default function GamePage() {
           );
         }
 
+        // Trigger animation for other players (not current player, as they have their own animation)
+        if (playedPlayerId && playedPlayerId !== playerId) {
+          const dummyCards: GameCard[] = Array.from({ length: cardCount }, (_, i) => ({
+            id: `dummy-${Date.now()}-${i}`,
+            suit: 'hearts' as const,
+            rank: '2' as const,
+            deckNumber: 1 as const,
+          }));
+          
+          setPlayingCardsAnimation({ 
+            show: true, 
+            cards: dummyCards,
+            fromPlayerId: playedPlayerId,
+          });
+
+          setTimeout(() => {
+            setPlayingCardsAnimation(null);
+          }, 1200);
+        }
+
         if (newGameState) {
           setGameState(newGameState);
           setIsMyTurn(newGameState.currentPlayerId === playerId);
@@ -238,8 +265,10 @@ export default function GamePage() {
           return;
         }
         const {
+          challengerId,
           challengerName,
           wasLying,
+          playerId: lastPlayerId,
           playerName: lastPlayerName,
           gameState: newGameState,
           revealedCards,
@@ -275,6 +304,22 @@ export default function GamePage() {
           setTimeout(() => {
             setRevealedCardsAnimation(null);
           }, 2500);
+        }
+
+        // Trigger animation for cards being taken from pile
+        // The loser takes the pile - use the number of revealed cards as an approximation
+        const loserPlayerId = wasLying ? lastPlayerId : challengerId;
+        const cardsToTake = revealedCards?.length || 1;
+        if (loserPlayerId) {
+          setTakingCardsAnimation({
+            show: true,
+            cardCount: cardsToTake,
+            toPlayerId: loserPlayerId,
+          });
+
+          setTimeout(() => {
+            setTakingCardsAnimation(null);
+          }, 1500);
         }
 
         const systemMessage: SystemMessage = {
@@ -499,7 +544,11 @@ export default function GamePage() {
     );
 
     // Show animation of cards moving to pile
-    setPlayingCardsAnimation({ show: true, cards: cardsBeingPlayed });
+    setPlayingCardsAnimation({ 
+      show: true, 
+      cards: cardsBeingPlayed,
+      fromPlayerId: playerId, // Current player
+    });
 
     // Clear animation after it completes
     setTimeout(() => {
@@ -593,27 +642,46 @@ export default function GamePage() {
       />
 
       {playingCardsAnimation?.show &&
-        pilePosition.x > 0 &&
-        handPosition.x > 0 && (
+        pilePosition.x > 0 && (
           <div className="fixed inset-0 z-40 pointer-events-none">
             {playingCardsAnimation.cards.map((card, index) => {
               const totalCards = playingCardsAnimation.cards.length;
               const cardWidth = 80;
 
-              const maxHandSpread = window.innerWidth * 0.6;
-              const idealSpacing = 20;
-              const totalIdealWidth =
-                totalCards * cardWidth + (totalCards - 1) * idealSpacing;
-              const handSpread = Math.min(totalIdealWidth, maxHandSpread);
-              const cardSpacing = (handSpread - cardWidth) / (totalCards - 1);
+              // Get start position based on who is playing
+              let startX, startY;
+              const fromPlayerId = playingCardsAnimation.fromPlayerId;
+              
+              if (fromPlayerId && fromPlayerId !== playerId) {
+                // Animation from another player's avatar
+                const playerAvatarEl = document.querySelector(`[data-player-id="${fromPlayerId}"]`);
+                if (playerAvatarEl) {
+                  const rect = playerAvatarEl.getBoundingClientRect();
+                  startX = rect.left + rect.width / 2;
+                  startY = rect.top + rect.height / 2;
+                } else {
+                  // Fallback to center if player not found
+                  startX = pilePosition.x;
+                  startY = pilePosition.y - 100;
+                }
+              } else {
+                // Animation from current player's hand
+                if (handPosition.x === 0) return null;
+                const maxHandSpread = window.innerWidth * 0.6;
+                const idealSpacing = 20;
+                const totalIdealWidth =
+                  totalCards * cardWidth + (totalCards - 1) * idealSpacing;
+                const handSpread = Math.min(totalIdealWidth, maxHandSpread);
+                const cardSpacing = (handSpread - cardWidth) / (totalCards - 1);
 
-              const handStartX =
-                handPosition.x -
-                handSpread / 2 +
-                cardWidth / 2 +
-                index * cardSpacing;
-              const startX = handStartX;
-              const startY = handPosition.y;
+                const handStartX =
+                  handPosition.x -
+                  handSpread / 2 +
+                  cardWidth / 2 +
+                  index * cardSpacing;
+                startX = handStartX;
+                startY = handPosition.y;
+              }
 
               const stackOffset = 2;
               const endX =
@@ -655,6 +723,73 @@ export default function GamePage() {
                   style={{ left: 0, top: 0 }}
                 >
                   <div className="w-full h-full bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg border-2 border-purple-300 shadow-2xl flex items-center justify-center">
+                    <div className="text-white font-bold text-4xl opacity-70">
+                      ?
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+
+      {takingCardsAnimation?.show &&
+        pilePosition.x > 0 && (
+          <div className="fixed inset-0 z-40 pointer-events-none">
+            {Array.from({ length: Math.min(takingCardsAnimation.cardCount, 10) }).map((_, index) => {
+              const toPlayerId = takingCardsAnimation.toPlayerId;
+              
+              // Get end position based on who is taking cards
+              let endX, endY;
+              if (toPlayerId && toPlayerId !== playerId) {
+                // Animation to another player's avatar
+                const playerAvatarEl = document.querySelector(`[data-player-id="${toPlayerId}"]`);
+                if (playerAvatarEl) {
+                  const rect = playerAvatarEl.getBoundingClientRect();
+                  endX = rect.left + rect.width / 2;
+                  endY = rect.top + rect.height / 2;
+                } else {
+                  // Fallback if player not found
+                  return null;
+                }
+              } else {
+                // Animation to current player's hand
+                if (handPosition.x === 0) return null;
+                endX = handPosition.x;
+                endY = handPosition.y;
+              }
+
+              const stackOffset = 2;
+              const startX = pilePosition.x + (index - 5) * stackOffset;
+              const startY = pilePosition.y + index * stackOffset;
+
+              const rotation = (index - 5) * 3 + (Math.random() - 0.5) * 5;
+
+              const duration = 0.7;
+              const delay = index * 0.05;
+
+              return (
+                <motion.div
+                  key={`take-${index}`}
+                  initial={{
+                    x: startX,
+                    y: startY,
+                    scale: 0.8,
+                    opacity: 0.8,
+                    rotate: rotation,
+                  }}
+                  animate={{
+                    x: endX,
+                    y: endY,
+                    scale: 0.5,
+                    opacity: 0,
+                    rotate: rotation + 180,
+                  }}
+                  transition={{ duration, delay, ease: "easeInOut" }}
+                  className="absolute w-20 h-28"
+                  style={{ left: 0, top: 0 }}
+                >
+                  <div className="w-full h-full bg-gradient-to-br from-red-500 to-pink-600 rounded-lg border-2 border-red-300 shadow-2xl flex items-center justify-center">
                     <div className="text-white font-bold text-4xl opacity-70">
                       ?
                     </div>
@@ -756,6 +891,8 @@ export default function GamePage() {
               playerCards={playerHand}
               autoPlayTimeout={autoPlayTimeout}
               serverTimer={gameState.remainingTime}
+              players={players}
+              currentPlayerId={playerId}
             />
 
             <div className="gap-4 flex flex-row w-full lg:flex-col lg:w-96">
