@@ -93,7 +93,7 @@ export default function GameBoard({
   // Calculate number of hands needed
   const getCardSize = () => {
     const width = window.innerWidth;
-    if (width >= 1280) return "xlarge"; // Extra Large for very wide screens
+    if (width >= 899) return "xlarge"; // Extra Large for very wide screens
     return "large"; // Small for mobile devices
   }
 

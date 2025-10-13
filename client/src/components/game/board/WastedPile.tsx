@@ -117,7 +117,7 @@ const WastedPile: React.FC<CenterPileProps> = ({ removedCards }) => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.3, type: "spring" }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-red-500 to-red-600 text-white rounded-full w-11 h-11 md:w-14 md:h-14 flex items-center justify-center font-bold border-3 border-white shadow-xl z-50"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-red-500 to-red-600 text-white rounded-full w-11 h-11 md:w-14 md:h-14 flex items-center justify-center font-bold border-3 border-white shadow-xl z-30"
           >
             <div className="text-center">
               <div className="text-sm md:text-lg leading-none">

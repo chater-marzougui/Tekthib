@@ -50,7 +50,7 @@ const StateCard: React.FC<StateCardProps> = ({
   const direction = useTextDirection();
 
   return (
-    <div className="md:flex-shrink-0 max-w-[100px] md:max-w-[160px] " dir={direction}>
+    <div className="md:flex-shrink-0 flex-1 max-w-[160px] md:max-w-[160px] " dir={direction}>
       <div className="bg-background backdrop-blur-sm border border-slate-700 rounded-lg px-4 md:px-2 py-3 md:min-w-[160px]">
         {/* Current player indicator */}
         <div className="flex items-center justify-between gap-2 md:gap-4 mb-2">
