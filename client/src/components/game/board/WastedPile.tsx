@@ -11,24 +11,32 @@ interface CenterPileProps {
 
 const WastedPile: React.FC<CenterPileProps> = ({ removedCards }) => {
   const { t } = useTranslation();
-  
+
   // Get unique ranks from removed cards (one card per four-of-a-kind)
   const uniqueRemovedRanks = useMemo(() => {
     return getUniqueRemovedRanks(removedCards);
   }, [removedCards.length]);
 
+  // Generate stable random rotations based on card IDs
+  const cardRotations = useMemo(() => {
+    return uniqueRemovedRanks.map((card) => {
+      // Use card ID to generate a stable "random" offset
+      const seed = card.id
+        .split("")
+        .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      return (seed % 100) / 10 - 5; // Returns value between -5 and 5
+    });
+  }, [uniqueRemovedRanks.length]);
+
   function getUniqueRemovedRanks(removedCards: Card[]): Card[] {
     const result: Card[] = [];
 
     // Group cards by rank
-    const grouped = removedCards.reduce<Record<string, Card[]>>(
-      (acc, card) => {
-        if (!acc[card.rank]) acc[card.rank] = [];
-        acc[card.rank].push(card);
-        return acc;
-      },
-      {}
-    );
+    const grouped = removedCards.reduce<Record<string, Card[]>>((acc, card) => {
+      if (!acc[card.rank]) acc[card.rank] = [];
+      acc[card.rank].push(card);
+      return acc;
+    }, {});
 
     // For each rank, pick 1 or 2 representatives based on count
     Object.values(grouped).forEach((cards) => {
@@ -52,13 +60,13 @@ const WastedPile: React.FC<CenterPileProps> = ({ removedCards }) => {
   }
 
   return (
-    <div className="flex-shrink-0 flex justify-center md:justify-end md:w-[200px]">
+    <div className="flex-shrink-0 flex justify-center md:justify-end md:w-[160px]">
       <div>
         <p className="text-xs font-semibold text-gray-600 mb-2 text-center">
-          {t('game.outOfGame')}
+          {t("game.outOfGame")}
         </p>
         <div className="relative h-32 w-32 md:h-40 md:w-40">
-          {uniqueRemovedRanks.slice(0, 12).map((card, i) => {
+          {uniqueRemovedRanks.slice(0, 8).map((card, i) => {
             const totalCards = Math.min(uniqueRemovedRanks.length, 12);
             const angle = (i / totalCards) * Math.PI * 2 - Math.PI / 2;
             const radius = 18;
@@ -66,8 +74,7 @@ const WastedPile: React.FC<CenterPileProps> = ({ removedCards }) => {
             const offsetX = Math.cos(angle) * radius;
             const offsetY = Math.sin(angle) * radius;
 
-            const rotation =
-              (i * 360) / totalCards - 15 + (Math.random() * 10 - 5);
+            const rotation = (i * 360) / totalCards - 15 + cardRotations[i];
 
             const isRecent = i >= totalCards - 8;
             const scale = isRecent ? 1 : 0.85;
@@ -117,7 +124,7 @@ const WastedPile: React.FC<CenterPileProps> = ({ removedCards }) => {
                 {uniqueRemovedRanks.length}
               </div>
               <div className="text-[8px] md:text-[10px] leading-none opacity-90">
-                {t('game.sets')}
+                {t("game.sets")}
               </div>
             </div>
           </motion.div>

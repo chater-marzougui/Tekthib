@@ -553,7 +553,6 @@ export default function GamePage() {
   };
 
   if (isLoading || !gameState) {
-    console.log("Loading or no game state:", { isLoading, gameState });
     return (
       <div className="flex-1 flex items-center justify-center">
         <LoadingSpinner isConnected={isConnected} />

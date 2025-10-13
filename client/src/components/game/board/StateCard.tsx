@@ -50,11 +50,11 @@ const StateCard: React.FC<StateCardProps> = ({
   const direction = useTextDirection();
 
   return (
-    <div className="md:flex-shrink-0 max-w-[150px] md:max-w-[200px] " dir={direction}>
-      <div className="bg-background backdrop-blur-sm border border-slate-700 rounded-lg px-4 md:px-6 py-3 md:min-w-[200px]">
+    <div className="md:flex-shrink-0 max-w-[100px] md:max-w-[160px] " dir={direction}>
+      <div className="bg-background backdrop-blur-sm border border-slate-700 rounded-lg px-4 md:px-2 py-3 md:min-w-[160px]">
         {/* Current player indicator */}
         <div className="flex items-center justify-between gap-2 md:gap-4 mb-2">
-          <p className="text-xs text-slate-400">{t("stateCard.current")}</p>
+          <p className="text-xs text-slate-400 truncate max-w-[12ch]">{t("stateCard.current")}</p>
           {CurrentPlayerName(currentPlayer, isMyTurn, t)}
         </div>
 

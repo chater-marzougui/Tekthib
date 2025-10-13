@@ -1,205 +1,114 @@
 import type { JSX } from "react";
 import type { Card, DisplayGameCard, Rank } from "shared";
+import { BASE_PREFIX, CardsSizes } from "@/types/config";
 
-const specialCards = ["2", "3", "A", "J", "Q", "K"] as Rank[];
-const renderRank = (rank: Rank) => {
-  if (rank === "Joker")
-    return (
-      <>
-        {rank.split("").map((char, i) => (
-          <span key={i+1} className="m-0 p-0" style={{ lineHeight: 0.8 }}>
-            {char}
-          </span>
-        ))}
-      </>
-    );
-  return rank;
+// Preload all card images on app initialization
+const preloadCardImages = () => {
+  const ranks: Rank[] = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+  const suits = ["hearts", "diamonds", "clubs", "spades"];
+  
+  ranks.forEach(rank => {
+    suits.forEach(suit => {
+      const img = new Image();
+      img.src = `${BASE_PREFIX}/cards/${rank}_${suit}.png`;
+    });
+  });
+  
+  // Preload joker assets
+  const jokerStatic = new Image();
+  jokerStatic.src = `${BASE_PREFIX}/icons/joker-smile.png`;
+  const jokerGif = new Image();
+  jokerGif.src = `${BASE_PREFIX}/icons/joker-smile.gif`;
 };
 
-function isSpecialCard(rank: Rank) {
-  return specialCards.includes(rank);
-}
+// Call this once when your app loads (e.g., in App.tsx or main component)
+export const initializeCardImages = () => {
+  preloadCardImages();
+};
 
 /**
- * Renders the suit symbols in a pattern based on the card's rank.
- * This function creates the classic playing card look.
- * @param {string} rank - The card's rank (e.g., 'A', '2', 'K').
- * @param {string} suitSymbol - The character for the suit (e.g., '♥').
- * @param {string} colorClass - The Tailwind CSS color class for the suit.
- * @returns {JSX.Element[]} An array of positioned JSX elements for the symbols.
+ * Renders the Joker card with interactive gif animation
  */
-const renderSuitPatterns = (
-  rank: Rank,
-  suitSymbol: string,
-  colorClass: string,
-  cardKey: string,
-  positionInHand?: number
-): JSX.Element[] => {
-  const symbol = (className: string, key: number, isRotated = false) => (
+const renderJokerCard = (
+  positionInHand: number,
+  cardSize: string,
+  isSelected: boolean,
+  colorClass: string = "text-purple-600"
+): JSX.Element => {
+  return (
     <div
-      key={`${cardKey}-${key}`}
-      className={`absolute select-none ${colorClass} ${className} ${
-        isRotated ? "rotate-180" : ""
-      }`}
+      className={`
+        relative ${cardSize} rounded-md shadow-md select-none
+        bg-slate-50 border transition-all duration-300
+        ${
+          isSelected
+            ? "border-blue-500 shadow-blue-400/50"
+            : "border-gray-400"
+        }
+        overflow-hidden
+      `}
+      style={{
+        userSelect: "none",
+        WebkitUserSelect: "none",
+        MozUserSelect: "none",
+        msUserSelect: "none",
+      }}
     >
-      {suitSymbol}
+      {/* Top left corner */}
+      <div className="absolute top-1 left-1.5 flex flex-col items-center leading-none select-none">
+        <div
+          className={`text-sm font-bold ${colorClass} select-none flex flex-col items-center`}
+        >
+          {"Joker".split("").map((char, i) => (
+            <span key={i + 1} className="m-0 p-0" style={{ lineHeight: 0.8 }}>
+              {char}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Joker GIF in center */}
+      <img
+        key={`joker-${positionInHand}`}
+        src={`${BASE_PREFIX}/icons/joker-smile.png`}
+        alt="Joker"
+        className="absolute select-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 object-contain transition-opacity duration-200"
+        onPointerEnter={(e) => {
+          e.currentTarget.src = `${BASE_PREFIX}/icons/joker-smile.gif`;
+        }}
+        onPointerLeave={(e) => {
+          e.currentTarget.src = `${BASE_PREFIX}/icons/joker-smile.png`;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.src = `${BASE_PREFIX}/icons/joker-smile.png`;
+        }}
+        onDragLeave={(e) => {
+          e.currentTarget.src = `${BASE_PREFIX}/icons/joker-smile.png`;
+        }}
+        onTouchEnd={(e) => {
+          e.currentTarget.src = `${BASE_PREFIX}/icons/joker-smile.png`;
+        }}
+        onPointerOut={(e) => {
+          e.currentTarget.src = `${BASE_PREFIX}/icons/joker-smile.png`;
+        }}
+      />
+
+      {/* Bottom right corner (rotated) */}
+      <div className="absolute bottom-1 right-1.5 flex flex-col items-center leading-none rotate-180 select-none">
+        <div
+          className={`text-sm font-bold ${colorClass} select-none flex flex-col items-center`}
+        >
+          {"Joker".split("").map((char, i) => (
+            <span key={i + 1} className="m-0 p-0" style={{ lineHeight: 0.8 }}>
+              {char}
+            </span>
+          ))}
+        </div>
+      </div>
     </div>
   );
-
-  // Reusable position classes for columns
-  const positions = {
-    topCenter: "top-3 left-1/2 -translate-x-1/2 text-xl",
-    midTopCenter: "top-1/4 left-1/2 -translate-x-1/2 text-xl",
-    center: "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl",
-    midBottomCenter: "bottom-1/4 left-1/2 -translate-x-1/2 text-xl",
-    bottomCenter: "bottom-3 left-1/2 -translate-x-1/2 text-xl",
-    topLeft: "top-3 left-3 text-xl",
-    topRight: "top-3 right-3 text-xl",
-    midLeft: "top-1/2 left-3 -translate-y-1/2 text-xl",
-    midRight: "top-1/2 right-3 -translate-y-1/2 text-xl",
-    midTopLeft: "top-1/4 left-3 text-xl",
-    midTopRight: "top-1/4 right-3 text-xl",
-    bottomLeft: "bottom-3 left-3 text-xl",
-    bottomRight: "bottom-3 right-3 text-xl",
-  };
-
-  switch (rank) {
-    case "A":
-      return [symbol(positions.center, 1)];
-    case "2":
-      return [
-        symbol(positions.topCenter, 1),
-        symbol(positions.bottomCenter, 2, true),
-      ];
-    case "3":
-      return [
-        symbol(positions.topCenter, 1),
-        symbol(positions.center, 2),
-        symbol(positions.bottomCenter, 3, true),
-      ];
-    case "4":
-      return [
-        symbol(positions.topLeft, 1),
-        symbol(positions.topRight, 2),
-        symbol(positions.bottomLeft, 3, true),
-        symbol(positions.bottomRight, 4, true),
-      ];
-    case "5":
-      return [
-        symbol(positions.topLeft, 1),
-        symbol(positions.topRight, 2),
-        symbol(positions.center, 3),
-        symbol(positions.bottomLeft, 4, true),
-        symbol(positions.bottomRight, 5, true),
-      ];
-    case "6":
-      return [
-        symbol(positions.topLeft, 1),
-        symbol(positions.topRight, 2),
-        symbol(positions.midLeft, 3),
-        symbol(positions.midRight, 4),
-        symbol(positions.bottomLeft, 5, true),
-        symbol(positions.bottomRight, 6, true),
-      ];
-    case "7":
-      return [
-        ...renderSuitPatterns("6", suitSymbol, colorClass, cardKey),
-        symbol(positions.midTopCenter, 7),
-      ];
-    case "8":
-      return [
-        ...renderSuitPatterns("7", suitSymbol, colorClass, cardKey),
-        symbol(positions.midBottomCenter, 8, true),
-      ];
-    case "9":
-      return [
-        symbol(positions.topLeft, 1),
-        symbol(positions.topRight, 2),
-        symbol(positions.midTopLeft, 3),
-        symbol(positions.midTopRight, 4),
-        symbol(positions.center, 5),
-        symbol(positions.bottomLeft, 6, true),
-        symbol(positions.bottomRight, 7, true),
-        symbol("bottom-1/4 left-3 text-xl", 8, true),
-        symbol("bottom-1/4 right-3 text-xl", 9, true),
-      ];
-    case "10":
-      return [
-        ...renderSuitPatterns("8", suitSymbol, colorClass, cardKey),
-        symbol(positions.topLeft, 9),
-        symbol(positions.bottomRight, 10, true),
-      ];
-    case "J":
-    case "Q":
-    case "K":
-      // For face cards, you might want an image, but a large symbol works as a placeholder.
-      return [symbol(`${positions.center} text-4xl`, 1)];
-    case "Joker":
-      // Joker gets a special GIF that plays on hover
-      return [
-        <img
-          key={`joker-${positionInHand}`}
-          src="../icons/joker-smile.png"
-          alt="Joker"
-          className="absolute select-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 object-contain transition-opacity duration-200"
-          onPointerEnter={(e) => {
-            e.currentTarget.src = "../icons/joker-smile.gif";
-          }}
-          onPointerLeave={(e) => {
-            e.currentTarget.src = "../icons/joker-smile.png";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.src = "../icons/joker-smile.png";
-          }}
-          onDragLeave={(e) => {
-            e.currentTarget.src = "../icons/joker-smile.png";
-          }}
-          onTouchEnd={(e) => {
-            e.currentTarget.src = "../icons/joker-smile.png";
-          }}
-          onPointerOut={(e) => {
-            e.currentTarget.src = "../icons/joker-smile.png";
-          }}
-        />,
-      ];
-    default:
-      return []; // Return nothing for ranks that don't have patterns
-  }
 };
 
-interface SizeProps {
-  cardSize: string;
-  overlapOffset: number;
-  selectedOffset: number;
-  YTranslation: number;
-}
-
-interface SizesProps {
-  small: SizeProps;
-  medium: SizeProps;
-  large: SizeProps;
-}
-  
-const sizes: SizesProps = {
-  small: {
-    cardSize: "w-16 h-24",
-    overlapOffset: 22,
-    selectedOffset: 30,
-    YTranslation: -20,
-  },
-  medium: {
-    cardSize: "w-18 h-26",
-    overlapOffset: 23,
-    selectedOffset: 35,
-    YTranslation: -25,
-  },
-  large: {
-    cardSize: "w-20 h-28",
-    overlapOffset: 25,
-    selectedOffset: 40,
-    YTranslation: -30,
-  },
-};
 
 export const RenderCard = (
   card: Card,
@@ -207,39 +116,14 @@ export const RenderCard = (
   onCardSelect: (id: string) => void,
   isSelected: boolean,
   positionInHand: number,
-  size: "small" | "large" | "medium" = "large"
+  size: "small" | "large" | "medium" | "xlarge" = "xlarge"
 ) => {
-  const getCardSymbol = (suit: DisplayGameCard["suit"]) => {
-    switch (suit) {
-      case "hearts":
-        return "♥";
-      case "diamonds":
-        return "♦";
-      case "clubs":
-        return "♣";
-      case "spades":
-        return "♠";
-      case "joker":
-        return "";
-    }
-  };
-
-  const getCardColor = (suit: DisplayGameCard["suit"]) => {
-    if (suit === "joker") return "text-purple-600";
-    return suit === "hearts" || suit === "diamonds"
-      ? "text-red-600"
-      : "text-black";
-  };
-
-  const cardSize = sizes[size];
-
-  // Calculate overlap offset for stacking - reduced for smaller cards
-  const overlapOffset = positionInHand * cardSize.overlapOffset;
-  const suitSymbol = getCardSymbol(card.suit);
-  const colorClass = getCardColor(card.suit);
-  const isSpecial = isSpecialCard(card.rank);
+  const cardSize = CardsSizes[size];
   const key = card.rank + card.suit + card.deckNumber + positionInHand;
 
+  // Handle Joker separately with the custom design
+  const isJoker = card.rank === "Joker";
+  
   return (
     <button
       key={key}
@@ -250,74 +134,55 @@ export const RenderCard = (
       `}
       style={{
         position: "absolute",
-        left: `${overlapOffset}px`,
-        transform: isSelected ? `translateY(${cardSize.YTranslation}px)` : "translateY(0px)", // Reduced from 40px to 30px
+        left: `${positionInHand * cardSize.overlapOffset}px`,
+        transform: isSelected
+          ? `translateY(${cardSize.YTranslation}px)`
+          : "translateY(0px)",
         userSelect: "none",
         WebkitUserSelect: "none",
         MozUserSelect: "none",
         msUserSelect: "none",
       }}
-      onDragStart={(e) => e.preventDefault()} // Prevent drag ghost image
-      onTouchMove={(e) => e.preventDefault()} // Prevent touch drag
-      onContextMenu={(e) => e.preventDefault()} // Prevent context menu on long press
+      onDragStart={(e) => e.preventDefault()}
+      onTouchMove={(e) => e.preventDefault()}
+      onContextMenu={(e) => e.preventDefault()}
     >
-      <div
-        className={`
-          relative ${cardSize.cardSize} rounded-md shadow-md select-none
-          bg-slate-50 border transition-all duration-300
-          ${
-            isSelected
-              ? "border-blue-500 shadow-blue-400/50"
-              : "border-gray-400"
-          }
-          overflow-hidden
-        `}
-        style={{
-          userSelect: "none",
-          WebkitUserSelect: "none",
-          MozUserSelect: "none",
-          msUserSelect: "none",
-        }}
-      >
-        {/* Top left corner */}
-        <div className="absolute top-1 left-1.5 flex flex-col items-center leading-none select-none">
-          <div
-            className={`text-sm font-bold ${colorClass} select-none flex flex-col items-center`}
-          >
-            {renderRank(card.rank)}
-          </div>
-          {isSpecial && (
-            <div className={`text-lg ${colorClass} select-none`}>
-              {suitSymbol}
-            </div>
-          )}
+      {isJoker ? (
+        renderJokerCard(positionInHand, cardSize.cardSize, isSelected)
+      ) : (
+        <div
+          className={`
+            relative ${cardSize.cardSize} rounded-md shadow-md select-none
+            border transition-all duration-300
+            ${
+              isSelected
+                ? "border-blue-500 shadow-blue-400/50"
+                : "border-gray-400"
+            }
+            overflow-hidden
+          `}
+          style={{
+            userSelect: "none",
+            WebkitUserSelect: "none",
+            MozUserSelect: "none",
+            msUserSelect: "none",
+          }}
+        >
+          {/* Card image fills the entire card */}
+          <img
+            src={`${BASE_PREFIX}/cards/${card.rank}_${card.suit}.png`}
+            alt={`${card.rank} of ${card.suit}`}
+            className="absolute inset-0 w-full h-full object-cover select-none"
+            draggable={false}
+            style={{
+              userSelect: "none",
+              WebkitUserSelect: "none",
+              MozUserSelect: "none",
+              msUserSelect: "none",
+            }}
+          />
         </div>
-
-        {/* The new suit patterns rendered in the center */}
-        {renderSuitPatterns(
-          card.rank,
-          suitSymbol,
-          colorClass,
-          key,
-          positionInHand
-        )}
-
-        {/* Bottom right corner (rotated) */}
-        <div className="absolute bottom-1 right-1.5 flex flex-col items-center leading-none rotate-180 select-none">
-          <div
-            className={`text-sm font-bold ${colorClass} select-none flex flex-col items-center`}
-          >
-            {renderRank(card.rank)}
-          </div>
-          {/* Smaller text */}
-          {isSpecial && (
-            <div className={`text-lg ${colorClass} select-none`}>
-              {suitSymbol}
-            </div>
-          )}{" "}
-          {/* Smaller icon */}
-        </div>
-      </div>
+      )}
     </button>
   );
 };
@@ -328,17 +193,19 @@ const RenderOneHand = (
   isMyTurn: boolean,
   onCardSelect: (id: string) => void,
   selectedCards: string[],
-  maxCardsPerHand: number
+  maxCardsPerHand: number,
+  cardSize: "small" | "large" | "medium" | "xlarge" = "xlarge"
 ) => {
   const handCards = cards.slice(startIndex, startIndex + maxCardsPerHand);
-  const handWidth = handCards.length * 25 + 69; // Reduced overlap * count + smaller card width
+  const offset = CardsSizes[cardSize].overlapOffset;
+  const handWidth = handCards.length * offset + 69;
 
   return (
     <div
       key={startIndex}
-      className="relative mb-3 select-none" // Reduced margin
+      className="relative mb-3 select-none"
       style={{
-        height: "140px", // Reduced height
+        height: "140px",
         width: `${handWidth}px`,
         margin: "0 auto",
         userSelect: "none",
@@ -349,7 +216,7 @@ const RenderOneHand = (
     >
       {handCards.map((card, idx) => {
         const isSelected = selectedCards.includes(card.id);
-        return RenderCard(card, isMyTurn, onCardSelect, isSelected, idx);
+        return RenderCard(card, isMyTurn, onCardSelect, isSelected, idx, cardSize);
       })}
     </div>
   );

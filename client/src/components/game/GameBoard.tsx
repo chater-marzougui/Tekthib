@@ -11,6 +11,7 @@ import StateCard from "./board/StateCard";
 import CenterPile from "./board/CenterPile";
 import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
+import { CardsSizes } from "@/types/config";
 
 interface MergedGameBoardProps {
   lastPlay: LastPlay | null;
@@ -90,7 +91,19 @@ export default function GameBoard({
   });
 
   // Calculate number of hands needed
-  const maxCardsPerHand = Math.min(Math.floor(window.innerWidth / 35), 24);
+  const getCardSize = () => {
+    const width = window.innerWidth;
+    if (width >= 1280) return "xlarge"; // Extra Large for very wide screens
+    return "large"; // Small for mobile devices
+  }
+
+  const getWidthBySize = (size: "large" | "xlarge") => {
+    return CardsSizes[size].overlapOffset + 22; // +12 for some padding/margin
+  }
+
+
+
+  const maxCardsPerHand = Math.min(Math.floor(window.innerWidth / getWidthBySize(getCardSize())), 24);
   const numberOfHands = Math.ceil(sortedCards.length / maxCardsPerHand);
 
   return (
@@ -127,7 +140,7 @@ export default function GameBoard({
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 rounded-lg blur-xl" />
 
                   {/* Content */}
-                  <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-lg px-4 py-3 shadow-sm">
+                  <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-md p-1 shadow-sm">
                     <div className="flex items-center justify-center gap-2 flex-wrap">
                       <span className="font-bold text-foreground">
                         {lastPlay.player}
@@ -139,7 +152,7 @@ export default function GameBoard({
                         {lastPlay.cardCount}×
                         <Badge
                           variant={isMyTurn ? "destructive" : "default"}
-                          className="text-base sm:text-lg font-bold px-3 py-1"
+                          className="text-base sm:text-md font-bold px-3 py-1"
                         >
                           {lastPlay.claimedRank}
                         </Badge>
@@ -207,7 +220,8 @@ export default function GameBoard({
                   isMyTurn,
                   onCardSelect,
                   selectedCards,
-                  maxCardsPerHand
+                  maxCardsPerHand,
+                  getCardSize()
                 )
               )}
             </div>

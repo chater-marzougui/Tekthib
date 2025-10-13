@@ -60,7 +60,7 @@ const CenterPile: React.FC<CenterPileProps> = ({ pileCount, lastPlay }) => {
                     type: "spring",
                     stiffness: 200,
                   }}
-                  className="absolute w-20 h-28 bg-white rounded-lg border-2 border-gray-300 shadow-xl"
+                  className="absolute w-12 h-18 bg-white rounded-sm border-2 border-gray-300 shadow-xl"
                   style={{
                     top: `${i * 3}px`,
                     left: `calc(25% - ${offsetX}px)`,

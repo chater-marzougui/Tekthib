@@ -10,46 +10,51 @@ import { Toaster } from "sonner";
 import { SoundProvider } from "./context/SoundPlayerContext";
 import { ThemeProvider } from "./context/ThemeProvider";
 import { VoiceChatWrapper } from "./components/VoiceChatWrapper";
+import { initializeCardImages } from "./components/game/RenderCard";
+
 function App() {
+  // Preload card images once when the app initializes
+  initializeCardImages();
   return (
     <Router basename="/Tekthib/">
       <ThemeProvider>
-      <HeaderProvider>
-        <Header />
-        <Toaster
-        richColors
-        duration={3500}
-        position="top-center"
-        closeButton={true}
-        swipeDirections={["left", "right", "top", "bottom"]}
-        toastOptions={{
-          style: { fontSize: "0.9rem" },
-          classNames: {
-            toast:
-              "scale-90 md:scale-115 px-4 md:px-16 py-2 md:py-0 md:max-w-[500px]",
-          },
-        }}
-      />
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/admin" element={<AdminPage />} />
-        <Route
-          path="/*"
-          element={
-            <WebSocketProvider>
-              <SoundProvider>
-                <VoiceChatWrapper>
-                  <Routes>
-                    <Route path="/room/:roomId" element={<RoomPage />} />
-                    <Route path="/game/:roomId" element={<GamePage />} />
-                  </Routes>
-                </VoiceChatWrapper>
-              </SoundProvider>
-            </WebSocketProvider>
-          }
-        />
-      </Routes>
-      </HeaderProvider>
+        <HeaderProvider>
+          <Header />
+          <Toaster
+            richColors
+            duration={3500}
+            position="top-center"
+            closeButton={true}
+            swipeDirections={["left", "right", "top", "bottom"]}
+            toastOptions={{
+              style: { fontSize: "0.9rem" },
+              classNames: {
+                toast:
+                  "scale-90 md:scale-115 px-4 md:px-16 py-2 md:py-0 md:max-w-[500px]",
+              },
+            }}
+          />
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route
+              path="/*"
+              element={
+                <WebSocketProvider>
+                  <SoundProvider>
+                    <VoiceChatWrapper>
+                      <Routes>
+                        <Route path="/room/:roomId" element={<RoomPage />} />
+                        <Route path="/game/:roomId" element={<GamePage />} />
+                        <Route path="*" element={<HomePage />} />
+                      </Routes>
+                    </VoiceChatWrapper>
+                  </SoundProvider>
+                </WebSocketProvider>
+              }
+            />
+          </Routes>
+        </HeaderProvider>
       </ThemeProvider>
     </Router>
   );
