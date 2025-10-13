@@ -756,6 +756,8 @@ export default function GamePage() {
               playerCards={playerHand}
               autoPlayTimeout={autoPlayTimeout}
               serverTimer={gameState.remainingTime}
+              players={players}
+              currentPlayerId={playerId}
             />
 
             <div className="gap-4 flex flex-row w-full lg:flex-col lg:w-96">

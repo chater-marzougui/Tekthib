@@ -1,17 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { DisplayGameCard, RankTypes } from "@shared";
 import RenderOneHand from "./RenderCard";
-import type { Card as GameCard, LastPlay } from "shared";
+import type { Card as GameCard, LastPlay, Player as BasePlayer } from "shared";
 import WastedPile from "./board/WastedPile";
 import { Badge } from "@/components/ui/badge";
 import PlayerControls from "./board/PlayerControls";
 import StateCard from "./board/StateCard";
 import CenterPile from "./board/CenterPile";
+import PlayerCircle from "./PlayerCircle";
 import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
 import { CardsSizes } from "@/types/config";
+
+interface Player extends BasePlayer {
+  isCurrentTurn: boolean;
+}
 
 interface MergedGameBoardProps {
   lastPlay: LastPlay | null;
@@ -27,6 +32,8 @@ interface MergedGameBoardProps {
   selectedCards: string[];
   autoPlayTimeout: number;
   serverTimer?: number;
+  players: Player[];
+  currentPlayerId: string;
 }
 
 export default function GameBoard({
@@ -43,12 +50,15 @@ export default function GameBoard({
   selectedCards,
   autoPlayTimeout,
   serverTimer,
+  players,
+  currentPlayerId,
 }: Readonly<MergedGameBoardProps>) {
   const [claimedRank, setClaimedRank] = useState(
     lastPlay ? lastPlay.claimedRank : ""
   );
   const [timer, setTimer] = useState<number | null>(null);
   const { t } = useTranslation();
+  const centerAreaRef = useRef<HTMLDivElement>(null);
 
   // Update timer when server sends updates and start local countdown
   useEffect(() => {
@@ -162,7 +172,19 @@ export default function GameBoard({
                 </div>
               )}
 
-              <CenterPile pileCount={pileCount} lastPlay={lastPlay} />
+              {/* Center pile with player circle around it */}
+              <div className="relative flex justify-center items-center" style={{ minHeight: '450px' }} ref={centerAreaRef}>
+                <CenterPile pileCount={pileCount} lastPlay={lastPlay} />
+                
+                {/* Player circle positioned around center pile */}
+                <PlayerCircle 
+                  players={players}
+                  currentPlayerId={currentPlayerId}
+                  centerX={0}
+                  centerY={0}
+                  radius={160}
+                />
+              </div>
 
               {canChallenge && lastPlay && (
                 <div className="flex justify-center">
