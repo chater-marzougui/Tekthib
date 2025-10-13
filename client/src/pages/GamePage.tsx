@@ -186,13 +186,13 @@ export default function GamePage() {
         if (message.type === "GAME_STATE_UPDATE") {
           const { hand, gameState: newGameState } = message.payload;
           if (isLoading && (hand || newGameState)) setIsLoading(false);
-          
+
           if (hand) {
             setPlayerHand(
               hand.map((card: GameCard) => ({ ...card, selected: false }))
             );
           }
-          
+
           if (newGameState) {
             setGameState(newGameState);
             setIsMyTurn(newGameState.currentPlayerId === playerId);
@@ -231,15 +231,18 @@ export default function GamePage() {
 
         // Trigger animation for other players (not current player, as they have their own animation)
         if (playedPlayerId && playedPlayerId !== playerId) {
-          const dummyCards: GameCard[] = Array.from({ length: cardCount }, (_, i) => ({
-            id: `dummy-${Date.now()}-${i}`,
-            suit: 'hearts' as const,
-            rank: '2' as const,
-            deckNumber: 1 as const,
-          }));
-          
-          setPlayingCardsAnimation({ 
-            show: true, 
+          const dummyCards: GameCard[] = Array.from(
+            { length: cardCount },
+            (_, i) => ({
+              id: `dummy-${Date.now()}-${i}`,
+              suit: "hearts" as const,
+              rank: "2" as const,
+              deckNumber: 1 as const,
+            })
+          );
+
+          setPlayingCardsAnimation({
+            show: true,
             cards: dummyCards,
             fromPlayerId: playedPlayerId,
           });
@@ -500,16 +503,16 @@ export default function GamePage() {
       if (pileEl) {
         const rect = pileEl.getBoundingClientRect();
         setPilePosition({
-          x: rect.left + rect.width / 2,
-          y: rect.top + rect.height / 2,
+          x: (rect.left + rect.right) / 2,
+          y: (rect.top + rect.bottom) / 2,
         });
       }
 
       if (handEl) {
         const rect = handEl.getBoundingClientRect();
         setHandPosition({
-          x: rect.left + rect.width / 2,
-          y: rect.top + rect.height / 2,
+          x: (rect.left + rect.right) / 2,
+          y: (rect.top + rect.bottom) / 2,
         });
       }
     };
@@ -544,8 +547,8 @@ export default function GamePage() {
     );
 
     // Show animation of cards moving to pile
-    setPlayingCardsAnimation({ 
-      show: true, 
+    setPlayingCardsAnimation({
+      show: true,
       cards: cardsBeingPlayed,
       fromPlayerId: playerId, // Current player
     });
@@ -641,164 +644,168 @@ export default function GamePage() {
         handlePlayAgain={handlePlayAgain}
       />
 
-      {playingCardsAnimation?.show &&
-        pilePosition.x > 0 && (
-          <div className="fixed inset-0 z-40 pointer-events-none">
-            {playingCardsAnimation.cards.map((card, index) => {
-              const totalCards = playingCardsAnimation.cards.length;
-              const cardWidth = 80;
+      {playingCardsAnimation?.show && pilePosition.x > 0 && (
+        <div className="fixed inset-0 z-40 pointer-events-none">
+          {playingCardsAnimation.cards.map((card, index) => {
+            const totalCards = playingCardsAnimation.cards.length;
+            const cardWidth = 80;
 
-              // Get start position based on who is playing
-              let startX, startY;
-              const fromPlayerId = playingCardsAnimation.fromPlayerId;
-              
-              if (fromPlayerId && fromPlayerId !== playerId) {
-                // Animation from another player's avatar
-                const playerAvatarEl = document.querySelector(`[data-player-id="${fromPlayerId}"]`);
-                if (playerAvatarEl) {
-                  const rect = playerAvatarEl.getBoundingClientRect();
-                  startX = rect.left + rect.width / 2;
-                  startY = rect.top + rect.height / 2;
-                } else {
-                  // Fallback to center if player not found
-                  startX = pilePosition.x;
-                  startY = pilePosition.y - 100;
-                }
-              } else {
-                // Animation from current player's hand
-                if (handPosition.x === 0) return null;
-                const maxHandSpread = window.innerWidth * 0.6;
-                const idealSpacing = 20;
-                const totalIdealWidth =
-                  totalCards * cardWidth + (totalCards - 1) * idealSpacing;
-                const handSpread = Math.min(totalIdealWidth, maxHandSpread);
-                const cardSpacing = (handSpread - cardWidth) / (totalCards - 1);
+            // Get start position based on who is playing
+            let startX, startY;
+            const fromPlayerId = playingCardsAnimation.fromPlayerId;
 
-                const handStartX =
-                  handPosition.x -
-                  handSpread / 2 +
-                  cardWidth / 2 +
-                  index * cardSpacing;
-                startX = handStartX;
-                startY = handPosition.y;
-              }
-
-              const stackOffset = 2;
-              const endX =
-                pilePosition.x + (index - totalCards / 2) * stackOffset;
-              const endY = pilePosition.y + index * stackOffset;
-
-              const rotation =
-                (index - totalCards / 2) * 3 + (Math.random() - 0.5) * 5;
-
-              const baseDuration = 0.6;
-              const duration = Math.min(baseDuration, 0.4 + totalCards * 0.02);
-              const getBaseDelay = () => {
-                if (totalCards <= 4) return 0.09;
-                if (totalCards <= 8) return 0.07;
-                return 0.05;
-              };
-              const baseDelay = getBaseDelay();
-              const delay = index * baseDelay;
-
-              return (
-                <motion.div
-                  key={`play-${card.id}-${index}`}
-                  initial={{
-                    x: startX,
-                    y: startY,
-                    scale: 1,
-                    opacity: 1,
-                    rotate: 0,
-                  }}
-                  animate={{
-                    x: endX,
-                    y: endY,
-                    scale: 0.8,
-                    opacity: 0.8,
-                    rotate: rotation,
-                  }}
-                  transition={{ duration, delay, ease: "easeInOut" }}
-                  className="absolute w-20 h-28"
-                  style={{ left: 0, top: 0 }}
-                >
-                  <div className="w-full h-full bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg border-2 border-purple-300 shadow-2xl flex items-center justify-center">
-                    <div className="text-white font-bold text-4xl opacity-70">
-                      ?
-                    </div>
-                  </div>
-                </motion.div>
+            if (fromPlayerId && fromPlayerId !== playerId) {
+              // Animation from another player's avatar
+              const playerAvatarEl = document.querySelector(
+                `[data-player-id="${fromPlayerId}"]`
               );
-            })}
-          </div>
-        )}
-
-      {takingCardsAnimation?.show &&
-        pilePosition.x > 0 && (
-          <div className="fixed inset-0 z-40 pointer-events-none">
-            {Array.from({ length: Math.min(takingCardsAnimation.cardCount, 10) }).map((_, index) => {
-              const toPlayerId = takingCardsAnimation.toPlayerId;
-              
-              // Get end position based on who is taking cards
-              let endX, endY;
-              if (toPlayerId && toPlayerId !== playerId) {
-                // Animation to another player's avatar
-                const playerAvatarEl = document.querySelector(`[data-player-id="${toPlayerId}"]`);
-                if (playerAvatarEl) {
-                  const rect = playerAvatarEl.getBoundingClientRect();
-                  endX = rect.left + rect.width / 2;
-                  endY = rect.top + rect.height / 2;
-                } else {
-                  // Fallback if player not found
-                  return null;
-                }
+              if (playerAvatarEl) {
+                const rect = playerAvatarEl.getBoundingClientRect();
+                startX = rect.left + rect.width / 2;
+                startY = rect.top + rect.height / 2;
               } else {
-                // Animation to current player's hand
-                if (handPosition.x === 0) return null;
-                endX = handPosition.x;
-                endY = handPosition.y;
+                // Fallback to center if player not found
+                startX = pilePosition.x;
+                startY = pilePosition.y - 100;
               }
+            } else {
+              // Animation from current player's hand
+              if (handPosition.x === 0) return null;
+              const maxHandSpread = window.innerWidth * 0.6;
+              const idealSpacing = 20;
+              const totalIdealWidth =
+                totalCards * cardWidth + (totalCards - 1) * idealSpacing;
+              const handSpread = Math.min(totalIdealWidth, maxHandSpread);
+              const cardSpacing = (handSpread - cardWidth) / (totalCards - 1);
 
-              const stackOffset = 2;
-              const startX = pilePosition.x + (index - 5) * stackOffset;
-              const startY = pilePosition.y + index * stackOffset;
+              const handStartX =
+                handPosition.x -
+                handSpread / 2 +
+                cardWidth / 2 +
+                index * cardSpacing;
+              startX = handStartX;
+              startY = handPosition.y;
+            }
 
-              const rotation = (index - 5) * 3 + (Math.random() - 0.5) * 5;
+            const stackOffset = 2;
+            const endX =
+              pilePosition.x + (index - totalCards / 2) * stackOffset;
+            const endY = pilePosition.y + index * stackOffset;
 
-              const duration = 0.7;
-              const delay = index * 0.05;
+            const rotation =
+              (index - totalCards / 2) * 3 + (Math.random() - 0.5) * 5;
 
-              return (
-                <motion.div
-                  key={`take-${index}`}
-                  initial={{
-                    x: startX,
-                    y: startY,
-                    scale: 0.8,
-                    opacity: 0.8,
-                    rotate: rotation,
-                  }}
-                  animate={{
-                    x: endX,
-                    y: endY,
-                    scale: 0.5,
-                    opacity: 0,
-                    rotate: rotation + 180,
-                  }}
-                  transition={{ duration, delay, ease: "easeInOut" }}
-                  className="absolute w-20 h-28"
-                  style={{ left: 0, top: 0 }}
-                >
-                  <div className="w-full h-full bg-gradient-to-br from-red-500 to-pink-600 rounded-lg border-2 border-red-300 shadow-2xl flex items-center justify-center">
-                    <div className="text-white font-bold text-4xl opacity-70">
-                      ?
-                    </div>
+            const baseDuration = 0.6;
+            const duration = Math.min(baseDuration, 0.4 + totalCards * 0.02);
+            const getBaseDelay = () => {
+              if (totalCards <= 4) return 0.09;
+              if (totalCards <= 8) return 0.07;
+              return 0.05;
+            };
+            const baseDelay = getBaseDelay();
+            const delay = index * baseDelay;
+
+            return (
+              <motion.div
+                key={`play-${card.id}-${index}`}
+                initial={{
+                  x: startX,
+                  y: startY,
+                  scale: 1,
+                  opacity: 1,
+                  rotate: 0,
+                }}
+                animate={{
+                  x: endX,
+                  y: endY,
+                  scale: 0.8,
+                  opacity: 0.8,
+                  rotate: rotation,
+                }}
+                transition={{ duration, delay, ease: "easeInOut" }}
+                className="absolute w-20 h-28"
+                style={{ left: 0, top: 0 }}
+              >
+                <div className="w-full h-full bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg border-2 border-purple-300 shadow-2xl flex items-center justify-center">
+                  <div className="text-white font-bold text-4xl opacity-70">
+                    ?
                   </div>
-                </motion.div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+
+      {takingCardsAnimation?.show && pilePosition.x > 0 && (
+        <div className="fixed inset-0 z-40 pointer-events-none">
+          {Array.from({
+            length: Math.min(takingCardsAnimation.cardCount, 10),
+          }).map((_, index) => {
+            const toPlayerId = takingCardsAnimation.toPlayerId;
+
+            // Get end position based on who is taking cards
+            let endX, endY;
+            if (toPlayerId && toPlayerId !== playerId) {
+              // Animation to another player's avatar
+              const playerAvatarEl = document.querySelector(
+                `[data-player-id="${toPlayerId}"]`
               );
-            })}
-          </div>
-        )}
+              if (playerAvatarEl) {
+                const rect = playerAvatarEl.getBoundingClientRect();
+                endX = rect.left + rect.width / 2;
+                endY = rect.top + rect.height / 2;
+              } else {
+                // Fallback if player not found
+                return null;
+              }
+            } else {
+              // Animation to current player's hand
+              if (handPosition.x === 0) return null;
+              endX = handPosition.x;
+              endY = handPosition.y;
+            }
+
+            const stackOffset = 2;
+            const startX = pilePosition.x + (index - 5) * stackOffset;
+            const startY = pilePosition.y + index * stackOffset;
+
+            const rotation = (index - 5) * 3 + (Math.random() - 0.5) * 5;
+
+            const duration = 0.7;
+            const delay = index * 0.05;
+
+            return (
+              <motion.div
+                key={`take-${index + 1}`}
+                initial={{
+                  x: startX,
+                  y: startY,
+                  scale: 0.8,
+                  opacity: 0.8,
+                  rotate: rotation,
+                }}
+                animate={{
+                  x: endX,
+                  y: endY,
+                  scale: 0.5,
+                  opacity: 0,
+                  rotate: rotation + 180,
+                }}
+                transition={{ duration, delay, ease: "easeInOut" }}
+                className="absolute w-20 h-28"
+                style={{ left: 0, top: 0 }}
+              >
+                <div className="w-full h-full bg-gradient-to-br from-red-500 to-pink-600 rounded-lg border-2 border-red-300 shadow-2xl flex items-center justify-center">
+                  <div className="text-white font-bold text-4xl opacity-70">
+                    ?
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
 
       {revealedCardsAnimation?.show &&
         pilePosition.x > 0 &&
@@ -893,6 +900,10 @@ export default function GamePage() {
               serverTimer={gameState.remainingTime}
               players={players}
               currentPlayerId={playerId}
+              centerPilePosition={{
+                x: pilePosition.x / 2,
+                y: pilePosition.y / 2,
+              }}
             />
 
             <div className="gap-4 flex flex-row w-full lg:flex-col lg:w-96">

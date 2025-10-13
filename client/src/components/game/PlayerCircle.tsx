@@ -41,13 +41,13 @@ export default function PlayerCircle({
   // Then go clockwise
   const getPlayerPosition = (index: number) => {
     // Start at bottom (270°) and go clockwise
-    const startAngle = (3 * Math.PI) / 2; // 270 degrees in radians
+    const startAngle = Math.PI / 2; // 90 degrees in radians
     const angleStep = (2 * Math.PI) / totalPlayers;
     const angle = startAngle - angleStep * index; // Subtract to go clockwise
     
     const x = centerX + radius * Math.cos(angle);
     const y = centerY + radius * Math.sin(angle);
-    
+
     return { x, y };
   };
 

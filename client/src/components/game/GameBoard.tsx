@@ -34,6 +34,7 @@ interface MergedGameBoardProps {
   serverTimer?: number;
   players: Player[];
   currentPlayerId: string;
+  centerPilePosition: { x: number; y: number }; // Optional prop for center pile position
 }
 
 export default function GameBoard({
@@ -52,6 +53,7 @@ export default function GameBoard({
   serverTimer,
   players,
   currentPlayerId,
+  centerPilePosition,
 }: Readonly<MergedGameBoardProps>) {
   const [claimedRank, setClaimedRank] = useState(
     lastPlay ? lastPlay.claimedRank : ""
@@ -175,13 +177,12 @@ export default function GameBoard({
               {/* Center pile with player circle around it */}
               <div className="relative flex justify-center items-center" style={{ minHeight: '450px' }} ref={centerAreaRef}>
                 <CenterPile pileCount={pileCount} lastPlay={lastPlay} />
-                
                 {/* Player circle positioned around center pile */}
                 <PlayerCircle 
                   players={players}
                   currentPlayerId={currentPlayerId}
-                  centerX={0}
-                  centerY={0}
+                  centerX={centerPilePosition.x}
+                  centerY={centerPilePosition.y}
                   radius={160}
                 />
               </div>
