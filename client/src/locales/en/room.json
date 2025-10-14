@@ -46,6 +46,7 @@
     "botsAddedSuccess": "Bots added successfully!",
     "botRemovedSuccess": "Bot removed successfully!",
     "gameResetSuccess": "Game has been reset! Get ready to play again.",
-    "roomCodeCopied": "Room code copied to clipboard!"
+    "roomCodeCopied": "Room code copied to clipboard!",
+    "gameInProgress": "Game already in progress. Redirecting to game..."
   }
 }

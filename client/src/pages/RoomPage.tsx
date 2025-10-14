@@ -147,8 +147,23 @@ export default function RoomPage() {
 
     const unregisterError = registerHandler("error", (message) => {
       if (message.type === "ERROR") {
-        setError(message.payload.message);
-        toast.error(`Error: ${message.payload.message}`);
+        const errorCode = message.payload.code;
+        const errorMessage = message.payload.message;
+        
+        // If game is in progress and player was in it, redirect to game page
+        if (errorCode === "GAME_IN_PROGRESS") {
+          toast.info(t("room.gameInProgress"));
+          const roomCodeFromPayload = message.payload.roomCode;
+          if (roomCodeFromPayload) {
+            navigate(`/game/${roomCodeFromPayload}`);
+          } else {
+            navigate("/");
+          }
+          return;
+        }
+        
+        setError(errorMessage);
+        toast.error(`Error: ${errorMessage}`);
       }
       if (message.payload.code === "ROOM_NOT_FOUND") {
         setTimeout(() => {

@@ -23,6 +23,7 @@ interface ChatBoxProps {
   playerName: string;
   playerId: string;
   systemMessages?: ChatMessage[];
+  players?: Array<{ id: string; name: string; isBot: boolean }>;
 }
 
 function isDuplicateMessage(
@@ -74,6 +75,7 @@ export default function ChatBox({
   playerName,
   playerId,
   systemMessages = [],
+  players = [],
 }: Readonly<ChatBoxProps>) {
   const { t } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -82,9 +84,31 @@ export default function ChatBox({
   const { sendMessage, registerHandler } = useWebSocketContext();
   const direction = useTextDirection();
 
-  const allMessages = [...messages, ...systemMessages].sort(
-    (a, b) => a.timestamp - b.timestamp,
-  );
+  // Get user settings from localStorage
+  const showBotMessages = localStorage.getItem("showBotMessages") !== "false";
+  const showSystemMessages = localStorage.getItem("showSystemMessages") !== "false";
+
+  // Helper to check if a player is a bot
+  const isPlayerBot = (messagePlayerId: string) => {
+    return players.some((p) => p.id === messagePlayerId && p.isBot);
+  };
+
+  // Filter messages based on settings
+  const filteredMessages = [...messages, ...systemMessages]
+    .filter((msg) => {
+      // Filter system messages
+      if (msg.isSystem && !showSystemMessages) {
+        return false;
+      }
+      // Filter bot messages
+      if (!msg.isSystem && isPlayerBot(msg.playerId) && !showBotMessages) {
+        return false;
+      }
+      return true;
+    })
+    .sort((a, b) => a.timestamp - b.timestamp);
+
+  const allMessages = filteredMessages;
 
   const messageHandlerRef = useRef<(message: WSMessage) => void>(null);
 

@@ -14,7 +14,10 @@
   "nav": {
     "toggleDarkMode": "Basculer le mode sombre",
     "language": "Langue",
-    "fullscreen": "Plein écran"
+    "fullscreen": "Plein écran",
+    "showBotMessages": "Messages des bots",
+    "showSystemMessages": "Messages système",
+    "showChallengeToasts": "Notifications de défi"
   },
   "languages": {
     "english": "Anglais",

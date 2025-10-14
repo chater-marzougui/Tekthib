@@ -287,12 +287,17 @@ export default function GamePage() {
         const resultMessage = result.message;
         const resultDescription = result.description;
 
-        if (toastColor === "red") {
-          toast.error(resultMessage, { description: resultDescription });
-        } else if (toastColor === "green") {
-          toast.success(resultMessage, { description: resultDescription });
-        } else {
-          toast.info(resultMessage, { description: resultDescription });
+        // Check user settings for showing challenge toasts
+        const showChallengeToasts = localStorage.getItem("showChallengeToasts") !== "false";
+        
+        if (showChallengeToasts) {
+          if (toastColor === "red") {
+            toast.error(resultMessage, { description: resultDescription });
+          } else if (toastColor === "green") {
+            toast.success(resultMessage, { description: resultDescription });
+          } else {
+            toast.info(resultMessage, { description: resultDescription });
+          }
         }
 
         const shouldShowCardReveal =
@@ -901,6 +906,7 @@ export default function GamePage() {
                   playerName={playerName}
                   playerId={playerId}
                   systemMessages={systemMessages}
+                  players={players}
                 />
               )}
               <PlayerList players={players} currentPlayerId={playerId} />

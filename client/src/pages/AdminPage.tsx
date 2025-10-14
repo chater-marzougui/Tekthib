@@ -110,6 +110,88 @@ export default function AdminPage() {
     }
   };
 
+  const deleteAllRooms = async () => {
+    if (!password) {
+      toast.error(t("admin.passwordRequired"));
+      return;
+    }
+
+    if (!confirm("Are you sure you want to delete ALL rooms? This action cannot be undone!")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${baseUrl}/api/admin/delete-all-rooms`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ password }),
+      });
+
+      if (response.status === 401) {
+        toast.error(t("admin.invalidPassword"));
+        setIsAuthenticated(false);
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error("Failed to delete all rooms");
+      }
+
+      const data = await response.json();
+      toast.success(`${data.deletedCount} room(s) deleted successfully`);
+      // Refresh system state
+      fetchSystemState(password);
+    } catch (error) {
+      console.error("Error deleting all rooms:", error);
+      toast.error("Failed to delete all rooms");
+    }
+  };
+
+  const kickPlayer = async (roomId: string, playerId: string, playerName: string) => {
+    if (!password) {
+      toast.error(t("admin.passwordRequired"));
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to kick player ${playerName}?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${baseUrl}/api/admin/kick-player`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ roomId, playerId, password }),
+      });
+
+      if (response.status === 401) {
+        toast.error(t("admin.invalidPassword"));
+        setIsAuthenticated(false);
+        return;
+      }
+
+      if (response.status === 404) {
+        toast.error("Player or room not found");
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error("Failed to kick player");
+      }
+
+      toast.success(`Player ${playerName} kicked successfully`);
+      // Refresh system state
+      fetchSystemState(password);
+    } catch (error) {
+      console.error("Error kicking player:", error);
+      toast.error("Failed to kick player");
+    }
+  };
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (password.trim()) {
@@ -254,6 +336,27 @@ export default function AdminPage() {
           </Card>
         </div>
 
+        {/* Admin Actions */}
+        {systemState && systemState.totalRooms > 0 && (
+          <Card className="border-red-200 bg-red-50">
+            <CardHeader>
+              <CardTitle className="text-red-700 flex items-center gap-2">
+                <Icon icon="mdi:alert" className="w-5 h-5" /> Danger Zone
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Button
+                variant="destructive"
+                onClick={deleteAllRooms}
+                className="w-full"
+              >
+                <Icon icon="mdi:delete-sweep" className="w-4 h-4 mr-2" />
+                Delete All Rooms ({systemState.totalRooms})
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Rooms List */}
         <Card>
           <CardHeader>
@@ -355,6 +458,11 @@ export default function AdminPage() {
                                     HOST
                                   </span>
                                 )}
+                                {player.isBot && (
+                                  <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded">
+                                    BOT
+                                  </span>
+                                )}
                               </div>
                               <div className="flex items-center gap-2 text-xs">
                                 <span
@@ -395,6 +503,17 @@ export default function AdminPage() {
                                   <span className="text-blue-600">
                                     🃏 {player.cardCount} cards
                                   </span>
+                                )}
+                                {!player.isBot && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 px-2 hover:bg-red-100 text-red-600"
+                                    onClick={() => kickPlayer(room.id, player.id, player.name)}
+                                    title="Kick Player"
+                                  >
+                                    <Icon icon="mdi:account-remove" className="w-3 h-3" />
+                                  </Button>
                                 )}
                               </div>
                             </div>

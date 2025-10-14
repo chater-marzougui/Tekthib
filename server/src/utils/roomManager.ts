@@ -387,6 +387,16 @@ class RoomManager {
     return true;
   }
 
+  deleteAllRooms(): number {
+    let deletedCount = 0;
+    for (const roomId of this.rooms.keys()) {
+      if (this.deleteRoom(roomId)) {
+        deletedCount++;
+      }
+    }
+    return deletedCount;
+  }
+
   cleanup(): void {
     for (const [roomId, room] of this.rooms.entries()) {
       const allPlayerBotsOrDisconnected = Array.from(

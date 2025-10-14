@@ -46,6 +46,7 @@
     "botsAddedSuccess": "Bots ajoutés avec succès !",
     "botRemovedSuccess": "Bot retiré avec succès !",
     "gameResetSuccess": "La partie a été réinitialisée ! Préparez-vous à jouer à nouveau.",
-    "roomCodeCopied": "Code de la salle copié dans le presse-papiers !"
+    "roomCodeCopied": "Code de la salle copié dans le presse-papiers !",
+    "gameInProgress": "Partie déjà en cours. Redirection vers le jeu..."
   }
 }
