@@ -17,7 +17,8 @@
     "fullscreen": "ملء الشاشة",
     "showBotMessages": "رسائل البوت",
     "showSystemMessages": "رسائل النظام",
-    "showChallengeToasts": "إشعارات التحدي"
+    "showChallengeToasts": "إشعارات التحدي",
+    "soundEffects": "المؤثرات الصوتية"
   },
   "languages": {
     "english": "الإنجليزية",

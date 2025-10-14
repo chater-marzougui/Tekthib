@@ -14,6 +14,8 @@ import VoiceChat from "@/components/chat/VoiceChat";
 import PlayerNameDialog from "@/components/room/PlayerNameDialog";
 import RoomGameInfo from "@/components/room/GameInfo";
 import RoomHeader from "@/components/room/RoomHeader";
+import { useSound } from "@/hooks/useSound";
+import { LOBBY_SOUNDS, PLAYER_JOIN_SOUNDS, GAME_START_SOUNDS } from "@/lib/sounds";
 
 function isDuplicatePlayer(players: Player[], newPlayer: Player): boolean {
   return players.some((p) => p.id === newPlayer.id);
@@ -25,6 +27,7 @@ export default function RoomPage() {
   const navigate = useNavigate();
   const { setHeaderConfig } = useHeader();
   const { sendMessage, registerHandler, isConnected } = useWebSocketContext();
+  const { playRandomSound } = useSound();
 
   const [players, setPlayers] = useState<Player[]>([]);
   const [isHost, setIsHost] = useState(false);
@@ -56,6 +59,23 @@ export default function RoomPage() {
   useEffect(() => {
     roomCodeRef.current = roomCode;
   }, [roomCode]);
+
+  // Play lobby background music when room is loaded (100% probability)
+  useEffect(() => {
+    let lobbyAudio: HTMLAudioElement | undefined;
+    
+    if (roomCode) {
+      lobbyAudio = playRandomSound(LOBBY_SOUNDS, { loop: true, volume: 0.3 });
+    }
+    
+    // Cleanup: stop lobby music when leaving the room
+    return () => {
+      if (lobbyAudio) {
+        lobbyAudio.pause();
+        lobbyAudio.currentTime = 0;
+      }
+    };
+  }, [roomCode, playRandomSound]);
 
   useEffect(() => {
     if (!isConnected) {
@@ -99,6 +119,10 @@ export default function RoomPage() {
       (message) => {
         if (message.type === "PLAYER_JOINED") {
           const { player } = message.payload;
+          
+          // Play player join sound (70% probability)
+          playRandomSound(PLAYER_JOIN_SOUNDS, { probability: 0.7 });
+          
           setPlayers((prev) => {
             if (!isDuplicatePlayer(prev, player)) {
               return [...prev, player];
@@ -140,6 +164,9 @@ export default function RoomPage() {
 
     const unregisterGameStarted = registerHandler("game-started", (message) => {
       if (message.type === "GAME_STARTED") {
+        // Play game start sound (100% probability)
+        playRandomSound(GAME_START_SOUNDS);
+        
         const currentRoomCode = roomCodeRef.current || roomId;
         navigate(`/game/${currentRoomCode}`);
       }

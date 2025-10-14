@@ -18,30 +18,30 @@ function App() {
   return (
     <Router basename="/Tekthib/">
       <ThemeProvider>
-        <HeaderProvider>
-          <Header />
-          <Toaster
-            richColors
-            duration={3500}
-            position="top-center"
-            closeButton={true}
-            swipeDirections={["left", "right", "top", "bottom"]}
-            toastOptions={{
-              style: { fontSize: "0.9rem" },
-              classNames: {
-                toast:
-                  "scale-90 md:scale-115 px-4 md:px-16 py-2 md:py-0 md:max-w-[500px]",
-              },
-            }}
-          />
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/admin" element={<AdminPage />} />
-            <Route
-              path="/*"
-              element={
-                <WebSocketProvider>
-                  <SoundProvider>
+        <SoundProvider>
+          <HeaderProvider>
+            <Header />
+            <Toaster
+              richColors
+              duration={3500}
+              position="top-center"
+              closeButton={true}
+              swipeDirections={["left", "right", "top", "bottom"]}
+              toastOptions={{
+                style: { fontSize: "0.9rem" },
+                classNames: {
+                  toast:
+                    "scale-90 md:scale-115 px-4 md:px-16 py-2 md:py-0 md:max-w-[500px]",
+                },
+              }}
+            />
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/admin" element={<AdminPage />} />
+              <Route
+                path="/*"
+                element={
+                  <WebSocketProvider>
                     <VoiceChatWrapper>
                       <Routes>
                         <Route path="/room/:roomId" element={<RoomPage />} />
@@ -49,12 +49,12 @@ function App() {
                         <Route path="*" element={<HomePage />} />
                       </Routes>
                     </VoiceChatWrapper>
-                  </SoundProvider>
-                </WebSocketProvider>
-              }
-            />
-          </Routes>
-        </HeaderProvider>
+                  </WebSocketProvider>
+                }
+              />
+            </Routes>
+          </HeaderProvider>
+        </SoundProvider>
       </ThemeProvider>
     </Router>
   );

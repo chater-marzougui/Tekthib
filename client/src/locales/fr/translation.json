@@ -17,7 +17,8 @@
     "fullscreen": "Plein écran",
     "showBotMessages": "Messages des bots",
     "showSystemMessages": "Messages système",
-    "showChallengeToasts": "Notifications de défi"
+    "showChallengeToasts": "Notifications de défi",
+    "soundEffects": "Effets sonores"
   },
   "languages": {
     "english": "Anglais",

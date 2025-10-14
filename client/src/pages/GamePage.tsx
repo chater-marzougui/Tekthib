@@ -19,6 +19,8 @@ import { getToastMessage } from "@/lib/utils";
 import PlayerNameDialog from "@/components/room/PlayerNameDialog";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useHeader } from "@/hooks/useHeader";
+import { useSound } from "@/hooks/useSound";
+import { SOUNDS, WIN_SOUNDS, LOSE_SOUNDS, WIN_ROUND_SOUNDS, LOSE_ROUND_SOUNDS } from "@/lib/sounds";
 
 interface GamePlayer extends Player {
   isCurrentTurn: boolean;
@@ -46,6 +48,7 @@ export default function GamePage() {
   const { roomId } = useParams<{ roomId: string }>();
   const { sendMessage, registerHandler, isConnected } = useWebSocketContext();
   const { setHeaderConfig } = useHeader();
+  const { playSound, playRandomSound } = useSound();
 
   const [players, setPlayers] = useState<GamePlayer[]>([]);
   const [playerHand, setPlayerHand] = useState<DisplayGameCard[]>([]);
@@ -287,6 +290,17 @@ export default function GamePage() {
         const resultMessage = result.message;
         const resultDescription = result.description;
 
+        // Play challenge result sound (70% probability)
+        // If I won the challenge, play win sound; if I lost, play lose sound
+        const iWon = (wasLying && challengerId === playerId) || (!wasLying && lastPlayerId === playerId);
+        const iLost = (wasLying && lastPlayerId === playerId) || (!wasLying && challengerId === playerId);
+        
+        if (iWon) {
+          playRandomSound(WIN_ROUND_SOUNDS, { probability: 0.7 });
+        } else if (iLost) {
+          playRandomSound(LOSE_ROUND_SOUNDS, { probability: 0.7 });
+        }
+
         // Check user settings for showing challenge toasts
         const showChallengeToasts = localStorage.getItem("showChallengeToasts") !== "false";
         
@@ -366,6 +380,14 @@ export default function GamePage() {
       const loserName =
         finalState?.players?.find((p: Player) => p.id === loser)?.name ||
         "Unknown";
+
+      // Play game end sound (70% probability)
+      // If I won, play win sound; if I lost, play lose sound
+      if (winners.includes(playerId)) {
+        playRandomSound(WIN_SOUNDS, { probability: 0.7 });
+      } else if (loser === playerId) {
+        playRandomSound(LOSE_SOUNDS, { probability: 0.7 });
+      }
 
       setGameEndedDialog({
         open: true,
@@ -528,6 +550,9 @@ export default function GamePage() {
   }, [lastPlay]);
 
   const handleCardSelect = (cardId: string) => {
+    // Play card select sound (100% probability)
+    playSound(SOUNDS.CARD_SELECT);
+    
     setPlayerHand((prev) =>
       prev.map((card) =>
         card.id === cardId ? { ...card, selected: !card.selected } : card
@@ -573,6 +598,9 @@ export default function GamePage() {
   };
 
   const handleChallenge = () => {
+    // Play challenge button sound (100% probability)
+    playSound(SOUNDS.CHALLENGE_BUTTON_CLICKED);
+    
     sendMessage({
       type: "CHALLENGE",
       payload: {
