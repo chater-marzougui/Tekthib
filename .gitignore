@@ -37,4 +37,4 @@ coverage/
 tmp/
 temp/
 STM32PAGE.tsx
-certs/
+certs/.backup
