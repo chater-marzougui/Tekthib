@@ -13,11 +13,8 @@ const CenterPile: React.FC<CenterPileProps> = ({ pileCount, lastPlay }) => {
   if (!lastPlay) {
     return (
       <div className="text-center text-gray-500 py-8">
-        <div className="text-4xl mb-2">🃏</div>
+        <div className="center-pile-container text-4xl mb-2">🃏</div>
         <div className="text-base md:text-lg">{t('centerPile.waitingForFirstPlay')}</div>
-        <div className="text-sm mt-2">
-          {t('centerPile.gameWillBegin')}
-        </div>
       </div>
     );
   }

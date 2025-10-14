@@ -148,7 +148,7 @@ export default function ChatBox({
   }, [allMessages]);
 
   return (
-    <Card className="h-96 flex flex-col w-full pt-3 pb-1" dir={direction}>
+    <Card className="h-96 flex flex-col w-full pt-3 pb-1 max-w-84" dir={direction}>
       <CardHeader className="flex-shrink-0">
         <CardTitle>{t('chat.title')}</CardTitle>
         <Separator className="!h-0.5" />

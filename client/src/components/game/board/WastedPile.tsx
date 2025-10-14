@@ -56,7 +56,7 @@ const WastedPile: React.FC<CenterPileProps> = ({ removedCards }) => {
   }
 
   if (removedCards.length === 0) {
-    return null;
+    return <div className="w-[160px] h-12"></div>;
   }
 
   return (

@@ -37,7 +37,7 @@ export const CardsSizes: SizesProps = {
     YTranslation: -25,
   },
   xlarge: {
-    cardSize: "w-24 h-34",
+    cardSize: "w-22 h-30",
     overlapOffset: 35,
     selectedOffset: 40,
     YTranslation: -30,

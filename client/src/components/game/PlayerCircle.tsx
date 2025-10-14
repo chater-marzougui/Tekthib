@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { PlayerBadge } from "../PlayerBadge";
 import { Icon } from "@iconify/react";
+import { useRef, useEffect, useState } from "react";
 import type { Player as BasePlayer } from "shared";
 
 interface Player extends BasePlayer {
@@ -10,18 +11,26 @@ interface Player extends BasePlayer {
 interface PlayerCircleProps {
   players: Player[];
   currentPlayerId: string;
-  centerX?: number;
-  centerY?: number;
-  radius?: number;
+  radius: number;
 }
 
 export default function PlayerCircle({
   players,
   currentPlayerId,
-  centerX = 0,
-  centerY = 0,
-  radius = 200,
+  radius,
 }: Readonly<PlayerCircleProps>) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [center, setCenter] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setCenter({
+        x: rect.width / 2,
+        y: rect.height / 2,
+      });
+    }
+  }, []);
   // Find the current player's index in the array
   const currentPlayerIndex = players.findIndex((p) => p.id === currentPlayerId);
   
@@ -44,15 +53,15 @@ export default function PlayerCircle({
     const startAngle = Math.PI / 2; // 90 degrees in radians
     const angleStep = (2 * Math.PI) / totalPlayers;
     const angle = startAngle - angleStep * index; // Subtract to go clockwise
-    
-    const x = centerX + radius * Math.cos(angle);
-    const y = centerY + radius * Math.sin(angle);
+
+    const x = center.x * 0.75 + radius * Math.cos(angle);
+    const y = center.y * 0.75 + radius * Math.sin(angle);
 
     return { x, y };
   };
 
   return (
-    <div className="player-circle-container absolute" style={{ 
+    <div ref={containerRef} className="player-circle-container absolute" style={{ 
       pointerEvents: 'none',
       width: '100%',
       height: '100%',
@@ -82,7 +91,6 @@ export default function PlayerCircle({
             style={{
               left: 0,
               top: 0,
-              transform: `translate(${position.x}px, ${position.y}px) translate(-50%, -50%)`,
               pointerEvents: 'auto',
             }}
           >

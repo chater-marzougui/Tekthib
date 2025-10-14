@@ -153,7 +153,6 @@ export default function GamePage() {
               const isWinner = initialGameState.winners.includes(playerId);
               const isLastPlayer = initialGameState.lastPlayerId === playerId;
               setCanChallenge(
-                initialGameState.currentPlayerId === playerId &&
                   !isLastPlayer &&
                   !isWinner &&
                   initialGameState.pileCount > 0
@@ -256,7 +255,7 @@ export default function GamePage() {
           setGameState(newGameState);
           setIsMyTurn(newGameState.currentPlayerId === playerId);
           const isWinner = newGameState.winners.includes(playerId);
-          setCanChallenge(pName !== playerName && !isWinner);
+          setCanChallenge(playedPlayerId !== playerId && !isWinner);
         }
       }
     });
@@ -503,8 +502,8 @@ export default function GamePage() {
       if (pileEl) {
         const rect = pileEl.getBoundingClientRect();
         setPilePosition({
-          x: (rect.left + rect.right) / 2,
-          y: (rect.top + rect.bottom) / 2,
+          x: (rect.left + rect.right) / 2 - 20, // slight offset to the left
+          y: (rect.top + rect.bottom) / 2 + 30, // slight offset downwards
         });
       }
 
@@ -690,7 +689,7 @@ export default function GamePage() {
             const stackOffset = 2;
             const endX =
               pilePosition.x + (index - totalCards / 2) * stackOffset;
-            const endY = pilePosition.y + index * stackOffset;
+            const endY = pilePosition.y * 0.8 + index * stackOffset;
 
             const rotation =
               (index - totalCards / 2) * 3 + (Math.random() - 0.5) * 5;
@@ -723,7 +722,7 @@ export default function GamePage() {
                   rotate: rotation,
                 }}
                 transition={{ duration, delay, ease: "easeInOut" }}
-                className="absolute w-20 h-28"
+                className="absolute w-12 h-20"
                 style={{ left: 0, top: 0 }}
               >
                 <div className="w-full h-full bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg border-2 border-purple-300 shadow-2xl flex items-center justify-center">
@@ -753,8 +752,8 @@ export default function GamePage() {
               );
               if (playerAvatarEl) {
                 const rect = playerAvatarEl.getBoundingClientRect();
-                endX = rect.left + rect.width / 2;
-                endY = rect.top + rect.height / 2;
+                endX = (rect.left + rect.right) / 2;
+                endY = (rect.top + rect.bottom) / 2;
               } else {
                 // Fallback if player not found
                 return null;
@@ -883,6 +882,11 @@ export default function GamePage() {
         </div>
 
         <div className="flex flex-col gap-6">
+          <div
+            className="rounded-xl w-4 h-4 absolute bg-red-500 z-6000"
+            style={{ top: `${pilePosition.y}px`, left: `${pilePosition.x}px` }}
+          ></div>
+
           <div className="flex flex-col lg:flex-row gap-6">
             <GameBoard
               lastPlay={lastPlay}
@@ -900,14 +904,9 @@ export default function GamePage() {
               serverTimer={gameState.remainingTime}
               players={players}
               currentPlayerId={playerId}
-              centerPilePosition={{
-                x: pilePosition.x / 2,
-                y: pilePosition.y / 2,
-              }}
             />
 
-            <div className="gap-4 flex flex-row w-full lg:flex-col lg:w-96">
-              <PlayerList players={players} currentPlayerId={playerId} />
+            <div className="gap-4 flex flex-row flex-wrap w-full lg:flex-col lg:w-96">
               {playerId && playerName && (
                 <ChatBox
                   playerName={playerName}
@@ -915,6 +914,7 @@ export default function GamePage() {
                   systemMessages={systemMessages}
                 />
               )}
+              <PlayerList players={players} currentPlayerId={playerId} />
             </div>
           </div>
 
