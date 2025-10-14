@@ -47,6 +47,20 @@ export function NavUser() {
   const playerId = localStorage.getItem("clientId");
   const randomStr = Math.random().toString(36).substring(2, 15);
   const [isFullscreen, setIsFullscreen] = React.useState(false);
+  
+  // User settings
+  const [showBotMessages, setShowBotMessages] = React.useState(() => {
+    const saved = localStorage.getItem("showBotMessages");
+    return saved !== null ? saved === "true" : true;
+  });
+  const [showSystemMessages, setShowSystemMessages] = React.useState(() => {
+    const saved = localStorage.getItem("showSystemMessages");
+    return saved !== null ? saved === "true" : true;
+  });
+  const [showChallengeToasts, setShowChallengeToasts] = React.useState(() => {
+    const saved = localStorage.getItem("showChallengeToasts");
+    return saved !== null ? saved === "true" : true;
+  });
 
   const avatarSvg = useAvatar(playerId || randomStr);
 
@@ -79,6 +93,30 @@ export function NavUser() {
       }).catch((err) => {
         console.error("Error attempting to exit fullscreen:", err);
       });
+    }
+  };
+
+  const toggleSetting = (
+    e: React.MouseEvent<HTMLButtonElement>,
+    setting: "bot" | "system" | "challenge",
+    currentValue: boolean
+  ) => {
+    e.stopPropagation();
+    const newValue = !currentValue;
+    
+    switch (setting) {
+      case "bot":
+        setShowBotMessages(newValue);
+        localStorage.setItem("showBotMessages", String(newValue));
+        break;
+      case "system":
+        setShowSystemMessages(newValue);
+        localStorage.setItem("showSystemMessages", String(newValue));
+        break;
+      case "challenge":
+        setShowChallengeToasts(newValue);
+        localStorage.setItem("showChallengeToasts", String(newValue));
+        break;
     }
   };
 
@@ -171,6 +209,80 @@ export function NavUser() {
                             className="h-4 w-4"
                           />
                         )}
+                      </span>
+                    </button>
+                  </label>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
+                  <label className="flex w-full items-center justify-between">
+                    <span>{t("nav.showBotMessages")}</span>
+                    <button
+                      className="relative inline-block w-10 h-6"
+                      onClick={(e) => toggleSetting(e, "bot", showBotMessages)}
+                    >
+                      <span className={`absolute inset-0 rounded-full transition-colors duration-200 ${
+                        showBotMessages ? "bg-green-400" : "bg-gray-300"
+                      }`} />
+                      <span
+                        className={`absolute left-0 top-0 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
+                          showBotMessages ? "translate-x-4" : "translate-x-0"
+                        } flex items-center justify-center`}
+                      >
+                        <Icon
+                          icon={showBotMessages ? "mdi:check" : "mdi:close"}
+                          className="h-4 w-4"
+                        />
+                      </span>
+                    </button>
+                  </label>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
+                  <label className="flex w-full items-center justify-between">
+                    <span>{t("nav.showSystemMessages")}</span>
+                    <button
+                      className="relative inline-block w-10 h-6"
+                      onClick={(e) => toggleSetting(e, "system", showSystemMessages)}
+                    >
+                      <span className={`absolute inset-0 rounded-full transition-colors duration-200 ${
+                        showSystemMessages ? "bg-green-400" : "bg-gray-300"
+                      }`} />
+                      <span
+                        className={`absolute left-0 top-0 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
+                          showSystemMessages ? "translate-x-4" : "translate-x-0"
+                        } flex items-center justify-center`}
+                      >
+                        <Icon
+                          icon={showSystemMessages ? "mdi:check" : "mdi:close"}
+                          className="h-4 w-4"
+                        />
+                      </span>
+                    </button>
+                  </label>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
+                  <label className="flex w-full items-center justify-between">
+                    <span>{t("nav.showChallengeToasts")}</span>
+                    <button
+                      className="relative inline-block w-10 h-6"
+                      onClick={(e) => toggleSetting(e, "challenge", showChallengeToasts)}
+                    >
+                      <span className={`absolute inset-0 rounded-full transition-colors duration-200 ${
+                        showChallengeToasts ? "bg-green-400" : "bg-gray-300"
+                      }`} />
+                      <span
+                        className={`absolute left-0 top-0 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
+                          showChallengeToasts ? "translate-x-4" : "translate-x-0"
+                        } flex items-center justify-center`}
+                      >
+                        <Icon
+                          icon={showChallengeToasts ? "mdi:check" : "mdi:close"}
+                          className="h-4 w-4"
+                        />
                       </span>
                     </button>
                   </label>

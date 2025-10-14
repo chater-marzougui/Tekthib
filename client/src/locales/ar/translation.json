@@ -14,7 +14,10 @@
   "nav": {
     "toggleDarkMode": "تبديل الوضع الداكن",
     "language": "اللغة",
-    "fullscreen": "ملء الشاشة"
+    "fullscreen": "ملء الشاشة",
+    "showBotMessages": "رسائل البوت",
+    "showSystemMessages": "رسائل النظام",
+    "showChallengeToasts": "إشعارات التحدي"
   },
   "languages": {
     "english": "الإنجليزية",

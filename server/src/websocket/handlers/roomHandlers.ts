@@ -129,6 +129,44 @@ function handleJoinRoom(
     return;
   }
 
+  // Check if game has already started
+  const gameEngine = roomManager.getGameEngine(room.id);
+  const wasPlayerInGame = room.players.has(clientInfo.id);
+  
+  // If game is in progress and player was not in it originally, deny joining
+  if (gameEngine && !wasPlayerInGame) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: { 
+        message: 'Game already in progress', 
+        code: 'GAME_IN_PROGRESS',
+        roomCode: payload.roomCode,
+      },
+    });
+    return;
+  }
+
+  // If game is in progress and player was in it, redirect to game page
+  if (gameEngine && wasPlayerInGame) {
+    clientInfo.roomId = room.id;
+    clientInfo.name = room.players.get(clientInfo.id)?.name || payload.playerName;
+    
+    // Update player connection status
+    const player = room.players.get(clientInfo.id);
+    if (player) {
+      player.isConnected = true;
+    }
+
+    // Send them to game page with GAME_STARTED message
+    sendToClient(ws, {
+      type: 'GAME_STARTED',
+      payload: {
+        roomCode: payload.roomCode,
+      },
+    });
+    return;
+  }
+
   const result = roomManager.addPlayerToRoom(
     room.id,
     clientInfo.id,
