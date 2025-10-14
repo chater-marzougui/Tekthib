@@ -8,7 +8,7 @@ interface VoiceChatWrapperProps {
   children: ReactNode;
 }
 
-export function VoiceChatWrapper({ children }: VoiceChatWrapperProps) {
+export function VoiceChatWrapper({ children }: Readonly<VoiceChatWrapperProps>) {
   const location = useLocation();
   const { registerHandler } = useWebSocketContext();
   const [players, setPlayers] = useState<Player[]>([]);
@@ -18,7 +18,7 @@ export function VoiceChatWrapper({ children }: VoiceChatWrapperProps) {
 
   // Extract roomId from pathname instead of useParams (since we're outside the Route)
   const roomId = (() => {
-    const match = location.pathname.match(/\/(room|game)\/([^/]+)/);
+    const match = RegExp(/\/(room|game)\/([^/]+)/).exec(location.pathname);
     return match ? match[2] : undefined;
   })();
 
@@ -80,13 +80,7 @@ export function VoiceChatWrapper({ children }: VoiceChatWrapperProps) {
         if (message.type === "INITIAL_GAME_STATE") {
           const { gameState } = message.payload;
           if (gameState) {
-            const gamePlayers: Player[] = gameState.players.map((p: any) => ({
-              id: p.id,
-              name: p.name,
-              isReady: true,
-              isConnected: p.isConnected,
-              isBot: p.isBot,
-            }));
+            const gamePlayers: Player[] = gameState.players;
             setPlayers(gamePlayers);
             setIsHost(
               gameState.players.length > 0 &&
@@ -103,13 +97,7 @@ export function VoiceChatWrapper({ children }: VoiceChatWrapperProps) {
         if (message.type === "GAME_STATE_UPDATE") {
           const { gameState } = message.payload;
           if (gameState) {
-            const gamePlayers: Player[] = gameState.players.map((p: any) => ({
-              id: p.id,
-              name: p.name,
-              isReady: true,
-              isConnected: p.isConnected,
-              isBot: p.isBot,
-            }));
+            const gamePlayers: Player[] = gameState.players;
             setPlayers(gamePlayers);
           }
         }

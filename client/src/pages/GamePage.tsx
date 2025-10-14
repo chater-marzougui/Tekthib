@@ -11,13 +11,14 @@ import type { GameState as ServerGameState } from "./../types";
 import VoiceChat from "@/components/chat/VoiceChat";
 import { EndGameDialog } from "@/components/game/EndGameDialog";
 import { motion } from "framer-motion";
-import { RenderCard, RenderUnknownCard } from "@/components/game/RenderCard";
-import { useHeader } from "@/context/HeaderContext";
+import { RenderCard } from "@/components/game/RenderCard";
+import { RenderUnknownCard } from "@/components/game/RenderUnknownCard";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import QuickRules from "@/components/game/QuickRules";
 import { getToastMessage } from "@/lib/utils";
 import PlayerNameDialog from "@/components/room/PlayerNameDialog";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { useHeader } from "@/hooks/useHeader";
 
 interface GamePlayer extends Player {
   isCurrentTurn: boolean;

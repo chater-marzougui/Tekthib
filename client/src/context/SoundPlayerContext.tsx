@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useEffect } from 'react';
 import { useSoundManager } from '../hooks/useSoundManager';
 import { CRITICAL_SOUNDS } from '../lib/sounds';
 
@@ -10,7 +10,7 @@ interface SoundContextType {
   updateVolume: (volume: number) => void;
 }
 
-const SoundContext = createContext<SoundContextType | null>(null);
+export const SoundContext = createContext<SoundContextType | null>(null);
 
 export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const soundManager = useSoundManager();
@@ -27,12 +27,4 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       {children}
     </SoundContext.Provider>
   );
-};
-
-export const useSound = () => {
-  const context = useContext(SoundContext);
-  if (!context) {
-    throw new Error('useSound must be used within SoundProvider');
-  }
-  return context;
 };

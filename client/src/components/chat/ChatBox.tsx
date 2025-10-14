@@ -8,7 +8,6 @@ import { useWebSocketContext } from "@/context/WebSocketContext";
 import type { WSMessage } from "shared";
 import { Icon } from "@iconify/react";
 import { useTextDirection } from "@/hooks/useTextDirection";
-import { Separator } from "../ui/separator";
 
 interface ChatMessage {
   id: string;

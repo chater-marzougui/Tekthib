@@ -818,6 +818,7 @@ export function useVoiceChat({
     disableVoiceChat,
     navigate,
     isHost,
+    t,
   ]);
 
   // Handle new players joining

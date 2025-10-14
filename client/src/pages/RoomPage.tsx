@@ -5,7 +5,7 @@ import { useWebSocketContext } from "@/context/WebSocketContext";
 import type { Player } from "shared";
 import { toast } from "sonner";
 import { Icon } from "@iconify/react";
-import { useHeader } from "@/context/HeaderContext";
+import { useHeader } from "@/hooks/useHeader";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useTextDirection } from "@/hooks/useTextDirection";
 import RoomControls from "@/components/room/RoomControls";

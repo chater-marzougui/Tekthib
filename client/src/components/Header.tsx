@@ -1,6 +1,6 @@
 import { NavUser } from "./NavUser";
 import { Button } from "@/components/ui/button";
-import { useHeader } from "@/context/HeaderContext";
+import { useHeader } from "@/hooks/useHeader";
 
 export function Header() {
   const { headerState } = useHeader();

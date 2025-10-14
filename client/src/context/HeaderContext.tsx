@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useMemo, ReactNode } from "react";
+import { createContext, useState, useMemo, ReactNode } from "react";
 
 export interface HeaderActionButton {
   readonly label: string;
@@ -42,7 +42,7 @@ const defaultHeaderState: HeaderState = {
   middleElement: undefined,
 };
 
-const HeaderContext = createContext<HeaderContextType | undefined>(undefined);
+export const HeaderContext = createContext<HeaderContextType | undefined>(undefined);
 
 export function HeaderProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [headerState, setHeaderState] =
@@ -78,12 +78,4 @@ export function HeaderProvider({ children }: Readonly<{ children: ReactNode }>) 
   return (
     <HeaderContext.Provider value={value}>{children}</HeaderContext.Provider>
   );
-}
-
-export function useHeader() {
-  const context = useContext(HeaderContext);
-  if (!context) {
-    throw new Error("useHeader must be used within a HeaderProvider");
-  }
-  return context;
 }

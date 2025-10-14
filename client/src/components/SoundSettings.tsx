@@ -1,5 +1,5 @@
 import { Volume2, VolumeX } from 'lucide-react';
-import { useSound } from '@/context/SoundPlayerContext';
+import { useSound } from '@/hooks/useSound';
 import { Button } from './ui/button';
 import { Slider } from './ui/slider';
 

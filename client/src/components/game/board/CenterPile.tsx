@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { LastPlay } from "@shared";
 import { AnimatePresence, motion } from "framer-motion";
-import { RenderUnknownCard } from "../RenderCard";
+import { RenderUnknownCard } from "@/components/game/RenderUnknownCard";
 
 interface CenterPileProps {
   pileCount: number;
