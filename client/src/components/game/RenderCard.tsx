@@ -1,19 +1,34 @@
 import type { JSX } from "react";
 import type { Card, DisplayGameCard, Rank } from "shared";
+import { cn } from "@/lib/utils";
 import { BASE_PREFIX, CardsSizes } from "@/types/config";
 
 // Preload all card images on app initialization
 const preloadCardImages = () => {
-  const ranks: Rank[] = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+  const ranks: Rank[] = [
+    "A",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "J",
+    "Q",
+    "K",
+  ];
   const suits = ["hearts", "diamonds", "clubs", "spades"];
-  
-  ranks.forEach(rank => {
-    suits.forEach(suit => {
+
+  ranks.forEach((rank) => {
+    suits.forEach((suit) => {
       const img = new Image();
       img.src = `${BASE_PREFIX}/cards/${rank}_${suit}.png`;
     });
   });
-  
+
   // Preload joker assets
   const jokerStatic = new Image();
   jokerStatic.src = `${BASE_PREFIX}/icons/joker-smile.png`;
@@ -40,11 +55,7 @@ const renderJokerCard = (
       className={`
         relative ${cardSize} rounded-md shadow-md select-none
         bg-slate-50 border transition-all duration-300
-        ${
-          isSelected
-            ? "border-blue-500 shadow-blue-400/50"
-            : "border-gray-400"
-        }
+        ${isSelected ? "border-blue-500 shadow-blue-400/50" : "border-gray-400"}
         overflow-hidden
       `}
       style={{
@@ -109,7 +120,6 @@ const renderJokerCard = (
   );
 };
 
-
 export const RenderCard = (
   card: Card,
   isMyTurn: boolean,
@@ -123,7 +133,7 @@ export const RenderCard = (
 
   // Handle Joker separately with the custom design
   const isJoker = card.rank === "Joker";
-  
+
   return (
     <button
       key={key}
@@ -216,8 +226,38 @@ const RenderOneHand = (
     >
       {handCards.map((card, idx) => {
         const isSelected = selectedCards.includes(card.id);
-        return RenderCard(card, isMyTurn, onCardSelect, isSelected, idx, cardSize);
+        return RenderCard(
+          card,
+          isMyTurn,
+          onCardSelect,
+          isSelected,
+          idx,
+          cardSize
+        );
       })}
+    </div>
+  );
+};
+
+export const RenderUnknownCard = (
+  color: "destructive" | "default" = "default"
+) => {
+  const baseClasses =
+    "w-full h-full rounded-sm border-gray-300 shadow-xl border-2 flex items-center justify-center";
+
+  const colorClasses =
+    color === "destructive"
+      ? "bg-gradient-to-br from-red-500 to-pink-600 border-red-300"
+      : "";
+  
+  const colorStyle =
+    color === "default"
+      ? { background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }
+      : { };  
+
+  return (
+    <div className={cn(baseClasses, colorClasses)} style={colorStyle}>
+      <div className="text-white font-bold text-3xl opacity-70">?</div>
     </div>
   );
 };

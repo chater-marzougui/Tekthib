@@ -151,13 +151,12 @@ export default function ChatBox({
     <Card className="h-96 flex flex-col w-full pt-3 pb-1 max-w-84" dir={direction}>
       <CardHeader className="flex-shrink-0">
         <CardTitle>{t('chat.title')}</CardTitle>
-        <Separator className="!h-0.5" />
       </CardHeader>
       <CardContent className="flex-1 flex flex-col p-0 min-h-0">
         {/* Messages Area */}
         <div 
           ref={messagesContainerRef}
-          className="flex-1 overflow-y-auto space-y-4 p-4"
+          className="flex-1 overflow-y-auto space-y-4 p-4 border-t"
         >
           {allMessages.length === 0 ? (
             <div className="flex items-center justify-center h-full text-muted-foreground">

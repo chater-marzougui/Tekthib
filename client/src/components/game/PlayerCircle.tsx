@@ -33,15 +33,16 @@ export default function PlayerCircle({
   }, []);
   // Find the current player's index in the array
   const currentPlayerIndex = players.findIndex((p) => p.id === currentPlayerId);
-  
+
   // Reorder players so the current player is first (will be positioned at bottom)
   // Then arrange others in play order
-  const reorderedPlayers = currentPlayerIndex !== -1
-    ? [
-        ...players.slice(currentPlayerIndex),
-        ...players.slice(0, currentPlayerIndex),
-      ]
-    : players;
+  const reorderedPlayers =
+    currentPlayerIndex !== -1
+      ? [
+          ...players.slice(currentPlayerIndex),
+          ...players.slice(0, currentPlayerIndex),
+        ]
+      : players;
 
   const totalPlayers = reorderedPlayers.length;
 
@@ -61,28 +62,32 @@ export default function PlayerCircle({
   };
 
   return (
-    <div ref={containerRef} className="player-circle-container absolute" style={{ 
-      pointerEvents: 'none',
-      width: '100%',
-      height: '100%',
-    }}>
+    <div
+      ref={containerRef}
+      className="player-circle-container absolute"
+      style={{
+        pointerEvents: "none",
+        width: "100%",
+        height: "100%",
+      }}
+    >
       {reorderedPlayers.map((player, index) => {
         const position = getPlayerPosition(index);
         const isCurrentPlayer = player.id === currentPlayerId;
-        
+
         return (
           <motion.div
             key={player.id}
             className={`player-avatar absolute`}
             data-player-id={player.id}
             initial={{ opacity: 0, scale: 0 }}
-            animate={{ 
-              opacity: 1, 
+            animate={{
+              opacity: 1,
               scale: 1,
               x: position.x,
               y: position.y,
             }}
-            transition={{ 
+            transition={{
               duration: 0.5,
               delay: index * 0.1,
               type: "spring",
@@ -91,18 +96,21 @@ export default function PlayerCircle({
             style={{
               left: 0,
               top: 0,
-              pointerEvents: 'auto',
+              pointerEvents: "auto",
             }}
           >
-            <div className={`
+            <div
+              className={`
               flex flex-col items-center gap-1 p-2 rounded-lg
-              transition-all duration-300
-              ${player.isCurrentTurn 
-                ? 'bg-blue-500/20 ring-2 ring-blue-500 shadow-lg shadow-blue-500/50' 
-                : 'bg-background/80 backdrop-blur-sm'
+              transition-all duration-300 w-20
+              ${
+                player.isCurrentTurn
+                  ? "bg-blue-500/20 ring-2 ring-blue-500 shadow-lg shadow-blue-500/50"
+                  : "bg-background/80 backdrop-blur-sm"
               }
-              ${isCurrentPlayer ? 'ring-2 ring-green-500' : ''}
-            `}>
+              ${isCurrentPlayer ? "ring-2 ring-green-500" : ""}
+            `}
+            >
               {/* Player Badge */}
               <div className="relative">
                 <PlayerBadge player={player} playerId={player.id} size="sm" />
@@ -118,26 +126,31 @@ export default function PlayerCircle({
               {/* Player Info */}
               <div className="text-center">
                 <div className="text-xs font-semibold text-foreground flex items-center gap-1">
-                  <span className="truncate max-w-[80px]">
+                  <span className="overflow-hidden whitespace-nowrap max-w-[60px] block">
                     {player.name}
                   </span>
                   {player.isBot && (
-                    <Icon icon="mdi:robot" className="w-3 h-3 text-purple-500" />
+                    <Icon
+                      icon="mdi:robot"
+                      className="w-3 h-3 text-purple-500"
+                    />
                   )}
                 </div>
-                
+
                 {/* Card count */}
-                <div className="text-xs text-muted-foreground">
-                  {player.cardCount || 0} 🃏
-                </div>
-                
-                {/* Winner indicator */}
-                {player.cardCount === 0 && (
-                  <div className="text-xs text-yellow-500 flex items-center gap-0.5">
-                    <Icon icon="mdi:trophy" className="w-3 h-3" />
+                {(player.cardCount ?? 0) > 0 && (
+                  <div className="text-xs text-muted-foreground">
+                    {player.cardCount} 🃏
                   </div>
                 )}
               </div>
+
+              {/* Winner indicator */}
+              {player.cardCount === 0 && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs text-yellow-500 flex items-center gap-0.5">
+                  <Icon icon="mdi:trophy" className="w-5 h-5" />
+                </div>
+              )}
             </div>
           </motion.div>
         );

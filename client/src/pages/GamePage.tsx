@@ -11,7 +11,7 @@ import type { GameState as ServerGameState } from "./../types";
 import VoiceChat from "@/components/chat/VoiceChat";
 import { EndGameDialog } from "@/components/game/EndGameDialog";
 import { motion } from "framer-motion";
-import { RenderCard } from "@/components/game/RenderCard";
+import { RenderCard, RenderUnknownCard } from "@/components/game/RenderCard";
 import { useHeader } from "@/context/HeaderContext";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import QuickRules from "@/components/game/QuickRules";
@@ -153,9 +153,7 @@ export default function GamePage() {
               const isWinner = initialGameState.winners.includes(playerId);
               const isLastPlayer = initialGameState.lastPlayerId === playerId;
               setCanChallenge(
-                  !isLastPlayer &&
-                  !isWinner &&
-                  initialGameState.pileCount > 0
+                !isLastPlayer && !isWinner && initialGameState.pileCount > 0
               );
             }
           }
@@ -689,7 +687,7 @@ export default function GamePage() {
             const stackOffset = 2;
             const endX =
               pilePosition.x + (index - totalCards / 2) * stackOffset;
-            const endY = pilePosition.y * 0.8 + index * stackOffset;
+            const endY = pilePosition.y * 0.75 + index * stackOffset;
 
             const rotation =
               (index - totalCards / 2) * 3 + (Math.random() - 0.5) * 5;
@@ -725,11 +723,7 @@ export default function GamePage() {
                 className="absolute w-12 h-20"
                 style={{ left: 0, top: 0 }}
               >
-                <div className="w-full h-full bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg border-2 border-purple-300 shadow-2xl flex items-center justify-center">
-                  <div className="text-white font-bold text-4xl opacity-70">
-                    ?
-                  </div>
-                </div>
+                {RenderUnknownCard("default")}
               </motion.div>
             );
           })}
@@ -741,6 +735,7 @@ export default function GamePage() {
           {Array.from({
             length: Math.min(takingCardsAnimation.cardCount, 10),
           }).map((_, index) => {
+            const totalCards = takingCardsAnimation.cardCount;
             const toPlayerId = takingCardsAnimation.toPlayerId;
 
             // Get end position based on who is taking cards
@@ -766,8 +761,10 @@ export default function GamePage() {
             }
 
             const stackOffset = 2;
-            const startX = pilePosition.x + (index - 5) * stackOffset;
-            const startY = pilePosition.y + index * stackOffset;
+
+            const startX =
+              pilePosition.x + (index - totalCards / 2) * stackOffset;
+            const startY = pilePosition.y * 0.7 + index * stackOffset;
 
             const rotation = (index - 5) * 3 + (Math.random() - 0.5) * 5;
 
@@ -788,18 +785,14 @@ export default function GamePage() {
                   x: endX,
                   y: endY,
                   scale: 0.5,
-                  opacity: 0,
+                  opacity: 0.3,
                   rotate: rotation + 180,
                 }}
                 transition={{ duration, delay, ease: "easeInOut" }}
-                className="absolute w-20 h-28"
+                className="absolute w-12 h-20"
                 style={{ left: 0, top: 0 }}
               >
-                <div className="w-full h-full bg-gradient-to-br from-red-500 to-pink-600 rounded-lg border-2 border-red-300 shadow-2xl flex items-center justify-center">
-                  <div className="text-white font-bold text-4xl opacity-70">
-                    ?
-                  </div>
-                </div>
+                {RenderUnknownCard("destructive")}
               </motion.div>
             );
           })}
@@ -882,11 +875,6 @@ export default function GamePage() {
         </div>
 
         <div className="flex flex-col gap-6">
-          <div
-            className="rounded-xl w-4 h-4 absolute bg-red-500 z-6000"
-            style={{ top: `${pilePosition.y}px`, left: `${pilePosition.x}px` }}
-          ></div>
-
           <div className="flex flex-col lg:flex-row gap-6">
             <GameBoard
               lastPlay={lastPlay}
@@ -906,7 +894,7 @@ export default function GamePage() {
               currentPlayerId={playerId}
             />
 
-            <div className="gap-4 flex flex-row flex-wrap w-full lg:flex-col lg:w-96">
+            <div className="gap-4 flex flex-row flex-wrap w-full lg:flex-col lg:w-84">
               {playerId && playerName && (
                 <ChatBox
                   playerName={playerName}

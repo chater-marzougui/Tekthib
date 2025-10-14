@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { LastPlay } from "@shared";
 import { AnimatePresence, motion } from "framer-motion";
+import { RenderUnknownCard } from "../RenderCard";
 
 interface CenterPileProps {
   pileCount: number;
@@ -57,21 +58,15 @@ const CenterPile: React.FC<CenterPileProps> = ({ pileCount, lastPlay }) => {
                     type: "spring",
                     stiffness: 200,
                   }}
-                  className="absolute w-12 h-18 bg-white rounded-sm border-2 border-gray-300 shadow-xl"
+                  className="absolute w-12 h-18 bg-white rounded-sm"
                   style={{
                     top: `${i * 3}px`,
                     left: `calc(25% - ${offsetX}px)`,
                     transform: `translateX(-50%)`,
-                    zIndex: i,
-                    background:
-                      "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    zIndex: i
                   }}
                 >
-                  <div className="w-full h-full flex items-center justify-center">
-                    <div className="text-white font-bold text-3xl opacity-50">
-                      ?
-                    </div>
-                  </div>
+                  {RenderUnknownCard("default")}
                 </motion.div>
               );
             })}
