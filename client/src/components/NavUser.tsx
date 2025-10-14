@@ -15,6 +15,7 @@ import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/context/ThemeProvider";
 import { useAvatar } from "@/hooks/useAvatar";
+import { useSound } from "@/hooks/useSound";
 import React from "react";
 
 const countryOptions = [
@@ -44,6 +45,7 @@ const countryOptions = [
 export function NavUser() {
   const { theme, setTheme } = useTheme();
   const { t, i18n } = useTranslation();
+  const { soundEffectsEnabled, toggleSoundEffects } = useSound();
   const playerId = localStorage.getItem("clientId");
   const randomStr = Math.random().toString(36).substring(2, 15);
   const [isFullscreen, setIsFullscreen] = React.useState(false);
@@ -281,6 +283,33 @@ export function NavUser() {
                       >
                         <Icon
                           icon={showChallengeToasts ? "mdi:check" : "mdi:close"}
+                          className="h-4 w-4"
+                        />
+                      </span>
+                    </button>
+                  </label>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
+                  <label className="flex w-full items-center justify-between">
+                    <span>{t("nav.soundEffects")}</span>
+                    <button
+                      className="relative inline-block w-10 h-6"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSoundEffects();
+                      }}
+                    >
+                      <span className={`absolute inset-0 rounded-full transition-colors duration-200 ${
+                        soundEffectsEnabled ? "bg-green-400" : "bg-gray-300"
+                      }`} />
+                      <span
+                        className={`absolute left-0 top-0 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
+                          soundEffectsEnabled ? "translate-x-4" : "translate-x-0"
+                        } flex items-center justify-center`}
+                      >
+                        <Icon
+                          icon={soundEffectsEnabled ? "mdi:volume-high" : "mdi:volume-off"}
                           className="h-4 w-4"
                         />
                       </span>

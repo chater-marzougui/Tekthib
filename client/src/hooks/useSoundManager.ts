@@ -4,12 +4,18 @@ interface SoundOptions {
   volume?: number;
   loop?: boolean;
   playbackRate?: number;
+  probability?: number; // Probability of playing the sound (0-1)
 }
 
 export const useSoundManager = () => {
   const [isMuted, setIsMuted] = useState(() => {
     const saved = localStorage.getItem('soundMuted');
     return saved === 'true';
+  });
+
+  const [soundEffectsEnabled, setSoundEffectsEnabled] = useState(() => {
+    const saved = localStorage.getItem('soundEffectsEnabled');
+    return saved !== 'false'; // Default to true
   });
   
   const [volume, setVolume] = useState(() => {
@@ -33,7 +39,11 @@ export const useSoundManager = () => {
     path: string,
     options: SoundOptions = {}
   ) => {
-    if (isMuted) return;
+    if (isMuted || !soundEffectsEnabled) return;
+
+    // Check probability
+    const probability = options.probability ?? 1;
+    if (Math.random() > probability) return;
 
     const audio = audioCache.current.get(path) || new Audio(path);
     
@@ -51,13 +61,32 @@ export const useSoundManager = () => {
     });
 
     return soundToPlay;
-  }, [isMuted, volume]);
+  }, [isMuted, soundEffectsEnabled, volume]);
+
+  // Play random sound from array
+  const playRandomSound = useCallback((
+    soundArray: string[],
+    options: SoundOptions = {}
+  ) => {
+    if (soundArray.length === 0) return;
+    const randomSound = soundArray[Math.floor(Math.random() * soundArray.length)];
+    return playSound(randomSound, options);
+  }, [playSound]);
 
   // Toggle mute
   const toggleMute = useCallback(() => {
     setIsMuted(prev => {
       const newValue = !prev;
       localStorage.setItem('soundMuted', String(newValue));
+      return newValue;
+    });
+  }, []);
+
+  // Toggle sound effects
+  const toggleSoundEffects = useCallback(() => {
+    setSoundEffectsEnabled(prev => {
+      const newValue = !prev;
+      localStorage.setItem('soundEffectsEnabled', String(newValue));
       return newValue;
     });
   }, []);
@@ -71,9 +100,12 @@ export const useSoundManager = () => {
 
   return {
     playSound,
+    playRandomSound,
     preloadSound,
     isMuted,
     toggleMute,
+    soundEffectsEnabled,
+    toggleSoundEffects,
     volume,
     updateVolume,
   };

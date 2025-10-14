@@ -3,9 +3,12 @@ import { useSoundManager } from '../hooks/useSoundManager';
 import { CRITICAL_SOUNDS } from '../lib/sounds';
 
 interface SoundContextType {
-  playSound: (path: string, options?: any) => void;
+  playSound: (path: string, options?: any) => HTMLAudioElement | undefined;
+  playRandomSound: (soundArray: string[], options?: any) => HTMLAudioElement | undefined;
   isMuted: boolean;
   toggleMute: () => void;
+  soundEffectsEnabled: boolean;
+  toggleSoundEffects: () => void;
   volume: number;
   updateVolume: (volume: number) => void;
 }
