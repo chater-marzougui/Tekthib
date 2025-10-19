@@ -113,12 +113,30 @@ function handleMessage(ws: WebSocket, message: WSMessage): void {
   }
 }
 
-export function sendToClient(ws: WebSocket, message: WSMessage): void {
+export function sendToClient(ws: WebSocket, message: WSMessage, roomId?: string): void {
   if (ws.readyState === WebSocket.OPEN) {
+    // Attach autoPlayTimeout to the message if client is in a room
+    let autoPlayTimeout: number | undefined;
+    
+    // Try to get roomId from parameter first, then from clients map
+    let effectiveRoomId = roomId;
+    if (!effectiveRoomId) {
+      const clientInfo = clients.get(ws);
+      effectiveRoomId = clientInfo?.roomId;
+    }
+    
+    if (effectiveRoomId) {
+      const room = roomManager.getRoom(effectiveRoomId);
+      if (room) {
+        autoPlayTimeout = room.autoPlayTimeout;
+      }
+    }
+
     ws.send(
       JSON.stringify({
         ...message,
         timestamp: Date.now(),
+        autoPlayTimeout,
       }),
     );
   }
@@ -132,7 +150,7 @@ export function broadcastToRoom(
 ): void {
   clients.forEach((clientInfo, ws) => {
     if (clientInfo.roomId === roomId && clientInfo.id !== excludeClientId) {
-      sendToClient(ws, message);
+      sendToClient(ws, message, roomId);
     }
   });
 }
@@ -144,7 +162,7 @@ export function sendToPlayer(
 ): void {
   clients.forEach((clientInfo, ws) => {
     if (clientInfo.id === playerId) {
-      sendToClient(ws, message);
+      sendToClient(ws, message, clientInfo.roomId);
     }
   });
 }

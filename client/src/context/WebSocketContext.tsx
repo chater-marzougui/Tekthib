@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { useWebSocket } from "../hooks/useWebsocket";
 import type { WSMessage } from "shared";
@@ -6,6 +6,7 @@ import type { WSMessage } from "shared";
 interface WebSocketContextType {
   isConnected: boolean;
   lastMessage: WSMessage | null;
+  autoPlayTimeout: number | null;
   sendMessage: (message: WSMessage) => void;
   registerHandler: (
     id: string,
@@ -21,9 +22,17 @@ export function WebSocketProvider({
   children,
 }: Readonly<{ children: ReactNode }>) {
   const websocket = useWebSocket();
+  const [autoPlayTimeout, setAutoPlayTimeout] = useState<number | null>(null);
+
+  // Extract autoPlayTimeout from incoming messages
+  useEffect(() => {
+    if (websocket.lastMessage?.autoPlayTimeout !== undefined) {
+      setAutoPlayTimeout(websocket.lastMessage.autoPlayTimeout);
+    }
+  }, [websocket.lastMessage]);
 
   return (
-    <WebSocketContext.Provider value={websocket}>
+    <WebSocketContext.Provider value={{ ...websocket, autoPlayTimeout }}>
       {children}
     </WebSocketContext.Provider>
   );

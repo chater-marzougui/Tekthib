@@ -91,14 +91,14 @@ export type WSMessageType =
   | 'SWITCH_PLAYER_MIC'
   | 'PLAYER_MIC_SWITCHED'
   | 'PLAY_AGAIN'
-  | 'GAME_RESET'
-  | 'TIMER_UPDATE';
+  | 'GAME_RESET';
 
   
 export interface WSMessage {
   type: WSMessageType;
   payload?: any;
   timestamp?: number;
+  autoPlayTimeout?: number;
 }
 
 export interface RTCSignalPayload {
