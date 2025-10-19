@@ -82,14 +82,14 @@ function handleCreateRoom(
     clientInfo.id,
     payload.playerName,
     payload.autoPlayTimeout,
+    payload.challengeSuspenseEnabled,
     payload.maxPlayers || 10,
     payload.isPublic ?? true,
-    payload.challengeSuspenseEnabled ?? true,
   );
 
   clientInfo.roomId = room.id;
   clientInfo.name = payload.playerName;
-  room.players.forEach((p) => {p.isReady = true;});
+  for (const p of room.players.values()) { p.isReady = true; }
 
   sendToClient(ws, {
     type: 'ROOM_CREATED',

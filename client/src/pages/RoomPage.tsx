@@ -171,7 +171,9 @@ export default function RoomPage() {
         playRandomSound(GAME_START_SOUNDS);
         
         const currentRoomCode = roomCodeRef.current || roomId;
-        navigate(`/game/${currentRoomCode}`);
+        setTimeout(() => {
+          navigate(`/game/${currentRoomCode}`);
+        }, 1000);
       }
     });
 

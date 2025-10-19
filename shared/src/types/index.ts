@@ -128,12 +128,12 @@ export interface CreateRoomPayload {
   autoPlayTimeout: number;
   maxPlayers?: number;
   isPublic?: boolean;
-  challengeSuspenseEnabled?: boolean;
+  challengeSuspenseEnabled: boolean;
 }
 
 export interface StartGamePayload {
   autoPlayTimeout: number;
-  challengeSuspenseEnabled?: boolean;
+  challengeSuspenseEnabled: boolean;
 }
 
 export interface PlayCardsPayload {

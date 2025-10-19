@@ -71,9 +71,9 @@ class RoomManager {
     hostId: string,
     hostName: string,
     autoPlayTimeout: number,
+    challengeSuspenseEnabled: boolean,
     maxPlayers: number = 10,
     isPublic: boolean = true,
-    challengeSuspenseEnabled: boolean = true,
   ): Room {
     const roomId = `room_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const code = this.generateRoomCode();
