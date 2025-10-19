@@ -447,7 +447,8 @@ function processBotChallenge(
       
       // Immediately broadcast that a challenge has been submitted
       // This allows clients to play suspense sound if enabled
-      if (room?.challengeSuspenseEnabled) {
+      const challengeSuspenseEnabled = room?.challengeSuspenseEnabled;
+      if (challengeSuspenseEnabled) {
         broadcastToRoom(clients, roomId, {
           type: 'CHALLENGE_SUBMITTED',
           payload: {
@@ -512,7 +513,7 @@ function processBotChallenge(
         setTimeout(() => {
           processBotTurn(clients, roomId, gameEngine);
         }, 3000);
-      }, 3000); // 3-second delay for challenge result reveal
+      }, challengeSuspenseEnabled ? 3000 : 0); // 3-second delay for challenge result reveal
     }
   } else {
     // No bot challenged, proceed to next turn (might be a bot)
