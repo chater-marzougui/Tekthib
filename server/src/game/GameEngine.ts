@@ -611,12 +611,12 @@ export class GameEngine {
     const currentPlayerId =
       this.gameState.playerOrder[this.gameState.currentPlayerIndex];
     
-    this.botPlayers.forEach((bot, botId) => {
+    for (const [botId, bot] of this.botPlayers) {
       // Only non-current-turn bots can send random chat
       if (botId !== currentPlayerId) {
         bot.maybeRandomChat();
       }
-    });
+    }
   }
 
   /**
@@ -653,7 +653,7 @@ export class GameEngine {
       if (this.timerBroadcastCallback) {
         this.timerBroadcastCallback();
       }
-    }, 1000);
+    }, 5000);
   }
 
   /**

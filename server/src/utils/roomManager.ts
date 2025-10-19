@@ -425,6 +425,14 @@ class RoomManager {
     return true;
   }
 
+  setChallengeSuspense(roomId: string, enabled: boolean): boolean {
+    const room = this.rooms.get(roomId);
+    if (!room) return false;
+
+    room.challengeSuspenseEnabled = enabled;
+    return true;
+  }
+
   getSystemState() {
     const rooms = Array.from(this.rooms.values()).map((room) => {
       const players = Array.from(room.players.values());

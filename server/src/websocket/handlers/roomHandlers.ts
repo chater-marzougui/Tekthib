@@ -419,7 +419,6 @@ function handleStartGame(
   }
 
   const room = roomManager.getRoom(clientInfo.roomId);
-  roomManager.setAutoPlayTimeout(clientInfo.roomId, payload.autoPlayTimeout);
   if (!room || room.hostId !== clientInfo.id) {
     sendToClient(ws, {
       type: 'ERROR',
@@ -436,6 +435,9 @@ function handleStartGame(
     });
     return;
   }
+
+  roomManager.setAutoPlayTimeout(clientInfo.roomId, payload.autoPlayTimeout);
+  roomManager.setChallengeSuspense(clientInfo.roomId, payload.challengeSuspenseEnabled);
 
   // Create bot chat callback
   const botChatCallback = (botId: string, message: string) => {
@@ -466,9 +468,7 @@ function handleStartGame(
   setupGameEngineCallbacks(clients, clientInfo.roomId, gameEngine);
 
   // Start the turn timer for the first player BEFORE getting public game state
-  if (!gameEngine.isCurrentPlayerBot()) {
-    gameEngine.startTurnTimer();
-  }
+  gameEngine.startTurnTimer();
 
   // Send game started event to all players
   const publicGameState = gameEngine.getPublicGameState();
@@ -478,7 +478,7 @@ function handleStartGame(
   });
 
   // Send each player their hand privately
-  clients.forEach((client, clientWs) => {
+  for (const [clientWs, client] of clients.entries()) {
     if (client.roomId === clientInfo.roomId) {
       const hand = gameEngine.getPlayerHand(client.id);
       sendToClient(clientWs, {
@@ -489,7 +489,7 @@ function handleStartGame(
         },
       });
     }
-  });
+  }
 
   // Trigger bot turn if first player is a bot
   triggerBotTurn(clients, clientInfo.roomId);
