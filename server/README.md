@@ -46,39 +46,6 @@ The server will start on http://localhost:3000
 - npm run lint - Run ESLint
 - npm run format - Format code with Prettier
 
-## API Endpoints
-
-### Items
-
-- \GET /api/items\ - Get all items
-- \GET /api/items/:id\ - Get item by ID
-- \POST /api/items\ - Create new item
-- \PUT /api/items/:id\ - Update item
-- \DELETE /api/items/:id\ - Delete item
-
-### Example Usage
-
-```bash
-# Get all items
-curl http://localhost:3000/api/items
-
-# Create a new item
-curl -X POST http://localhost:3000/api/items \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Sample Item"}'
-
-# Get item by ID
-curl http://localhost:3000/api/items/1
-
-# Update item
-curl -X PUT http://localhost:3000/api/items/1 \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Updated Item"}'
-
-# Delete item
-curl -X DELETE http://localhost:3000/api/items/1
-```
-
 ## Project Structure
 
 ```
@@ -86,14 +53,6 @@ server/
 ├── src/
 │   ├── config/
 │   │   └── config.ts        # Environment configuration
-│   ├── controllers/
-│   │   └── itemController.ts # Business logic
-│   ├── middlewares/
-│   │   └── errorHandler.ts   # Error handling
-│   ├── models/
-│   │   └── item.ts          # Data models
-│   ├── routes/
-│   │   └── itemRoutes.ts    # API routes
 │   ├── app.ts               # Express app setup
 │   └── server.ts            # Server entry point
 ├── .env                     # Environment variables
