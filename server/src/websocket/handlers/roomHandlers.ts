@@ -477,15 +477,31 @@ function handleStartGame(
     payload: { gameState: publicGameState },
   });
 
-  // Send each player their hand privately
+  // Send each player their hand and initial game state privately
   for (const [clientWs, client] of clients.entries()) {
     if (client.roomId === clientInfo.roomId) {
       const hand = gameEngine.getPlayerHand(client.id);
+      // Send INITIAL_GAME_STATE to ensure all players (especially host) get the full state
       sendToClient(clientWs, {
-        type: 'GAME_STATE_UPDATE',
+        type: 'INITIAL_GAME_STATE',
         payload: {
           hand,
           gameState: publicGameState,
+          room: {
+            id: room.id,
+            code: room.code,
+            hostId: room.hostId,
+            maxPlayers: room.maxPlayers,
+            autoPlayTimeout: room.autoPlayTimeout,
+            challengeSuspenseEnabled: room.challengeSuspenseEnabled,
+            players: Array.from(room.players.values()).map((p) => ({
+              id: p.id,
+              name: p.name,
+              isReady: p.isReady,
+              isConnected: p.isConnected,
+              isBot: p.isBot,
+            })),
+          },
         },
       });
     }
