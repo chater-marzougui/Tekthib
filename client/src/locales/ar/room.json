@@ -47,6 +47,8 @@
     "botRemovedSuccess": "تم إزالة البوت بنجاح!",
     "gameResetSuccess": "تمت إعادة تعيين اللعبة! استعد للعب مرة أخرى.",
     "roomCodeCopied": "تم نسخ رمز الغرفة إلى الحافظة!",
-    "gameInProgress": "اللعبة جارية بالفعل. إعادة التوجيه إلى اللعبة..."
+    "gameInProgress": "اللعبة جارية بالفعل. إعادة التوجيه إلى اللعبة...",
+    "challengeSuspense": "تشويق التحدي",
+    "challengeSuspenseDescription": "تشغيل طبول التشويق عند تقديم تحدٍ"
   }
 }

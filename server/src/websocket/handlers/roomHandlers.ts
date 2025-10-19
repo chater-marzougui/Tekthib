@@ -84,6 +84,7 @@ function handleCreateRoom(
     payload.autoPlayTimeout,
     payload.maxPlayers || 10,
     payload.isPublic ?? true,
+    payload.challengeSuspenseEnabled ?? true,
   );
 
   clientInfo.roomId = room.id;
@@ -99,6 +100,7 @@ function handleCreateRoom(
         hostId: room.hostId,
         maxPlayers: room.maxPlayers,
         autoPlayTimeout: room.autoPlayTimeout,
+        challengeSuspenseEnabled: room.challengeSuspenseEnabled,
         players: Array.from(room.players.values()).map((p) => ({
           id: p.id,
           name: p.name,
@@ -194,6 +196,7 @@ function handleJoinRoom(
         hostId: room.hostId,
         maxPlayers: room.maxPlayers,
         autoPlayTimeout: room.autoPlayTimeout,
+        challengeSuspenseEnabled: room.challengeSuspenseEnabled,
         players: Array.from(room.players.values()).map((p) => ({
           id: p.id,
           name: p.name,

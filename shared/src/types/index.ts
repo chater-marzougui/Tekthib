@@ -74,6 +74,7 @@ export type WSMessageType =
   | 'PLAY_CARDS'
   | 'CARDS_PLAYED'
   | 'CHALLENGE'
+  | 'CHALLENGE_SUBMITTED'
   | 'CHALLENGE_RESULT'
   | 'GAME_STATE_UPDATE'
   | 'TURN_CHANGED'
@@ -127,10 +128,12 @@ export interface CreateRoomPayload {
   autoPlayTimeout: number;
   maxPlayers?: number;
   isPublic?: boolean;
+  challengeSuspenseEnabled?: boolean;
 }
 
 export interface StartGamePayload {
   autoPlayTimeout: number;
+  challengeSuspenseEnabled?: boolean;
 }
 
 export interface PlayCardsPayload {

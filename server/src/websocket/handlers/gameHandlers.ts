@@ -184,6 +184,7 @@ function handleGetGameState(
           hostId: room.hostId,
           maxPlayers: room.maxPlayers,
           autoPlayTimeout: room.autoPlayTimeout,
+          challengeSuspenseEnabled: room.challengeSuspenseEnabled,
           players: Array.from(room.players.values()).map((p) => ({
             id: p.id,
             name: p.name,
@@ -212,6 +213,7 @@ function handleGetGameState(
         hostId: room.hostId,
         maxPlayers: room.maxPlayers,
         autoPlayTimeout: room.autoPlayTimeout,
+        challengeSuspenseEnabled: room.challengeSuspenseEnabled,
         players: Array.from(room.players.values()).map((p) => ({
           id: p.id,
           name: p.name,
@@ -348,6 +350,18 @@ function handleChallenge(
 
   // Store roomId for use in setTimeout
   const roomId = clientInfo.roomId;
+  const room = roomManager.getRoom(roomId);
+
+  // Immediately broadcast that a challenge has been submitted
+  // This allows clients to play suspense sound if enabled
+  if (room?.challengeSuspenseEnabled) {
+    broadcastToRoom(clients, roomId, {
+      type: 'CHALLENGE_SUBMITTED',
+      payload: {
+        challengerId: payload.challengerId,
+      },
+    });
+  }
 
   // Add 3-second delay before revealing challenge result for tension
   setTimeout(() => {
@@ -429,12 +443,24 @@ function processBotChallenge(
     const result = gameEngine.challenge(botChallengerId, lastPlayInfo);
 
     if (result.success) {
+      const room = roomManager.getRoom(roomId);
+      
+      // Immediately broadcast that a challenge has been submitted
+      // This allows clients to play suspense sound if enabled
+      if (room?.challengeSuspenseEnabled) {
+        broadcastToRoom(clients, roomId, {
+          type: 'CHALLENGE_SUBMITTED',
+          payload: {
+            challengerId: botChallengerId,
+          },
+        });
+      }
+      
       // Add 3-second delay before revealing challenge result for tension
       setTimeout(() => {
         const publicGameState = gameEngine.getPublicGameState();
 
         // Get challenger and player names
-        const room = roomManager.getRoom(roomId);
         const challengerPlayer = room?.players.get(botChallengerId);
         const lastPlayer = room?.players.get(result.playerId);
 

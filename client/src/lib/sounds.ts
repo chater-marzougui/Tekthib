@@ -2,6 +2,7 @@ export const SOUNDS = {
   // General sounds (from general_sounds folder)
   CARD_SELECT: '/Tekthib/sounds/general_sounds/card_select.mp3',
   CHALLENGE_BUTTON_CLICKED: '/Tekthib/sounds/general_sounds/challenge_button_clicked.mp3',
+  CHALLENGE_SUSPENSE_DRUMS: '/Tekthib/sounds/general_sounds/suspense_drums.mp3',
   GAME_START: '/Tekthib/sounds/general_sounds/game_start_5.mp3',
   GAME_START_ALT: '/Tekthib/sounds/general_sounds/game_start_ahh_sht.mp3',
   GOOD_GUITAR: '/Tekthib/sounds/general_sounds/good_guitar_sound.mp3',

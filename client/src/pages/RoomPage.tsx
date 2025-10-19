@@ -38,6 +38,7 @@ export default function RoomPage() {
   const [nameInput, setNameInput] = useState("");
   const [timerSlideEnabled, setTimerSlideEnabled] = useState(true);
   const [autoPlayTimeout, setAutoPlayTimeout] = useState(45);
+  const [challengeSuspenseEnabled, setChallengeSuspenseEnabled] = useState(true);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const direction = useTextDirection();
 
@@ -91,6 +92,7 @@ export default function RoomPage() {
         setPlayers(room.players);
         setAutoPlayTimeout(room.autoPlayTimeout ?? 45);
         setTimerSlideEnabled(room.autoPlayTimeout && room.autoPlayTimeout > 0);
+        setChallengeSuspenseEnabled(room.challengeSuspenseEnabled ?? true);
         setIsReady(
           room.players.find((p: Player) => p.id === playerId)?.isReady || false
         );
@@ -106,6 +108,7 @@ export default function RoomPage() {
         setRoomCode(room.code);
         setPlayers(room.players);
         setAutoPlayTimeout(room.autoPlayTimeout ?? 45);
+        setChallengeSuspenseEnabled(room.challengeSuspenseEnabled ?? true);
         setIsReady(
           room.players.find((p: Player) => p.id === playerId)?.isReady ||
             isReady
@@ -235,6 +238,7 @@ export default function RoomPage() {
           maxPlayers: 10,
           isPublic,
           autoPlayTimeout,
+          challengeSuspenseEnabled,
         },
       });
     } else if (roomId !== "create") {
@@ -303,7 +307,7 @@ export default function RoomPage() {
     if (isHost && canStartGame) {
       sendMessage({
         type: "START_GAME",
-        payload: { autoPlayTimeout },
+        payload: { autoPlayTimeout, challengeSuspenseEnabled },
       });
     }
   };
@@ -401,6 +405,8 @@ export default function RoomPage() {
               setAutoPlayTimeout={setAutoPlayTimeout}
               timerSlideEnabled={timerSlideEnabled}
               setTimerSlideEnabled={setTimerSlideEnabled}
+              challengeSuspenseEnabled={challengeSuspenseEnabled}
+              setChallengeSuspenseEnabled={setChallengeSuspenseEnabled}
               handleReadyToggle={handleReadyToggle}
               handleStartGame={handleStartGame}
               handleAddBots={handleAddBots}

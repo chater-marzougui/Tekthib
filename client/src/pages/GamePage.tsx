@@ -59,6 +59,7 @@ export default function GamePage() {
   const [showNameDialog, setShowNameDialog] = useState(false);
   const [nameInput, setNameInput] = useState("");
   const [autoPlayTimeout, setAutoPlayTimeout] = useState(45);
+  const [challengeSuspenseEnabled, setChallengeSuspenseEnabled] = useState(true);
   const [pilePosition, setPilePosition] = useState({ x: 0, y: 0 });
   const [handPosition, setHandPosition] = useState({ x: 0, y: 0 });
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
@@ -131,6 +132,13 @@ export default function GamePage() {
             setAutoPlayTimeout(room.autoPlayTimeout);
           } else {
             setAutoPlayTimeout(45);
+          }
+
+          // Set challenge suspense enabled from room settings
+          if (room && room.challengeSuspenseEnabled !== undefined) {
+            setChallengeSuspenseEnabled(room.challengeSuspenseEnabled);
+          } else {
+            setChallengeSuspenseEnabled(true);
           }
 
           if (initialGameState) {
@@ -261,6 +269,21 @@ export default function GamePage() {
         }
       }
     });
+
+    const unregisterChallengeSubmitted = registerHandler(
+      "challenge-submitted",
+      (message) => {
+        if (message.type !== "CHALLENGE_SUBMITTED") {
+          return;
+        }
+        
+        // Play suspense drums sound immediately when challenge is submitted
+        // Only if the setting is enabled
+        if (challengeSuspenseEnabled) {
+          playSound(SOUNDS.CHALLENGE_SUSPENSE_DRUMS);
+        }
+      }
+    );
 
     const unregisterChallengeResult = registerHandler(
       "challenge-result",
@@ -465,6 +488,7 @@ export default function GamePage() {
       unregisterRoomJoined();
       unregisterGameStateUpdate();
       unregisterCardsPlayed();
+      unregisterChallengeSubmitted();
       unregisterChallengeResult();
       unregisterGameEnded();
       unregisterError();
@@ -479,6 +503,8 @@ export default function GamePage() {
     lastPlay,
     roomId,
     isConnected,
+    challengeSuspenseEnabled,
+    playSound,
   ]);
 
   useEffect(() => {
