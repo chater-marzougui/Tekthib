@@ -140,6 +140,10 @@ export interface PlayCardsPayload {
 
 export interface ChallengePayload {
   challengerId: string;
+  lastPlayInfo?: {
+    playerId: string;
+    claimedRank: Rank;
+  };
 }
 
 export interface ChatMessagePayload {

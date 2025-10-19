@@ -268,13 +268,17 @@ export class GameEngine {
     return { success: true, newRank: claimedRank };
   }
 
-  challenge(challengerId: string): {
+  challenge(
+    challengerId: string,
+    lastPlayInfo?: { playerId: string; claimedRank: Rank }
+  ): {
     success: boolean;
     wasLying: boolean;
     playerId: string;
     challengerId: string;
     revealedCards: Card[];
     error?: string;
+    mismatch?: boolean;
   } {
     if (!this.gameState.lastPlayerId) {
       return {
@@ -285,6 +289,24 @@ export class GameEngine {
         revealedCards: [],
         error: 'No cards to challenge',
       };
+    }
+
+    // Validate lastPlayInfo if provided (fail-safe check)
+    if (lastPlayInfo) {
+      if (
+        lastPlayInfo.playerId !== this.gameState.lastPlayerId ||
+        lastPlayInfo.claimedRank !== this.gameState.currentRank
+      ) {
+        // Play has moved on - silently ignore this challenge
+        return {
+          success: false,
+          wasLying: false,
+          playerId: '',
+          challengerId: '',
+          revealedCards: [],
+          mismatch: true,
+        };
+      }
     }
 
     const lastPlayer = this.players.get(this.gameState.lastPlayerId);
@@ -528,14 +550,22 @@ export class GameEngine {
       return null;
     }
 
+    // Create array of bot IDs and shuffle to prevent first bot from dominating
+    const botIds = Array.from(this.botPlayers.keys());
+    for (let i = botIds.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [botIds[i], botIds[j]] = [botIds[j], botIds[i]];
+    }
+
     // Check each bot (except the one who just played)
-    for (const [botId, bot] of this.botPlayers.entries()) {
+    for (const botId of botIds) {
       if (botId === this.gameState.lastPlayerId) {
         continue;
       }
 
+      const bot = this.botPlayers.get(botId);
       const botPlayer = this.players.get(botId);
-      if (!botPlayer || this.gameState.winners.includes(botId)) {
+      if (!bot || !botPlayer || this.gameState.winners.includes(botId)) {
         continue;
       }
 
