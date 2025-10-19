@@ -11,6 +11,7 @@ export interface Room {
   isPublic: boolean;
   hostName: string;
   autoPlayTimeout: number;
+  challengeSuspenseEnabled: boolean;
 }
 
 export interface GameState {

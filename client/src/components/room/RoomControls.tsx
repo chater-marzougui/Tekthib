@@ -21,6 +21,8 @@ interface RoomControlsProps {
   setTimerSlideEnabled: (enabled: boolean) => void;
   autoPlayTimeout: number;
   setAutoPlayTimeout: (timeout: number) => void;
+  challengeSuspenseEnabled: boolean;
+  setChallengeSuspenseEnabled: (enabled: boolean) => void;
   setShowLeaveDialog: (show: boolean) => void;
 }
 
@@ -33,6 +35,8 @@ const RoomControls = ({
   timerSlideEnabled,
   setTimerSlideEnabled,
   autoPlayTimeout,
+  challengeSuspenseEnabled,
+  setChallengeSuspenseEnabled,
   handleReadyToggle,
   handleAddBots,
   handleStartGame,
@@ -150,6 +154,30 @@ const RoomControls = ({
                     </div>
                   </div>
                 )}
+              </div>
+
+              <div className="p-4 rounded-lg space-y-4">
+                {/* Challenge suspense toggle */}
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="challenge-suspense" className="text-sm font-medium">
+                      {t("room.challengeSuspense")}
+                    </Label>
+                    <p className="text-xs text-gray-400">
+                      {t("room.challengeSuspenseDescription")}
+                    </p>
+                  </div>
+                  <Switch
+                    id="challenge-suspense"
+                    checked={challengeSuspenseEnabled}
+                    dir="ltr"
+                    className={`
+                        ${direction === "rtl" ? "transform rotate-180" : ""} 
+                        ${challengeSuspenseEnabled ? "!bg-blue-600" : ""}
+                        `}
+                    onCheckedChange={setChallengeSuspenseEnabled}
+                  />
+                </div>
               </div>
             </div>
 
