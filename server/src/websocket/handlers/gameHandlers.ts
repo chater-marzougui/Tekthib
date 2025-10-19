@@ -343,6 +343,9 @@ function handleChallenge(
   // This allows clients to play suspense sound if enabled
   const challengeSuspenseEnabled = room?.challengeSuspenseEnabled;
   if (challengeSuspenseEnabled) {
+    // Set processing challenge flag to block plays during suspense
+    gameEngine.setProcessingChallenge(true);
+    
     broadcastToRoom(clients, roomId, {
       type: 'CHALLENGE_SUBMITTED',
       payload: {
@@ -353,6 +356,10 @@ function handleChallenge(
 
   // Add 3-second delay before revealing challenge result for tension
   setTimeout(() => {
+    // Clear the processing challenge flag after revealing result
+    if (challengeSuspenseEnabled) {
+      gameEngine.setProcessingChallenge(false);
+    }
     const publicGameState = gameEngine.getPublicGameState();
 
     // Get challenger and liar names
@@ -437,6 +444,9 @@ function processBotChallenge(
       // This allows clients to play suspense sound if enabled
       const challengeSuspenseEnabled = room?.challengeSuspenseEnabled;
       if (challengeSuspenseEnabled) {
+        // Set processing challenge flag to block plays during suspense
+        gameEngine.setProcessingChallenge(true);
+        
         broadcastToRoom(clients, roomId, {
           type: 'CHALLENGE_SUBMITTED',
           payload: {
@@ -447,6 +457,10 @@ function processBotChallenge(
       
       // Add 3-second delay before revealing challenge result for tension
       setTimeout(() => {
+        // Clear the processing challenge flag after revealing result
+        if (challengeSuspenseEnabled) {
+          gameEngine.setProcessingChallenge(false);
+        }
         const publicGameState = gameEngine.getPublicGameState();
 
         // Get challenger and player names

@@ -26,6 +26,7 @@ export interface GameState {
   playerStats: Record<string, PlayerStats>;
   removedCards: Card[];
   remainingTime: number;
+  canPlay: boolean;
 }
 
 export interface ToastMessage {

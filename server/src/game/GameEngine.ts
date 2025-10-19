@@ -23,6 +23,7 @@ interface ReturnGameState
   };
   playerStats: { [k: string]: PlayerStats };
   remainingTime: number;
+  canPlay: boolean;
 }
 
 export class GameEngine {
@@ -34,6 +35,7 @@ export class GameEngine {
   private turnTimer: NodeJS.Timeout | null = null;
   private turnStartTime: number = 0;
   private autoPlayCallback?: (playerId: string, cardIds: string[], claimedRank: Rank) => void;
+  private processingChallenge: boolean = false;
 
   constructor(players: Map<string, PlayerWithHand>, autoPlayTimeout: number = 0) {
     this.players = players;
@@ -147,6 +149,11 @@ export class GameEngine {
     error?: string;
     newRank?: Rank;
   } {
+    // Block all plays while processing a challenge
+    if (this.processingChallenge) {
+      return { success: false, error: 'Processing Challenge' };
+    }
+
     // Verify it's the player's turn
     const currentPlayerId =
       this.gameState.playerOrder[this.gameState.currentPlayerIndex];
@@ -529,6 +536,7 @@ export class GameEngine {
       playerStats: Object.fromEntries(this.gameState.playerStats),
       removedCards: [...this.gameState.removedCards],
       remainingTime: this.getRemainingTime(),
+      canPlay: !this.processingChallenge,
     };
   }
 
@@ -725,5 +733,19 @@ export class GameEngine {
    */
   cleanup(): void {
     this.stopTurnTimer();
+  }
+
+  /**
+   * Set the processing challenge flag to block plays during challenge resolution
+   */
+  setProcessingChallenge(isProcessing: boolean): void {
+    this.processingChallenge = isProcessing;
+  }
+
+  /**
+   * Check if a challenge is currently being processed
+   */
+  isProcessingChallenge(): boolean {
+    return this.processingChallenge;
   }
 }

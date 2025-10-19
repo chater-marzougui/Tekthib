@@ -28,6 +28,7 @@ A real-time multiplayer card game platform that brings the classic Tunisian bluf
 - **Real-time Communication**: WebSocket for game state, WebRTC for voice chat
 - **AI Bots**: Three personalities (aggressive, truthful, unpredictable) with learning capabilities
 - **Timer System**: Configurable auto-play timer (10-120 seconds) with real-time updates
+- **Challenge Suspense**: Optional 3-second dramatic reveal with play blocking during challenge processing
 - **i18n**: Multi-language support (English, French, Arabic) with RTL for Arabic
 - **Voice Chat**: P2P WebRTC audio with host controls (kick, mute) and personal mute
 - **Admin Dashboard**: Real-time monitoring of rooms, players, and game states
@@ -175,6 +176,7 @@ npm run build      # Production build
 3. Click "Create New Room"
 4. Configure settings:
    - Auto-play timer (optional, 10-120 seconds)
+   - Challenge suspense (optional, 3-second dramatic reveal)
    - Max players (3-10)
 5. Share room code or QR code with friends
 6. Wait for at least 3 players, all mark ready, and host starts game
@@ -183,6 +185,8 @@ npm run build      # Production build
 - **Your Turn**: Select cards and claim a rank (watch the timer!)
 - **Bluffing**: Claim any rank, even if you don't have those cards
 - **Challenge**: Click "Challenge!" if you think someone is lying
+  - With suspense enabled: 3-second dramatic reveal with sound effects
+  - Play is blocked for all players during challenge processing
 - **Win**: Empty your hand first; last player with cards loses
 - **Special Rule**: Collect all 4 of same rank = automatically removed
 
@@ -227,6 +231,27 @@ See [BOT_AI_ENHANCEMENT_SUMMARY.md](./BOT_AI_ENHANCEMENT_SUMMARY.md) for:
 - Learning system that adapts to player behavior
 - 40+ contextual chat messages
 - Memory tracking and risk profiling
+
+## 🔧 Recent Fixes & Improvements
+
+### Challenge Suspense System (Latest)
+- **Play Blocking**: Players can no longer play cards while a challenge is being processed during suspense
+- **Error Handling**: Clear "Processing Challenge" error message displayed to players who attempt to play
+- **State Management**: Added `canPlay` flag to game state for proper UI state management
+- Ensures fair gameplay and prevents timing exploits during dramatic challenge reveals
+
+### Host Game Start Fix (Latest)
+- **Initial State Delivery**: Host now receives complete `INITIAL_GAME_STATE` message immediately on game start
+- **Loading Screen Fix**: Resolves production issue where host would see loading screen until first game update
+- **Consistent Experience**: All players now receive identical initial state for seamless game start
+- Improves reliability in production environments with network latency
+
+### Core Features
+- Server-authoritative game engine prevents cheating
+- WebSocket-based real-time communication with automatic reconnection
+- WebRTC P2P voice chat with fallback mechanisms
+- Bot AI with personality-driven behavior and learning system
+- Comprehensive player statistics and title system
 
 ## 🤝 Contributing
 
