@@ -58,19 +58,6 @@ export function setupGameEngineCallbacks(
   roomId: string,
   gameEngine: GameEngine,
 ): void {
-  // Set up timer broadcast callback to keep clients updated
-  gameEngine.setTimerBroadcastCallback(() => {
-    const publicGameState = gameEngine.getPublicGameState();
-    
-    // Broadcast updated timer to all clients in the room
-    broadcastToRoom(clients, roomId, {
-      type: 'TIMER_UPDATE',
-      payload: {
-        remainingTime: publicGameState.remainingTime,
-      },
-    });
-  });
-
   // Set up auto-play callback to notify when a player times out
   gameEngine.setAutoPlayCallback((playerId: string, cardIds: string[], claimedRank: string) => {
     const room = roomManager.getRoom(roomId);
@@ -161,7 +148,7 @@ function handleGetGameState(
     sendToClient(ws, {
       type: 'ERROR',
       payload: { message: 'Player not in room' },
-    });
+    }, room.id);
     return;
   }
 
@@ -195,7 +182,7 @@ function handleGetGameState(
         },
         playerId,
       },
-    });
+    }, room.id);
     return;
   }
 
@@ -223,7 +210,7 @@ function handleGetGameState(
         })),
       },
     },
-  });
+  }, room.id);
 }
 
 function handlePlayCards(
@@ -246,7 +233,7 @@ function handlePlayCards(
     sendToClient(ws, {
       type: 'ERROR',
       payload: { message: 'Game not started' },
-    });
+    }, clientInfo.roomId);
     return;
   }
 
@@ -260,7 +247,7 @@ function handlePlayCards(
     sendToClient(ws, {
       type: 'ERROR',
       payload: { message: result.error },
-    });
+    }, clientInfo.roomId);
     return;
   }
 
@@ -285,7 +272,7 @@ function handlePlayCards(
       hand: gameEngine.getPlayerHand(clientInfo.id),
       gameState: publicGameState,
     },
-  });
+  }, clientInfo.roomId);
 
   // Check if game ended
   if (publicGameState.phase === 'ended') {
@@ -330,7 +317,7 @@ function handleChallenge(
     sendToClient(ws, {
       type: 'ERROR',
       payload: { message: 'Game not started' },
-    });
+    }, clientInfo.roomId);
     return;
   }
 
@@ -344,7 +331,7 @@ function handleChallenge(
     sendToClient(ws, {
       type: 'ERROR',
       payload: { message: result.error },
-    });
+    }, clientInfo.roomId);
     return;
   }
 

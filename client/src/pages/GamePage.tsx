@@ -46,7 +46,7 @@ export default function GamePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { roomId } = useParams<{ roomId: string }>();
-  const { sendMessage, registerHandler, isConnected } = useWebSocketContext();
+  const { sendMessage, registerHandler, isConnected, autoPlayTimeout: wsAutoPlayTimeout } = useWebSocketContext();
   const { setHeaderConfig } = useHeader();
   const { playSound, playRandomSound } = useSound();
 
@@ -58,7 +58,6 @@ export default function GamePage() {
   const [systemMessages, setSystemMessages] = useState<SystemMessage[]>([]);
   const [showNameDialog, setShowNameDialog] = useState(false);
   const [nameInput, setNameInput] = useState("");
-  const [autoPlayTimeout, setAutoPlayTimeout] = useState(45);
   const [challengeSuspenseEnabled, setChallengeSuspenseEnabled] = useState(true);
   const [pilePosition, setPilePosition] = useState({ x: 0, y: 0 });
   const [handPosition, setHandPosition] = useState({ x: 0, y: 0 });
@@ -126,13 +125,6 @@ export default function GamePage() {
         if (message.type === "INITIAL_GAME_STATE") {
           const { hand, gameState: initialGameState, room } = message.payload;
           if ((initialGameState || hand) && isLoading) setIsLoading(false);
-
-          // Set auto play timeout from room settings
-          if (room && room.autoPlayTimeout !== undefined) {
-            setAutoPlayTimeout(room.autoPlayTimeout);
-          } else {
-            setAutoPlayTimeout(45);
-          }
 
           // Set challenge suspense enabled from room settings
           if (room && room.challengeSuspenseEnabled !== undefined) {
@@ -466,23 +458,6 @@ export default function GamePage() {
       }
     });
 
-    const unregisterTimerUpdate = registerHandler("timer-update", (message) => {
-      if (message.type === "TIMER_UPDATE") {
-        const { remainingTime } = message.payload;
-        if (!gameState) return;
-        if (isLoading) return;
-
-        // Update game state with new remaining time
-        setGameState((prevState) => {
-          if (!prevState) return prevState;
-          return {
-            ...prevState,
-            remainingTime,
-          };
-        });
-      }
-    });
-
     return () => {
       unregisterInitialState();
       unregisterRoomJoined();
@@ -493,7 +468,6 @@ export default function GamePage() {
       unregisterGameEnded();
       unregisterError();
       unregisterGameReset();
-      unregisterTimerUpdate();
     };
   }, [
     registerHandler,
@@ -948,7 +922,7 @@ export default function GamePage() {
               onPlayCards={handlePlayCards}
               onCardSelect={handleCardSelect}
               playerCards={playerHand}
-              autoPlayTimeout={autoPlayTimeout}
+              autoPlayTimeout={wsAutoPlayTimeout ?? 45}
               serverTimer={gameState.remainingTime}
               players={players}
               currentPlayerId={playerId}

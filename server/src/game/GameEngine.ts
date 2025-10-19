@@ -33,8 +33,6 @@ export class GameEngine {
   private botChatCallback?: (botId: string, message: string) => void;
   private turnTimer: NodeJS.Timeout | null = null;
   private turnStartTime: number = 0;
-  private timerBroadcastInterval: NodeJS.Timeout | null = null;
-  private timerBroadcastCallback?: () => void;
   private autoPlayCallback?: (playerId: string, cardIds: string[], claimedRank: Rank) => void;
 
   constructor(players: Map<string, PlayerWithHand>, autoPlayTimeout: number = 0) {
@@ -64,13 +62,6 @@ export class GameEngine {
         callback(botId, message);
       });
     });
-  }
-
-  /**
-   * Set callback for timer broadcasts
-   */
-  setTimerBroadcastCallback(callback: () => void): void {
-    this.timerBroadcastCallback = callback;
   }
 
   /**
@@ -647,13 +638,6 @@ export class GameEngine {
     this.turnTimer = setTimeout(() => {
       this.handleAutoPlay();
     }, this.autoPlayTimeout * 1000);
-
-    // Set up periodic broadcast (every 1 second) to keep clients updated
-    this.timerBroadcastInterval = setInterval(() => {
-      if (this.timerBroadcastCallback) {
-        this.timerBroadcastCallback();
-      }
-    }, 5000);
   }
 
   /**
@@ -663,10 +647,6 @@ export class GameEngine {
     if (this.turnTimer) {
       clearTimeout(this.turnTimer);
       this.turnTimer = null;
-    }
-    if (this.timerBroadcastInterval) {
-      clearInterval(this.timerBroadcastInterval);
-      this.timerBroadcastInterval = null;
     }
   }
 

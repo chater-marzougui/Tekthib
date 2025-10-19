@@ -99,6 +99,7 @@ export interface WSMessage {
   type: WSMessageType;
   payload?: any;
   timestamp?: number;
+  autoPlayTimeout?: number;
 }
 
 export interface RTCSignalPayload {
