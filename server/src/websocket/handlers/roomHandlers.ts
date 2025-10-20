@@ -449,6 +449,7 @@ function handleStartGame(
           playerId: botId,
           playerName: botPlayer.name,
           message: message,
+          isBotMessage: true, // Flag to indicate this is a bot message with i18n key
           timestamp: Date.now(),
         },
       });
