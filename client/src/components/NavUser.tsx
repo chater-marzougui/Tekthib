@@ -42,6 +42,47 @@ const countryOptions = [
   },
 ];
 
+interface RenderDropdownItemProps {
+  title: string;
+  iconName: string;
+  iconClass?: string;
+  enabled: boolean;
+  onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
+}
+
+const RenderDropdownItem = ({
+  onClick,
+  title,
+  enabled,
+  iconName,
+  iconClass,
+}: RenderDropdownItemProps) => {
+  return (
+    <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
+      <label className="flex w-full items-center justify-between">
+        <span>{title}</span>
+        <button
+          className="relative inline-block w-10 h-6"
+          onClick={(e) => onClick(e)}
+        >
+          <span
+            className={`absolute inset-0 rounded-full transition-colors duration-200 ${
+              enabled ? "bg-green-400" : "bg-gray-300"
+            }`}
+          />
+          <span
+            className={`absolute left-0 top-0 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
+              enabled ? "translate-x-4" : "translate-x-0"
+            } flex items-center justify-center`}
+          >
+            <Icon icon={iconName} className={`h-4 w-4 ${iconClass || ""}`} />
+          </span>
+        </button>
+      </label>
+    </DropdownMenuItem>
+  );
+};
+
 export function NavUser() {
   const { theme, setTheme } = useTheme();
   const { t, i18n } = useTranslation();
@@ -49,19 +90,28 @@ export function NavUser() {
   const playerId = localStorage.getItem("clientId");
   const randomStr = Math.random().toString(36).substring(2, 15);
   const [isFullscreen, setIsFullscreen] = React.useState(false);
-  
+
   // User settings
   const [showBotMessages, setShowBotMessages] = React.useState(() => {
     const saved = localStorage.getItem("showBotMessages");
-    return saved !== null ? saved === "true" : true;
+    if (saved === null) {
+      return true;
+    }
+    return saved === "true";
   });
   const [showSystemMessages, setShowSystemMessages] = React.useState(() => {
     const saved = localStorage.getItem("showSystemMessages");
-    return saved !== null ? saved === "true" : true;
+    if (saved === null) {
+      return true;
+    }
+    return saved === "true";
   });
   const [showChallengeToasts, setShowChallengeToasts] = React.useState(() => {
     const saved = localStorage.getItem("showChallengeToasts");
-    return saved !== null ? saved === "true" : true;
+    if (saved === null) {
+      return true;
+    }
+    return saved === "true";
   });
 
   const avatarSvg = useAvatar(playerId || randomStr);
@@ -77,24 +127,70 @@ export function NavUser() {
     newTheme: "dark" | "light"
   ) => {
     e.stopPropagation();
-    setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
+
+    // Get click coordinates for the circular reveal animation
+    const x = e.clientX;
+    const y = e.clientY;
+
+    // Calculate the radius needed to cover the entire screen from the click point
+    const endRadius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y)
+    );
+
+    // Check if browser supports View Transitions API
+    if (!document.startViewTransition) {
+      setTheme(newTheme);
+      localStorage.setItem("theme", newTheme);
+      return;
+    }
+
+    // Start the view transition
+    const transition = document.startViewTransition(() => {
+      setTheme(newTheme);
+      localStorage.setItem("theme", newTheme);
+    });
+
+    // Animate the circular reveal
+    transition.ready.then(() => {
+      const clipPath = [
+        `circle(0px at ${x}px ${y}px)`,
+        `circle(${endRadius}px at ${x}px ${y}px)`,
+      ];
+
+      document.documentElement.animate(
+        {
+          clipPath: clipPath,
+        },
+        {
+          duration: 500,
+          easing: "ease-in-out",
+          pseudoElement: "::view-transition-new(root)",
+        }
+      );
+    });
   };
 
   const toggleFullscreen = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().then(() => {
-        setIsFullscreen(true);
-      }).catch((err) => {
-        console.error("Error attempting to enable fullscreen:", err);
-      });
+    if (document.fullscreenElement) {
+      document
+        .exitFullscreen()
+        .then(() => {
+          setIsFullscreen(false);
+        })
+        .catch((err) => {
+          console.error("Error attempting to exit fullscreen:", err);
+        });
     } else {
-      document.exitFullscreen().then(() => {
-        setIsFullscreen(false);
-      }).catch((err) => {
-        console.error("Error attempting to exit fullscreen:", err);
-      });
+      document.documentElement
+        .requestFullscreen()
+        .then(() => {
+          setIsFullscreen(true);
+        })
+        .catch((err) => {
+          console.error("Error attempting to enable fullscreen:", err);
+        });
     }
   };
 
@@ -105,7 +201,7 @@ export function NavUser() {
   ) => {
     e.stopPropagation();
     const newValue = !currentValue;
-    
+
     switch (setting) {
       case "bot":
         setShowBotMessages(newValue);
@@ -133,6 +229,33 @@ export function NavUser() {
     };
   }, []);
 
+  const QuickActions: RenderDropdownItemProps[] = [
+    {
+      title: t("nav.showBotMessages"),
+      iconName: showBotMessages ? "mdi:check" : "mdi:close",
+      enabled: showBotMessages,
+      onClick: (e) => toggleSetting(e, "bot", showBotMessages),
+    },
+    {
+      title: t("nav.showSystemMessages"),
+      iconName: showSystemMessages ? "mdi:check" : "mdi:close",
+      enabled: showSystemMessages,
+      onClick: (e) => toggleSetting(e, "system", showSystemMessages),
+    },
+    {
+      title: t("nav.showChallengeToasts"),
+      iconName: showChallengeToasts ? "mdi:check" : "mdi:close",
+      enabled: showChallengeToasts,
+      onClick: (e) => toggleSetting(e, "challenge", showChallengeToasts),
+    },
+    {
+      title: t("nav.soundEffects"),
+      iconName: soundEffectsEnabled ? "mdi:volume-high" : "mdi:volume-off",
+      enabled: soundEffectsEnabled,
+      onClick: (_) => toggleSoundEffects(),
+    },
+  ];
+
   return (
     <div className="sticky flex items-center gap-2 cursor-pointer">
       <SidebarMenu>
@@ -151,171 +274,43 @@ export function NavUser() {
               sideOffset={4}
             >
               <DropdownMenuGroup>
-                <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
-                  <label className="flex w-full items-center justify-between">
-                    <span>{t("nav.toggleDarkMode")}</span>
-                    <button
-                      className="relative inline-block w-10 h-6"
-                      onClick={(e) =>
-                        handleChangeTheme(
-                          e,
-                          theme === "dark" ? "light" : "dark"
-                        )
-                      }
-                    >
-                      <span className="absolute inset-0 bg-gray-300 rounded-full transition-colors duration-200" />
-                      <span
-                        className={`absolute left-0 top-0 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                          theme === "dark" ? "translate-x-4" : "translate-x-0"
-                        } flex items-center justify-center`}
-                      >
-                        {theme === "dark" ? (
-                          <Icon
-                            icon="mdi:white-balance-sunny"
-                            className="h-4 w-4"
-                          />
-                        ) : (
-                          <Icon
-                            icon="mdi:moon-waning-crescent"
-                            className="h-4 w-4"
-                          />
-                        )}
-                      </span>
-                    </button>
-                  </label>
-                </DropdownMenuItem>
+                <RenderDropdownItem
+                  key={t("nav.toggleDarkMode")}
+                  title={t("nav.toggleDarkMode")}
+                  enabled={theme === "dark"}
+                  iconName={
+                    theme === "light"
+                      ? "mdi:white-balance-sunny"
+                      : "mdi:moon-waning-crescent"
+                  }
+                  iconClass={
+                    theme === "light" ? "text-yellow-500" : "text-gray-700"
+                  }
+                  onClick={(e) =>
+                    handleChangeTheme(e, theme === "dark" ? "light" : "dark")
+                  }
+                />
 
-                <DropdownMenuSeparator />
-                
-                <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
-                  <label className="flex w-full items-center justify-between">
-                    <span>{t("nav.fullscreen")}</span>
-                    <button
-                      className="relative inline-block w-10 h-6"
-                      onClick={toggleFullscreen}
-                    >
-                      <span className="absolute inset-0 bg-gray-300 rounded-full transition-colors duration-200" />
-                      <span
-                        className={`absolute left-0 top-0 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                          isFullscreen ? "translate-x-4" : "translate-x-0"
-                        } flex items-center justify-center`}
-                      >
-                        {isFullscreen ? (
-                          <Icon
-                            icon="mdi:fullscreen-exit"
-                            className="h-4 w-4"
-                          />
-                        ) : (
-                          <Icon
-                            icon="mdi:fullscreen"
-                            className="h-4 w-4"
-                          />
-                        )}
-                      </span>
-                    </button>
-                  </label>
-                </DropdownMenuItem>
+                <RenderDropdownItem
+                  title={t("nav.fullscreen")}
+                  iconName={
+                    isFullscreen ? "mdi:fullscreen-exit" : "mdi:fullscreen"
+                  }
+                  enabled={isFullscreen}
+                  onClick={toggleFullscreen}
+                />
 
                 <DropdownMenuSeparator />
 
-                <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
-                  <label className="flex w-full items-center justify-between">
-                    <span>{t("nav.showBotMessages")}</span>
-                    <button
-                      className="relative inline-block w-10 h-6"
-                      onClick={(e) => toggleSetting(e, "bot", showBotMessages)}
-                    >
-                      <span className={`absolute inset-0 rounded-full transition-colors duration-200 ${
-                        showBotMessages ? "bg-green-400" : "bg-gray-300"
-                      }`} />
-                      <span
-                        className={`absolute left-0 top-0 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                          showBotMessages ? "translate-x-4" : "translate-x-0"
-                        } flex items-center justify-center`}
-                      >
-                        <Icon
-                          icon={showBotMessages ? "mdi:check" : "mdi:close"}
-                          className="h-4 w-4"
-                        />
-                      </span>
-                    </button>
-                  </label>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
-                  <label className="flex w-full items-center justify-between">
-                    <span>{t("nav.showSystemMessages")}</span>
-                    <button
-                      className="relative inline-block w-10 h-6"
-                      onClick={(e) => toggleSetting(e, "system", showSystemMessages)}
-                    >
-                      <span className={`absolute inset-0 rounded-full transition-colors duration-200 ${
-                        showSystemMessages ? "bg-green-400" : "bg-gray-300"
-                      }`} />
-                      <span
-                        className={`absolute left-0 top-0 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                          showSystemMessages ? "translate-x-4" : "translate-x-0"
-                        } flex items-center justify-center`}
-                      >
-                        <Icon
-                          icon={showSystemMessages ? "mdi:check" : "mdi:close"}
-                          className="h-4 w-4"
-                        />
-                      </span>
-                    </button>
-                  </label>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
-                  <label className="flex w-full items-center justify-between">
-                    <span>{t("nav.showChallengeToasts")}</span>
-                    <button
-                      className="relative inline-block w-10 h-6"
-                      onClick={(e) => toggleSetting(e, "challenge", showChallengeToasts)}
-                    >
-                      <span className={`absolute inset-0 rounded-full transition-colors duration-200 ${
-                        showChallengeToasts ? "bg-green-400" : "bg-gray-300"
-                      }`} />
-                      <span
-                        className={`absolute left-0 top-0 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                          showChallengeToasts ? "translate-x-4" : "translate-x-0"
-                        } flex items-center justify-center`}
-                      >
-                        <Icon
-                          icon={showChallengeToasts ? "mdi:check" : "mdi:close"}
-                          className="h-4 w-4"
-                        />
-                      </span>
-                    </button>
-                  </label>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
-                  <label className="flex w-full items-center justify-between">
-                    <span>{t("nav.soundEffects")}</span>
-                    <button
-                      className="relative inline-block w-10 h-6"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleSoundEffects();
-                      }}
-                    >
-                      <span className={`absolute inset-0 rounded-full transition-colors duration-200 ${
-                        soundEffectsEnabled ? "bg-green-400" : "bg-gray-300"
-                      }`} />
-                      <span
-                        className={`absolute left-0 top-0 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                          soundEffectsEnabled ? "translate-x-4" : "translate-x-0"
-                        } flex items-center justify-center`}
-                      >
-                        <Icon
-                          icon={soundEffectsEnabled ? "mdi:volume-high" : "mdi:volume-off"}
-                          className="h-4 w-4"
-                        />
-                      </span>
-                    </button>
-                  </label>
-                </DropdownMenuItem>
+                {QuickActions.map((action) => (
+                  <RenderDropdownItem
+                    key={action.title}
+                    title={action.title}
+                    iconName={action.iconName}
+                    enabled={action.enabled}
+                    onClick={action.onClick}
+                  />
+                ))}
 
                 <DropdownMenuSeparator />
                 <DropdownMenuSub>

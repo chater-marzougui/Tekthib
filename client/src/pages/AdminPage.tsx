@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import type { Room as BaseRoom, GameState } from "@/types";
 import { Icon } from "@iconify/react";
+import { useHeader } from "@/hooks/useHeader";
 
 interface Room extends BaseRoom {
   gameState: GameState | null;
@@ -33,11 +34,14 @@ const baseUrl =
 export default function AdminPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState<string>(
+    localStorage.getItem("adminPassword") || ""
+  );
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [systemState, setSystemState] = useState<SystemState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const { setHeaderConfig } = useHeader();
 
   const fetchSystemState = async (pwd: string) => {
     setIsLoading(true);
@@ -51,6 +55,8 @@ export default function AdminPage() {
         setIsAuthenticated(false);
         return;
       }
+
+      localStorage.setItem("adminPassword", pwd);
 
       if (!response.ok) {
         throw new Error("Failed to fetch system state");
@@ -116,7 +122,11 @@ export default function AdminPage() {
       return;
     }
 
-    if (!confirm("Are you sure you want to delete ALL rooms? This action cannot be undone!")) {
+    if (
+      !confirm(
+        "Are you sure you want to delete ALL rooms? This action cannot be undone!"
+      )
+    ) {
       return;
     }
 
@@ -149,7 +159,11 @@ export default function AdminPage() {
     }
   };
 
-  const kickPlayer = async (roomId: string, playerId: string, playerName: string) => {
+  const kickPlayer = async (
+    roomId: string,
+    playerId: string,
+    playerName: string
+  ) => {
     if (!password) {
       toast.error(t("admin.passwordRequired"));
       return;
@@ -210,10 +224,37 @@ export default function AdminPage() {
     }
   }, [isAuthenticated, autoRefresh, password]);
 
+  useEffect(() => {
+    if (password.trim()) {
+      handleLogin(new Event("submit") as unknown as React.FormEvent);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+    setHeaderConfig({
+      actionButton: {
+        label: "Logout",
+        onClick: () => {
+          navigate("/");
+        },
+        variant: "destructive",
+        color: "default",
+      },
+    });
+    return () => {
+      setHeaderConfig({
+        actionButton: undefined,
+      });
+    };
+  }, [t, isAuthenticated]);
+
   // Login screen
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 flex items-center justify-center p-4">
+      <div className="flex items-center justify-center p-4 h-full">
         <Card className="w-96">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -257,15 +298,15 @@ export default function AdminPage() {
 
   // Admin dashboard
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 p-4">
+    <div className="p-4">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-              <Icon icon="mdi:gamepad-variant" className="w-8 h-8" /> System Admin Dashboard
+            <h1 className="text-3xl font-bold text-foreground/80 flex items-center gap-2">
+              <Icon icon="mdi:gamepad-variant" className="w-8 h-8" /> System
+              Admin Dashboard
             </h1>
-            <p className="text-gray-600">Real-time system state monitoring</p>
           </div>
           <div className="flex gap-2 items-center">
             <Button
@@ -275,11 +316,13 @@ export default function AdminPage() {
             >
               {autoRefresh ? (
                 <>
-                  <Icon icon="mdi:refresh" className="w-4 h-4 mr-2" /> Auto-refresh ON
+                  <Icon icon="mdi:refresh" className="w-4 h-4 mr-2" />{" "}
+                  Auto-refresh ON
                 </>
               ) : (
                 <>
-                  <Icon icon="mdi:pause" className="w-4 h-4 mr-2" /> Auto-refresh OFF
+                  <Icon icon="mdi:pause" className="w-4 h-4 mr-2" />{" "}
+                  Auto-refresh OFF
                 </>
               )}
             </Button>
@@ -294,16 +337,6 @@ export default function AdminPage() {
                   <Icon icon="mdi:refresh" className="w-4 h-4 mr-2" /> Refresh
                 </>
               )}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsAuthenticated(false);
-                setPassword("");
-                navigate("/");
-              }}
-            >
-              Logout
             </Button>
           </div>
         </div>
@@ -325,7 +358,8 @@ export default function AdminPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Icon icon="mdi:account-group" className="w-5 h-5" /> Total Players Online
+                <Icon icon="mdi:account-group" className="w-5 h-5" /> Total
+                Players Online
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -338,7 +372,7 @@ export default function AdminPage() {
 
         {/* Admin Actions */}
         {systemState && systemState.totalRooms > 0 && (
-          <Card className="border-red-200 bg-red-50">
+          <Card className="border-red-200">
             <CardHeader>
               <CardTitle className="text-red-700 flex items-center gap-2">
                 <Icon icon="mdi:alert" className="w-5 h-5" /> Danger Zone
@@ -348,7 +382,7 @@ export default function AdminPage() {
               <Button
                 variant="destructive"
                 onClick={deleteAllRooms}
-                className="w-full"
+                className="w-fit p-5"
               >
                 <Icon icon="mdi:delete-sweep" className="w-4 h-4 mr-2" />
                 Delete All Rooms ({systemState.totalRooms})
@@ -375,7 +409,7 @@ export default function AdminPage() {
             ) : (
               <div className="space-y-4">
                 {systemState?.rooms.map((room) => (
-                  <Card key={room.id} className="bg-gray-50">
+                  <Card key={room.id}>
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div>
@@ -394,14 +428,21 @@ export default function AdminPage() {
                             onClick={() => deleteRoom(room.id)}
                             title="Delete Room"
                           >
-                            <Icon icon="mdi:delete" className="text-red-500 cursor-pointer" />
+                            <Icon
+                              icon="mdi:delete"
+                              className="text-red-500 cursor-pointer"
+                            />
                           </Button>
                           <div className="text-sm font-medium">
                             Players: {room.playerCount}/{room.maxPlayers}
                           </div>
                           {room.gameState && (
                             <div className="flex items-center gap-1 text-xs text-green-600 font-medium">
-                              <Icon icon="mdi:gamepad-variant" className="w-3 h-3" /> Game in Progress
+                              <Icon
+                                icon="mdi:gamepad-variant"
+                                className="w-3 h-3"
+                              />{" "}
+                              Game in Progress
                             </div>
                           )}
                         </div>
@@ -410,7 +451,7 @@ export default function AdminPage() {
                     <CardContent className="space-y-4">
                       {/* Game State */}
                       {room.gameState && (
-                        <div className="bg-white p-3 rounded border">
+                        <div className="p-3 rounded border">
                           <h4 className="font-semibold mb-2">Game State</h4>
                           <div className="grid grid-cols-2 gap-2 text-sm">
                             <div>
@@ -448,7 +489,7 @@ export default function AdminPage() {
                           {room.players.map((player, idx) => (
                             <div
                               key={player.id}
-                              className="flex justify-between items-center bg-white p-2 rounded border"
+                              className="flex justify-between items-center p-2 rounded border"
                             >
                               <div className="flex items-center gap-2">
                                 <span className="font-medium">#{idx + 1}</span>
@@ -491,11 +532,19 @@ export default function AdminPage() {
                                 >
                                   {player.isReady ? (
                                     <>
-                                      <Icon icon="mdi:check" className="w-3 h-3" /> Ready
+                                      <Icon
+                                        icon="mdi:check"
+                                        className="w-3 h-3"
+                                      />{" "}
+                                      Ready
                                     </>
                                   ) : (
                                     <>
-                                      <Icon icon="mdi:clock-outline" className="w-3 h-3" /> Not Ready
+                                      <Icon
+                                        icon="mdi:clock-outline"
+                                        className="w-3 h-3"
+                                      />{" "}
+                                      Not Ready
                                     </>
                                   )}
                                 </span>
@@ -509,10 +558,19 @@ export default function AdminPage() {
                                     variant="ghost"
                                     size="sm"
                                     className="h-6 px-2 hover:bg-red-100 text-red-600"
-                                    onClick={() => kickPlayer(room.id, player.id, player.name)}
+                                    onClick={() =>
+                                      kickPlayer(
+                                        room.id,
+                                        player.id,
+                                        player.name
+                                      )
+                                    }
                                     title="Kick Player"
                                   >
-                                    <Icon icon="mdi:account-remove" className="w-3 h-3" />
+                                    <Icon
+                                      icon="mdi:account-remove"
+                                      className="w-3 h-3"
+                                    />
                                   </Button>
                                 )}
                               </div>

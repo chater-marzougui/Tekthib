@@ -74,6 +74,8 @@
   --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
   --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: oklch(0.704 0.04 256.788);
+  
+  view-transition-name: root;
 }
 
 .dark {
@@ -159,4 +161,37 @@
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--primary-foreground) / 0.5) transparent;
   }
+}
+
+/* Disable Chrome’s default blend + fade animations */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none !important;
+  mix-blend-mode: normal !important;
+}
+
+/* Keep old theme visible underneath */
+::view-transition-old(root) {
+  z-index: 0;
+  opacity: 1 !important;
+}
+
+/* Put the new theme on top, we’ll control its reveal manually */
+::view-transition-new(root) {
+  z-index: 1;
+  clip-path: circle(0px at center);
+  opacity: 1 !important;
+  background: inherit !important; /* prevents black fill */
+}
+
+/* Stop the parent container from painting black */
+html::view-transition,
+html::view-transition-group(root),
+html::view-transition-image-pair(root) {
+  background: none !important;
+  mix-blend-mode: normal !important;
+}
+
+html[view-transition="running"] body {
+  visibility: hidden;
 }
