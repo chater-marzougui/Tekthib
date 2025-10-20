@@ -17,6 +17,7 @@ interface ChatMessage {
   timestamp: number;
   isSystem?: boolean;
   systemMessageColor?: string;
+  isBotMessage?: boolean; // Flag to indicate this is a bot message with i18n key
 }
 
 interface ChatBoxProps {
@@ -121,6 +122,7 @@ export default function ChatBox({
           playerName: message.payload.playerName,
           message: message.payload.message,
           timestamp: message.timestamp || Date.now(),
+          isBotMessage: message.payload.isBotMessage, // Preserve bot message flag
         };
 
         setMessages((prev) => {
@@ -242,7 +244,7 @@ export default function ChatBox({
                           {msg.playerName}
                         </div>
                       )}
-                      {msg.message}
+                      {msg.isBotMessage ? t(msg.message) : msg.message}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {new Date(msg.timestamp).toLocaleTimeString([], {

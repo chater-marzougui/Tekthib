@@ -1,0 +1,130 @@
+{
+  "bot": {
+    "aggressive": {
+      "successfulBluff": {
+        "thinkLyingAgain": "هل تعتقد أنني أكذب مرة أخرى يا إنسان؟ 😏",
+        "callMeDare": "اتصل بي إذا كنت تجرؤ!",
+        "tooScaredChallenge": "خائف جدًا من التحدي؟",
+        "couldDoAllDay": "يمكنني فعل هذا طوال اليوم! 💪",
+        "notBraveEnough": "لست شجاعًا بما فيه الكفاية؟",
+        "thatsWhatThought": "هذا ما ظننته...",
+        "easyMoney": "مال سهل!",
+        "yallTooPredictable": "أنتم جميعًا متوقعون جدًا 😎",
+        "whosNext": "من التالي؟",
+        "watchAndLearn": "شاهد وتعلم!",
+        "iRunThisTable": "أنا أدير هذه الطاولة! 🔥",
+        "sittingPretty": "جالس بشكل جميل مع هذه البطاقات!"
+      },
+      "caughtBluff": {
+        "gotcha": "أمسكت بك! كنت أعرف أنك تكذب! 🎯",
+        "calledIt": "قلتها! خذ تلك البطاقات!",
+        "tooObvious": "واضح جدًا يا صديقي!",
+        "smellLiar": "يمكنني شم رائحة كاذب من أميال بعيدة!",
+        "readLikeBook": "قرأتك مثل كتاب! 📖",
+        "notOnWatch": "ليس تحت مراقبتي!",
+        "thatsHowDone": "هكذا يتم ذلك!",
+        "cantFoolTwice": "لا يمكنك خداعي مرتين!",
+        "justiceServed": "العدالة تحققت! ⚖️",
+        "sawThroughImmediately": "رأيت خلال ذلك على الفور!"
+      },
+      "bigPlay": {
+        "bigMovesOnly": "حركات كبيرة فقط! 💥",
+        "goingAllIn": "سأراهن بكل شيء!",
+        "thisHowYouPlay": "هكذا تلعب!",
+        "watchThis": "شاهد هذا!",
+        "timeToDominate": "حان وقت السيطرة! 👑",
+        "makingPowerMoves": "أقوم بحركات قوية!",
+        "shakeThingsUp": "دعونا نهز الأمور!",
+        "noFear": "لا خوف!"
+      },
+      "random": {
+        "feelingConfident": "أشعر بالثقة اليوم!",
+        "moveWontSave": "حركتك لن تنقذك...",
+        "cardsOnMySide": "البطاقات في صفي!",
+        "speedThisUp": "لنسرع هذا!",
+        "anyoneElse": "أي شخص آخر يريد بعضًا؟ 😤"
+      }
+    },
+    "truthful": {
+      "successfulBluff": {
+        "honestyNotBest": "أحيانًا الصدق ليس أفضل سياسة... 🤫",
+        "neverLie": "أنا لا أكذب أبدًا... أو هل أفعل؟",
+        "wasUnexpected": "كان ذلك... غير متوقع بالنسبة لي",
+        "surpriseMyself": "حتى أنا أفاجئ نفسي أحيانًا",
+        "rareMoment": "لحظة نادرة من الخداع",
+        "dontGetUsed": "لا تعتاد على هذا!",
+        "conscienceHurts": "ضميري يؤلمني قليلاً 😅",
+        "feelsWrong": "هذا يبدو خطأ ولكن... نجح!"
+      },
+      "caughtBluff": {
+        "justicePrevails": "العدالة تسود! ⚖️",
+        "cardsSpeakTruth": "هذه البطاقات تتحدث بالحقيقة!",
+        "honestyBest": "الصدق هو أفضل سياسة!",
+        "truthComesOut": "الحقيقة دائمًا تظهر!",
+        "couldTellStart": "كنت أستطيع أن أقول من البداية!",
+        "liarsNever": "الكذابون لا يزدهرون أبدًا!",
+        "thatsKarma": "هذا هو الكارما!",
+        "truthWins": "الحقيقة تفوز مرة أخرى! ✨",
+        "knewSomethingOff": "كنت أعلم أن هناك خطأ ما!",
+        "instinctsRight": "كانت غرائزي صحيحة!"
+      },
+      "bigPlay": {
+        "allLegitimate": "كل البطاقات شرعية، أؤكد لك!",
+        "noTricks": "لا خدع هنا، فقط مهارة!",
+        "honestPays": "اللعب الصادق يؤتي ثماره!",
+        "theseAllReal": "هذه كلها حقيقية!",
+        "playingByRules": "ألعب وفقًا للقواعد! 📜",
+        "cleanPlayOnly": "لعب نظيف فقط!"
+      },
+      "random": {
+        "believeFairPlay": "أؤمن باللعب العادل",
+        "letCardsDecide": "دع البطاقات تقرر",
+        "playingSafe": "ألعب بأمان...",
+        "noNonsense": "لا هراء هنا!",
+        "justHonest": "فقط صادق 😊"
+      }
+    },
+    "unpredictable": {
+      "successfulBluff": {
+        "feelingLucky": "هل تشعر بالحظ؟ 🎲",
+        "dontKnow": "حتى أنا لا أعرف ماذا أفعل!",
+        "chaosStrategy": "الفوضى هي استراتيجيتي!",
+        "randomWinning": "عشوائي = فوز؟",
+        "actuallyWorked": "ذلك... نجح فعلاً؟ 😂",
+        "pureInstinct": "غريزة خالصة!",
+        "noPlanVibes": "لا خطة، كل الذبذبات!",
+        "spontaneityWin": "العفوية للفوز!",
+        "calculated": "محسوب؟ لا. محظوظ؟ ربما!",
+        "rollingDice": "أرمي النرد! 🎰"
+      },
+      "caughtBluff": {
+        "caughtAccident": "أمسكت بك! عن طريق الصدفة... ولكن لا يزال! 😄",
+        "brokenClock": "حتى الساعة المكسورة تكون صحيحة مرتين!",
+        "randomGuess": "تخميني العشوائي آتى ثماره!",
+        "chaosWins": "الفوضى تفوز مرة أخرى!",
+        "didntSeeComing": "لم تكن تتوقع ذلك، أليس كذلك؟",
+        "neitherDidI": "ولا أنا! 🤪",
+        "pureIntuition": "حدس خالص!",
+        "randomWorks": "أحيانًا العشوائية تنجح!"
+      },
+      "bigPlay": {
+        "letChaos": "دع الفوضى تقرر! 🌪️",
+        "whyNot": "لماذا لا؟",
+        "yolo": "يولو! 💫",
+        "noRhyme": "لا قافية ولا سبب!",
+        "goingGut": "أتبع حدسي!",
+        "throwingCaution": "ألقي الحذر في مهب الريح!",
+        "whoKnows": "من يعلم ما سيحدث!"
+      },
+      "random": {
+        "interesting": "مثير للاهتمام... 🤔",
+        "hmmMaybe": "همم... أو ربما لا؟",
+        "oneWayFind": "طريقة واحدة لمعرفة ذلك!",
+        "letsSeeHappens": "دعونا نرى ما يحدث!",
+        "whyNotTry": "لماذا لا نحاول هذا؟",
+        "keepGuessing": "أبقيكم تخمنون! 😉",
+        "expectUnexpected": "توقع ما هو غير متوقع!"
+      }
+    }
+  }
+}

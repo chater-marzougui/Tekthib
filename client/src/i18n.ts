@@ -23,6 +23,10 @@ import roomAR from "./locales/ar/room.json";
 import homeEN from "./locales/en/home.json";
 import homeFR from "./locales/fr/home.json";
 import homeAR from "./locales/ar/home.json";
+// Import bot translation files
+import botEN from "./locales/en/bot.json";
+import botFR from "./locales/fr/bot.json";
+import botAR from "./locales/ar/bot.json";
 
 const resources = {
   en: {
@@ -32,6 +36,7 @@ const resources = {
       ...gameEN,
       ...roomEN,
       ...homeEN,
+      ...botEN,
     },
   },
   fr: {
@@ -41,6 +46,7 @@ const resources = {
       ...gameFR,
       ...roomFR,
       ...homeFR,
+      ...botFR,
     },
   },
   ar: {
@@ -50,6 +56,7 @@ const resources = {
       ...gameAR,
       ...roomAR,
       ...homeAR,
+      ...botAR,
     },
   },
 };

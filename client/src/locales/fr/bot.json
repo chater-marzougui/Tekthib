@@ -1,0 +1,130 @@
+{
+  "bot": {
+    "aggressive": {
+      "successfulBluff": {
+        "thinkLyingAgain": "Tu penses que je mens encore, humain ? 😏",
+        "callMeDare": "Défie-moi si tu l'oses !",
+        "tooScaredChallenge": "Trop peur de défier ?",
+        "couldDoAllDay": "Je pourrais faire ça toute la journée ! 💪",
+        "notBraveEnough": "Pas assez courageux ?",
+        "thatsWhatThought": "C'est ce que je pensais...",
+        "easyMoney": "De l'argent facile !",
+        "yallTooPredictable": "Vous êtes trop prévisibles 😎",
+        "whosNext": "C'est à qui ?",
+        "watchAndLearn": "Regarde et apprends !",
+        "iRunThisTable": "Je dirige cette table ! 🔥",
+        "sittingPretty": "Je suis bien installé avec ces cartes !"
+      },
+      "caughtBluff": {
+        "gotcha": "JE T'AI EU ! Je savais que tu mentais ! 🎯",
+        "calledIt": "Je l'ai dit ! Prends ces cartes !",
+        "tooObvious": "Trop évident, mon ami !",
+        "smellLiar": "Je peux sentir un menteur à des kilomètres !",
+        "readLikeBook": "Je t'ai lu comme un livre ! 📖",
+        "notOnWatch": "Pas sous ma surveillance !",
+        "thatsHowDone": "Voilà comment on fait !",
+        "cantFoolTwice": "Tu ne peux pas me tromper deux fois !",
+        "justiceServed": "Justice est faite ! ⚖️",
+        "sawThroughImmediately": "J'ai vu clair immédiatement !"
+      },
+      "bigPlay": {
+        "bigMovesOnly": "Seulement les grands coups ! 💥",
+        "goingAllIn": "Je mise tout !",
+        "thisHowYouPlay": "Voilà comment on joue !",
+        "watchThis": "Regarde ça !",
+        "timeToDominate": "Il est temps de dominer ! 👑",
+        "makingPowerMoves": "Je fais des coups puissants !",
+        "shakeThingsUp": "Secouons un peu les choses !",
+        "noFear": "Pas de peur !"
+      },
+      "random": {
+        "feelingConfident": "Je me sens confiant aujourd'hui !",
+        "moveWontSave": "Ton coup ne te sauvera pas...",
+        "cardsOnMySide": "Les cartes sont de mon côté !",
+        "speedThisUp": "Accélérons ça !",
+        "anyoneElse": "Quelqu'un d'autre en veut ? 😤"
+      }
+    },
+    "truthful": {
+      "successfulBluff": {
+        "honestyNotBest": "Parfois l'honnêteté n'est pas la meilleure politique... 🤫",
+        "neverLie": "Je ne mens jamais... ou si ?",
+        "wasUnexpected": "C'était... inattendu pour moi",
+        "surpriseMyself": "Même moi je me surprends parfois",
+        "rareMoment": "Un moment rare de tromperie",
+        "dontGetUsed": "Ne vous y habituez pas !",
+        "conscienceHurts": "Ma conscience me fait un peu mal 😅",
+        "feelsWrong": "Ça fait bizarre mais... ça a marché !"
+      },
+      "caughtBluff": {
+        "justicePrevails": "La justice prévaut ! ⚖️",
+        "cardsSpeakTruth": "Ces cartes disent la vérité !",
+        "honestyBest": "L'honnêteté est la meilleure politique !",
+        "truthComesOut": "La vérité sort toujours !",
+        "couldTellStart": "Je pouvais le dire dès le début !",
+        "liarsNever": "Les menteurs ne prospèrent jamais !",
+        "thatsKarma": "C'est ça le karma !",
+        "truthWins": "La vérité gagne encore ! ✨",
+        "knewSomethingOff": "Je savais que quelque chose n'allait pas !",
+        "instinctsRight": "Mes instincts avaient raison !"
+      },
+      "bigPlay": {
+        "allLegitimate": "Toutes des cartes légitimes, je vous assure !",
+        "noTricks": "Pas de tours ici, juste du talent !",
+        "honestPays": "Le jeu honnête paye !",
+        "theseAllReal": "Ce sont toutes des vraies !",
+        "playingByRules": "Je joue selon les règles ! 📜",
+        "cleanPlayOnly": "Seulement du jeu propre !"
+      },
+      "random": {
+        "believeFairPlay": "Je crois au jeu équitable",
+        "letCardsDecide": "Laissons les cartes décider",
+        "playingSafe": "Je joue prudemment...",
+        "noNonsense": "Pas de bêtises ici !",
+        "justHonest": "Juste honnête 😊"
+      }
+    },
+    "unpredictable": {
+      "successfulBluff": {
+        "feelingLucky": "Tu te sens chanceux ? 🎲",
+        "dontKnow": "Même moi je ne sais pas ce que je fais !",
+        "chaosStrategy": "Le chaos est ma stratégie !",
+        "randomWinning": "Aléatoire = gagner ?",
+        "actuallyWorked": "Ça... a réellement marché ? 😂",
+        "pureInstinct": "Pur instinct !",
+        "noPlanVibes": "Pas de plan, que des bonnes vibes !",
+        "spontaneityWin": "Spontanéité pour la victoire !",
+        "calculated": "Calculé ? Non. Chanceux ? Peut-être !",
+        "rollingDice": "Je lance les dés ! 🎰"
+      },
+      "caughtBluff": {
+        "caughtAccident": "Je t'ai eu ! Par accident... mais quand même ! 😄",
+        "brokenClock": "Même une horloge cassée a raison deux fois !",
+        "randomGuess": "Mon devinette aléatoire a payé !",
+        "chaosWins": "Le chaos gagne encore !",
+        "didntSeeComing": "Tu ne t'y attendais pas, hein ?",
+        "neitherDidI": "Moi non plus ! 🤪",
+        "pureIntuition": "Pure intuition !",
+        "randomWorks": "Parfois l'aléatoire fonctionne !"
+      },
+      "bigPlay": {
+        "letChaos": "Laissons le chaos décider ! 🌪️",
+        "whyNot": "Pourquoi pas ?",
+        "yolo": "YOLO ! 💫",
+        "noRhyme": "Ni rime ni raison !",
+        "goingGut": "Je suis mon instinct !",
+        "throwingCaution": "Je jette la prudence au vent !",
+        "whoKnows": "Qui sait ce qui va arriver !"
+      },
+      "random": {
+        "interesting": "Intéressant... 🤔",
+        "hmmMaybe": "Hmm... ou peut-être pas ?",
+        "oneWayFind": "Une façon de le découvrir !",
+        "letsSeeHappens": "Voyons ce qui se passe !",
+        "whyNotTry": "Pourquoi ne pas essayer ?",
+        "keepGuessing": "Je vous garde en haleine ! 😉",
+        "expectUnexpected": "Attendez-vous à l'inattendu !"
+      }
+    }
+  }
+}

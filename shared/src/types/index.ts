@@ -153,6 +153,7 @@ export interface ChatMessagePayload {
   message: string;
   playerId: string;
   playerName: string;
+  isBotMessage?: boolean; // Flag to indicate this is a bot message with i18n key
 }
 
 export interface AddBotsPayload {
