@@ -70,9 +70,12 @@ choco install ffmpeg
 # Navigate to the node test directory
 cd test/node
 
-# Install dependencies
-npm install
+# Install dependencies (wrtc may fail on some systems - see troubleshooting)
+npm install --no-optional  # Install without wrtc first to test connectivity
+npm install                # Then try with wrtc for full WebRTC testing
 ```
+
+**Note**: The `wrtc` package requires native compilation and may fail in some environments. If you encounter issues, you can still test WebSocket connectivity without it (see Test Signaling Only section below).
 
 ### Python Setup
 
@@ -89,6 +92,36 @@ pip install -r requirements.txt
 ```
 
 ## Usage
+
+### Running the Test Signaling Server
+
+If you want to test without the full Tekthib server, we provide a lightweight signaling server:
+
+```bash
+cd test
+npm install
+npm run signaling-server
+```
+
+This test server implements only WebRTC signaling (WebSocket message forwarding) and is useful for:
+- Testing the peer simulation scripts independently
+- Development without running the full game server
+- CI/CD testing of WebRTC functionality
+
+### Test Signaling Only (Without WebRTC)
+
+If you want to verify that the signaling server is working before attempting full WebRTC testing:
+
+```bash
+cd test/node
+npm install --no-optional  # Installs only ws package
+SIGNALING_URL=ws://localhost:3001 NUM_CLIENTS=4 node testConnection.js
+```
+
+This lighter test verifies:
+- WebSocket connectivity
+- Room creation and joining
+- Message exchange via signaling server
 
 ### Running Node.js Tests
 
@@ -188,15 +221,22 @@ A test is considered successful when:
 
 **Problem**: `wrtc` installation fails
 ```bash
-# Solution: Install build tools
-# On Ubuntu/Debian:
-sudo apt-get install build-essential
+# The wrtc package requires native compilation and may fail in CI/CD
+# or containerized environments. Options:
 
-# On Windows:
-npm install --global windows-build-tools
+# Option 1: Test signaling only (without WebRTC)
+npm install --no-optional
+node testConnection.js
 
-# On macOS:
-xcode-select --install
+# Option 2: Use Docker with prebuilt binaries
+# See: https://github.com/node-webrtc/node-webrtc#docker
+
+# Option 3: Install build tools (Linux)
+sudo apt-get install build-essential python3
+
+# Option 4: Use the Python implementation instead
+cd ../python
+python simulate_peers.py
 ```
 
 **Problem**: `Error: ECONNREFUSED` when connecting

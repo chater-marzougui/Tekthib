@@ -1,0 +1,12 @@
+{
+  "name": "tekthib-test-utils",
+  "version": "1.0.0",
+  "description": "Test utilities for Tekthib WebRTC",
+  "type": "module",
+  "scripts": {
+    "signaling-server": "node signaling-server.mjs"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
