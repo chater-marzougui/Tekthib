@@ -2,7 +2,7 @@ import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useVoiceChatContext } from "@/context/VoiceChatContext";
+import { useVoiceChatContext } from "@/context/WebRTCContext";
 import type { Player } from "shared";
 import { useTextDirection } from "@/hooks/useTextDirection";
 

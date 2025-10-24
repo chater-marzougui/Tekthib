@@ -9,7 +9,7 @@ import AdminPage from "./pages/AdminPage";
 import { Toaster } from "sonner";
 import { SoundProvider } from "./context/SoundPlayerContext";
 import { ThemeProvider } from "./context/ThemeProvider";
-import { VoiceChatWrapper } from "./components/VoiceChatWrapper";
+import { WebRTCWrapper } from "./components/WebRTCWrapper";
 import { initializeCardImages } from "./components/game/RenderCard";
 
 function App() {
@@ -42,13 +42,13 @@ function App() {
                 path="/*"
                 element={
                   <WebSocketProvider>
-                    <VoiceChatWrapper>
+                    <WebRTCWrapper>
                       <Routes>
                         <Route path="/room/:roomId" element={<RoomPage />} />
                         <Route path="/game/:roomId" element={<GamePage />} />
                         <Route path="*" element={<HomePage />} />
                       </Routes>
-                    </VoiceChatWrapper>
+                    </WebRTCWrapper>
                   </WebSocketProvider>
                 }
               />
