@@ -2,11 +2,11 @@ import { useTranslation } from "react-i18next";
 import { useTextDirection } from "@/hooks/useTextDirection";
 import { Icon } from "@iconify/react";
 import { Button } from "../ui/button";
-import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Switch } from "../ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Player } from "@shared";
+import { Slider } from "../ui/slider";
 
 interface RoomControlsProps {
   playerName: string;
@@ -97,7 +97,7 @@ const RoomControls = ({
             </div>
 
             <div className="space-y-2">
-              <div className="p-4 rounded-lg space-y-4">
+              <div className="p-4 pb-2 rounded-lg space-y-4">
                 {/* Auto-play toggle */}
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
@@ -115,10 +115,10 @@ const RoomControls = ({
                         `}
                     onCheckedChange={(checked) => {
                       setTimerSlideEnabled(checked);
-                      if (!checked) {
-                        setAutoPlayTimeout(0);
-                      } else {
+                      if (checked) {
                         setAutoPlayTimeout(45);
+                      } else {
+                        setAutoPlayTimeout(0);
                       }
                     }}
                   />
@@ -131,32 +131,25 @@ const RoomControls = ({
                       {t("room.timerDuration")}
                     </Label>
                     <div className="flex items-center gap-2">
-                      <Input
-                        id="timer-duration"
-                        type="number"
-                        min="10"
-                        max="300"
-                        value={autoPlayTimeout}
-                        onChange={(e) => {
-                          const value = parseInt(e.target.value) || 0;
-                          setAutoPlayTimeout(
-                            Math.max(10, Math.min(300, value))
-                          );
-                        }}
-                        className="w-24"
+                      <Slider
+                      id="timer-duration"
+                      value={[autoPlayTimeout]}
+                      onValueChange={(value) => setAutoPlayTimeout(value[0])}
+                      max={120}
+                      min={10}
+                      step={2}
+                      className="flex-1"
                       />
-                      <span className="text-sm text-gray-500">
-                        {t("room.secondsPerTurn")}
+                    </div>
+                    
+                      <span className="text-sm text-gray-500 min-w-fit">
+                      {autoPlayTimeout} {t("room.secondsPerTurn")}
                       </span>
-                    </div>
-                    <div className="text-xs text-gray-400">
-                      {t("room.timerRange")}
-                    </div>
                   </div>
                 )}
               </div>
 
-              <div className="p-4 rounded-lg space-y-4">
+              <div className="p-4 pt-0 rounded-lg space-y-4">
                 {/* Challenge suspense toggle */}
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
