@@ -11,6 +11,7 @@ import { SoundProvider } from "./context/SoundPlayerContext";
 import { ThemeProvider } from "./context/ThemeProvider";
 import { WebRTCWrapper } from "./components/WebRTCWrapper";
 import { initializeCardImages } from "./components/game/RenderCard";
+import NotFoundPage from "./pages/NotFound";
 
 function App() {
   // Preload card images once when the app initializes
@@ -46,7 +47,7 @@ function App() {
                       <Routes>
                         <Route path="/room/:roomId" element={<RoomPage />} />
                         <Route path="/game/:roomId" element={<GamePage />} />
-                        <Route path="*" element={<HomePage />} />
+                        <Route path="*" element={<NotFoundPage />} />
                       </Routes>
                     </WebRTCWrapper>
                   </WebSocketProvider>
