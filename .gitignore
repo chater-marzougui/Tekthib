@@ -18,6 +18,8 @@ build/
 !tailwind.config.js
 !postcss.config.js
 !eslint.config.js
+!test/**/*.js
+!test/**/*.mjs
 
 # IDE
 .vscode/

@@ -2,6 +2,35 @@
 
 This directory contains comprehensive testing utilities for Tekthib's WebRTC voice chat functionality. These tools allow you to simulate multiple peers connecting to your signaling server without needing multiple physical devices or browsers.
 
+## Quick Start
+
+The fastest way to verify WebRTC functionality:
+
+```bash
+# 1. Install test dependencies
+cd test
+npm install
+cd node
+npm install --no-optional
+
+# 2. Start the test signaling server (in one terminal)
+cd test
+npm run signaling-server
+
+# 3. Run connectivity test (in another terminal)
+cd test/node
+npm run test-connection
+
+# Output should show: ✅ SUCCESS: WebSocket signaling is working correctly!
+```
+
+For full WebRTC testing with audio (requires native compilation):
+```bash
+cd test/node
+npm install  # Includes wrtc - may fail in some environments
+node simulatePeers.js
+```
+
 ## Overview
 
 The testing suite provides two implementations:
@@ -357,6 +386,52 @@ You can integrate these tests into your CI/CD pipeline:
     cd test/node
     npm install
     SIGNALING_URL=ws://localhost:3001 node simulatePeers.js
+```
+
+## Example Workflows
+
+### Development Workflow
+
+When developing WebRTC features locally:
+
+```bash
+# Terminal 1: Run the main Tekthib server
+cd server
+npm run dev
+
+# Terminal 2: Test with simulated peers
+cd test/node
+SIGNALING_URL=ws://localhost:3001 NUM_PEERS=4 node testConnection.js
+```
+
+### Testing New Signaling Changes
+
+When modifying signaling logic:
+
+```bash
+# Terminal 1: Use test signaling server for quick iteration
+cd test
+npm run signaling-server
+
+# Terminal 2: Run tests
+cd test/node
+node testConnection.js  # Quick connectivity test
+node simulatePeers.js   # Full WebRTC test (if wrtc is installed)
+
+# Terminal 3: Try Python implementation
+cd test/python
+python simulate_peers.py
+```
+
+### Load Testing
+
+Test server capacity with many peers:
+
+```bash
+# Gradually increase peer count to find limits
+NUM_PEERS=5 node simulatePeers.js   # 5 peers = 10 connections
+NUM_PEERS=10 node simulatePeers.js  # 10 peers = 45 connections
+NUM_PEERS=15 node simulatePeers.js  # 15 peers = 105 connections
 ```
 
 ## Contributing

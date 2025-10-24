@@ -4,7 +4,9 @@
   "description": "Test utilities for Tekthib WebRTC",
   "type": "module",
   "scripts": {
-    "signaling-server": "node signaling-server.mjs"
+    "signaling-server": "node signaling-server.mjs",
+    "test-connection": "cd node && npm run test-connection",
+    "test-peers": "cd node && npm test"
   },
   "dependencies": {
     "ws": "^8.18.0"
