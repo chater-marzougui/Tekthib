@@ -146,35 +146,6 @@ export function useWebRTC({
   );
 
   /**
-   * Create and setup a DataChannel for a peer connection
-   */
-  const setupDataChannel = useCallback((pc: RTCPeerConnection, remotePlayerId: string, isInitiator: boolean) => {
-    let dataChannel: RTCDataChannel;
-
-    if (isInitiator) {
-      // Create data channel if we're the initiator
-      dataChannel = pc.createDataChannel("game-data");
-      console.log(`[DataChannel] Created for peer: ${remotePlayerId}`);
-    } else {
-      // Listen for incoming data channel
-      pc.ondatachannel = (event) => {
-        dataChannel = event.channel;
-        console.log(`[DataChannel] Received from peer: ${remotePlayerId}`);
-        setupDataChannelListeners(dataChannel, remotePlayerId);
-      };
-      return; // Wait for ondatachannel event
-    }
-
-    setupDataChannelListeners(dataChannel, remotePlayerId);
-
-    // Store reference in peer connection
-    const peerConn = peerConnectionsRef.current.get(remotePlayerId);
-    if (peerConn) {
-      peerConn.dataChannel = dataChannel;
-    }
-  }, []);
-
-  /**
    * Setup event listeners for a DataChannel
    */
   const setupDataChannelListeners = useCallback((dataChannel: RTCDataChannel, remotePlayerId: string) => {
@@ -209,6 +180,35 @@ export function useWebRTC({
       console.error(`[DataChannel] Error with ${remotePlayerId}:`, error);
     };
   }, [localPlayerId]);
+
+  /**
+   * Create and setup a DataChannel for a peer connection
+   */
+  const setupDataChannel = useCallback((pc: RTCPeerConnection, remotePlayerId: string, isInitiator: boolean) => {
+    let dataChannel: RTCDataChannel;
+
+    if (isInitiator) {
+      // Create data channel if we're the initiator
+      dataChannel = pc.createDataChannel("game-data");
+      console.log(`[DataChannel] Created for peer: ${remotePlayerId}`);
+    } else {
+      // Listen for incoming data channel
+      pc.ondatachannel = (event) => {
+        dataChannel = event.channel;
+        console.log(`[DataChannel] Received from peer: ${remotePlayerId}`);
+        setupDataChannelListeners(dataChannel, remotePlayerId);
+      };
+      return; // Wait for ondatachannel event
+    }
+
+    setupDataChannelListeners(dataChannel, remotePlayerId);
+
+    // Store reference in peer connection
+    const peerConn = peerConnectionsRef.current.get(remotePlayerId);
+    if (peerConn) {
+      peerConn.dataChannel = dataChannel;
+    }
+  }, [setupDataChannelListeners]);
 
   /**
    * Create RTCPeerConnection for a remote player
@@ -260,10 +260,11 @@ export function useWebRTC({
         try {
           await audioElement.play();
           console.log(`Audio playing for: ${remotePlayerId}`);
-        } catch (err: any) {
-          console.warn("Audio play failed:", err.message);
+        } catch (err: unknown) {
+          const error = err as Error & { name?: string };
+          console.warn("Audio play failed:", error.message);
           // Setup retry on user interaction if needed
-          if (err.name === "NotAllowedError") {
+          if (error.name === "NotAllowedError") {
             setAudioError(t("voiceChat.audioPlaybackFailed", { player: remotePlayerId }) || 
               "Audio playback blocked. Click anywhere to enable.");
             
