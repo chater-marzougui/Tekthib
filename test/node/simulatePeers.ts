@@ -14,13 +14,14 @@
  *   PLAYER_PREFIX - Prefix for player names (default: TestPeer)
  */
 
-import { RTCPeerConnection, RTCAudioSource, RTCAudioSink, nonstandard } from 'wrtc';
+import { RTCPeerConnection, RTCAudioSink, nonstandard } from 'wrtc';
 import WebSocket from 'ws';
+import type { WSMessage } from 'shared';
 
 // Configuration from environment variables
 const SIGNALING_URL = process.env.SIGNALING_URL || 'ws://localhost:3001';
 const ROOM_CODE = process.env.ROOM_CODE || null;
-const NUM_PEERS = parseInt(process.env.NUM_PEERS || '4', 10);
+const NUM_PEERS = Number.parseInt(process.env.NUM_PEERS || '4', 10);
 const PLAYER_PREFIX = process.env.PLAYER_PREFIX || 'TestPeer';
 
 // ICE servers configuration
@@ -36,7 +37,22 @@ const ICE_SERVERS = {
  * Manages WebSocket connection, WebRTC peer connections, and audio tracks
  */
 class SimulatedPeer {
-  constructor(id, playerName, signalingUrl) {
+  id: number;
+  playerName: string;
+  signalingUrl: string;
+  clientId: string | null;
+  roomCode: string | null;
+  ws: WebSocket | null;
+  peerConnections: Map<string, RTCPeerConnection>;
+  audioSource: any;
+  audioTrack: any;
+  localStream: any;
+  audioInterval: any;
+  pendingCandidates: Map<string, any[]>;
+  isConnected: boolean;
+  receivedTracks: number;
+
+  constructor(id: number, playerName: string, signalingUrl: string) {
     this.id = id;
     this.playerName = playerName;
     this.signalingUrl = signalingUrl;
@@ -47,6 +63,7 @@ class SimulatedPeer {
     this.audioSource = null;
     this.audioTrack = null;
     this.localStream = null;
+    this.audioInterval = null;
     this.pendingCandidates = new Map(); // Store ICE candidates before remote description
     this.isConnected = false;
     this.receivedTracks = 0;
@@ -55,7 +72,7 @@ class SimulatedPeer {
   /**
    * Initialize the peer and connect to signaling server
    */
-  async connect() {
+  async connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       console.log(`[${this.playerName}] Connecting to ${this.signalingUrl}...`);
       
@@ -72,9 +89,9 @@ class SimulatedPeer {
         });
       });
 
-      this.ws.on('message', (data) => {
+      this.ws.on('message', (data: any) => {
         try {
-          const message = JSON.parse(data.toString());
+          const message = JSON.parse(String(data)) as WSMessage;
           this.handleMessage(message);
           
           // Resolve when we get client ID
@@ -111,7 +128,7 @@ class SimulatedPeer {
   /**
    * Send a message to the signaling server
    */
-  sendMessage(message) {
+  sendMessage(message: WSMessage): void {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(message));
     } else {
@@ -122,7 +139,7 @@ class SimulatedPeer {
   /**
    * Handle incoming messages from signaling server
    */
-  handleMessage(message) {
+  handleMessage(message: WSMessage): void {
     switch (message.type) {
       case 'CONNECTED':
         // Handled in connect()
@@ -167,7 +184,7 @@ class SimulatedPeer {
   /**
    * Create or join a room
    */
-  async joinRoom(roomCode = null) {
+  async joinRoom(roomCode: string | null = null): Promise<string | null> {
     // Create dummy audio track
     this.createDummyAudioTrack();
 
@@ -195,7 +212,7 @@ class SimulatedPeer {
     }
 
     // Wait for room creation/join confirmation
-    await new Promise((resolve) => {
+    await new Promise<void>((resolve) => {
       const checkRoom = setInterval(() => {
         if (this.roomCode) {
           clearInterval(checkRoom);
@@ -216,9 +233,9 @@ class SimulatedPeer {
   /**
    * Create a dummy audio track with a sine wave
    */
-  createDummyAudioTrack() {
+  createDummyAudioTrack(): void {
     try {
-      const { RTCAudioSource } = nonstandard;
+      const { RTCAudioSource } = nonstandard as any;
       this.audioSource = new RTCAudioSource();
       
       // Create audio track from source
@@ -260,10 +277,10 @@ class SimulatedPeer {
   /**
    * Create peer connection with another peer
    */
-  createPeerConnection(remotePlayerId) {
+  createPeerConnection(remotePlayerId: string): RTCPeerConnection {
     if (this.peerConnections.has(remotePlayerId)) {
       console.log(`[${this.playerName}] Peer connection already exists for ${remotePlayerId}`);
-      return this.peerConnections.get(remotePlayerId);
+      return this.peerConnections.get(remotePlayerId)!;
     }
 
     console.log(`[${this.playerName}] Creating peer connection with ${remotePlayerId}`);
@@ -277,13 +294,13 @@ class SimulatedPeer {
     }
 
     // Handle incoming tracks
-    pc.ontrack = (event) => {
+    pc.ontrack = (event: any) => {
       console.log(`[${this.playerName}] 🎵 Received audio track from ${remotePlayerId}`);
       this.receivedTracks++;
       
       // Create audio sink to consume the track
       const audioSink = new RTCAudioSink(event.track);
-      audioSink.ondata = (data) => {
+      audioSink.ondata = (data: any) => {
         // Audio data received - just log periodically
         if (Math.random() < 0.01) { // Log 1% of the time to avoid spam
           console.log(`[${this.playerName}] 📊 Receiving audio packets from ${remotePlayerId} (${data.samples.length} samples)`);
@@ -292,7 +309,7 @@ class SimulatedPeer {
     };
 
     // Handle ICE candidates
-    pc.onicecandidate = (event) => {
+    pc.onicecandidate = (event: any) => {
       if (event.candidate) {
         this.sendMessage({
           type: 'RTC_ICE_CANDIDATE',
@@ -320,7 +337,7 @@ class SimulatedPeer {
   /**
    * Create and send an offer to a remote peer
    */
-  async createOffer(remotePlayerId) {
+  async createOffer(remotePlayerId: string): Promise<void> {
     const pc = this.createPeerConnection(remotePlayerId);
 
     try {
@@ -331,7 +348,7 @@ class SimulatedPeer {
         type: 'RTC_OFFER',
         payload: {
           targetPlayerId: remotePlayerId,
-          signal: pc.localDescription.toJSON(),
+          signal: pc.localDescription!.toJSON(),
         },
       });
 
@@ -344,7 +361,7 @@ class SimulatedPeer {
   /**
    * Handle incoming RTC offer
    */
-  async handleRTCOffer(payload) {
+  async handleRTCOffer(payload: any): Promise<void> {
     const { fromPlayerId, signal } = payload;
     console.log(`[${this.playerName}] Received offer from ${fromPlayerId}`);
 
@@ -368,7 +385,7 @@ class SimulatedPeer {
         type: 'RTC_ANSWER',
         payload: {
           targetPlayerId: fromPlayerId,
-          signal: pc.localDescription.toJSON(),
+          signal: pc.localDescription!.toJSON(),
         },
       });
 
@@ -381,7 +398,7 @@ class SimulatedPeer {
   /**
    * Handle incoming RTC answer
    */
-  async handleRTCAnswer(payload) {
+  async handleRTCAnswer(payload: any): Promise<void> {
     const { fromPlayerId, signal } = payload;
     console.log(`[${this.playerName}] Received answer from ${fromPlayerId}`);
 
@@ -410,7 +427,7 @@ class SimulatedPeer {
   /**
    * Handle incoming ICE candidate
    */
-  async handleRTCIceCandidate(payload) {
+  async handleRTCIceCandidate(payload: any): Promise<void> {
     const { fromPlayerId, signal } = payload;
     
     const pc = this.peerConnections.get(fromPlayerId);
@@ -439,7 +456,7 @@ class SimulatedPeer {
   /**
    * Cleanup resources
    */
-  cleanup() {
+  cleanup(): void {
     console.log(`[${this.playerName}] Cleaning up...`);
 
     // Stop audio generation
@@ -453,10 +470,10 @@ class SimulatedPeer {
     }
 
     // Close all peer connections
-    this.peerConnections.forEach((pc, remoteId) => {
+    for (const [remoteId, pc] of this.peerConnections) {
       console.log(`[${this.playerName}] Closing connection to ${remoteId}`);
       pc.close();
-    });
+    }
     this.peerConnections.clear();
 
     // Close WebSocket
@@ -484,7 +501,12 @@ class SimulatedPeer {
  * Test runner - creates and manages multiple simulated peers
  */
 class TestRunner {
-  constructor(numPeers, signalingUrl) {
+  numPeers: number;
+  signalingUrl: string;
+  peers: SimulatedPeer[];
+  roomCode: string | null;
+  
+  constructor(numPeers: number, signalingUrl: string) {
     this.numPeers = numPeers;
     this.signalingUrl = signalingUrl;
     this.peers = [];
@@ -494,7 +516,7 @@ class TestRunner {
   /**
    * Run the test
    */
-  async run() {
+  async run(): Promise<void> {
     console.log('\n=================================================');
     console.log('  Tekthib WebRTC Peer Simulation Test');
     console.log('=================================================');
@@ -522,7 +544,7 @@ class TestRunner {
 
       // First peer creates or joins room, others join
       console.log('🏠 Step 3: Setting up room...');
-      if (!this.roomCode) {
+      if (this.roomCode === null) {
         this.roomCode = await this.peers[0].joinRoom();
         console.log(`✅ Room created: ${this.roomCode}\n`);
       } else {
@@ -547,9 +569,11 @@ class TestRunner {
           const peer1 = this.peers[i];
           const peer2 = this.peers[j];
           
-          console.log(`   Creating connection: ${peer1.playerName} ↔ ${peer2.playerName}`);
-          await peer1.createOffer(peer2.clientId);
-          await new Promise((resolve) => setTimeout(resolve, 100));
+          if (peer2.clientId) {
+            console.log(`   Creating connection: ${peer1.playerName} ↔ ${peer2.playerName}`);
+            await peer1.createOffer(peer2.clientId);
+            await new Promise((resolve) => setTimeout(resolve, 100));
+          }
         }
       }
       console.log('✅ Offer/Answer exchange initiated\n');
@@ -561,13 +585,13 @@ class TestRunner {
       const statsInterval = setInterval(() => {
         console.log('\n📊 Current Statistics:');
         console.log('─────────────────────────────────────────');
-        this.peers.forEach((peer) => {
+        for (const peer of this.peers) {
           const stats = peer.getStats();
           console.log(`  ${stats.playerName}:`);
           console.log(`    - Connected: ${stats.isConnected}`);
           console.log(`    - Peer Connections: ${stats.peerConnections}`);
           console.log(`    - Received Tracks: ${stats.receivedTracks}`);
-        });
+        }
         console.log('─────────────────────────────────────────\n');
       }, 3000);
 
@@ -577,7 +601,7 @@ class TestRunner {
       // Final statistics
       console.log('\n📊 Final Statistics:');
       console.log('=================================================');
-      this.peers.forEach((peer) => {
+      for (const peer of this.peers) {
         const stats = peer.getStats();
         console.log(`${stats.playerName}:`);
         console.log(`  ✓ Client ID: ${stats.clientId}`);
@@ -585,7 +609,7 @@ class TestRunner {
         console.log(`  ✓ Peer Connections: ${stats.peerConnections}`);
         console.log(`  ✓ Received Audio Tracks: ${stats.receivedTracks}`);
         console.log('─────────────────────────────────────────');
-      });
+      }
 
       // Calculate expected vs actual
       const expectedConnections = this.numPeers - 1;
@@ -612,7 +636,9 @@ class TestRunner {
     } finally {
       // Cleanup
       console.log('🧹 Cleaning up...');
-      this.peers.forEach((peer) => peer.cleanup());
+      for (const peer of this.peers) {
+        peer.cleanup();
+      }
       console.log('✅ Done\n');
       
       // Exit after a short delay to allow cleanup
@@ -622,7 +648,5 @@ class TestRunner {
 }
 
 // Main execution
-(async () => {
-  const runner = new TestRunner(NUM_PEERS, SIGNALING_URL);
-  await runner.run();
-})();
+const runner = new TestRunner(NUM_PEERS, SIGNALING_URL);
+await runner.run();

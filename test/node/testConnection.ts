@@ -13,7 +13,7 @@
 import WebSocket from 'ws';
 
 const SIGNALING_URL = process.env.SIGNALING_URL || 'ws://localhost:3001';
-const NUM_CLIENTS = parseInt(process.env.NUM_CLIENTS || '2', 10);
+const NUM_CLIENTS = Number.parseInt(process.env.NUM_CLIENTS || '2', 10);
 
 console.log('\n' + '='.repeat(50));
 console.log('  WebSocket Connectivity Test');
@@ -23,17 +23,23 @@ console.log(`Number of Clients: ${NUM_CLIENTS}`);
 console.log('='.repeat(50) + '\n');
 
 class TestClient {
-  constructor(id, name) {
+  id: number;
+  name: string;
+  ws: WebSocket;
+  clientId: string | null;
+  roomCode: string | null;
+  messagesReceived: any[];
+  constructor(id: number, name: string) {
     this.id = id;
     this.name = name;
-    this.ws = null;
+    this.ws = new WebSocket(SIGNALING_URL);
     this.clientId = null;
     this.roomCode = null;
     this.messagesReceived = [];
   }
 
   async connect() {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       console.log(`[${this.name}] Connecting...`);
       
       this.ws = new WebSocket(SIGNALING_URL);
@@ -43,8 +49,8 @@ class TestClient {
         this.ws.send(JSON.stringify({ type: 'CONNECT', payload: {} }));
       });
 
-      this.ws.on('message', (data) => {
-        const message = JSON.parse(data.toString());
+      this.ws.on('message', (data: any) => {
+        const message = JSON.parse(String(data)) as Record<string, any>;
         this.messagesReceived.push(message);
         
         switch (message.type) {
@@ -64,10 +70,11 @@ class TestClient {
             console.log(`[${this.name}] ✓ Joined room: ${this.roomCode}`);
             break;
           
-          case 'PLAYER_JOINED':
+          case 'PLAYER_JOINED': {
             const playerName = message.payload.player?.name || 'Unknown';
             console.log(`[${this.name}] ℹ Player joined: ${playerName}`);
             break;
+          }
           
           case 'ERROR':
             console.error(`[${this.name}] ✗ Error: ${message.payload?.message}`);
@@ -106,7 +113,7 @@ class TestClient {
     }));
   }
 
-  joinRoom(roomCode) {
+  joinRoom(roomCode: string) {
     console.log(`[${this.name}] Joining room ${roomCode}...`);
     this.ws.send(JSON.stringify({
       type: 'JOIN_ROOM',
@@ -133,8 +140,8 @@ class TestClient {
   }
 }
 
-async function runTest() {
-  const clients = [];
+async function runTest(): Promise<void> {
+  const clients: TestClient[] = [];
   let testsPassed = 0;
   let testsFailed = 0;
 
@@ -190,14 +197,14 @@ async function runTest() {
     console.log('\n' + '='.repeat(50));
     console.log('  Test Results');
     console.log('='.repeat(50));
-    
-    clients.forEach(client => {
+
+    for (const client of clients) {
       const stats = client.getStats();
       console.log(`\n${stats.name}:`);
       console.log(`  Client ID: ${stats.clientId}`);
       console.log(`  Room Code: ${stats.roomCode || 'N/A'}`);
       console.log(`  Messages Received: ${stats.messagesReceived}`);
-    });
+    }
 
     console.log('\n' + '='.repeat(50));
     console.log(`  Tests Passed: ${testsPassed}`);
@@ -214,12 +221,15 @@ async function runTest() {
     }
 
   } catch (error) {
-    console.error('\n✗ Test failed:', error.message);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('\n✗ Test failed:', message);
     testsFailed++;
   } finally {
     // Cleanup
     console.log('Cleaning up...');
-    clients.forEach(client => client.close());
+    for (const client of clients) {
+      client.close();
+    }
     
     setTimeout(() => {
       process.exit(testsFailed > 0 ? 1 : 0);
@@ -227,4 +237,4 @@ async function runTest() {
   }
 }
 
-runTest();
+await runTest();
