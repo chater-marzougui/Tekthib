@@ -10,7 +10,8 @@
  *   SIGNALING_URL=ws://localhost:3001 node testConnection.js
  */
 
-import WebSocket from 'ws';
+import * as WS from 'ws';
+const WebSocket = WS.default || WS;
 
 const SIGNALING_URL = process.env.SIGNALING_URL || 'ws://localhost:3001';
 const NUM_CLIENTS = Number.parseInt(process.env.NUM_CLIENTS || '2', 10);
@@ -61,12 +62,12 @@ class TestClient {
             break;
           
           case 'ROOM_CREATED':
-            this.roomCode = message.payload.roomCode;
+            this.roomCode = message.payload.room?.code || message.payload.roomCode;
             console.log(`[${this.name}] ✓ Room created: ${this.roomCode}`);
             break;
           
           case 'ROOM_JOINED':
-            this.roomCode = message.payload.roomCode;
+            this.roomCode = message.payload.room?.code || message.payload.roomCode;
             console.log(`[${this.name}] ✓ Joined room: ${this.roomCode}`);
             break;
           
@@ -237,4 +238,7 @@ async function runTest(): Promise<void> {
   }
 }
 
-await runTest();
+// Main execution
+(async () => {
+  await runTest();
+})();
