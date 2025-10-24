@@ -147,6 +147,7 @@ export function useWebRTC({
 
   /**
    * Setup event listeners for a DataChannel
+   * Note: localPlayerId is stable (from localStorage) and doesn't change during session
    */
   const setupDataChannelListeners = useCallback((dataChannel: RTCDataChannel, remotePlayerId: string) => {
     dataChannel.onopen = () => {
@@ -262,9 +263,10 @@ export function useWebRTC({
           console.log(`Audio playing for: ${remotePlayerId}`);
         } catch (err: unknown) {
           const error = err as Error & { name?: string };
-          console.warn("Audio play failed:", error.message);
+          const errorMessage = error instanceof Error ? error.message : "Unknown error";
+          console.warn("Audio play failed:", errorMessage);
           // Setup retry on user interaction if needed
-          if (error.name === "NotAllowedError") {
+          if (error && error.name === "NotAllowedError") {
             setAudioError(t("voiceChat.audioPlaybackFailed", { player: remotePlayerId }) || 
               "Audio playback blocked. Click anywhere to enable.");
             
