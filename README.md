@@ -98,6 +98,12 @@ Tekthib/
 │   │   └── utils/                # roomManager and utilities
 │   └── Procfile                  # Heroku deployment config
 │
+├── test/                         # WebRTC Testing Tools
+│   ├── browser-test.html         # Browser multi-tab test (recommended)
+│   ├── quick-start.sh            # Interactive testing script
+│   ├── TESTING_GUIDE.md          # Complete testing documentation
+│   └── node/                     # Node.js connectivity tests
+│
 └── shared/                       # Shared TypeScript types
     └── src/types/                # Game, Player, Room, WebSocket message types
 ```
@@ -148,6 +154,28 @@ npm run dev:client
 - Frontend: http://localhost:5173
 - Backend: http://localhost:3001
 - Admin: http://localhost:5173/admin (password required)
+
+### Testing WebRTC Voice Chat
+
+Test voice chat from a single computer without needing multiple devices:
+
+```bash
+# Quick test with browser (recommended)
+# Open test/browser-test.html in your browser
+# Click "Start Multi-Tab Test"
+# Allow popups and microphone access
+
+# Or use the interactive script
+cd test
+./quick-start.sh
+
+# Or run connectivity test
+cd test/node
+npm install
+npm run dev-connection
+```
+
+📚 **See [test/TESTING_GUIDE.md](./test/TESTING_GUIDE.md) for complete testing documentation**
 
 ### Alternative Individual Setup
 

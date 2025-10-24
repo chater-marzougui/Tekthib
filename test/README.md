@@ -1,454 +1,132 @@
 # Tekthib WebRTC Testing Suite
 
-This directory contains comprehensive testing utilities for Tekthib's WebRTC voice chat functionality. These tools allow you to simulate multiple peers connecting to your signaling server without needing multiple physical devices or browsers.
+Test WebRTC voice chat functionality **from a single computer** without needing multiple devices!
 
-## Quick Start
+## 🚀 Quick Start
 
-The fastest way to verify WebRTC functionality:
+### Option 1: Browser Test (Recommended)
+**Best for:** Visual testing with real audio
 
 ```bash
-# 1. Install test dependencies
+# 1. Start the server
+cd server && npm run dev
+
+# 2. Open in browser
+# Just open test/browser-test.html
+# Click "Start Multi-Tab Test"
+# Allow popups and microphone access
+```
+
+### Option 2: Automated Script
+**Best for:** Quick setup and testing
+
+```bash
 cd test
+./quick-start.sh
+# Choose option 1 or 2 from the menu
+```
+
+### Option 3: Node.js Test
+**Best for:** Testing signaling without WebRTC
+
+```bash
+# 1. Start the server
+cd server && npm run dev
+
+# 2. Run connectivity test
+cd test/node
 npm install
-cd node
-npm install --no-optional
-
-# 2. Start the test signaling server (in one terminal)
-cd test
-npm run signaling-server
-
-# 3. Run connectivity test (in another terminal)
-cd test/node
-npm run test-connection
-
-# Output should show: ✅ SUCCESS: WebSocket signaling is working correctly!
+npm run dev-connection
 ```
 
-For full WebRTC testing with audio (requires native compilation):
+## 📖 Documentation
+
+- **[Complete Testing Guide](TESTING_GUIDE.md)** - Comprehensive guide with all testing methods
+- **[Implementation Details](IMPLEMENTATION.md)** - Technical architecture
+- **[Examples](EXAMPLES.md)** - Usage examples and scenarios
+
+## 🎯 What This Solves
+
+**Problem:** Testing WebRTC voice chat requires 2+ people/devices  
+**Solution:** Open multiple browser tabs on one computer, each acting as a separate peer
+
+## ✅ Features
+
+- ✅ **Real audio testing** - Uses actual microphone
+- ✅ **Visual interface** - See connection status and logs
+- ✅ **Multi-peer support** - Test 2-8 peers simultaneously
+- ✅ **No compilation** - Browser-based, works immediately
+- ✅ **Works on one PC** - No need for multiple devices
+
+## 🔧 Available Test Tools
+
+### 1. Browser Multi-Tab Test (`browser-test.html`)
+- Opens multiple tabs automatically
+- Real WebRTC with audio
+- Visual monitoring
+- **Start here for most testing**
+
+### 2. Node.js Connectivity Test (`node/testConnection.ts`)
+- Tests WebSocket signaling
+- No WebRTC complexity
+- Quick validation
+- Good for CI/CD
+
+### 3. Test Signaling Server (`signaling-server.mjs`)
+- Standalone WebSocket server
+- No game logic
+- Rapid development iteration
+
+## 📊 Test Scenarios
+
+### Quick 2-Peer Test
 ```bash
-cd test/node
-npm install  # Includes wrtc - may fail in some environments
-node simulatePeers.js
+# Browser: Set peers to 2, click "Start Test"
+# Node: NUM_CLIENTS=2 npm run dev-connection
 ```
 
-## Overview
-
-The testing suite provides two implementations:
-
-1. **Node.js** (`/test/node/`) - Using `wrtc` and `ws` packages
-2. **Python** (`/test/python/`) - Using `aiortc` and `websockets` packages
-
-Both implementations simulate multiple WebRTC peers that:
-- Connect to the Tekthib signaling server via WebSocket
-- Exchange WebRTC offers/answers/ICE candidates
-- Generate dummy audio tracks (sine waves)
-- Receive and log audio from other peers
-- Report statistics on connection success
-
-## Directory Structure
-
-```
-test/
-├── README.md                    # This file
-├── node/                        # Node.js implementation
-│   ├── package.json            # Node dependencies
-│   └── simulatePeers.js        # Main test script
-└── python/                      # Python implementation
-    ├── requirements.txt        # Python dependencies
-    └── simulate_peers.py       # Main test script
-```
-
-## Prerequisites
-
-### For Node.js Tests
-
-- **Node.js** v18 or higher
-- **npm** or **yarn**
-- **Operating System**: Linux, macOS, or Windows (with build tools)
-
-> **Note**: The `wrtc` package requires native compilation. On Windows, you may need to install [windows-build-tools](https://www.npmjs.com/package/windows-build-tools).
-
-### For Python Tests
-
-- **Python** 3.8 or higher
-- **pip**
-- **libavformat**, **libavcodec**, **libavutil** (ffmpeg libraries)
-
-On Ubuntu/Debian:
+### Multi-Peer Mesh (4+ peers)
 ```bash
-sudo apt-get update
-sudo apt-get install -y python3-pip python3-dev libavformat-dev libavcodec-dev libavutil-dev
+# Browser: Set peers to 4+, click "Start Test"
+# Verify all peers connect to each other
 ```
 
-On macOS (using Homebrew):
+### Manual Room Test
 ```bash
-brew install python ffmpeg
+# 1. Open browser-test.html in multiple tabs
+# 2. Tab 1: Connect → Create Room
+# 3. Other tabs: Connect → Join Room (use same code)
 ```
 
-On Windows:
+## 🐛 Troubleshooting
+
+### Popups blocked?
+Allow popups for the test page or use Manual mode
+
+### Microphone not working?
+Check browser permissions and reload the page
+
+### Server not running?
 ```bash
-# Install ffmpeg using chocolatey
-choco install ffmpeg
+cd server && npm run dev
 ```
 
-## Installation
+### wrtc package won't install?
+That's OK! Use the browser-based test instead - it's more reliable
 
-### Node.js Setup
+## 📝 Next Steps
 
-```bash
-# Navigate to the node test directory
-cd test/node
+1. Read the [Complete Testing Guide](TESTING_GUIDE.md)
+2. Try the browser test
+3. Report any issues with logs and steps to reproduce
 
-# Install dependencies (wrtc may fail on some systems - see troubleshooting)
-npm install --no-optional  # Install without wrtc first to test connectivity
-npm install                # Then try with wrtc for full WebRTC testing
-```
+## 💡 Pro Tips
 
-**Note**: The `wrtc` package requires native compilation and may fail in some environments. If you encounter issues, you can still test WebSocket connectivity without it (see Test Signaling Only section below).
+- **Use Chrome DevTools** (F12) to see detailed WebRTC logs
+- **Check chrome://webrtc-internals** for connection diagnostics  
+- **Start with 2 peers** then scale up to test mesh topology
+- **Monitor the logs** - they show exactly what's happening
 
-### Python Setup
+---
 
-```bash
-# Navigate to the python test directory
-cd test/python
-
-# Create a virtual environment (recommended)
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-## Usage
-
-### Running the Test Signaling Server
-
-If you want to test without the full Tekthib server, we provide a lightweight signaling server:
-
-```bash
-cd test
-npm install
-npm run signaling-server
-```
-
-This test server implements only WebRTC signaling (WebSocket message forwarding) and is useful for:
-- Testing the peer simulation scripts independently
-- Development without running the full game server
-- CI/CD testing of WebRTC functionality
-
-### Test Signaling Only (Without WebRTC)
-
-If you want to verify that the signaling server is working before attempting full WebRTC testing:
-
-```bash
-cd test/node
-npm install --no-optional  # Installs only ws package
-SIGNALING_URL=ws://localhost:3001 NUM_CLIENTS=4 node testConnection.js
-```
-
-This lighter test verifies:
-- WebSocket connectivity
-- Room creation and joining
-- Message exchange via signaling server
-
-### Running Node.js Tests
-
-Before running the tests, make sure your Tekthib server is running (typically on port 3001).
-
-```bash
-# Basic usage (uses defaults)
-cd test/node
-node simulatePeers.js
-
-# Custom configuration with environment variables
-SIGNALING_URL=ws://localhost:3001 ROOM_CODE=TEST123 NUM_PEERS=6 node simulatePeers.js
-
-# Using a remote server
-SIGNALING_URL=wss://your-server.com node simulatePeers.js
-```
-
-### Running Python Tests
-
-```bash
-# Basic usage (uses defaults)
-cd test/python
-python simulate_peers.py
-
-# Custom configuration with environment variables
-SIGNALING_URL=ws://localhost:3001 ROOM_CODE=TEST123 NUM_PEERS=6 python simulate_peers.py
-
-# Using a remote server
-SIGNALING_URL=wss://your-server.com python simulate_peers.py
-```
-
-## Configuration Options
-
-Both implementations support the same environment variables:
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `SIGNALING_URL` | WebSocket URL of the signaling server | `ws://localhost:3001` |
-| `ROOM_CODE` | Room code to join (if not set, creates new room) | `null` (auto-generated) |
-| `NUM_PEERS` | Number of simulated peers | `4` |
-| `PLAYER_PREFIX` | Prefix for player names | `TestPeer` (Node) / `PyPeer` (Python) |
-
-### Examples
-
-**Test with 8 peers in auto-generated room:**
-```bash
-NUM_PEERS=8 node simulatePeers.js
-```
-
-**Join specific room with custom names:**
-```bash
-ROOM_CODE=MYROOM123 PLAYER_PREFIX=Bot node simulatePeers.js
-```
-
-**Connect to production server:**
-```bash
-SIGNALING_URL=wss://tekthib-prod.herokuapp.com NUM_PEERS=4 python simulate_peers.py
-```
-
-## What the Tests Do
-
-### Connection Flow
-
-1. **Create Peers** - Instantiates the specified number of peer objects
-2. **Connect to Signaling Server** - Establishes WebSocket connections
-3. **Room Setup** - First peer creates/joins room, others follow
-4. **Peer Connection Establishment** - Creates WebRTC peer connections in mesh topology
-5. **Audio Exchange** - Sends and receives dummy audio tracks
-6. **Monitoring** - Reports statistics every 3 seconds for 15 seconds
-7. **Cleanup** - Closes all connections and exits
-
-### Expected Output
-
-Both scripts provide detailed console output showing:
-
-- Connection status for each peer
-- WebSocket messages being exchanged
-- WebRTC signaling (offers, answers, ICE candidates)
-- Connection state changes
-- Audio track reception events
-- Periodic statistics updates
-- Final success/failure summary
-
-### Success Criteria
-
-A test is considered successful when:
-- All peers connect to the signaling server
-- All peers join the room
-- Each peer establishes connections with all other peers
-- Each peer receives audio tracks from all other peers
-- Expected connections = `NUM_PEERS - 1` per peer
-- Expected audio tracks = `NUM_PEERS - 1` per peer
-
-## Troubleshooting
-
-### Node.js Issues
-
-**Problem**: `wrtc` installation fails
-```bash
-# The wrtc package requires native compilation and may fail in CI/CD
-# or containerized environments. Options:
-
-# Option 1: Test signaling only (without WebRTC)
-npm install --no-optional
-node testConnection.js
-
-# Option 2: Use Docker with prebuilt binaries
-# See: https://github.com/node-webrtc/node-webrtc#docker
-
-# Option 3: Install build tools (Linux)
-sudo apt-get install build-essential python3
-
-# Option 4: Use the Python implementation instead
-cd ../python
-python simulate_peers.py
-```
-
-**Problem**: `Error: ECONNREFUSED` when connecting
-```bash
-# Solution: Ensure the Tekthib server is running
-cd ../../server
-npm run dev
-```
-
-### Python Issues
-
-**Problem**: `ModuleNotFoundError: No module named 'av'`
-```bash
-# Solution: Install system dependencies first
-sudo apt-get install libavformat-dev libavcodec-dev libavutil-dev
-pip install av
-```
-
-**Problem**: `ImportError: cannot import name 'RTCPeerConnection'`
-```bash
-# Solution: Reinstall aiortc
-pip uninstall aiortc
-pip install aiortc>=1.6.0
-```
-
-**Problem**: WebSocket connection fails with SSL errors
-```bash
-# Solution: If using wss:// with self-signed cert, you may need to disable SSL verification
-# (Not recommended for production)
-```
-
-### General Issues
-
-**Problem**: Peers connect but no audio tracks received
-- Check firewall settings - ensure STUN servers are accessible
-- Verify NAT/router configuration if testing across networks
-- Check server logs for WebRTC signaling errors
-
-**Problem**: ICE connection fails
-- Ensure STUN servers in the configuration are accessible
-- If behind NAT, you may need a TURN server
-- Check network connectivity between peers
-
-**Problem**: Only some peers connect successfully
-- Increase delays between peer creation (modify sleep/timeout values)
-- Check server capacity and resource limits
-- Review server logs for rate limiting or connection limits
-
-## Architecture Notes
-
-### Mesh Topology
-
-Both implementations use a **mesh topology** where each peer connects directly to every other peer. For `N` peers:
-- Total connections: `N × (N-1) / 2`
-- Connections per peer: `N - 1`
-
-Example with 4 peers:
-```
-Peer1 ↔ Peer2
-Peer1 ↔ Peer3
-Peer1 ↔ Peer4
-Peer2 ↔ Peer3
-Peer2 ↔ Peer4
-Peer3 ↔ Peer4
-```
-
-### Audio Generation
-
-- **Node.js**: Uses `wrtc.RTCAudioSource` to generate PCM audio samples (sine wave)
-- **Python**: Uses `aiortc.MediaStreamTrack` with numpy to generate audio frames
-
-Each peer generates a unique frequency:
-- Peer 0: 440 Hz (A4)
-- Peer 1: 490 Hz
-- Peer 2: 540 Hz
-- etc.
-
-This helps distinguish audio sources during debugging.
-
-### Signaling Protocol
-
-Both implementations follow the Tekthib signaling protocol:
-
-1. `CONNECT` → `CONNECTED` (with clientId)
-2. `CREATE_ROOM` / `JOIN_ROOM` → `ROOM_CREATED` / `ROOM_JOINED`
-3. `RTC_OFFER` → `RTC_ANSWER` (peer-to-peer via server)
-4. `RTC_ICE_CANDIDATE` exchanges (peer-to-peer via server)
-
-## Performance Testing
-
-To stress-test the server with many peers:
-
-```bash
-# Test with 10 peers (45 total connections)
-NUM_PEERS=10 node simulatePeers.js
-
-# Test with 20 peers (190 total connections) - requires powerful server
-NUM_PEERS=20 python simulate_peers.py
-```
-
-**Warning**: High peer counts can consume significant CPU, memory, and bandwidth.
-
-## Integration with CI/CD
-
-You can integrate these tests into your CI/CD pipeline:
-
-```yaml
-# Example GitHub Actions workflow
-- name: Start Tekthib Server
-  run: |
-    cd server
-    npm run build
-    npm start &
-    sleep 5
-
-- name: Run WebRTC Tests
-  run: |
-    cd test/node
-    npm install
-    SIGNALING_URL=ws://localhost:3001 node simulatePeers.js
-```
-
-## Example Workflows
-
-### Development Workflow
-
-When developing WebRTC features locally:
-
-```bash
-# Terminal 1: Run the main Tekthib server
-cd server
-npm run dev
-
-# Terminal 2: Test with simulated peers
-cd test/node
-SIGNALING_URL=ws://localhost:3001 NUM_PEERS=4 node testConnection.js
-```
-
-### Testing New Signaling Changes
-
-When modifying signaling logic:
-
-```bash
-# Terminal 1: Use test signaling server for quick iteration
-cd test
-npm run signaling-server
-
-# Terminal 2: Run tests
-cd test/node
-node testConnection.js  # Quick connectivity test
-node simulatePeers.js   # Full WebRTC test (if wrtc is installed)
-
-# Terminal 3: Try Python implementation
-cd test/python
-python simulate_peers.py
-```
-
-### Load Testing
-
-Test server capacity with many peers:
-
-```bash
-# Gradually increase peer count to find limits
-NUM_PEERS=5 node simulatePeers.js   # 5 peers = 10 connections
-NUM_PEERS=10 node simulatePeers.js  # 10 peers = 45 connections
-NUM_PEERS=15 node simulatePeers.js  # 15 peers = 105 connections
-```
-
-## Contributing
-
-When modifying the test scripts:
-1. Maintain compatibility with the existing signaling protocol
-2. Keep both Node.js and Python implementations in sync
-3. Update this README with any new configuration options
-4. Test with various peer counts (2, 4, 8, 10)
-
-## Support
-
-For issues or questions:
-- Check the [main Tekthib README](../../README.md)
-- Review server logs in `server/src/websocket/`
-- Open an issue on the GitHub repository
-
-## License
-
-Same as the main Tekthib project - MIT License
+**Need help?** See [TESTING_GUIDE.md](TESTING_GUIDE.md) for detailed instructions and troubleshooting.
