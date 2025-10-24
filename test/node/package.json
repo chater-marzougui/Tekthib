@@ -1,0 +1,17 @@
+{
+  "name": "tekthib-webrtc-tests",
+  "version": "1.0.0",
+  "description": "WebRTC testing utilities for Tekthib using Node.js and wrtc",
+  "type": "module",
+  "main": "simulatePeers.js",
+  "scripts": {
+    "test": "node simulatePeers.js"
+  },
+  "keywords": ["webrtc", "testing", "wrtc"],
+  "author": "Chater Marzougui",
+  "license": "MIT",
+  "dependencies": {
+    "wrtc": "^0.4.7",
+    "ws": "^8.18.0"
+  }
+}
