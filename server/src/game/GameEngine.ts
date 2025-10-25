@@ -12,6 +12,15 @@ import { Deck } from './Deck';
 import { BotPlayer } from './BotPlayer';
 import { GameState } from '../types';
 
+export interface GameEvent {
+  eventType: 'game_start' | 'round_start' | 'cards_played' | 'challenge' | 'round_end' | 'game_end';
+  playerUserId?: string;
+  playerName: string;
+  eventData: Record<string, unknown>;
+  roundNumber?: number;
+  timestamp: Date;
+}
+
 interface ReturnGameState
   extends Omit<GameState, 'pile' | 'lastPlayedCards' | 'playerStats'> {
   currentPlayerId: string;
@@ -37,6 +46,8 @@ export class GameEngine {
   private autoPlayCallback?: (playerId: string, cardIds: string[], claimedRank: Rank) => void;
   private processingChallenge: boolean = false;
   private gameEndCallback?: () => void;
+  private readonly gameEvents: GameEvent[] = [];
+  private currentRoundNumber: number = 0;
 
   constructor(players: Map<string, PlayerWithHand>, autoPlayTimeout: number = 0) {
     this.players = players;
@@ -136,6 +147,75 @@ export class GameEngine {
       playerStats,
       removedCards,
     };
+  }
+
+  /**
+   * Record the initial game state when the game starts
+   */
+  recordGameStart(): void {
+    // Build initial state data
+    const playerData: Record<string, unknown>[] = [];
+    this.gameState.playerOrder.forEach((playerId) => {
+      const player = this.players.get(playerId);
+      if (player) {
+        playerData.push({
+          playerId,
+          playerName: player.name,
+          isBot: player.isBot,
+          initialHandSize: player.hand.length,
+        });
+      }
+    });
+
+    this.addGameEvent({
+      eventType: 'game_start',
+      playerName: 'System',
+      eventData: {
+        totalPlayers: this.players.size,
+        playerOrder: this.gameState.playerOrder,
+        players: playerData,
+        removedCardsCount: this.gameState.removedCards.length,
+      },
+      timestamp: new Date(),
+    });
+
+    // Start the first round
+    this.startNewRound();
+  }
+
+  /**
+   * Start a new round
+   */
+  private startNewRound(): void {
+    this.currentRoundNumber++;
+    const currentPlayer = this.players.get(this.gameState.playerOrder[this.gameState.currentPlayerIndex]);
+    
+    this.addGameEvent({
+      eventType: 'round_start',
+      playerUserId: currentPlayer?.id,
+      playerName: currentPlayer?.name || 'Unknown',
+      eventData: {
+        roundNumber: this.currentRoundNumber,
+        startingPlayerId: currentPlayer?.id,
+        startingPlayerName: currentPlayer?.name,
+      },
+      roundNumber: this.currentRoundNumber,
+      timestamp: new Date(),
+    });
+  }
+
+  /**
+   * Add a game event to the history
+   */
+  private addGameEvent(event: GameEvent): void {
+    this.gameEvents.push(event);
+  }
+
+  /**
+   * Get all game events
+   */
+  getGameEvents(): GameEvent[] {
+    return [...this.gameEvents];
   }
 
   getGameState(): GameState {
@@ -238,6 +318,22 @@ export class GameEngine {
     this.gameState.lastPlayerId = playerId;
     this.gameState.currentRank = claimedRank;
 
+    // Record the card play event
+    this.addGameEvent({
+      eventType: 'cards_played',
+      playerUserId: playerId,
+      playerName: player.name,
+      eventData: {
+        cardsPlayed: playedCards.map(c => ({ rank: c.rank, suit: c.suit })),
+        claimedRank,
+        cardsCount: playedCards.length,
+        remainingHandSize: player.hand.length,
+        pileSize: this.gameState.pile.length,
+      },
+      roundNumber: this.currentRoundNumber,
+      timestamp: new Date(),
+    });
+
     // Check for four of a kind
     for (const player of this.players.values()) {
       if (player.hand.length === 0) continue;
@@ -265,6 +361,24 @@ export class GameEngine {
     if (remainingPlayers.length === 1) {
       this.gameState.loser = remainingPlayers[0];
       this.gameState.phase = 'ended';
+      
+      // Record game end event
+      this.addGameEvent({
+        eventType: 'game_end',
+        playerName: 'System',
+        eventData: {
+          winners: this.gameState.winners,
+          loser: this.gameState.loser,
+          totalRounds: this.currentRoundNumber,
+          finalStats: Array.from(this.gameState.playerStats.entries()).map(([playerId, stats]) => ({
+            playerId,
+            playerName: this.players.get(playerId)?.name,
+            stats,
+          })),
+        },
+        timestamp: new Date(),
+      });
+
       // Trigger game end callback
       if (this.gameEndCallback) {
         this.gameEndCallback();
@@ -375,6 +489,40 @@ export class GameEngine {
     // Check for four of a kind after taking pile
     this.checkAndRemoveFourOfKind(getsThePile);
 
+    // Record the challenge event
+    this.addGameEvent({
+      eventType: 'challenge',
+      playerUserId: challengerId,
+      playerName: challenger.name,
+      eventData: {
+        challengerId,
+        challengerName: challenger.name,
+        challengedPlayerId: lastPlayer.id,
+        challengedPlayerName: lastPlayer.name,
+        wasLying,
+        claimedRank,
+        revealedCards: this.gameState.pile.map(c => ({ rank: c.rank, suit: c.suit })),
+        cardsCount: this.gameState.pile.length,
+        pileTakenBy: getsThePile.id,
+        pileTakenByName: getsThePile.name,
+      },
+      roundNumber: this.currentRoundNumber,
+      timestamp: new Date(),
+    });
+
+    // Record round end event
+    this.addGameEvent({
+      eventType: 'round_end',
+      playerName: 'System',
+      eventData: {
+        roundNumber: this.currentRoundNumber,
+        endReason: 'challenge',
+        challengeResult: wasLying ? 'caught_bluffing' : 'false_accusation',
+      },
+      roundNumber: this.currentRoundNumber,
+      timestamp: new Date(),
+    });
+
     // If last player was not lying he plays again, else challenger plays next
     let nextPlayerId: string;
     if (wasLying) {
@@ -404,6 +552,9 @@ export class GameEngine {
     this.gameState.currentRank = null;
     this.gameState.lastPlayedCards = [];
     this.gameState.lastPlayerId = null;
+
+    // Start a new round after challenge
+    this.startNewRound();
 
     return {
       success: true,
@@ -511,6 +662,23 @@ export class GameEngine {
           this.gameState.playerOrder.find(
             (id) => !this.gameState.winners.includes(id),
           ) || null;
+
+        // Record game end event
+        this.addGameEvent({
+          eventType: 'game_end',
+          playerName: 'System',
+          eventData: {
+            winners: this.gameState.winners,
+            loser: this.gameState.loser,
+            totalRounds: this.currentRoundNumber,
+            finalStats: Array.from(this.gameState.playerStats.entries()).map(([playerId, stats]) => ({
+              playerId,
+              playerName: this.players.get(playerId)?.name,
+              stats,
+            })),
+          },
+          timestamp: new Date(),
+        });
 
         // Trigger game end callback
         if (this.gameEndCallback) {
