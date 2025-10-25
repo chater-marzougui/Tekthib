@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
 
 interface User {
   id: string;
@@ -106,18 +106,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.removeItem("user");
   };
 
+  const value = useMemo(
+    () => ({
+      user,
+      token,
+      login,
+      signup,
+      logout,
+      isAuthenticated: !!user && !!token,
+      isLoading,
+    }),
+    [user, token, login, signup, logout, isLoading]
+  );
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        login,
-        signup,
-        logout,
-        isAuthenticated: !!user && !!token,
-        isLoading,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

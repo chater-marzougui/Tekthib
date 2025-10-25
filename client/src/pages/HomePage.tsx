@@ -213,7 +213,7 @@ export default function HomePage() {
                     </Button>
                     <Button
                       type="button"
-                      variant={!isPublicRoom ? "default" : "outline"}
+                      variant={isPublicRoom ? "outline" : "default"}
                       onClick={() => setIsPublicRoom(false)}
                       className="flex-1"
                     >
@@ -307,7 +307,7 @@ export default function HomePage() {
               <CardContent>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {rooms.map((room) => (
-                    <div
+                    <button
                       key={room.id}
                       onClick={() => handleRoomClick(room)}
                       className={`p-3 border rounded-lg cursor-pointer hover:bg-background/50 transition-colors ${
@@ -353,7 +353,7 @@ export default function HomePage() {
                           {room.playerCount}/{room.maxPlayers}
                         </div>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </CardContent>

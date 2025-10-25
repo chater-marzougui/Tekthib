@@ -20,9 +20,9 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Preload critical sounds on mount
   useEffect(() => {
-    CRITICAL_SOUNDS.forEach(sound => {
+    for(const sound of CRITICAL_SOUNDS) {
       soundManager.preloadSound(sound);
-    });
+    }
   }, [soundManager]);
 
   return (

@@ -235,10 +235,10 @@ export function useWebRTC({
       peerConnectionsRef.current.set(remotePlayerId, peerConn);
 
       // Add local audio tracks
-      localStreamRef.current.getTracks().forEach((track) => {
+      for (const track of localStreamRef.current.getTracks()) {
         console.log(`Adding ${track.kind} track to peer: ${remotePlayerId}`);
-        pc.addTrack(track, localStreamRef.current!);
-      });
+        pc.addTrack(track, localStreamRef.current);
+      }
 
       // Create data channel only if we're the impolite peer (to avoid duplicates)
       if (!polite) {
@@ -479,7 +479,7 @@ export function useWebRTC({
     async (fromPlayerId: string, candidate: RTCIceCandidateInit) => {
       const peerConn = peerConnectionsRef.current.get(fromPlayerId);
 
-      if (!peerConn || !peerConn.connection.remoteDescription) {
+      if (!peerConn?.connection.remoteDescription) {
         // Store for later if peer connection doesn't exist or remote description not set
         const pending = pendingCandidatesRef.current.get(fromPlayerId) || [];
         pending.push(new RTCIceCandidate(candidate));
@@ -528,12 +528,12 @@ export function useWebRTC({
     }
 
     // Create peer connections for all other players
-    otherPlayers.forEach((player) => {
+    for (const player of otherPlayers) {
       if (!peerConnectionsRef.current.has(player.id)) {
         console.log("Creating peer connection for:", player.id);
         createPeerConnection(player.id);
       }
-    });
+    }
   }, [
     isVoiceEnabled,
     initializeAudio,
@@ -548,38 +548,38 @@ export function useWebRTC({
   const disableVoiceChat = useCallback(() => {
     // Stop local stream
     if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((track) => track.stop());
+      for (const track of localStreamRef.current.getTracks()) {
+        track.stop();
+      }
       localStreamRef.current = null;
     }
 
     // Cleanup audio analysis
-    animationFramesRef.current.forEach((frameId) =>
-      cancelAnimationFrame(frameId)
-    );
+    for (const frameId of animationFramesRef.current.values()) {
+      cancelAnimationFrame(frameId);
+    }
     animationFramesRef.current.clear();
 
-    audioContextsRef.current.forEach((ctx) => {
+    for (const ctx of audioContextsRef.current.values()) {
       if (ctx.state !== "closed") ctx.close();
-    });
+    }
     audioContextsRef.current.clear();
 
     analysersRef.current.clear();
     setAudioLevels(new Map());
 
     // Close peer connections and cleanup
-    peerConnectionsRef.current.forEach((peerConn) => {
+    for (const peerConn of peerConnectionsRef.current.values()) {
       if (peerConn.audioElement) {
         peerConn.audioElement.pause();
         peerConn.audioElement.srcObject = null;
-        if (peerConn.audioElement.parentNode) {
-          peerConn.audioElement.parentNode.removeChild(peerConn.audioElement);
-        }
+        peerConn.audioElement.remove();
       }
       if (peerConn.dataChannel) {
         peerConn.dataChannel.close();
       }
       peerConn.connection.close();
-    });
+    }
     peerConnectionsRef.current.clear();
     pendingCandidatesRef.current.clear();
 
@@ -750,7 +750,9 @@ export function useWebRTC({
   useEffect(() => {
     return () => {
       if (isVoiceEnabled) {
-        console.log("useWebRTC hook unmounting - cleaning up voice connections");
+        console.log(
+          "useWebRTC hook unmounting - cleaning up voice connections"
+        );
         disableVoiceChat();
       }
     };
@@ -768,15 +770,15 @@ export function useWebRTC({
     );
 
     // Create connections for new players
-    activePlayers.forEach((player) => {
+    for (const player of activePlayers) {
       if (!currentPeerIds.has(player.id)) {
         console.log("New player joined, creating connection:", player.id);
         createPeerConnection(player.id);
       }
-    });
+    }
 
     // Cleanup connections for players who left
-    currentPeerIds.forEach((peerId) => {
+    for (const peerId of currentPeerIds) {
       const playerExists = activePlayers.some((p) => p.id === peerId);
       if (!playerExists) {
         console.log("Player left, cleaning up connection:", peerId);
@@ -784,15 +786,11 @@ export function useWebRTC({
         if (peerConn) {
           if (peerConn.audioElement) {
             peerConn.audioElement.pause();
+          if (peerConn.audioElement) {
+            peerConn.audioElement.pause();
             peerConn.audioElement.srcObject = null;
-            if (peerConn.audioElement.parentNode) {
-              peerConn.audioElement.parentNode.removeChild(
-                peerConn.audioElement
-              );
-            }
+            peerConn.audioElement.remove();
           }
-          if (peerConn.dataChannel) {
-            peerConn.dataChannel.close();
           }
           peerConn.connection.close();
           peerConnectionsRef.current.delete(peerId);
@@ -818,7 +816,7 @@ export function useWebRTC({
           return newMap;
         });
       }
-    });
+    }
   }, [players, localPlayerId, isVoiceEnabled, createPeerConnection]);
 
   return {

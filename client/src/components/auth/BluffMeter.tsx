@@ -2,12 +2,21 @@ import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 
 interface BluffMeterProps {
-  readonly progress: number; // 0-100
-  readonly playfulMessage: string;
+  readonly progress: number;
 }
 
-export default function BluffMeter({ progress, playfulMessage }: Readonly<BluffMeterProps>) {
+export default function BluffMeter({ progress }: Readonly<BluffMeterProps>) {
   const { t } = useTranslation();
+  const playfulMessages = [
+    t("auth.bluffMeterMessage1"),
+    t("auth.bluffMeterMessage2"),
+    t("auth.bluffMeterMessage3"),
+    t("auth.bluffMeterMessage4"),
+    t("auth.bluffMeterMessage5"),
+    t("auth.bluffMeterMessage6"),
+  ];
+  
+  const playfulMessage = playfulMessages[Math.floor(progress / 20)];
 
   return (
     <motion.div

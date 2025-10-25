@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -19,21 +19,6 @@ export default function BluffAuthPage() {
   const { login, signup } = useAuth();
   const navigate = useNavigate();
   const { formState, updateField, calculateFormProgress } = useAuthForm();
-
-  const playfulMessages = [
-    t("auth.bluffMeterMessage1"),
-    t("auth.bluffMeterMessage2"),
-    t("auth.bluffMeterMessage3"),
-    t("auth.bluffMeterMessage4"),
-    t("auth.bluffMeterMessage5"),
-    t("auth.bluffMeterMessage6"),
-  ];
-
-  const playfulMessage = useMemo(
-    () => playfulMessages[Math.floor(Math.random() * playfulMessages.length)],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
 
   const formProgress = calculateFormProgress(isLogin ? "login" : "signup");
 
@@ -101,7 +86,12 @@ export default function BluffAuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 flex items-center justify-center p-4 overflow-hidden relative">
+    <div
+      className="flex-1 flex items-center justify-center p-4 overflow-hidden relative
+    bg-gradient-to-br dark:from-slate-950 dark:via-purple-950 dark:to-slate-950
+    from-purple-200 via-purple-100 to-purple-400
+  "
+    >
       <AuthBackground />
 
       {/* Main container */}
@@ -111,13 +101,12 @@ export default function BluffAuthPage() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="flex flex-col lg:flex-row gap-8 items-center">
+        <div className="flex flex-col md:flex-row gap-8 items-center">
           {/* Left side - Playful branding with bluff meter */}
           <div className="flex-1">
             <AuthBranding />
             <BluffMeter
               progress={formProgress}
-              playfulMessage={playfulMessage}
             />
           </div>
 

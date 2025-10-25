@@ -23,14 +23,10 @@ export default function AuthBranding() {
         }}
         className="inline-block mb-6"
       >
-        <div className="text-8xl mb-4">🃏</div>
+        <img className="h-32 mb-4" src="/Tekthib/icons/logo-256.png" alt="Bluff Icon" />
       </motion.div>
 
-      <h1 className="text-5xl lg:text-7xl font-black mb-4 bg-gradient-to-r from-red-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-        {t("auth.bluffTitle")}
-      </h1>
-
-      <p className="text-xl text-slate-300 mb-8">
+      <p className="text-xl text-slate-500 dark:text-slate-300 mb-8">
         {t("auth.bluffSubtitle1")}
         <br />
         <span className="text-purple-400">{t("auth.bluffSubtitle2")}</span>

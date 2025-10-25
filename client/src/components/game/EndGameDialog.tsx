@@ -139,6 +139,12 @@ function calculateTitles(
   return titles;
 }
 
+function getBorderColor(isLoser: boolean, isCurrentPlayer: boolean): string {
+  if (isLoser) return "border-red-300";
+  if (isCurrentPlayer) return "border-blue-500";
+  return "";
+}
+
 export const EndGameDialog = ({
   open,
   winners,
@@ -162,9 +168,7 @@ export const EndGameDialog = ({
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t("dialog.title")}</DialogTitle>
-          <DialogDescription>
-            {t("dialog.description")}
-          </DialogDescription>
+          <DialogDescription>{t("dialog.description")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div>
@@ -214,13 +218,10 @@ export const EndGameDialog = ({
                   return (
                     <div
                       key={player.id}
-                      className={`bg-card/50 border rounded-lg p-3 ${
-                        isLoserPlayer
-                          ? " border-red-300"
-                          : isCurrentPlayer
-                            ? " border-blue-300"
-                            : ""
-                      }`}
+                      className={`bg-card/50 border rounded-lg p-3 ${getBorderColor(
+                        isLoserPlayer,
+                        isCurrentPlayer
+                      )}`}
                     >
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-semibold">{player.name}</h4>

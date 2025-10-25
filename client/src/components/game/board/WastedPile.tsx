@@ -9,6 +9,33 @@ interface CenterPileProps {
   // Add any props if needed in the future
 }
 
+function getUniqueRemovedRanks(removedCards: Card[]): Card[] {
+  const result: Card[] = [];
+
+  // Group cards by rank
+  const grouped = removedCards.reduce<Record<string, Card[]>>((acc, card) => {
+    if (!acc[card.rank]) acc[card.rank] = [];
+    acc[card.rank].push(card);
+    return acc;
+  }, {});
+
+  // For each rank, pick 1 or 2 representatives based on count
+  for (const cards of Object.values(grouped)) {
+    if (cards.length === 4) {
+      const randomCard =
+        cards[(cards[0].rank.codePointAt(0)! + 1) % cards.length];
+      result.push(randomCard);
+    } else if (cards.length === 8) {
+      const randomCard1 =
+        cards[(cards[0].rank.codePointAt(0)! + 1) % cards.length];
+      const randomCard2 =
+        cards[(cards[4].rank.codePointAt(0)! + 2) % cards.length];
+      result.push(randomCard1, randomCard2);
+    }
+  }
+  return result;
+}
+
 const WastedPile: React.FC<CenterPileProps> = ({ removedCards }) => {
   const { t } = useTranslation();
 
@@ -23,37 +50,10 @@ const WastedPile: React.FC<CenterPileProps> = ({ removedCards }) => {
       // Use card ID to generate a stable "random" offset
       const seed = card.id
         .split("")
-        .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        .reduce((acc, char) => acc + char.codePointAt(0)!, 0);
       return (seed % 100) / 10 - 5; // Returns value between -5 and 5
     });
   }, [uniqueRemovedRanks.length]);
-
-  function getUniqueRemovedRanks(removedCards: Card[]): Card[] {
-    const result: Card[] = [];
-
-    // Group cards by rank
-    const grouped = removedCards.reduce<Record<string, Card[]>>((acc, card) => {
-      if (!acc[card.rank]) acc[card.rank] = [];
-      acc[card.rank].push(card);
-      return acc;
-    }, {});
-
-    // For each rank, pick 1 or 2 representatives based on count
-    Object.values(grouped).forEach((cards) => {
-      if (cards.length === 4) {
-        const randomCard =
-          cards[(cards[0].rank.charCodeAt(0) + 1) % cards.length];
-        result.push(randomCard);
-      } else if (cards.length === 8) {
-        const randomCard1 =
-          cards[(cards[0].rank.charCodeAt(0) + 1) % cards.length];
-        const randomCard2 =
-          cards[(cards[4].rank.charCodeAt(0) + 2) % cards.length];
-        result.push(randomCard1, randomCard2);
-      }
-    });
-    return result;
-  }
 
   if (removedCards.length === 0) {
     return <div className="w-[160px] h-12"></div>;

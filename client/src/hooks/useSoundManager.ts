@@ -20,7 +20,7 @@ export const useSoundManager = () => {
   
   const [volume, setVolume] = useState(() => {
     const saved = localStorage.getItem('soundVolume');
-    return saved ? parseFloat(saved) : 0.7;
+    return saved ? Number.parseFloat(saved) : 0.7;
   });
 
   const audioCache = useRef<Map<string, HTMLAudioElement>>(new Map());

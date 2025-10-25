@@ -35,7 +35,7 @@ const Seo = ({
       "twitter:image": image,
     };
 
-    Object.entries(metaTags).forEach(([name, content]) => {
+    for (const [name, content] of Object.entries(metaTags)) {
       let element =
         document.querySelector(`meta[name="${name}"]`) ||
         document.querySelector(`meta[property="${name}"]`);
@@ -49,7 +49,7 @@ const Seo = ({
         element.setAttribute("content", content);
         document.head.appendChild(element);
       }
-    });
+    }
 
     // Update canonical URL
     let canonical = document.querySelector('link[rel="canonical"]');

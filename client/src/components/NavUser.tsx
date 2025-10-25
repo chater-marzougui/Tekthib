@@ -267,7 +267,7 @@ export function NavUser() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <div
-                className={`w-10 h-10 ring-2 ring-blue-500 rounded-full overflow-hidden flex items-center justify-center bg-gray-300`}
+                className={`w-10 h-10 ring-2 ${isAuthenticated ? 'ring-green-500' : 'ring-red-600'} rounded-full overflow-hidden flex items-center justify-center bg-gray-300`}
                 dangerouslySetInnerHTML={{ __html: avatarSvg! }}
               />
             </DropdownMenuTrigger>
@@ -287,18 +287,7 @@ export function NavUser() {
                   </>
                 ) : null}
 
-                {!isAuthenticated ? (
-                  <>
-                    <DropdownMenuItem
-                      onClick={() => navigate("/auth")}
-                      className="cursor-pointer"
-                    >
-                      <Icon icon="mdi:login" className="mr-2 h-4 w-4" />
-                      <span>{t("auth.login")}</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                  </>
-                ) : (
+                {isAuthenticated ? (
                   <>
                     <DropdownMenuItem
                       onClick={() => {
@@ -309,6 +298,17 @@ export function NavUser() {
                     >
                       <Icon icon="mdi:logout" className="mr-2 h-4 w-4" />
                       <span>{t("auth.logout")}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                ) : (
+                  <>
+                    <DropdownMenuItem
+                      onClick={() => navigate("/auth")}
+                      className="cursor-pointer"
+                    >
+                      <Icon icon="mdi:login" className="mr-2 h-4 w-4" />
+                      <span>{t("auth.login")}</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                   </>

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import type { ReactNode } from "react";
 import { useWebSocket } from "../hooks/useWebsocket";
 import type { WSMessage } from "shared";
@@ -31,8 +31,13 @@ export function WebSocketProvider({
     }
   }, [websocket.lastMessage]);
 
+  const contextValue = useMemo(
+    () => ({ ...websocket, autoPlayTimeout }),
+    [websocket, autoPlayTimeout],
+  );
+
   return (
-    <WebSocketContext.Provider value={{ ...websocket, autoPlayTimeout }}>
+    <WebSocketContext.Provider value={contextValue}>
       {children}
     </WebSocketContext.Provider>
   );

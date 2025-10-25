@@ -1,32 +1,15 @@
 import type { JSX } from "react";
-import type { Card, DisplayGameCard, Rank } from "shared";
+import { Card, DisplayGameCard, SuitTypes, playableRanks } from "shared";
 import { BASE_PREFIX, CardsSizes } from "@/types/config";
 
 // Preload all card images on app initialization
 const preloadCardImages = () => {
-  const ranks: Rank[] = [
-    "A",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "J",
-    "Q",
-    "K",
-  ];
-  const suits = ["hearts", "diamonds", "clubs", "spades"];
-
-  ranks.forEach((rank) => {
-    suits.forEach((suit) => {
+  for (const rank of playableRanks) {
+    for (const suit of SuitTypes) {
       const img = new Image();
       img.src = `${BASE_PREFIX}/cards/${rank}_${suit}.png`;
-    });
-  });
+    }
+  }
 
   // Preload joker assets
   const jokerStatic = new Image();

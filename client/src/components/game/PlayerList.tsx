@@ -51,7 +51,7 @@ export default function PlayerList({
                       )}
                     </div>
                     <div className="text-sm text-gray-600">
-                      {player.cardCount} {player.cardCount !== 1 ? t('playerList.cards') : t('playerList.card')}
+                      {player.cardCount} {player.cardCount! > 1 ? t('playerList.cards') : t('playerList.card')}
                     </div>
                   </div>
                 </div>

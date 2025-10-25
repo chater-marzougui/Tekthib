@@ -39,7 +39,7 @@ export default function SignupForm({
       animate={{ opacity: 1, x: 0, rotateY: 0 }}
       exit={{ opacity: 0, x: -50, rotateY: -90 }}
       transition={{ duration: 0.4 }}
-      className="space-y-5"
+      className="space-y-1"
     >
       <div>
         <label className="block text-sm font-medium text-slate-300 mb-2">

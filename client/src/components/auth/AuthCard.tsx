@@ -18,7 +18,7 @@ export default function AuthCard({
 
   return (
     <motion.div
-      className="flex-1 w-full max-w-md perspective"
+      className="flex-1 w-full max-w-md perspective scale-90"
       initial={{ x: 100, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ delay: 0.2, duration: 0.6 }}
@@ -80,10 +80,10 @@ export default function AuthCard({
 
           <div className="p-8 relative z-10">
             {/* Toggle buttons */}
-            <div className="flex gap-2 mb-8 bg-slate-800/50 p-2 rounded-2xl">
+            <div className="flex gap-2 mb-1 bg-slate-800/50 p-2 rounded-2xl">
               <motion.button
                 onClick={() => !isLoading && onToggleMode(true)}
-                className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all ${
+                className={`flex-1 p-2 rounded-xl font-bold transition-all ${
                   isLogin
                     ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                     : "text-slate-400 hover:text-white"
@@ -96,7 +96,7 @@ export default function AuthCard({
               </motion.button>
               <motion.button
                 onClick={() => !isLoading && onToggleMode(false)}
-                className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all ${
+                className={`flex-1 p-2 rounded-xl font-bold transition-all ${
                   isLogin
                     ? "text-slate-400 hover:text-white"
                     : "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
@@ -111,18 +111,6 @@ export default function AuthCard({
 
             {/* Form content */}
             {children}
-
-            {/* Fun footer message */}
-            <motion.p
-              className="text-center text-xs text-slate-500 mt-6"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8 }}
-            >
-              {isLogin
-                ? t("auth.footerNewPlayer")
-                : t("auth.footerAlreadyPro")}
-            </motion.p>
           </div>
         </motion.div>
       </div>
