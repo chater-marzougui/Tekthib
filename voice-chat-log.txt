@@ -1,0 +1,254 @@
+
+
+Äll this is on the same laptop;
+Player-1 using google chrome
+Player-2 using Firefox
+Player-3 using operaGX
+
+what i want for now since voice chat is not working, i'm getting some logs saying connected to people and all, things like this:
+scenario player 1-google chrome: makes a room and clicks on the join voice chat; 
+logs:
+Local audio stream initialized
+
+player2-firefox on same pc:
+enters room, then clicks join voice chat, logs:
+Local audio stream initialized
+
+but it doesn't say that i'm connected to anyone
+
+player3-opera gx still on same pc:
+enters room, then clicks join voice chat, logs:
+Local audio stream initialized 
+
+still no one connected; 
+player 1 clicks start game and shit is about to go down;
+
+This only happens after player 1 clicks start game:
+Player-1 logs:
+Creating new peer connection for: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 Adding audio track to peer: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 [DataChannel] Created for peer: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 Creating new peer connection for: client_1761398347420_c2erovzv9
+index-CJYkeMVl.js:152 Adding audio track to peer: client_1761398347420_c2erovzv9
+index-CJYkeMVl.js:152 [DataChannel] Created for peer: client_1761398347420_c2erovzv9
+index-CJYkeMVl.js:152 Offer sent to: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 Offer sent to: client_1761398347420_c2erovzv9
+index-CJYkeMVl.js:152 Closing existing connection in state: have-local-offer
+index-CJYkeMVl.js:152 Adding audio track to peer: client_1761398347420_c2erovzv9
+index-CJYkeMVl.js:152 [DataChannel] Created for peer: client_1761398347420_c2erovzv9
+index-CJYkeMVl.js:152 [DataChannel] Closed with client_1761398347420_c2erovzv9
+index-CJYkeMVl.js:152 Closing existing connection in state: have-local-offer
+index-CJYkeMVl.js:152 Adding audio track to peer: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 [DataChannel] Created for peer: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 Received remote track from: client_1761398347420_c2erovzv9
+index-CJYkeMVl.js:152 [DataChannel] Closed with client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 Received remote track from: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 Added ICE candidate from: client_1761398347420_c2erovzv9
+index-CJYkeMVl.js:152 Audio playing for: client_1761398347420_c2erovzv9
+index-CJYkeMVl.js:152 Audio playing for: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 Added ICE candidate from: client_1761398347420_c2erovzv9
+index-CJYkeMVl.js:152 Added ICE candidate from: client_1760145056230_bzovqnvxg
+4index-CJYkeMVl.js:152 Added ICE candidate from: client_1761398347420_c2erovzv9
+3index-CJYkeMVl.js:152 Added ICE candidate from: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 Error handling answer: InvalidStateError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Called in wrong state: have-remote-offer
+overrideMethod @ hook.js:608
+(anonymous) @ index-CJYkeMVl.js:152
+await in (anonymous)
+(anonymous) @ index-CJYkeMVl.js:152
+(anonymous) @ index-CJYkeMVl.js:94
+p.onmessage @ index-CJYkeMVl.js:94Understand this error
+5index-CJYkeMVl.js:152 Added ICE candidate from: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 Answer sent to: client_1761398347420_c2erovzv9
+index-CJYkeMVl.js:152 Error handling answer: InvalidStateError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Called in wrong state: stable
+overrideMethod @ hook.js:608
+(anonymous) @ index-CJYkeMVl.js:152
+await in (anonymous)
+(anonymous) @ index-CJYkeMVl.js:152
+(anonymous) @ index-CJYkeMVl.js:94
+p.onmessage @ index-CJYkeMVl.js:94Understand this error
+2index-CJYkeMVl.js:152 Added ICE candidate from: client_1761398347420_c2erovzv9
+index-CJYkeMVl.js:152 Connection state with client_1761398347420_c2erovzv9: connecting
+3index-CJYkeMVl.js:152 Added ICE candidate from: client_1761398347420_c2erovzv9
+index-CJYkeMVl.js:152 Answer sent to: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 Connection state with client_1760145056230_bzovqnvxg: connecting
+index-CJYkeMVl.js:152 Error handling offer: InvalidAccessError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote offer sdp: Failed to set remote audio description send parameters for m-section with mid='0'.
+overrideMethod @ hook.js:608
+(anonymous) @ index-CJYkeMVl.js:152
+await in (anonymous)
+(anonymous) @ index-CJYkeMVl.js:152
+(anonymous) @ index-CJYkeMVl.js:94
+p.onmessage @ index-CJYkeMVl.js:94Understand this error
+6index-CJYkeMVl.js:152 Added ICE candidate from: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 Connection state with client_1760145056230_bzovqnvxg: failed
+index-CJYkeMVl.js:152 Attempting to reconnect to client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 Error creating offer: OperationError: Failed to execute 'createOffer' on 'RTCPeerConnection': Session error code: ERROR_CONTENT. Session error description: Failed to set remote audio description send parameters for m-section with mid='0'..
+overrideMethod @ hook.js:608
+(anonymous) @ index-CJYkeMVl.js:152
+await in (anonymous)
+(anonymous) @ index-CJYkeMVl.js:152
+setTimeout
+fe.onconnectionstatechange @ index-CJYkeMVl.js:152Understand this error
+
+
+
+
+Player-2 logs:Local audio stream initialized index-CJYkeMVl.js:152:11303
+Offer sent to: client_1759259808038_m5cnsbn0o index-CJYkeMVl.js:152:15552
+Offer sent to: client_1761398347420_c2erovzv9 index-CJYkeMVl.js:152:15552
+Closing existing connection in state: have-local-offer index-CJYkeMVl.js:152:15925
+Adding audio track to peer: client_1761398347420_c2erovzv9 index-CJYkeMVl.js:152:13189
+[DataChannel] Created for peer: client_1761398347420_c2erovzv9 index-CJYkeMVl.js:152:12734
+[DataChannel] Closed with client_1761398347420_c2erovzv9 index-CJYkeMVl.js:152:12535
+Closing existing connection in state: have-local-offer index-CJYkeMVl.js:152:15925
+Adding audio track to peer: client_1759259808038_m5cnsbn0o index-CJYkeMVl.js:152:13189
+[DataChannel] Created for peer: client_1759259808038_m5cnsbn0o index-CJYkeMVl.js:152:12734
+Received remote track from: client_1761398347420_c2erovzv9 index-CJYkeMVl.js:152:13303
+[DataChannel] Closed with client_1759259808038_m5cnsbn0o index-CJYkeMVl.js:152:12535
+Received remote track from: client_1759259808038_m5cnsbn0o index-CJYkeMVl.js:152:13303
+AudioContext resumed index-CJYkeMVl.js:152:11022
+Added ICE candidate from: client_1761398347420_c2erovzv9 index-CJYkeMVl.js:152:17351
+Audio playing for: client_1761398347420_c2erovzv9 index-CJYkeMVl.js:152:13659
+AudioContext resumed index-CJYkeMVl.js:152:11022
+Added ICE candidate from: client_1759259808038_m5cnsbn0o index-CJYkeMVl.js:152:17351
+Added ICE candidate from: client_1761398347420_c2erovzv9 index-CJYkeMVl.js:152:17351
+Audio playing for: client_1759259808038_m5cnsbn0o index-CJYkeMVl.js:152:13659
+Added ICE candidate from: client_1759259808038_m5cnsbn0o index-CJYkeMVl.js:152:17351
+Added ICE candidate from: client_1761398347420_c2erovzv9 index-CJYkeMVl.js:152:17351
+Added ICE candidate from: client_1759259808038_m5cnsbn0o index-CJYkeMVl.js:152:17351
+Added ICE candidate from: client_1761398347420_c2erovzv9 index-CJYkeMVl.js:152:17351
+Added ICE candidate from: client_1759259808038_m5cnsbn0o index-CJYkeMVl.js:152:17351
+Added ICE candidate from: client_1761398347420_c2erovzv9 index-CJYkeMVl.js:152:17351
+Answer sent to: client_1759259808038_m5cnsbn0o index-CJYkeMVl.js:152:16522
+Added ICE candidate from: client_1761398347420_c2erovzv9 index-CJYkeMVl.js:152:17351
+Added ICE candidate from: client_1759259808038_m5cnsbn0o 2 index-CJYkeMVl.js:152:17351
+Connection state with client_1759259808038_m5cnsbn0o: connecting index-CJYkeMVl.js:152:14509
+Added ICE candidate from: client_1759259808038_m5cnsbn0o 2 index-CJYkeMVl.js:152:17351
+Answer sent to: client_1761398347420_c2erovzv9 index-CJYkeMVl.js:152:16522
+Added ICE candidate from: client_1759259808038_m5cnsbn0o 2 index-CJYkeMVl.js:152:17351
+Connection state with client_1761398347420_c2erovzv9: connecting index-CJYkeMVl.js:152:14509
+Error handling answer: DOMException: Cannot set remote answer in state stable
+    setRemoteDescription https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:40
+    se https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:152
+    fe https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:152
+    onmessage https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    onmessage https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    d https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    current https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    setTimeout handler*IR/d</p.onclose https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    d https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    current https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    setTimeout handler*IR/d</p.onclose https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    d https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    current https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    setTimeout handler*IR/d</p.onclose https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    d https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    IR https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    co https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:82
+    re https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:59
+index-CJYkeMVl.js:152:16936
+Error adding ICE candidate: DOMException: Unknown ufrag (0l71) index-CJYkeMVl.js:152:17495
+Error adding ICE candidate: DOMException: Unknown ufrag (0l71) index-CJYkeMVl.js:152:17495
+Error adding ICE candidate: DOMException: Unknown ufrag (0l71) index-CJYkeMVl.js:152:17495
+Error adding ICE candidate: DOMException: Unknown ufrag (0l71) index-CJYkeMVl.js:152:17495
+Error adding ICE candidate: DOMException: Unknown ufrag (0l71) index-CJYkeMVl.js:152:17495
+Error handling answer: DOMException: Cannot set remote answer in state stable
+    setRemoteDescription https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:40
+    se https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:152
+    fe https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:152
+    onmessage https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    onmessage https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    d https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    current https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    setTimeout handler*IR/d</p.onclose https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    d https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    current https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    setTimeout handler*IR/d</p.onclose https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    d https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    current https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    setTimeout handler*IR/d</p.onclose https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    d https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    IR https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:94
+    co https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:82
+    a3 https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:82
+    A3 https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:82
+    re https://chater-marzougui.me/Tekthib/assets/index-CJYkeMVl.js:59
+index-CJYkeMVl.js:152:16936
+Error adding ICE candidate: DOMException: Unknown ufrag (dSFP) index-CJYkeMVl.js:152:17495
+Error adding ICE candidate: DOMException: Unknown ufrag (dSFP) index-CJYkeMVl.js:152:17495
+Error adding ICE candidate: DOMException: Unknown ufrag (dSFP) index-CJYkeMVl.js:152:17495
+Error adding ICE candidate: DOMException: Unknown ufrag (dSFP) index-CJYkeMVl.js:152:17495
+Error adding ICE candidate: DOMException: Unknown ufrag (dSFP) index-CJYkeMVl.js:152:17495
+WebRTC: ICE failed, add a TURN server and see about:webrtc for more details
+Connection state with client_1761398347420_c2erovzv9: failed index-CJYkeMVl.js:152:14509
+Attempting to reconnect to client_1761398347420_c2erovzv9 index-CJYkeMVl.js:152:14642
+[DataChannel] Closed with client_1761398347420_c2erovzv9 index-CJYkeMVl.js:152:12535
+WebRTC: ICE failed, add a TURN server and see about:webrtc for more details
+Connection state with client_1759259808038_m5cnsbn0o: failed index-CJYkeMVl.js:152:14509
+Attempting to reconnect to client_1759259808038_m5cnsbn0o index-CJYkeMVl.js:152:14642
+[DataChannel] Closed with client_1759259808038_m5cnsbn0o index-CJYkeMVl.js:152:12535
+Offer sent to: client_1761398347420_c2erovzv9 index-CJYkeMVl.js:152:15552
+Offer sent to: client_1759259808038_m5cnsbn0o
+
+
+
+Player-3 logs
+Local audio stream initialized
+index-CJYkeMVl.js:152 Creating new peer connection for: client_1759259808038_m5cnsbn0o
+index-CJYkeMVl.js:152 Adding audio track to peer: client_1759259808038_m5cnsbn0o
+index-CJYkeMVl.js:152 [DataChannel] Created for peer: client_1759259808038_m5cnsbn0o
+index-CJYkeMVl.js:152 Creating new peer connection for: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 Adding audio track to peer: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 [DataChannel] Created for peer: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 Offer sent to: client_1759259808038_m5cnsbn0o
+index-CJYkeMVl.js:152 Offer sent to: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 Closing existing connection in state: have-local-offer
+index-CJYkeMVl.js:152 Adding audio track to peer: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 [DataChannel] Created for peer: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 [DataChannel] Closed with client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 Closing existing connection in state: have-local-offer
+index-CJYkeMVl.js:152 Adding audio track to peer: client_1759259808038_m5cnsbn0o
+index-CJYkeMVl.js:152 [DataChannel] Created for peer: client_1759259808038_m5cnsbn0o
+index-CJYkeMVl.js:152 Received remote track from: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 [DataChannel] Closed with client_1759259808038_m5cnsbn0o
+index-CJYkeMVl.js:152 Received remote track from: client_1759259808038_m5cnsbn0o
+index-CJYkeMVl.js:152 Audio playing for: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 Added ICE candidate from: client_1759259808038_m5cnsbn0o
+index-CJYkeMVl.js:152 Audio playing for: client_1759259808038_m5cnsbn0o
+index-CJYkeMVl.js:152 Answer sent to: client_1759259808038_m5cnsbn0o
+3index-CJYkeMVl.js:152 Added ICE candidate from: client_1759259808038_m5cnsbn0o
+index-CJYkeMVl.js:152 Added ICE candidate from: client_1760145056230_bzovqnvxg
+2index-CJYkeMVl.js:152 Added ICE candidate from: client_1759259808038_m5cnsbn0o
+index-CJYkeMVl.js:152 Added ICE candidate from: client_1760145056230_bzovqnvxg
+4index-CJYkeMVl.js:152 Added ICE candidate from: client_1759259808038_m5cnsbn0o
+index-CJYkeMVl.js:152 Error handling answer: InvalidStateError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Called in wrong state: have-remote-offer
+(anonymous) @ index-CJYkeMVl.js:152
+await in (anonymous)
+(anonymous) @ index-CJYkeMVl.js:152
+(anonymous) @ index-CJYkeMVl.js:94
+p.onmessage @ index-CJYkeMVl.js:94
+4index-CJYkeMVl.js:152 Added ICE candidate from: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 Connection state with client_1759259808038_m5cnsbn0o: connecting
+index-CJYkeMVl.js:152 Answer sent to: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 Added ICE candidate from: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 Connection state with client_1760145056230_bzovqnvxg: connecting
+index-CJYkeMVl.js:152 Added ICE candidate from: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 Error handling answer: InvalidStateError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote answer sdp: Called in wrong state: stable
+(anonymous) @ index-CJYkeMVl.js:152
+await in (anonymous)
+(anonymous) @ index-CJYkeMVl.js:152
+(anonymous) @ index-CJYkeMVl.js:94
+p.onmessage @ index-CJYkeMVl.js:94
+5index-CJYkeMVl.js:152 Added ICE candidate from: client_1759259808038_m5cnsbn0o
+index-CJYkeMVl.js:152 Error handling offer: InvalidAccessError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Failed to set remote offer sdp: Failed to set remote audio description send parameters for m-section with mid='0'.
+(anonymous) @ index-CJYkeMVl.js:152
+await in (anonymous)
+(anonymous) @ index-CJYkeMVl.js:152
+(anonymous) @ index-CJYkeMVl.js:94
+p.onmessage @ index-CJYkeMVl.js:94
+6index-CJYkeMVl.js:152 Added ICE candidate from: client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 Connection state with client_1760145056230_bzovqnvxg: failed
+index-CJYkeMVl.js:152 Attempting to reconnect to client_1760145056230_bzovqnvxg
+index-CJYkeMVl.js:152 Error creating offer: OperationError: Failed to execute 'createOffer' on 'RTCPeerConnection': Session error code: ERROR_CONTENT. Session error description: Failed to set remote audio description send parameters for m-section with mid='0'..
+
+
+i'm not understanding the problem, why does this start only when player clicks start game, it needs to start on room page when each person joins; the errors appearing, no voice appears

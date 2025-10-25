@@ -10,6 +10,9 @@ interface PeerConnection {
   stream?: MediaStream;
   audioElement?: HTMLAudioElement;
   dataChannel?: RTCDataChannel;
+  makingOffer?: boolean;
+  ignoreOffer?: boolean;
+  isSettingRemoteAnswerPending?: boolean;
 }
 
 interface WebRTCConfig {
@@ -29,6 +32,14 @@ const ICE_SERVERS = {
 };
 
 /**
+ * Determines if this peer should be "polite" (yields in negotiation conflicts)
+ * Uses lexicographic comparison of player IDs for deterministic behavior
+ */
+function isPolite(localId: string, remoteId: string): boolean {
+  return localId > remoteId;
+}
+
+/**
  * Hook for managing WebRTC peer connections for voice chat and data channels
  */
 export function useWebRTC({
@@ -44,39 +55,43 @@ export function useWebRTC({
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [audioError, setAudioError] = useState<string | null>(null);
-  const [audioLevels, setAudioLevels] = useState<Map<string, number>>(new Map());
-  
+  const [audioLevels, setAudioLevels] = useState<Map<string, number>>(
+    new Map()
+  );
+
   // Player control state
   const [mutedPlayers, setMutedPlayers] = useState<Set<string>>(new Set());
-  const [hostMutedPlayers, setHostMutedPlayers] = useState<Set<string>>(new Set());
+  const [hostMutedPlayers, setHostMutedPlayers] = useState<Set<string>>(
+    new Set()
+  );
   const [hostMuted, setHostMuted] = useState(false);
 
   // Refs for managing connections
-  const isNegotiatingRef = useRef<Map<string, boolean>>(new Map());
   const audioContextsRef = useRef<Map<string, AudioContext>>(new Map());
   const analysersRef = useRef<Map<string, AnalyserNode>>(new Map());
   const animationFramesRef = useRef<Map<string, number>>(new Map());
   const localStreamRef = useRef<MediaStream | null>(null);
   const peerConnectionsRef = useRef<Map<string, PeerConnection>>(new Map());
-  const pendingCandidatesRef = useRef<Map<string, RTCIceCandidate[]>>(new Map());
-
-  // Forward refs for circular dependencies
-  const createOfferRef = useRef<(remotePlayerId: string) => Promise<void>>(null);
-  const createPeerConnectionRef = useRef<(remotePlayerId: string) => RTCPeerConnection>(null);
+  const pendingCandidatesRef = useRef<Map<string, RTCIceCandidate[]>>(
+    new Map()
+  );
 
   /**
    * Ensure AudioContext is running (fixes Firefox autoplay issues)
    */
-  const ensureAudioContextRunning = useCallback(async (audioContext: AudioContext) => {
-    if (audioContext.state === "suspended") {
-      try {
-        await audioContext.resume();
-        console.log("AudioContext resumed");
-      } catch (error) {
-        console.error("Failed to resume AudioContext:", error);
+  const ensureAudioContextRunning = useCallback(
+    async (audioContext: AudioContext) => {
+      if (audioContext.state === "suspended") {
+        try {
+          await audioContext.resume();
+          console.log("AudioContext resumed");
+        } catch (error) {
+          console.error("Failed to resume AudioContext:", error);
+        }
       }
-    }
-  }, []);
+    },
+    []
+  );
 
   /**
    * Initialize local audio stream with microphone access
@@ -96,7 +111,8 @@ export function useWebRTC({
       console.log("Local audio stream initialized");
       return stream;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       setAudioError(`Microphone access denied: ${errorMessage}`);
       console.error("Error accessing microphone:", error);
       return null;
@@ -125,7 +141,8 @@ export function useWebRTC({
         const dataArray = new Uint8Array(analyser.frequencyBinCount);
         const updateLevel = () => {
           analyser.getByteFrequencyData(dataArray);
-          const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+          const average =
+            dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
           const level = Math.min(100, (average / 128) * 100);
 
           setAudioLevels((prev) => {
@@ -147,72 +164,47 @@ export function useWebRTC({
 
   /**
    * Setup event listeners for a DataChannel
-   * Note: localPlayerId is stable (from localStorage) and doesn't change during session
    */
-  const setupDataChannelListeners = useCallback((dataChannel: RTCDataChannel, remotePlayerId: string) => {
-    dataChannel.onopen = () => {
-      console.log(`[DataChannel] Opened with ${remotePlayerId}`);
-      // Send test message
-      try {
-        dataChannel.send(JSON.stringify({
-          type: "TEST",
-          from: localPlayerId,
-          message: "DataChannel connection established"
-        }));
-      } catch (error) {
-        console.error(`[DataChannel] Failed to send test message:`, error);
-      }
-    };
-
-    dataChannel.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log(`[DataChannel] Message from ${remotePlayerId}:`, data);
-      } catch (error) {
-        console.error(`[DataChannel] Failed to parse message:`, error);
-      }
-    };
-
-    dataChannel.onclose = () => {
-      console.log(`[DataChannel] Closed with ${remotePlayerId}`);
-    };
-
-    dataChannel.onerror = (error) => {
-      console.error(`[DataChannel] Error with ${remotePlayerId}:`, error);
-    };
-  }, [localPlayerId]);
-
-  /**
-   * Create and setup a DataChannel for a peer connection
-   */
-  const setupDataChannel = useCallback((pc: RTCPeerConnection, remotePlayerId: string, isInitiator: boolean) => {
-    let dataChannel: RTCDataChannel;
-
-    if (isInitiator) {
-      // Create data channel if we're the initiator
-      dataChannel = pc.createDataChannel("game-data");
-      console.log(`[DataChannel] Created for peer: ${remotePlayerId}`);
-    } else {
-      // Listen for incoming data channel
-      pc.ondatachannel = (event) => {
-        dataChannel = event.channel;
-        console.log(`[DataChannel] Received from peer: ${remotePlayerId}`);
-        setupDataChannelListeners(dataChannel, remotePlayerId);
+  const setupDataChannelListeners = useCallback(
+    (dataChannel: RTCDataChannel, remotePlayerId: string) => {
+      dataChannel.onopen = () => {
+        console.log(`[DataChannel] Opened with ${remotePlayerId}`);
+        try {
+          dataChannel.send(
+            JSON.stringify({
+              type: "TEST",
+              from: localPlayerId,
+              message: "DataChannel connection established",
+            })
+          );
+        } catch (error) {
+          console.error(`[DataChannel] Failed to send test message:`, error);
+        }
       };
-      return; // Wait for ondatachannel event
-    }
 
-    setupDataChannelListeners(dataChannel, remotePlayerId);
+      dataChannel.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log(`[DataChannel] Message from ${remotePlayerId}:`, data);
+        } catch (error) {
+          console.error(`[DataChannel] Failed to parse message:`, error);
+        }
+      };
 
-    // Store reference in peer connection
-    const peerConn = peerConnectionsRef.current.get(remotePlayerId);
-    if (peerConn) {
-      peerConn.dataChannel = dataChannel;
-    }
-  }, [setupDataChannelListeners]);
+      dataChannel.onclose = () => {
+        console.log(`[DataChannel] Closed with ${remotePlayerId}`);
+      };
+
+      dataChannel.onerror = (error) => {
+        console.error(`[DataChannel] Error with ${remotePlayerId}:`, error);
+      };
+    },
+    [localPlayerId]
+  );
 
   /**
-   * Create RTCPeerConnection for a remote player
+   * Create and setup a RTCPeerConnection for a remote player
+   * Uses "perfect negotiation" pattern to avoid glare
    */
   const createPeerConnection = useCallback(
     (remotePlayerId: string): RTCPeerConnection => {
@@ -221,7 +213,20 @@ export function useWebRTC({
         throw new Error("Local stream not initialized");
       }
 
+      // Determine if this peer should be polite
+      const polite = isPolite(localPlayerId, remotePlayerId);
+      console.log(
+        `Creating peer connection with ${remotePlayerId} (${polite ? "polite" : "impolite"})`
+      );
+
       const pc = new RTCPeerConnection(ICE_SERVERS);
+      const peerConn: PeerConnection = {
+        connection: pc,
+        makingOffer: false,
+        ignoreOffer: false,
+        isSettingRemoteAnswerPending: false,
+      };
+      peerConnectionsRef.current.set(remotePlayerId, peerConn);
 
       // Add local audio tracks
       localStreamRef.current.getTracks().forEach((track) => {
@@ -229,20 +234,25 @@ export function useWebRTC({
         pc.addTrack(track, localStreamRef.current!);
       });
 
-      // Setup DataChannel (we initiate if we're creating the offer)
-      setupDataChannel(pc, remotePlayerId, true);
+      // Create data channel only if we're the impolite peer (to avoid duplicates)
+      if (!polite) {
+        const dataChannel = pc.createDataChannel("game-data");
+        console.log(`[DataChannel] Created for peer: ${remotePlayerId}`);
+        setupDataChannelListeners(dataChannel, remotePlayerId);
+        peerConn.dataChannel = dataChannel;
+      }
+
+      // Handle incoming data channel (polite peer)
+      pc.ondatachannel = (event) => {
+        console.log(`[DataChannel] Received from peer: ${remotePlayerId}`);
+        peerConn.dataChannel = event.channel;
+        setupDataChannelListeners(event.channel, remotePlayerId);
+      };
 
       // Handle incoming remote stream
       pc.ontrack = async (event) => {
         console.log(`Received remote track from: ${remotePlayerId}`);
         const [remoteStream] = event.streams;
-
-        const peerConn = peerConnectionsRef.current.get(remotePlayerId);
-        if (!peerConn) {
-          console.warn("No peer connection found for ontrack event");
-          return;
-        }
-
         peerConn.stream = remoteStream;
 
         // Create and attach audio element
@@ -263,13 +273,15 @@ export function useWebRTC({
           console.log(`Audio playing for: ${remotePlayerId}`);
         } catch (err: unknown) {
           const error = err as Error & { name?: string };
-          const errorMessage = error instanceof Error ? error.message : "Unknown error";
+          const errorMessage =
+            error instanceof Error ? error.message : "Unknown error";
           console.warn("Audio play failed:", errorMessage);
-          // Setup retry on user interaction if needed
           if (error && error.name === "NotAllowedError") {
-            setAudioError(t("voiceChat.audioPlaybackFailed", { player: remotePlayerId }) || 
-              "Audio playback blocked. Click anywhere to enable.");
-            
+            setAudioError(
+              t("voiceChat.audioPlaybackFailed", { player: remotePlayerId }) ||
+                "Audio playback blocked. Click anywhere to enable."
+            );
+
             const playOnInteraction = async () => {
               try {
                 await audioElement.play();
@@ -280,19 +292,34 @@ export function useWebRTC({
                 console.error("Still failed after user interaction:", e);
               }
             };
-            
-            document.addEventListener("click", playOnInteraction, { once: true });
-            document.addEventListener("keydown", playOnInteraction, { once: true });
+
+            document.addEventListener("click", playOnInteraction, {
+              once: true,
+            });
+            document.addEventListener("keydown", playOnInteraction, {
+              once: true,
+            });
           }
         }
       };
 
-      // Handle negotiation
+      // Perfect negotiation pattern
       pc.onnegotiationneeded = async () => {
-        if (!isNegotiatingRef.current.get(remotePlayerId) && pc.signalingState === "stable") {
-          if (createOfferRef.current) {
-            await createOfferRef.current(remotePlayerId);
-          }
+        try {
+          peerConn.makingOffer = true;
+          await pc.setLocalDescription();
+          sendMessage({
+            type: "RTC_OFFER",
+            payload: {
+              targetPlayerId: remotePlayerId,
+              signal: pc.localDescription,
+            },
+          });
+          console.log(`Offer sent to: ${remotePlayerId}`);
+        } catch (err) {
+          console.error("Error during negotiation:", err);
+        } finally {
+          peerConn.makingOffer = false;
         }
       };
 
@@ -311,95 +338,31 @@ export function useWebRTC({
 
       // Handle connection state changes
       pc.onconnectionstatechange = () => {
-        console.log(`Connection state with ${remotePlayerId}:`, pc.connectionState);
-        if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
-          console.log(`Attempting to reconnect to ${remotePlayerId}`);
-          setTimeout(() => {
-            if (pc.connectionState !== "connected" && createOfferRef.current) {
-              createOfferRef.current(remotePlayerId);
-            }
-          }, 3000);
+        console.log(
+          `Connection state with ${remotePlayerId}:`,
+          pc.connectionState
+        );
+        if (pc.connectionState === "failed") {
+          console.error(`Connection failed with ${remotePlayerId}`);
+          // Optionally trigger reconnection
+          pc.restartIce();
         }
       };
 
-      peerConnectionsRef.current.set(remotePlayerId, { connection: pc });
       return pc;
     },
-    [sendMessage, mutedPlayers, setupAudioAnalysis, setupDataChannel, t]
+    [
+      localPlayerId,
+      sendMessage,
+      mutedPlayers,
+      setupAudioAnalysis,
+      setupDataChannelListeners,
+      t,
+    ]
   );
 
   /**
-   * Create and send offer to remote player
-   */
-  const createOffer = useCallback(
-    async (remotePlayerId: string) => {
-      if (!localStreamRef.current) {
-        console.error("Cannot create offer - no local stream");
-        return;
-      }
-
-      if (isNegotiatingRef.current.get(remotePlayerId)) {
-        console.log("Already negotiating with:", remotePlayerId);
-        return;
-      }
-
-      let peerData = peerConnectionsRef.current.get(remotePlayerId);
-      if (!peerData && createPeerConnectionRef.current) {
-        console.log("Creating new peer connection for:", remotePlayerId);
-        try {
-          createPeerConnectionRef.current(remotePlayerId);
-          peerData = peerConnectionsRef.current.get(remotePlayerId);
-        } catch (error) {
-          console.error("Failed to create peer connection:", error);
-          return;
-        }
-      }
-
-      if (!peerData) {
-        console.error("No peer connection available for:", remotePlayerId);
-        return;
-      }
-
-      const pc = peerData.connection;
-      if (pc.signalingState !== "stable") {
-        console.log("Cannot create offer, signaling state:", pc.signalingState);
-        return;
-      }
-
-      isNegotiatingRef.current.set(remotePlayerId, true);
-
-      try {
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-
-        sendMessage({
-          type: "RTC_OFFER",
-          payload: {
-            targetPlayerId: remotePlayerId,
-            signal: offer,
-          },
-        });
-
-        console.log("Offer sent to:", remotePlayerId);
-      } catch (error) {
-        console.error("Error creating offer:", error);
-        isNegotiatingRef.current.set(remotePlayerId, false);
-      }
-    },
-    [sendMessage]
-  );
-
-  // Update refs
-  useEffect(() => {
-    createOfferRef.current = createOffer;
-  }, [createOffer]);
-
-  useEffect(() => {
-    createPeerConnectionRef.current = createPeerConnection;
-  }, [createPeerConnection]);
-
-  /**
-   * Handle incoming WebRTC offer
+   * Handle incoming WebRTC offer (perfect negotiation)
    */
   const handleOffer = useCallback(
     async (fromPlayerId: string, offer: RTCSessionDescriptionInit) => {
@@ -408,30 +371,39 @@ export function useWebRTC({
         return;
       }
 
-      let pc = peerConnectionsRef.current.get(fromPlayerId)?.connection;
-
-      // Recreate connection if in wrong state
-      if (pc && pc.signalingState !== "stable") {
-        console.log("Closing existing connection in state:", pc.signalingState);
-        pc.close();
-        isNegotiatingRef.current.set(fromPlayerId, false);
-        if (createPeerConnectionRef.current) {
-          pc = createPeerConnectionRef.current(fromPlayerId);
-        }
-      } else if (!pc && createPeerConnectionRef.current) {
-        pc = createPeerConnectionRef.current(fromPlayerId);
+      let peerConn = peerConnectionsRef.current.get(fromPlayerId);
+      if (!peerConn) {
+        createPeerConnection(fromPlayerId);
+        peerConn = peerConnectionsRef.current.get(fromPlayerId);
       }
 
-      if (!pc) {
+      if (!peerConn) {
         console.error("Failed to get peer connection for:", fromPlayerId);
         return;
       }
 
+      const pc = peerConn.connection;
+      const polite = isPolite(localPlayerId, fromPlayerId);
+
+      // Perfect negotiation: handle offer collision
+      const offerCollision =
+        pc.signalingState !== "stable" || peerConn.makingOffer;
+
+      peerConn.ignoreOffer = !polite && offerCollision;
+
+      if (peerConn.ignoreOffer) {
+        console.log(
+          `Ignoring offer from ${fromPlayerId} (collision, we're impolite)`
+        );
+        return;
+      }
+
       try {
-        await pc.setRemoteDescription(new RTCSessionDescription(offer));
+        await pc.setRemoteDescription(offer);
 
         // Add pending ICE candidates
-        const pendingCandidates = pendingCandidatesRef.current.get(fromPlayerId) || [];
+        const pendingCandidates =
+          pendingCandidatesRef.current.get(fromPlayerId) || [];
         for (const candidate of pendingCandidates) {
           try {
             await pc.addIceCandidate(candidate);
@@ -442,14 +414,12 @@ export function useWebRTC({
         pendingCandidatesRef.current.delete(fromPlayerId);
 
         // Create and send answer
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-
+        await pc.setLocalDescription();
         sendMessage({
           type: "RTC_ANSWER",
           payload: {
             targetPlayerId: fromPlayerId,
-            signal: answer,
+            signal: pc.localDescription,
           },
         });
 
@@ -458,7 +428,7 @@ export function useWebRTC({
         console.error("Error handling offer:", error);
       }
     },
-    [sendMessage, isVoiceEnabled]
+    [localPlayerId, isVoiceEnabled, createPeerConnection, sendMessage]
   );
 
   /**
@@ -467,23 +437,30 @@ export function useWebRTC({
   const handleAnswer = useCallback(
     async (fromPlayerId: string, answer: RTCSessionDescriptionInit) => {
       const peerConn = peerConnectionsRef.current.get(fromPlayerId);
-      if (!peerConn) return;
+      if (!peerConn) {
+        console.warn("No peer connection found for answer from:", fromPlayerId);
+        return;
+      }
+
+      const pc = peerConn.connection;
 
       try {
-        await peerConn.connection.setRemoteDescription(new RTCSessionDescription(answer));
-        isNegotiatingRef.current.set(fromPlayerId, false);
+        peerConn.isSettingRemoteAnswerPending = true;
+        await pc.setRemoteDescription(answer);
 
         // Add pending ICE candidates
-        const pendingCandidates = pendingCandidatesRef.current.get(fromPlayerId) || [];
+        const pendingCandidates =
+          pendingCandidatesRef.current.get(fromPlayerId) || [];
         for (const candidate of pendingCandidates) {
-          await peerConn.connection.addIceCandidate(candidate);
+          await pc.addIceCandidate(candidate);
         }
         pendingCandidatesRef.current.delete(fromPlayerId);
 
         console.log("Answer processed from:", fromPlayerId);
       } catch (error) {
         console.error("Error handling answer:", error);
-        isNegotiatingRef.current.set(fromPlayerId, false);
+      } finally {
+        peerConn.isSettingRemoteAnswerPending = false;
       }
     },
     []
@@ -496,8 +473,8 @@ export function useWebRTC({
     async (fromPlayerId: string, candidate: RTCIceCandidateInit) => {
       const peerConn = peerConnectionsRef.current.get(fromPlayerId);
 
-      if (!peerConn) {
-        // Store for later if peer connection doesn't exist
+      if (!peerConn || !peerConn.connection.remoteDescription) {
+        // Store for later if peer connection doesn't exist or remote description not set
         const pending = pendingCandidatesRef.current.get(fromPlayerId) || [];
         pending.push(new RTCIceCandidate(candidate));
         pendingCandidatesRef.current.set(fromPlayerId, pending);
@@ -506,15 +483,10 @@ export function useWebRTC({
       }
 
       try {
-        if (peerConn.connection.remoteDescription && peerConn.connection.signalingState !== "closed") {
-          await peerConn.connection.addIceCandidate(new RTCIceCandidate(candidate));
-          console.log("Added ICE candidate from:", fromPlayerId);
-        } else {
-          // Store for later
-          const pending = pendingCandidatesRef.current.get(fromPlayerId) || [];
-          pending.push(new RTCIceCandidate(candidate));
-          pendingCandidatesRef.current.set(fromPlayerId, pending);
-        }
+        await peerConn.connection.addIceCandidate(
+          new RTCIceCandidate(candidate)
+        );
+        console.log("Added ICE candidate from:", fromPlayerId);
       } catch (error) {
         console.error("Error adding ICE candidate:", error);
       }
@@ -534,32 +506,27 @@ export function useWebRTC({
     localStreamRef.current = stream;
     setIsVoiceEnabled(true);
 
-    // Wait for WebSocket to be ready
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
     // Get other players (not self, not bots, connected only)
     const otherPlayers = players.filter(
       (p) => p.id !== localPlayerId && !p.isBot && p.isConnected
     );
 
-    // Create peer connections
+    console.log(`Creating connections for ${otherPlayers.length} players`);
+
+    // Create peer connections for all other players
     otherPlayers.forEach((player) => {
       if (!peerConnectionsRef.current.has(player.id)) {
-        console.log("Pre-creating peer connection for:", player.id);
-        if (createPeerConnectionRef.current) {
-          createPeerConnectionRef.current(player.id);
-        }
+        console.log("Creating peer connection for:", player.id);
+        createPeerConnection(player.id);
       }
     });
-
-    // Small delay then create offers
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    for (const player of otherPlayers) {
-      console.log("Creating offer for:", player.id);
-      await createOffer(player.id);
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-  }, [isVoiceEnabled, initializeAudio, players, localPlayerId, createOffer]);
+  }, [
+    isVoiceEnabled,
+    initializeAudio,
+    players,
+    localPlayerId,
+    createPeerConnection,
+  ]);
 
   /**
    * Disable voice chat - cleanup all connections
@@ -572,7 +539,9 @@ export function useWebRTC({
     }
 
     // Cleanup audio analysis
-    animationFramesRef.current.forEach((frameId) => cancelAnimationFrame(frameId));
+    animationFramesRef.current.forEach((frameId) =>
+      cancelAnimationFrame(frameId)
+    );
     animationFramesRef.current.clear();
 
     audioContextsRef.current.forEach((ctx) => {
@@ -599,7 +568,6 @@ export function useWebRTC({
     });
     peerConnectionsRef.current.clear();
     pendingCandidatesRef.current.clear();
-    isNegotiatingRef.current.clear();
 
     setIsVoiceEnabled(false);
     setIsMuted(false);
@@ -731,16 +699,19 @@ export function useWebRTC({
       }
     });
 
-    const unregisterPlayerKicked = registerHandler("player-kicked", (message) => {
-      if (message.type === "PLAYER_KICKED") {
-        const { playerId } = message.payload;
-        if (playerId === localPlayerId) {
-          disableVoiceChat();
-          toast.error(t("voiceChat.kickedByHost"));
-          navigate("/");
+    const unregisterPlayerKicked = registerHandler(
+      "player-kicked",
+      (message) => {
+        if (message.type === "PLAYER_KICKED") {
+          const { playerId } = message.payload;
+          if (playerId === localPlayerId) {
+            disableVoiceChat();
+            toast.error(t("voiceChat.kickedByHost"));
+            navigate("/");
+          }
         }
       }
-    });
+    );
 
     return () => {
       unregisterOffer();
@@ -773,7 +744,8 @@ export function useWebRTC({
     // Create connections for new players
     activePlayers.forEach((player) => {
       if (!currentPeerIds.has(player.id)) {
-        createOffer(player.id);
+        console.log("New player joined, creating connection:", player.id);
+        createPeerConnection(player.id);
       }
     });
 
@@ -781,13 +753,16 @@ export function useWebRTC({
     currentPeerIds.forEach((peerId) => {
       const playerExists = activePlayers.some((p) => p.id === peerId);
       if (!playerExists) {
+        console.log("Player left, cleaning up connection:", peerId);
         const peerConn = peerConnectionsRef.current.get(peerId);
         if (peerConn) {
           if (peerConn.audioElement) {
             peerConn.audioElement.pause();
             peerConn.audioElement.srcObject = null;
             if (peerConn.audioElement.parentNode) {
-              peerConn.audioElement.parentNode.removeChild(peerConn.audioElement);
+              peerConn.audioElement.parentNode.removeChild(
+                peerConn.audioElement
+              );
             }
           }
           if (peerConn.dataChannel) {
@@ -818,7 +793,7 @@ export function useWebRTC({
         });
       }
     });
-  }, [players, localPlayerId, isVoiceEnabled, createOffer]);
+  }, [players, localPlayerId, isVoiceEnabled, createPeerConnection]);
 
   return {
     // Voice state
