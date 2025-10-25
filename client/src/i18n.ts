@@ -41,8 +41,8 @@ const resources = {
       ...roomEN,
       ...homeEN,
       ...botEN,
+      ...authEN,
     },
-    auth: authEN,
   },
   fr: {
     translation: {
@@ -52,8 +52,8 @@ const resources = {
       ...roomFR,
       ...homeFR,
       ...botFR,
+      ...authFR,
     },
-    auth: authFR,
   },
   ar: {
     translation: {
@@ -63,8 +63,8 @@ const resources = {
       ...roomAR,
       ...homeAR,
       ...botAR,
+      ...authAR,
     },
-    auth: authAR,
   },
 };
 
