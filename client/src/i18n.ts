@@ -27,6 +27,10 @@ import homeAR from "./locales/ar/home.json";
 import botEN from "./locales/en/bot.json";
 import botFR from "./locales/fr/bot.json";
 import botAR from "./locales/ar/bot.json";
+// Import auth translation files
+import authEN from "./locales/en/auth.json";
+import authFR from "./locales/fr/auth.json";
+import authAR from "./locales/ar/auth.json";
 
 const resources = {
   en: {
@@ -38,6 +42,7 @@ const resources = {
       ...homeEN,
       ...botEN,
     },
+    auth: authEN,
   },
   fr: {
     translation: {
@@ -48,6 +53,7 @@ const resources = {
       ...homeFR,
       ...botFR,
     },
+    auth: authFR,
   },
   ar: {
     translation: {
@@ -58,6 +64,7 @@ const resources = {
       ...homeAR,
       ...botAR,
     },
+    auth: authAR,
   },
 };
 
