@@ -10,7 +10,10 @@ A real-time multiplayer card game platform that brings the classic Tunisian bluf
 
 > **🌐 Live Application**: https://chater-marzougui.me/Tekthib/
 > 
-> **📚 Documentation**: See [SYSTEM_OPTIMIZATION.md](./SYSTEM_OPTIMIZATION.md) and [MIGRATION_PLAN.md](./MIGRATION_PLAN.md) for technical details
+> **📚 Documentation**: 
+> - [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) - Database and authentication setup
+> - [SYSTEM_OPTIMIZATION.md](./SYSTEM_OPTIMIZATION.md) - Performance optimization
+> - [MIGRATION_PLAN.md](./MIGRATION_PLAN.md) - WebRTC migration plan
 
 ### 🎯 Quick Rules
 - **Goal**: Be the first to get rid of all your cards. Last player with cards loses
@@ -33,11 +36,13 @@ A real-time multiplayer card game platform that brings the classic Tunisian bluf
 - **Voice Chat**: P2P WebRTC audio with host controls (kick, mute) and personal mute
 - **Admin Dashboard**: Real-time monitoring of rooms, players, and game states
 - **Responsive UI**: Dark/light themes, custom animations, mobile-friendly
+- **Database Backend**: Supabase integration for user authentication and game history
 
 ### 🚧 Future Enhancements
+- Link game history to authenticated users
+- Leaderboards and player rankings
 - Spectator mode and game replay
-- Persistent user accounts and statistics
-- Tournament system with leaderboards
+- Tournament system
 - Custom game modes and rule variations
 - Enhanced mobile app experience
 
@@ -55,6 +60,8 @@ A real-time multiplayer card game platform that brings the classic Tunisian bluf
 - **WebSocket**: ws library
 - **Game Logic**: Server-authoritative GameEngine
 - **AI**: Bot players with personalities and learning (40+ chat messages)
+- **Database**: Supabase (PostgreSQL) for authentication and game history
+- **Authentication**: JWT tokens with refresh capability (1-week expiry)
 - **Deployment**: Heroku with Procfile
 
 ### Architecture
@@ -134,12 +141,20 @@ Create `server/.env`:
 PORT=3001
 NODE_ENV=development
 CORS_ORIGIN=http://localhost:5173
+
+# Optional: Supabase for authentication and game history
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_KEY=your-service-role-key-here
+JWT_SECRET=your-secret-key-here
 ```
 
 Create `client/.env`:
 ```env
 VITE_WS_URL=ws://localhost:3001
+VITE_API_URL=http://localhost:3001
 ```
+
+> **Note**: Supabase configuration is optional. The game works without it, but you won't have user authentication or game history tracking. See [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) for detailed setup instructions.
 
 4. **Start Development Servers**
 ```bash
