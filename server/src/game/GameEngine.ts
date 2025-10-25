@@ -36,6 +36,7 @@ export class GameEngine {
   private turnStartTime: number = 0;
   private autoPlayCallback?: (playerId: string, cardIds: string[], claimedRank: Rank) => void;
   private processingChallenge: boolean = false;
+  private gameEndCallback?: () => void;
 
   constructor(players: Map<string, PlayerWithHand>, autoPlayTimeout: number = 0) {
     this.players = players;
@@ -71,6 +72,13 @@ export class GameEngine {
    */
   setAutoPlayCallback(callback: (playerId: string, cardIds: string[], claimedRank: Rank) => void): void {
     this.autoPlayCallback = callback;
+  }
+
+  /**
+   * Set callback for game end events
+   */
+  setGameEndCallback(callback: () => void): void {
+    this.gameEndCallback = callback;
   }
 
   /**
@@ -257,6 +265,10 @@ export class GameEngine {
     if (remainingPlayers.length === 1) {
       this.gameState.loser = remainingPlayers[0];
       this.gameState.phase = 'ended';
+      // Trigger game end callback
+      if (this.gameEndCallback) {
+        this.gameEndCallback();
+      }
       return { success: true, newRank: claimedRank };
     }
 
@@ -499,6 +511,11 @@ export class GameEngine {
           this.gameState.playerOrder.find(
             (id) => !this.gameState.winners.includes(id),
           ) || null;
+
+        // Trigger game end callback
+        if (this.gameEndCallback) {
+          this.gameEndCallback();
+        }
 
         return;
       }

@@ -1,10 +1,13 @@
 import { Room } from '../types';
 import { PlayerWithHand, BotPersonality } from 'shared';
 import { GameEngine } from '../game/GameEngine';
+import { gameHistoryService } from '../services/gameHistoryService';
+import config from '../config/config';
 
 class RoomManager {
   private readonly rooms: Map<string, Room> = new Map();
   private readonly gameEngines: Map<string, GameEngine> = new Map();
+  private readonly gameStartTimes: Map<string, Date> = new Map();
 
   // Pool of bot names that don't reveal personality
   private readonly botNames: string[] = [
@@ -323,6 +326,16 @@ class RoomManager {
       gameEngine.setBotChatCallback(botChatCallback);
     }
 
+    // Set up game end callback to save history
+    gameEngine.setGameEndCallback(() => {
+      this.saveGameHistory(roomId).catch((error) => {
+        console.error('Failed to save game history:', error);
+      });
+    });
+
+    // Track game start time
+    this.gameStartTimes.set(roomId, new Date());
+
     this.gameEngines.set(roomId, gameEngine);
     room.gameState = gameEngine.getGameState();
     room.gameState.phase = 'playing';
@@ -351,8 +364,9 @@ class RoomManager {
       player.hand = [];
     });
 
-    // Clear game engine and state
+    // Clear game engine, state, and start time
     this.gameEngines.delete(roomId);
+    this.gameStartTimes.delete(roomId);
     room.gameState = null;
 
     return { success: true, room };
@@ -471,6 +485,96 @@ class RoomManager {
       ),
       rooms,
     };
+  }
+
+  /**
+   * Save game history to database when game ends
+   * Only saves if Supabase is configured
+   */
+  async saveGameHistory(roomId: string): Promise<void> {
+    // Check if Supabase is configured
+    if (!config.supabase.url || !config.supabase.serviceKey) {
+      console.log('Supabase not configured, skipping game history save');
+      return;
+    }
+
+    const room = this.rooms.get(roomId);
+    const gameEngine = this.gameEngines.get(roomId);
+    const startTime = this.gameStartTimes.get(roomId);
+
+    if (!room || !gameEngine || !startTime) {
+      console.error('Cannot save game history: room, game engine, or start time not found');
+      return;
+    }
+
+    const gameState = gameEngine.getGameState();
+    if (gameState.phase !== 'ended') {
+      console.error('Cannot save game history: game has not ended');
+      return;
+    }
+
+    try {
+      const endTime = new Date();
+      const participants = Array.from(room.players.entries()).map(([playerId, player], index) => {
+        const stats = gameState.playerStats.get(playerId);
+        const isWinner = gameState.winners.includes(playerId);
+        const isLoser = gameState.loser === playerId;
+
+        // Calculate stats from PlayerStats interface
+        const bluffsMade = (stats?.timesBluffedSuccessfully || 0) + (stats?.timesCaughtBluffing || 0);
+        const successfulBluffs = stats?.timesBluffedSuccessfully || 0;
+        const challengesMade = (stats?.timesCaughtBluffing || 0) + (stats?.timesFalselyAccused || 0);
+        const successfulChallenges = stats?.timesCaughtBluffing || 0;
+        const failedChallenges = stats?.timesFalselyAccused || 0;
+        const cardsPlayed = (stats?.timesToldTruth || 0) + bluffsMade;
+
+        return {
+          userId: undefined, // TODO: Link to user when authentication is used
+          playerName: player.name,
+          finalPosition: isWinner ? gameState.winners.indexOf(playerId) + 1 : 
+                        isLoser ? room.players.size : index + 1,
+          cardsPlayed,
+          bluffsMade,
+          successfulBluffs,
+          challengesMade,
+          successfulChallenges,
+          failedChallenges,
+          isWinner,
+          isLoser,
+          isBot: player.isBot || false,
+        };
+      });
+
+      // Calculate total challenges from player stats
+      const totalChallenges = Array.from(gameState.playerStats.values()).reduce(
+        (sum, stats) => sum + ((stats?.timesCaughtBluffing || 0) + (stats?.timesFalselyAccused || 0)),
+        0,
+      );
+
+      await gameHistoryService.saveGame(
+        {
+          roomCode: room.code,
+          startedAt: startTime,
+          endedAt: endTime,
+          winnerUserId: undefined, // TODO: Link to user when authentication is used
+          loserUserId: undefined, // TODO: Link to user when authentication is used
+          totalPlayers: room.players.size,
+          totalRounds: 0, // We don't track rounds currently
+          totalChallenges,
+          gameSettings: {
+            maxPlayers: room.maxPlayers,
+            autoPlayTimeout: room.autoPlayTimeout,
+            challengeSuspenseEnabled: room.challengeSuspenseEnabled,
+          },
+        },
+        participants,
+        [], // Events - we'll add these in future iterations
+      );
+
+      console.log(`Game history saved for room ${room.code}`);
+    } catch (error) {
+      console.error('Error saving game history:', error);
+    }
   }
 }
 

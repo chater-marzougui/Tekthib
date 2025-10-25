@@ -14,9 +14,11 @@ import { SidebarMenu, SidebarMenuItem } from "@/components/ui/sidebar";
 import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/context/ThemeProvider";
+import { useAuth } from "@/context/AuthContext";
 import { useAvatar } from "@/hooks/useAvatar";
 import { useSound } from "@/hooks/useSound";
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 const countryOptions = [
   {
@@ -87,6 +89,8 @@ export function NavUser() {
   const { theme, setTheme } = useTheme();
   const { t, i18n } = useTranslation();
   const { soundEffectsEnabled, toggleSoundEffects } = useSound();
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
   const playerId = localStorage.getItem("clientId");
   const randomStr = Math.random().toString(36).substring(2, 15);
   const [isFullscreen, setIsFullscreen] = React.useState(false);
@@ -274,6 +278,42 @@ export function NavUser() {
               sideOffset={4}
             >
               <DropdownMenuGroup>
+                {isAuthenticated && user ? (
+                  <>
+                    <div className="px-2 py-1.5 text-sm font-semibold">
+                      {user.display_name || user.username}
+                    </div>
+                    <DropdownMenuSeparator />
+                  </>
+                ) : null}
+
+                {!isAuthenticated ? (
+                  <>
+                    <DropdownMenuItem
+                      onClick={() => navigate("/auth")}
+                      className="cursor-pointer"
+                    >
+                      <Icon icon="mdi:login" className="mr-2 h-4 w-4" />
+                      <span>{t("auth.login")}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                ) : (
+                  <>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        logout();
+                        navigate("/");
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <Icon icon="mdi:logout" className="mr-2 h-4 w-4" />
+                      <span>{t("auth.logout")}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+
                 <RenderDropdownItem
                   key={t("nav.toggleDarkMode")}
                   title={t("nav.toggleDarkMode")}
