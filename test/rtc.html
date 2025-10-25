@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebRTC Monitor</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #1a1a1a;
+        color: #fff;
+      }
+      h1 {
+        text-align: center;
+        color: #4caf50;
+      }
+      .controls {
+        background: #2a2a2a;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+      button {
+        background: #4caf50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        margin: 5px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      button:hover {
+        background: #45a049;
+      }
+      button:disabled {
+        background: #666;
+        cursor: not-allowed;
+      }
+      .status {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+      .status-card {
+        background: #2a2a2a;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 4px solid #4caf50;
+      }
+      .status-card.error {
+        border-left-color: #f44336;
+      }
+      .status-card.warning {
+        border-left-color: #ff9800;
+      }
+      .status-card h3 {
+        margin: 0 0 10px 0;
+        color: #4caf50;
+      }
+      .status-card.error h3 {
+        color: #f44336;
+      }
+      .status-card.warning h3 {
+        color: #ff9800;
+      }
+      .logs {
+        background: #2a2a2a;
+        padding: 15px;
+        border-radius: 8px;
+        max-height: 400px;
+        overflow-y: auto;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+      }
+      .log-entry {
+        margin: 5px 0;
+        padding: 5px;
+        border-radius: 3px;
+      }
+      .log-info {
+        color: #64b5f6;
+      }
+      .log-success {
+        color: #81c784;
+      }
+      .log-warning {
+        color: #ffb74d;
+      }
+      .log-error {
+        color: #e57373;
+      }
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .metric {
+        background: #333;
+        padding: 10px;
+        border-radius: 4px;
+        text-align: center;
+      }
+      .metric-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #4caf50;
+      }
+      .metric-label {
+        font-size: 12px;
+        color: #888;
+        margin-top: 5px;
+      }
+      input {
+        padding: 8px;
+        border: 1px solid #444;
+        border-radius: 4px;
+        background: #333;
+        color: #fff;
+        margin: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🔊 WebRTC Voice Chat Monitor</h1>
+
+    <div class="controls">
+      <h3>Connection Controls</h3>
+      <label
+        >Room Code:
+        <input
+          type="text"
+          id="roomCode"
+          placeholder="Enter room code"
+          value="TEST123"
+      /></label>
+      <label
+        >Player Name:
+        <input type="text" id="playerName" placeholder="Your name" value=""
+      /></label>
+      <br />
+      <button onclick="connectToRoom()">Connect to Room</button>
+      <button onclick="enableVoice()" id="voiceBtn" disabled>
+        Enable Voice Chat
+      </button>
+      <button onclick="clearLogs()">Clear Logs</button>
+      <button onclick="exportDiagnostics()">Export Diagnostics</button>
+    </div>
+
+    <div class="status">
+      <div class="status-card" id="wsStatus">
+        <h3>WebSocket Status</h3>
+        <p id="wsState">Disconnected</p>
+        <small id="wsDetails"></small>
+      </div>
+      <div class="status-card" id="voiceStatus">
+        <h3>Voice Chat Status</h3>
+        <p id="voiceState">Inactive</p>
+        <small id="voiceDetails"></small>
+      </div>
+      <div class="status-card" id="peersStatus">
+        <h3>Peer Connections</h3>
+        <p id="peersCount">0 active</p>
+        <small id="peersDetails"></small>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-value" id="offersCount">0</div>
+        <div class="metric-label">Offers Sent</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" id="answersCount">0</div>
+        <div class="metric-label">Answers Sent</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" id="iceCount">0</div>
+        <div class="metric-label">ICE Candidates</div>
+      </div>
+      <div class="metric">
+        <div class="metric-value" id="errorsCount">0</div>
+        <div class="metric-label">Errors</div>
+      </div>
+    </div>
+
+    <h3>Connection Logs</h3>
+    <div class="logs" id="logs"></div>
+
+    <script>
+      // State
+      let ws = null;
+      let localStream = null;
+      let peerConnections = new Map();
+      let localPlayerId = localStorage.getItem("clientId") || null;
+      let roomId = null;
+      let isVoiceEnabled = false;
+
+      // Metrics
+      let metrics = {
+        offers: 0,
+        answers: 0,
+        ice: 0,
+        errors: 0,
+      };
+
+      // Generate random player name
+      document.getElementById("playerName").value =
+        "Player_" + Math.random().toString(36).substr(2, 5);
+
+      // Logging
+      function log(message, type = "info") {
+        const logsDiv = document.getElementById("logs");
+        const entry = document.createElement("div");
+        entry.className = `log-entry log-${type}`;
+        const timestamp = new Date().toLocaleTimeString();
+        entry.textContent = `[${timestamp}] ${message}`;
+        logsDiv.appendChild(entry);
+        logsDiv.scrollTop = logsDiv.scrollHeight;
+
+        console.log(`[${type.toUpperCase()}]`, message);
+
+        if (type === "error") {
+          metrics.errors++;
+          updateMetrics();
+        }
+      }
+
+      function clearLogs() {
+        document.getElementById("logs").innerHTML = "";
+      }
+
+      function updateMetrics() {
+        document.getElementById("offersCount").textContent = metrics.offers;
+        document.getElementById("answersCount").textContent = metrics.answers;
+        document.getElementById("iceCount").textContent = metrics.ice;
+        document.getElementById("errorsCount").textContent = metrics.errors;
+      }
+
+      function updateStatus(cardId, state, details, type = "normal") {
+        const card = document.getElementById(cardId);
+        card.className = `status-card ${type}`;
+        card.querySelector("p").textContent = state;
+        card.querySelector("small").textContent = details;
+      }
+
+      // WebSocket Connection
+      function connectToRoom() {
+        const code = document.getElementById("roomCode").value;
+        const name = document.getElementById("playerName").value;
+
+        if (!code || !name) {
+          log("Please enter room code and name", "error");
+          return;
+        }
+
+        roomId = code;
+
+        // Replace with your WebSocket URL
+        const wsUrl = "wss://takthib-a00f145250bc.herokuapp.com"; // or your production URL
+
+        log(`Connecting to ${wsUrl}...`, "info");
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          log("WebSocket connected", "success");
+          updateStatus(
+            "wsStatus",
+            "Connected",
+            "Connection established",
+            "normal"
+          );
+
+          // Send connect message
+          ws.send(
+            JSON.stringify({
+              type: "CONNECT",
+              payload: { clientId: localPlayerId },
+            })
+          );
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const message = JSON.parse(event.data);
+            handleMessage(message);
+          } catch (error) {
+            log(`Failed to parse message: ${error.message}`, "error");
+          }
+        };
+
+        ws.onerror = (error) => {
+          log(`WebSocket error: ${error}`, "error");
+          updateStatus("wsStatus", "Error", "Connection failed", "error");
+        };
+
+        ws.onclose = () => {
+          log("WebSocket disconnected", "warning");
+          updateStatus(
+            "wsStatus",
+            "Disconnected",
+            "Connection closed",
+            "warning"
+          );
+        };
+      }
+
+      function handleMessage(message) {
+        log(`Received: ${message.type}`, "info");
+
+        switch (message.type) {
+          case "CONNECTED":
+            localPlayerId = message.payload.clientId;
+            localStorage.setItem("clientId", localPlayerId);
+            log(`Client ID: ${localPlayerId}`, "success");
+
+            // Join room
+            sendMessage({
+              type: "JOIN_ROOM",
+              payload: {
+                roomCode: roomId,
+                playerName: document.getElementById("playerName").value,
+              },
+            });
+            break;
+
+          case "ROOM_JOINED":
+          case "ROOM_CREATED":
+            log(`Joined room: ${message.payload.room.code}`, "success");
+            document.getElementById("voiceBtn").disabled = false;
+            break;
+
+          case "RTC_OFFER":
+            handleOffer(message.payload);
+            break;
+
+          case "RTC_ANSWER":
+            handleAnswer(message.payload);
+            break;
+
+          case "RTC_ICE_CANDIDATE":
+            handleIceCandidate(message.payload);
+            break;
+
+          case "ERROR":
+            log(`Error: ${message.payload.message}`, "error");
+            break;
+        }
+      }
+
+      function sendMessage(message) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify(message));
+        } else {
+          log("WebSocket not connected", "error");
+        }
+      }
+
+      // Voice Chat
+      async function enableVoice() {
+        if (isVoiceEnabled) {
+          disableVoice();
+          return;
+        }
+
+        try {
+          log("Requesting microphone access...", "info");
+          localStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+            },
+          });
+
+          log("Microphone access granted", "success");
+          isVoiceEnabled = true;
+          document.getElementById("voiceBtn").textContent =
+            "Disable Voice Chat";
+          updateStatus("voiceStatus", "Active", "Microphone enabled", "normal");
+
+          // Note: In real app, you'd get player list from server
+          log("Voice chat enabled. Waiting for peers...", "info");
+        } catch (error) {
+          log(`Microphone error: ${error.message}`, "error");
+          updateStatus("voiceStatus", "Error", error.message, "error");
+        }
+      }
+
+      function disableVoice() {
+        if (localStream) {
+          for (const track of localStream.getTracks()) {
+            track.stop();
+          }
+          localStream = null;
+        }
+        
+        for (const pc of peerConnections.values()) {
+          pc.close();
+        }
+
+        peerConnections.clear();
+
+        isVoiceEnabled = false;
+        document.getElementById("voiceBtn").textContent = "Enable Voice Chat";
+        updateStatus(
+          "voiceStatus",
+          "Inactive",
+          "Voice chat disabled",
+          "normal"
+        );
+        updatePeerStatus();
+        log("Voice chat disabled", "info");
+      }
+
+      function getConnectionState(connectionState) {
+        switch (connectionState) {
+          case "connected":
+            return "success";
+          case "failed":
+            return "error";
+          default:
+            return "info";
+        }
+      }
+
+      // WebRTC Peer Connection
+      function createPeerConnection(remotePlayerId) {
+        log(`Creating peer connection with ${remotePlayerId}`, "info");
+
+        const pc = new RTCPeerConnection({
+          iceServers: [
+            { urls: "stun:stun.l.google.com:19302" },
+            { urls: "stun:stun1.l.google.com:19302" },
+          ],
+        });
+
+        // Add local tracks
+        if (localStream) {
+          for (const track of localStream.getTracks()) {
+            pc.addTrack(track, localStream);
+          }
+        }
+
+        // Handle negotiation
+        pc.onnegotiationneeded = async () => {
+          try {
+            log(`Negotiation needed with ${remotePlayerId}`, "info");
+            await pc.setLocalDescription();
+            sendMessage({
+              type: "RTC_OFFER",
+              payload: {
+                targetPlayerId: remotePlayerId,
+                signal: pc.localDescription,
+              },
+            });
+            metrics.offers++;
+            updateMetrics();
+            log(`Offer sent to ${remotePlayerId}`, "success");
+          } catch (error) {
+            log(`Negotiation error: ${error.message}`, "error");
+          }
+        };
+
+        // Handle ICE candidates
+        pc.onicecandidate = (event) => {
+          if (event.candidate) {
+            sendMessage({
+              type: "RTC_ICE_CANDIDATE",
+              payload: {
+                targetPlayerId: remotePlayerId,
+                signal: event.candidate,
+              },
+            });
+            metrics.ice++;
+            updateMetrics();
+          }
+        };
+
+        // Handle connection state
+        pc.onconnectionstatechange = () => {
+          log(
+            `Connection with ${remotePlayerId}: ${pc.connectionState}`,
+            getConnectionState(pc.connectionState)
+          );
+          updatePeerStatus();
+
+          if (pc.connectionState === "failed") {
+            log(
+              `Connection failed with ${remotePlayerId}, restarting ICE...`,
+              "warning"
+            );
+            pc.restartIce();
+          }
+        };
+
+        // Handle remote tracks
+        pc.ontrack = (event) => {
+          log(`Received remote track from ${remotePlayerId}`, "success");
+          const audio = new Audio();
+          audio.srcObject = event.streams[0];
+          audio.play();
+        };
+
+        peerConnections.set(remotePlayerId, pc);
+        updatePeerStatus();
+        return pc;
+      }
+
+      async function handleOffer(payload) {
+        const { fromPlayerId, signal } = payload;
+        log(`Received offer from ${fromPlayerId}`, "info");
+
+        let pc = peerConnections.get(fromPlayerId);
+        if (!pc) {
+          pc = createPeerConnection(fromPlayerId);
+        }
+
+        try {
+          await pc.setRemoteDescription(signal);
+          await pc.setLocalDescription();
+          sendMessage({
+            type: "RTC_ANSWER",
+            payload: {
+              targetPlayerId: fromPlayerId,
+              signal: pc.localDescription,
+            },
+          });
+          metrics.answers++;
+          updateMetrics();
+          log(`Answer sent to ${fromPlayerId}`, "success");
+        } catch (error) {
+          log(`Error handling offer: ${error.message}`, "error");
+        }
+      }
+
+      async function handleAnswer(payload) {
+        const { fromPlayerId, signal } = payload;
+        log(`Received answer from ${fromPlayerId}`, "success");
+
+        const pc = peerConnections.get(fromPlayerId);
+        if (!pc) {
+          log(`No peer connection found for ${fromPlayerId}`, "error");
+          return;
+        }
+
+        try {
+          await pc.setRemoteDescription(signal);
+          log(`Answer processed from ${fromPlayerId}`, "success");
+        } catch (error) {
+          log(`Error handling answer: ${error.message}`, "error");
+        }
+      }
+
+      async function handleIceCandidate(payload) {
+        const { fromPlayerId, signal } = payload;
+
+        const pc = peerConnections.get(fromPlayerId);
+        if (!pc) {
+          log(
+            `Received ICE candidate but no peer connection for ${fromPlayerId}`,
+            "warning"
+          );
+          return;
+        }
+
+        try {
+          await pc.addIceCandidate(signal);
+        } catch (error) {
+          log(`Error adding ICE candidate: ${error.message}`, "error");
+        }
+      }
+
+      function updatePeerStatus() {
+        const count = peerConnections.size;
+        const connected = Array.from(peerConnections.values()).filter(
+          (pc) => pc.connectionState === "connected"
+        ).length;
+
+        updateStatus(
+          "peersStatus",
+          `${connected}/${count} connected`,
+          `${count} total peer connections`,
+          connected === count && count > 0 ? "normal" : "warning"
+        );
+      }
+
+      function exportDiagnostics() {
+        const diagnostics = {
+          timestamp: new Date().toISOString(),
+          localPlayerId,
+          roomId,
+          metrics,
+          peers: Array.from(peerConnections.entries()).map(([id, pc]) => ({
+            peerId: id,
+            connectionState: pc.connectionState,
+            iceConnectionState: pc.iceConnectionState,
+            signalingState: pc.signalingState,
+          })),
+          logs: document.getElementById("logs").innerText,
+        };
+
+        const blob = new Blob([JSON.stringify(diagnostics, null, 2)], {
+          type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `webrtc-diagnostics-${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        log("Diagnostics exported", "success");
+      }
+    </script>
+  </body>
+</html>
