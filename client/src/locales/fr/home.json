@@ -40,5 +40,14 @@
     "invalidPassword": "Mot de passe invalide",
     "roomFull": "Salle pleine",
     "available": "Disponible"
+  },
+  "leaderboard": {
+    "title": "Classement",
+    "byWins": "Plus de Victoires",
+    "byWinRate": "Taux de Victoire",
+    "byGames": "Plus de Parties",
+    "wins": "victoires",
+    "games": "parties",
+    "noData": "Aucune donnée de classement pour le moment"
   }
 }

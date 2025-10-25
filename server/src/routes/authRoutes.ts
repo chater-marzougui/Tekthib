@@ -182,4 +182,21 @@ router.get('/game/:gameId', authMiddleware, async (req: AuthRequest, res: Respon
   }
 });
 
+router.get('/leaderboard', async (req: Request, res: Response) => {
+  try {
+    const sortBy = (req.query.sortBy as 'wins' | 'win_rate' | 'total_games') || 'wins';
+    const limit = Number.parseInt(req.query.limit as string) || 10;
+
+    const leaderboard = await gameHistoryService.getLeaderboard(sortBy, limit);
+
+    res.json(leaderboard);
+  } catch (error) {
+    console.error('Get leaderboard error:', error);
+    res.status(500).json({
+      error: 'Failed to get leaderboard',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
 export default router;
