@@ -2,6 +2,7 @@
 import cors from 'cors';
 import { roomManager } from './utils/roomManager';
 import adminRoutes from './routes/adminRoutes';
+import authRoutes from './routes/authRoutes';
 
 const app: Express = express();
 const ORIGINS = process.env.NODE_ENV === 'production'
@@ -84,6 +85,9 @@ app.get('/api/rooms', (req, res) => {
 
   res.json(roomList);
 });
+
+// Auth routes
+app.use('/api/auth', authRoutes);
 
 // Admin routes
 app.use('/api/admin', adminRoutes);
