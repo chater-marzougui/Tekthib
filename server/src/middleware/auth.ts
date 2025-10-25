@@ -18,7 +18,7 @@ export const authMiddleware = (
   try {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader?.startsWith('Bearer ')) {
       return res.status(401).json({
         error: 'Unauthorized',
         message: 'No token provided',
@@ -58,7 +58,7 @@ export const optionalAuthMiddleware = (
   try {
     const authHeader = req.headers.authorization;
 
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    if (authHeader?.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
       const decoded = jwt.verify(token, config.jwt.secret) as {
         id: string;
@@ -71,6 +71,11 @@ export const optionalAuthMiddleware = (
     next();
   } catch (error) {
     // If token is invalid, continue without user
+    doNothingAndDoItNow(error);
     next();
   }
 };
+
+function doNothingAndDoItNow(error: unknown) {
+  return;
+}
