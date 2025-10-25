@@ -31,8 +31,9 @@ router.post('/signup', async (req: Request, res: Response) => {
       });
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    // Use a safer email validation to prevent ReDoS
+    const emailRegex = /^[\w.+-]+@[\w.-]+\.[\w.-]+$/;
+    if (!emailRegex.test(email) || email.length > 254) {
       return res.status(400).json({
         error: 'Invalid email',
         message: 'Please provide a valid email address',
