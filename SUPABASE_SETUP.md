@@ -332,7 +332,8 @@ When a game ends, the server automatically:
 
 1. Creates a record in the `games` table
 2. Saves all participant data in `game_participants`
-3. Updates player statistics in `player_stats`
+3. Records detailed game events in `game_history` table
+4. Updates player statistics in `player_stats`
 
 This happens in `GameEngine.ts` when the game phase changes to `'ended'`.
 
@@ -340,25 +341,61 @@ This happens in `GameEngine.ts` when the game phase changes to `'ended'`.
 
 For each completed game:
 
-- **Game Info**: Room code, start/end times, winner, loser
-- **Participants**: Each player's stats (cards played, bluffs, challenges)
-- **Statistics**: Aggregated stats for each player (total wins, losses, etc.)
+- **Game Info**: Room code, start/end times, winner, loser, total rounds, total challenges
+- **Participants**: Each player's stats (cards played, bluffs, challenges, final position)
+- **Game Events**: Detailed event history including:
+  - Game start with initial state (card distribution, player order)
+  - Round starts (each new round with the starting player)
+  - Cards played (each card play with claimed rank, actual cards, pile size)
+  - Challenges (challenge results, revealed cards, who took the pile)
+  - Round ends (after each challenge with the result)
+  - Game end (final statistics for all players)
+- **Statistics**: Aggregated stats for each player (total wins, losses, bluff success rates, etc.)
 
-### Linking Users to Games (Future Enhancement)
+### Game Event Tracking
 
-Currently, game history is saved but not linked to authenticated users. To link them:
+The game now tracks detailed events throughout gameplay:
 
-1. When a player joins a room, check if they're authenticated
-2. Store their user ID in the room data
-3. Pass the user ID when saving game history
-4. Update the `saveGameHistory` method in `roomManager.ts` to use actual user IDs
+1. **Game Start**: Records initial player setup, hand sizes, and removed cards
+2. **Round Tracking**: Each round is numbered and tracked from start to finish
+3. **Card Plays**: Every card played is logged with the claimed rank and actual cards
+4. **Challenges**: Challenge events record who challenged, the result, and pile distribution
+5. **Game End**: Final statistics and winner/loser information
 
-Example modification needed in `roomManager.ts`:
+All events are timestamped and include the round number for historical playback capability.
 
-```typescript
-// TODO: When implementing user linking
-userId: player.userId || undefined, // Add userId to player data
-```
+## New Features
+
+### Leaderboards
+
+A leaderboard is now available on the home page showing top players:
+
+- **API Endpoint**: `GET /api/auth/leaderboard?sortBy=wins&limit=10`
+- **Sort Options**: 
+  - `wins` - Sort by total wins
+  - `win_rate` - Sort by win percentage
+  - `total_games` - Sort by total games played
+- **Display**: Shows top 5 players in each category with trophy icons for top 3
+
+### User Profiles
+
+Users can now view detailed profiles:
+
+- **Route**: `/profile/:username`
+- **API Endpoints**:
+  - `GET /api/auth/profile/:username` - Get user profile by username
+  - `GET /api/auth/user/:userId/game-history` - Get user's game history
+- **Features**:
+  - User statistics (games played, wins, losses, win rate)
+  - Bluff and challenge success rates
+  - Recent game history with detailed stats
+  - Clickable from NavUser dropdown
+
+### Accessing Profile Pages
+
+Users can access profiles by:
+1. Clicking their display name in the NavUser dropdown (top right)
+2. Navigating to `/profile/username` directly
 
 ## Troubleshooting
 
@@ -429,13 +466,18 @@ userId: player.userId || undefined, // Add userId to player data
 
 ## Next Steps
 
-After setting up Supabase:
+After setting up Supabase, these features are now available:
 
-1. **Link game history to users**: Modify the game flow to track authenticated users
-2. **Add leaderboards**: Query player_stats to show top players
-3. **Implement profile pages**: Show user stats and game history
-4. **Add achievements**: Track special accomplishments
-5. **Enable social features**: Friends, challenges, tournaments
+✅ **Completed Features:**
+1. **Detailed game history tracking**: All game events are recorded including rounds, card plays, and challenges
+2. **Leaderboards**: Top players displayed on home page sorted by wins, win rate, or total games
+3. **User profile pages**: View detailed stats and game history for any player
+
+🔮 **Future Enhancements:**
+4. **Add achievements**: Track special accomplishments (e.g., "Master Bluffer", "Challenge Champion")
+5. **Enable social features**: Friends list, direct challenges, tournaments
+6. **Advanced analytics**: Trend charts, performance over time, player comparisons
+7. **Replay system**: Use game_history events to replay past games
 
 ## Support
 
