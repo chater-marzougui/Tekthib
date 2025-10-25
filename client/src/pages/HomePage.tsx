@@ -9,6 +9,7 @@ import JoinRoomCard from "@/components/home/JoinRoomCard";
 import AvailableRoomsList from "@/components/home/AvailableRoomsList";
 import QuickRulesCard from "@/components/home/QuickRulesCard";
 import PrivateRoomDialog from "@/components/home/PrivateRoomDialog";
+import Leaderboard from "@/components/home/Leaderboard";
 
 const SERVER_URL =
   import.meta.env.VITE_API_URL || "https://takthib-a00f145250bc.herokuapp.com";
@@ -163,6 +164,7 @@ export default function HomePage() {
             />
           </div>
           <AvailableRoomsList rooms={rooms} onRoomClick={handleRoomClick} />
+          <Leaderboard />
           <QuickRulesCard />
         </div>
       </div>

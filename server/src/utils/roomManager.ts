@@ -336,6 +336,9 @@ class RoomManager {
     // Track game start time
     this.gameStartTimes.set(roomId, new Date());
 
+    // Record initial game state
+    gameEngine.recordGameStart();
+
     this.gameEngines.set(roomId, gameEngine);
     room.gameState = gameEngine.getGameState();
     room.gameState.phase = 'playing';
@@ -551,6 +554,18 @@ class RoomManager {
         0,
       );
 
+      // Get game events from the game engine
+      const gameEvents = gameEngine.getGameEvents().map(event => ({
+        eventType: event.eventType,
+        playerUserId: event.playerUserId,
+        playerName: event.playerName,
+        eventData: event.eventData,
+        roundNumber: event.roundNumber,
+      }));
+
+      // Calculate total rounds from events
+      const totalRounds = gameEngine.getGameEvents().filter(e => e.eventType === 'round_start').length;
+
       await gameHistoryService.saveGame(
         {
           roomCode: room.code,
@@ -559,7 +574,7 @@ class RoomManager {
           winnerUserId: gameState.winners[0],
           loserUserId: gameState.loser || undefined,
           totalPlayers: room.players.size,
-          totalRounds: 0, // We don't track rounds currently
+          totalRounds,
           totalChallenges,
           gameSettings: {
             maxPlayers: room.maxPlayers,
@@ -568,7 +583,7 @@ class RoomManager {
           },
         },
         participants,
-        [], // Events - we'll add these in future iterations
+        gameEvents,
       );
 
       console.log(`Game history saved for room ${room.code}`);

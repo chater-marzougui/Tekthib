@@ -1,0 +1,26 @@
+{
+  "profile": {
+    "notFound": "User Not Found",
+    "backHome": "Back to Home",
+    "memberSince": "Member since",
+    "statistics": "Statistics",
+    "totalGames": "Total Games",
+    "wins": "Wins",
+    "losses": "Losses",
+    "winRate": "Win Rate",
+    "bluffSuccess": "Bluff Success",
+    "challengeSuccess": "Challenge Success",
+    "cardsPlayed": "Cards Played",
+    "recentGames": "Recent Games",
+    "noGamesYet": "No games played yet",
+    "victory": "Victory",
+    "defeat": "Defeat",
+    "position": "Position",
+    "players": "Players",
+    "rounds": "Rounds",
+    "challenges": "Challenges"
+  },
+  "nav": {
+    "viewProfile": "View Profile"
+  }
+}

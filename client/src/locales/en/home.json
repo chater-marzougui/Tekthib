@@ -40,5 +40,14 @@
     "invalidPassword": "Invalid password",
     "roomFull": "Room Full",
     "available": "Available"
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "byWins": "Most Wins",
+    "byWinRate": "Win Rate",
+    "byGames": "Most Games",
+    "wins": "wins",
+    "games": "games",
+    "noData": "No leaderboard data yet"
   }
 }

@@ -1,0 +1,26 @@
+{
+  "profile": {
+    "notFound": "Utilisateur Non Trouvé",
+    "backHome": "Retour à l'Accueil",
+    "memberSince": "Membre depuis",
+    "statistics": "Statistiques",
+    "totalGames": "Total de Parties",
+    "wins": "Victoires",
+    "losses": "Défaites",
+    "winRate": "Taux de Victoire",
+    "bluffSuccess": "Succès de Bluff",
+    "challengeSuccess": "Succès de Défi",
+    "cardsPlayed": "Cartes Jouées",
+    "recentGames": "Parties Récentes",
+    "noGamesYet": "Aucune partie jouée encore",
+    "victory": "Victoire",
+    "defeat": "Défaite",
+    "position": "Position",
+    "players": "Joueurs",
+    "rounds": "Rounds",
+    "challenges": "Défis"
+  },
+  "nav": {
+    "viewProfile": "Voir le Profil"
+  }
+}

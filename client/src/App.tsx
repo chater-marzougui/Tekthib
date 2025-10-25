@@ -8,6 +8,7 @@ import RoomPage from "./pages/RoomPage";
 import GamePage from "./pages/GamePage";
 import AdminPage from "./pages/AdminPage";
 import AuthPage from "./pages/AuthPage";
+import UserProfilePage from "./pages/UserProfilePage";
 import { Toaster } from "sonner";
 import { SoundProvider } from "./context/SoundPlayerContext";
 import { ThemeProvider } from "./context/ThemeProvider";
@@ -43,6 +44,7 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/admin" element={<AdminPage />} />
+                <Route path="/profile/:username" element={<UserProfilePage />} />
                 <Route
                   path="/*"
                   element={

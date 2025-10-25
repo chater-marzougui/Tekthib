@@ -182,4 +182,59 @@ router.get('/game/:gameId', authMiddleware, async (req: AuthRequest, res: Respon
   }
 });
 
+router.get('/leaderboard', async (req: Request, res: Response) => {
+  try {
+    const sortBy = (req.query.sortBy as 'wins' | 'win_rate' | 'total_games') || 'wins';
+    const limit = Number.parseInt(req.query.limit as string) || 10;
+
+    const leaderboard = await gameHistoryService.getLeaderboard(sortBy, limit);
+
+    res.json(leaderboard);
+  } catch (error) {
+    console.error('Get leaderboard error:', error);
+    res.status(500).json({
+      error: 'Failed to get leaderboard',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+router.get('/profile/:username', async (req: Request, res: Response) => {
+  try {
+    const { username } = req.params;
+
+    const profile = await authService.getUserProfileByUsername(username);
+
+    res.json(profile);
+  } catch (error) {
+    console.error('Get profile by username error:', error);
+    res.status(404).json({
+      error: 'Profile not found',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+router.get('/user/:userId/game-history', async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const limit = Number.parseInt(req.query.limit as string) || 10;
+    const offset = Number.parseInt(req.query.offset as string) || 0;
+
+    const history = await gameHistoryService.getPlayerGameHistory(
+      userId,
+      limit,
+      offset,
+    );
+
+    res.json(history);
+  } catch (error) {
+    console.error('Get user game history error:', error);
+    res.status(500).json({
+      error: 'Failed to get game history',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
 export default router;

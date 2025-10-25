@@ -280,9 +280,22 @@ export function NavUser() {
               <DropdownMenuGroup>
                 {isAuthenticated && user ? (
                   <>
-                    <div className="px-2 py-1.5 text-sm font-semibold">
-                      {user.display_name || user.username}
-                    </div>
+                    <DropdownMenuItem
+                      onClick={() => navigate(`/profile/${user.username}`)}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Icon icon="mdi:account" className="w-4 h-4" />
+                        <div>
+                          <div className="font-semibold">
+                            {user.display_name || user.username}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {t("nav.viewProfile")}
+                          </div>
+                        </div>
+                      </div>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                   </>
                 ) : null}

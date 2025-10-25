@@ -31,6 +31,10 @@ import botAR from "./locales/ar/bot.json";
 import authEN from "./locales/en/auth.json";
 import authFR from "./locales/fr/auth.json";
 import authAR from "./locales/ar/auth.json";
+// Import profile translation files
+import profileEN from "./locales/en/profile.json";
+import profileFR from "./locales/fr/profile.json";
+import profileAR from "./locales/ar/profile.json";
 
 const resources = {
   en: {
@@ -42,6 +46,7 @@ const resources = {
       ...homeEN,
       ...botEN,
       ...authEN,
+      ...profileEN,
     },
   },
   fr: {
@@ -53,6 +58,7 @@ const resources = {
       ...homeFR,
       ...botFR,
       ...authFR,
+      ...profileFR,
     },
   },
   ar: {
@@ -64,6 +70,7 @@ const resources = {
       ...homeAR,
       ...botAR,
       ...authAR,
+      ...profileAR,
     },
   },
 };

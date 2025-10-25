@@ -254,6 +254,32 @@ export class GameHistoryService {
 
     return game;
   }
+
+  async getLeaderboard(
+    sortBy: 'wins' | 'win_rate' | 'total_games' = 'wins',
+    limit: number = 10,
+  ): Promise<unknown[]> {
+    const { data, error } = await supabase
+      .from('player_stats')
+      .select(
+        `
+        *,
+        users (
+          username,
+          display_name,
+          avatar_url
+        )
+      `,
+      )
+      .order(sortBy, { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      throw new Error('Failed to fetch leaderboard: ' + error.message);
+    }
+
+    return data || [];
+  }
 }
 
 export const gameHistoryService = new GameHistoryService();
