@@ -1,0 +1,26 @@
+{
+  "profile": {
+    "notFound": "المستخدم غير موجود",
+    "backHome": "العودة إلى الصفحة الرئيسية",
+    "memberSince": "عضو منذ",
+    "statistics": "الإحصائيات",
+    "totalGames": "إجمالي الألعاب",
+    "wins": "الانتصارات",
+    "losses": "الخسائر",
+    "winRate": "معدل الفوز",
+    "bluffSuccess": "نجاح الخداع",
+    "challengeSuccess": "نجاح التحدي",
+    "cardsPlayed": "البطاقات الملعوبة",
+    "recentGames": "الألعاب الأخيرة",
+    "noGamesYet": "لم يتم لعب أي ألعاب بعد",
+    "victory": "فوز",
+    "defeat": "هزيمة",
+    "position": "الموقع",
+    "players": "اللاعبون",
+    "rounds": "الجولات",
+    "challenges": "التحديات"
+  },
+  "nav": {
+    "viewProfile": "عرض الملف الشخصي"
+  }
+}

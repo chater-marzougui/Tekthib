@@ -209,6 +209,32 @@ export class AuthService {
     };
   }
 
+  async getUserProfileByUsername(
+    username: string,
+  ): Promise<UserProfile & { stats: UserStats }> {
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id, username, email, display_name, avatar_url, created_at')
+      .eq('username', username)
+      .single();
+
+    if (error || !user) {
+      throw new Error('User not found');
+    }
+
+    // Get stats
+    const { data: stats } = await supabase
+      .from('player_stats')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    return {
+      ...user,
+      stats: stats || this.getDefaultStats(),
+    };
+  }
+
   async updateProfile(
     userId: string,
     updates: { display_name?: string; avatar_url?: string },
