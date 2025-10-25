@@ -39,7 +39,9 @@ export default function VoiceChat({
     if (isVoiceEnabled) {
       disableVoiceChat();
     } else {
+      console.log("Toggling voice chat");
       await enableVoiceChat();
+      console.log("Voice chat enabled");
     }
   };
 
@@ -55,7 +57,7 @@ export default function VoiceChat({
           <Icon icon="mdi:phone" className="w-5 h-5" style={{ color: '#10b981' }} />
           {t('voiceChat.title')}
         </CardTitle>
-      </CardHeader>
+      </CardHeader> 
       <CardContent className="space-y-3">
         {audioError && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">

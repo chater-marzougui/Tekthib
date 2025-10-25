@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useWebSocketContext } from "@/context/WebSocketContext";
+import { useVoiceChatContext } from "@/context/WebRTCContext";
 import type { Player } from "shared";
 import { toast } from "sonner";
 import { Icon } from "@iconify/react";
@@ -27,6 +28,7 @@ export default function RoomPage() {
   const navigate = useNavigate();
   const { setHeaderConfig } = useHeader();
   const { sendMessage, registerHandler, isConnected } = useWebSocketContext();
+  const { disableVoiceChat } = useVoiceChatContext();
   const { playRandomSound } = useSound();
 
   const [players, setPlayers] = useState<Player[]>([]);
@@ -315,6 +317,7 @@ export default function RoomPage() {
   };
 
   const handleLeaveRoom = () => {
+    disableVoiceChat();
     sendMessage({
       type: "LEAVE_ROOM",
       payload: { roomId: roomCode, playerId },

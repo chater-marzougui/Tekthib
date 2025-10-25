@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { WebRTCProvider } from "@/context/WebRTCContext";
 import type { Player } from "shared";
 import { useWebSocketContext } from "@/context/WebSocketContext";
@@ -12,7 +12,6 @@ interface WebRTCWrapperProps {
  * Wrapper component that provides WebRTC context with live player data
  */
 export function WebRTCWrapper({ children }: Readonly<WebRTCWrapperProps>) {
-  const { roomId } = useParams<{ roomId: string }>();
   const location = useLocation();
   const { registerHandler } = useWebSocketContext();
 
@@ -25,6 +24,11 @@ export function WebRTCWrapper({ children }: Readonly<WebRTCWrapperProps>) {
   const isInRoomOrGame =
     location.pathname.includes("/room/") ||
     location.pathname.includes("/game/");
+
+  // Extract roomId from pathname since useParams doesn't work outside Routes
+  const pathSegments = location.pathname.split("/").filter(Boolean);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const roomId = (isInRoomOrGame && pathSegments[pathSegments.length - 1]) || "";
 
   useEffect(() => {
     if (!isInRoomOrGame) return;

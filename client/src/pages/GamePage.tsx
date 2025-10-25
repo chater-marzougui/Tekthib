@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useWebSocketContext } from "@/context/WebSocketContext";
+import { useVoiceChatContext } from "@/context/WebRTCContext";
 import GameBoard from "../components/game/GameBoard";
 import PlayerList from "../components/game/PlayerList";
 import ChatBox from "../components/chat/ChatBox";
@@ -47,6 +48,7 @@ export default function GamePage() {
   const navigate = useNavigate();
   const { roomId } = useParams<{ roomId: string }>();
   const { sendMessage, registerHandler, isConnected, autoPlayTimeout: wsAutoPlayTimeout } = useWebSocketContext();
+  const { disableVoiceChat } = useVoiceChatContext();
   const { setHeaderConfig } = useHeader();
   const { playSound, playRandomSound } = useSound();
 
@@ -610,6 +612,7 @@ export default function GamePage() {
   };
 
   const handleLeaveGame = () => {
+    disableVoiceChat();
     navigate("/");
   };
 

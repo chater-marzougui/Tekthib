@@ -504,10 +504,12 @@ export function useWebRTC({
    * Enable voice chat - get mic access and create connections
    */
   const enableVoiceChat = useCallback(async () => {
+    console.log("Enabling voice chat");
     if (isVoiceEnabled) return;
 
     const stream = await initializeAudio();
     if (!stream) return;
+    console.log("initialized   audio stream");
 
     localStreamRef.current = stream;
     setIsVoiceEnabled(true);
@@ -518,6 +520,12 @@ export function useWebRTC({
     );
 
     console.log(`Creating connections for ${otherPlayers.length} players`);
+
+    if (otherPlayers.length === 0) {
+      console.log(
+        "No other players available yet. Connections will be created as players join."
+      );
+    }
 
     // Create peer connections for all other players
     otherPlayers.forEach((player) => {
@@ -737,6 +745,18 @@ export function useWebRTC({
     isHost,
     t,
   ]);
+
+  // Cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      if (isVoiceEnabled) {
+        console.log("useWebRTC hook unmounting - cleaning up voice connections");
+        disableVoiceChat();
+      }
+    };
+    // Only run on unmount - empty dependency array
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Handle players joining/leaving
   useEffect(() => {
