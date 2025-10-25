@@ -16,7 +16,8 @@ interface AuthContextType {
     username: string,
     email: string,
     password: string,
-    displayName?: string
+    displayName?: string,
+    clientId?: string | null
   ) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -74,14 +75,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     username: string,
     email: string,
     password: string,
-    displayName?: string
+    displayName?: string,
+    clientId?: string | null
   ) => {
     const response = await fetch(`${SERVER_URL}/api/auth/signup`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ username, email, password, displayName }),
+      body: JSON.stringify({ username, email, password, displayName, clientId }),
     });
 
     if (!response.ok) {
@@ -96,6 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.setItem("auth_token", data.token);
     localStorage.setItem("refresh_token", data.refreshToken);
     localStorage.setItem("user", JSON.stringify(data.user));
+    localStorage.setItem("clientId", data.clientId);
   };
 
   const logout = () => {

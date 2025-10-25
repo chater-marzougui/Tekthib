@@ -529,7 +529,7 @@ class RoomManager {
         const cardsPlayed = (stats?.timesToldTruth || 0) + bluffsMade;
 
         return {
-          userId: undefined, // TODO: Link to user when authentication is used
+          userId: playerId,
           playerName: player.name,
           finalPosition: isWinner ? gameState.winners.indexOf(playerId) + 1 : 
                         isLoser ? room.players.size : index + 1,
@@ -556,8 +556,8 @@ class RoomManager {
           roomCode: room.code,
           startedAt: startTime,
           endedAt: endTime,
-          winnerUserId: undefined, // TODO: Link to user when authentication is used
-          loserUserId: undefined, // TODO: Link to user when authentication is used
+          winnerUserId: gameState.winners[0],
+          loserUserId: gameState.loser || undefined,
           totalPlayers: room.players.size,
           totalRounds: 0, // We don't track rounds currently
           totalChallenges,
@@ -573,7 +573,11 @@ class RoomManager {
 
       console.log(`Game history saved for room ${room.code}`);
     } catch (error) {
-      console.error('Error saving game history:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`Error saving game history for room ${roomId}:`, errorMessage);
+      if (error instanceof Error) {
+        console.error('Stack trace:', error.stack);
+      }
     }
   }
 }

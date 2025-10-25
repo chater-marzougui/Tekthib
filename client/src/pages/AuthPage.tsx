@@ -72,7 +72,8 @@ export default function BluffAuthPage() {
         formState.signupUsername,
         formState.signupEmail,
         formState.signupPassword,
-        formState.signupDisplayName || formState.signupUsername
+        formState.signupDisplayName || formState.signupUsername,
+        localStorage.getItem("clientId") || null
       );
       toast.success(t("auth.signupSuccess"));
       navigate("/");

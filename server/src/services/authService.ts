@@ -31,12 +31,25 @@ interface UserStats {
 }
 
 export class AuthService {
+  /**
+   * Generate a custom user ID
+   */
+  private generateUserId(): string {
+    return `client_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+  }
+
   async signup(
     username: string,
     email: string,
     password: string,
     displayName?: string,
-  ): Promise<{ user: UserProfile; token: string; refreshToken: string }> {
+    clientId?: string | null,
+  ): Promise<{
+    user: UserProfile;
+    token: string;
+    refreshToken: string;
+    clientId: string;
+  }> {
     // Check if user exists
     const { data: existingUser } = await supabase
       .from('users')
@@ -51,10 +64,25 @@ export class AuthService {
     // Hash password
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
+    // Generate custom user ID
+    if (clientId) {
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', clientId)
+        .single();
+
+      if (existingUser) { 
+        clientId = null;
+      }
+    }
+    const userId = clientId || this.generateUserId();
+
     // Create user
     const { data: user, error } = await supabase
       .from('users')
       .insert({
+        id: userId,
         username,
         email,
         password_hash: passwordHash,
@@ -69,7 +97,7 @@ export class AuthService {
 
     // Initialize player stats
     await supabase.from('player_stats').insert({
-      user_id: user.id,
+      user_id: userId,
     });
 
     // Generate tokens
@@ -82,7 +110,7 @@ export class AuthService {
       .update({ last_login_at: new Date().toISOString() })
       .eq('id', user.id);
 
-    return { user, token, refreshToken };
+    return { user, token, refreshToken, clientId: userId };
   }
 
   async login(
@@ -92,7 +120,9 @@ export class AuthService {
     // Find user
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, username, email, password_hash, display_name, avatar_url, created_at')
+      .select(
+        'id, username, email, password_hash, display_name, avatar_url, created_at',
+      )
       .or(`username.eq.${usernameOrEmail},email.eq.${usernameOrEmail}`)
       .single();
 
@@ -148,12 +178,14 @@ export class AuthService {
       const newRefreshToken = this.generateRefreshToken(user);
 
       return { token, refreshToken: newRefreshToken };
-    } catch (error) {
-      throw new Error('Invalid refresh token');
+    } catch (error: any) {
+      throw new Error('Invalid refresh token: ' + error.message);
     }
   }
 
-  async getUserProfile(userId: string): Promise<UserProfile & { stats: UserStats }> {
+  async getUserProfile(
+    userId: string,
+  ): Promise<UserProfile & { stats: UserStats }> {
     const { data: user, error } = await supabase
       .from('users')
       .select('id, username, email, display_name, avatar_url, created_at')
@@ -195,7 +227,11 @@ export class AuthService {
     return user;
   }
 
-  private generateToken(user: { id: string; username: string; email: string }): string {
+  private generateToken(user: {
+    id: string;
+    username: string;
+    email: string;
+  }): string {
     const payload = {
       id: user.id,
       username: user.username,
@@ -207,7 +243,11 @@ export class AuthService {
     return jwt.sign(payload, config.jwt.secret as jwt.Secret, options);
   }
 
-  private generateRefreshToken(user: { id: string; username: string; email: string }): string {
+  private generateRefreshToken(user: {
+    id: string;
+    username: string;
+    email: string;
+  }): string {
     const payload = {
       id: user.id,
       username: user.username,

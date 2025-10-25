@@ -6,7 +6,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Users table for authentication and profiles
 CREATE TABLE IF NOT EXISTS users (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id TEXT PRIMARY KEY,
   username VARCHAR(50) UNIQUE NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- Player statistics table
 CREATE TABLE IF NOT EXISTS player_stats (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  user_id TEXT UNIQUE NOT NULL,
   total_games INTEGER DEFAULT 0,
   wins INTEGER DEFAULT 0,
   losses INTEGER DEFAULT 0,
@@ -63,8 +63,8 @@ CREATE TABLE IF NOT EXISTS games (
   duration_minutes INTEGER GENERATED ALWAYS AS (
     EXTRACT(EPOCH FROM (ended_at - started_at)) / 60
   ) STORED,
-  winner_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  loser_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  winner_user_id TEXT,
+  loser_user_id TEXT,
   total_players INTEGER NOT NULL,
   total_rounds INTEGER DEFAULT 0,
   total_challenges INTEGER DEFAULT 0,
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS games (
 CREATE TABLE IF NOT EXISTS game_participants (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   game_id UUID REFERENCES games(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  user_id TEXT,
   player_name VARCHAR(100) NOT NULL,
   final_position INTEGER,
   cards_played INTEGER DEFAULT 0,
@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS game_history (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   game_id UUID REFERENCES games(id) ON DELETE CASCADE,
   event_type VARCHAR(50) NOT NULL,
-  player_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  player_user_id TEXT,
   player_name VARCHAR(100),
   event_data JSONB NOT NULL,
   round_number INTEGER,
@@ -115,6 +115,16 @@ CREATE INDEX IF NOT EXISTS idx_game_participants_game_id ON game_participants(ga
 CREATE INDEX IF NOT EXISTS idx_game_participants_user_id ON game_participants(user_id);
 CREATE INDEX IF NOT EXISTS idx_game_history_game_id ON game_history(game_id);
 CREATE INDEX IF NOT EXISTS idx_game_history_timestamp ON game_history(timestamp DESC);
+
+-- Grant permissions to service_role (anon role for unauthenticated access)
+GRANT USAGE ON SCHEMA public TO postgres, anon, authenticated, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO postgres, anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO postgres, anon, authenticated, service_role;
+GRANT ALL ON ALL ROUTINES IN SCHEMA public TO postgres, anon, authenticated, service_role;
+
+-- Ensure future tables get the same permissions
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO postgres, anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO postgres, anon, authenticated, service_role;
 
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -144,25 +154,52 @@ ALTER TABLE games ENABLE ROW LEVEL SECURITY;
 ALTER TABLE game_participants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE game_history ENABLE ROW LEVEL SECURITY;
 
--- Users: Users can read their own data, service role can do everything
-CREATE POLICY "Users can view own profile" ON users
-  FOR SELECT USING (auth.uid()::uuid = id);
+-- Users: Service role can do everything, public can view
+CREATE POLICY "Anyone can view users" ON users
+  FOR SELECT USING (true);
 
-CREATE POLICY "Users can update own profile" ON users
-  FOR UPDATE USING (auth.uid()::uuid = id);
+CREATE POLICY "Service role can insert users" ON users
+  FOR INSERT WITH CHECK (true);
 
--- Player stats: Users can read their own and others' stats, only service updates
+CREATE POLICY "Service role can update users" ON users
+  FOR UPDATE USING (true);
+
+-- Player stats: Service role can do everything, public can view
 CREATE POLICY "Anyone can view player stats" ON player_stats
   FOR SELECT USING (true);
 
--- Games: Anyone can read completed games
+CREATE POLICY "Service role can insert player stats" ON player_stats
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Service role can update player stats" ON player_stats
+  FOR UPDATE USING (true);
+
+-- Games: Service role can do everything, public can view
 CREATE POLICY "Anyone can view games" ON games
   FOR SELECT USING (true);
 
--- Game participants: Anyone can read
+CREATE POLICY "Service role can insert games" ON games
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Service role can update games" ON games
+  FOR UPDATE USING (true);
+
+-- Game participants: Service role can do everything, public can view
 CREATE POLICY "Anyone can view game participants" ON game_participants
   FOR SELECT USING (true);
 
--- Game history: Anyone can read
+CREATE POLICY "Service role can insert game participants" ON game_participants
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Service role can update game participants" ON game_participants
+  FOR UPDATE USING (true);
+
+-- Game history: Service role can do everything, public can view
 CREATE POLICY "Anyone can view game history" ON game_history
   FOR SELECT USING (true);
+
+CREATE POLICY "Service role can insert game history" ON game_history
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Service role can update game history" ON game_history
+  FOR UPDATE USING (true);

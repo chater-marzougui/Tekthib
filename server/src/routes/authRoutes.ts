@@ -7,7 +7,7 @@ const router = Router();
 
 router.post('/signup', async (req: Request, res: Response) => {
   try {
-    const { username, email, password, displayName } = req.body;
+    const { username, email, password, displayName, clientId } = req.body;
 
     if (!username || !email || !password) {
       return res.status(400).json({
@@ -40,7 +40,7 @@ router.post('/signup', async (req: Request, res: Response) => {
       });
     }
 
-    const result = await authService.signup(username, email, password, displayName);
+    const result = await authService.signup(username, email, password, displayName, clientId);
 
     res.status(201).json(result);
   } catch (error) {
@@ -145,8 +145,8 @@ router.get('/game-history', authMiddleware, async (req: AuthRequest, res: Respon
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const limit = parseInt(req.query.limit as string) || 10;
-    const offset = parseInt(req.query.offset as string) || 0;
+    const limit = Number.parseInt(req.query.limit as string) || 10;
+    const offset = Number.parseInt(req.query.offset as string) || 0;
 
     const history = await gameHistoryService.getPlayerGameHistory(
       req.user.id,

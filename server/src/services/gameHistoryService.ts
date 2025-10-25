@@ -1,5 +1,4 @@
 import { supabase } from '../config/supabase';
-import { PlayerStats } from 'shared';
 
 interface GameData {
   roomCode: string;
@@ -61,10 +60,14 @@ export class GameHistoryService {
         .single();
 
       if (gameError || !game) {
-        throw new Error('Failed to save game: ' + gameError?.message);
+        const errorMessage = gameError?.message || 'Unknown error occurred';
+        throw new Error(`Failed to save game: ${errorMessage}`);
       }
 
-      const gameId = game.id;
+      const gameId = game?.id;
+      if (!gameId) {
+        throw new Error('Failed to save game: No game ID returned from database');
+      }
 
       // Insert participants
       const participantInserts = participants.map((p) => ({
@@ -88,7 +91,7 @@ export class GameHistoryService {
         .insert(participantInserts);
 
       if (participantsError) {
-        console.error('Failed to save participants:', participantsError);
+        console.error('Failed to save participants:', participantsError?.message || participantsError);
       }
 
       // Insert events
@@ -107,7 +110,7 @@ export class GameHistoryService {
           .insert(eventInserts);
 
         if (eventsError) {
-          console.error('Failed to save game events:', eventsError);
+          console.error('Failed to save game events:', eventsError?.message || eventsError);
         }
       }
 
@@ -116,7 +119,11 @@ export class GameHistoryService {
 
       return gameId;
     } catch (error) {
-      console.error('Error saving game:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('Error saving game:', errorMessage);
+      if (error instanceof Error && error.stack) {
+        console.debug('Stack trace:', error.stack);
+      }
       throw error;
     }
   }
