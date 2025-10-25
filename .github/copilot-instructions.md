@@ -69,3 +69,5 @@ Quick examples for common edits
 
 - Emit a server request for game state (used in GamePage):
   - sendMessage({ type: "GET_GAME_STATE", payload: { roomCode: roomId, playerId } });
+
+- You are only allowed to create one .MD file only if needed, you're allowed to update readme files, they are not in the 1 md file rule.
