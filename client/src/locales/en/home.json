@@ -37,6 +37,8 @@
     "gameInProgress": "Game already in progress",
     "cannotJoinInProgress": "Cannot join, game already in progress",
     "pleaseEnterPassword": "Please enter the room password",
-    "invalidPassword": "Invalid password"
+    "invalidPassword": "Invalid password",
+    "roomFull": "Room Full",
+    "available": "Available"
   }
 }

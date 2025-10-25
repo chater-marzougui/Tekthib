@@ -37,6 +37,8 @@
     "gameInProgress": "Partie déjà en cours",
     "cannotJoinInProgress": "Impossible de rejoindre, partie déjà en cours",
     "pleaseEnterPassword": "Veuillez entrer le mot de passe de la salle",
-    "invalidPassword": "Mot de passe invalide"
+    "invalidPassword": "Mot de passe invalide",
+    "roomFull": "Salle pleine",
+    "available": "Disponible"
   }
 }

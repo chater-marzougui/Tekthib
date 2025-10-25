@@ -37,6 +37,8 @@
     "gameInProgress": "اللعبة قيد التقدم بالفعل",
     "cannotJoinInProgress": "لا يمكن الانضمام، اللعبة قيد التقدم بالفعل",
     "pleaseEnterPassword": "الرجاء إدخال كلمة مرور الغرفة",
-    "invalidPassword": "كلمة مرور غير صالحة"
+    "invalidPassword": "كلمة مرور غير صالحة",
+    "roomFull": "الغرفة ممتلئة",
+    "available": "متاح"
   }
 }
