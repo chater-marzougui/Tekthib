@@ -45,7 +45,10 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/admin" element={<AdminPage />} />
-                <Route path="/profile/:username" element={<UserProfilePage />} />
+                <Route
+                  path="/profile/:username"
+                  element={<UserProfilePage />}
+                />
                 <Route path="/replay/:gameId" element={<ReplayPage />} />
                 <Route
                   path="/*"

@@ -85,8 +85,6 @@ export default function Leaderboard() {
       );
     }
 
-    console.log(entries);
-
     return (
       <div className="space-y-2">
         {entries?.map((entry, index) => {

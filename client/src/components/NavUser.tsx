@@ -170,8 +170,24 @@ export function NavUser() {
           duration: 500,
           easing: "ease-in-out",
           pseudoElement: "::view-transition-new(root)",
+          fill: "forwards",
         }
       );
+
+      // Fade out the new pseudo-element at the very end to reveal the real DOM
+      setTimeout(() => {
+        document.documentElement.animate(
+          {
+            opacity: [1, 0],
+          },
+          {
+            duration: 50, // Very short fade to mask cleanup
+            easing: "ease-out",
+            pseudoElement: "::view-transition-new(root)",
+            fill: "forwards",
+          }
+        );
+      }, 480); // Start fade 20ms before clip-path animation ends
     });
   };
 
