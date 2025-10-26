@@ -124,7 +124,7 @@ export function NavUser() {
     if (i18n.language === language) return;
     i18n.changeLanguage(language);
     localStorage.setItem("locale", language);
-    
+
     // Sync with database if authenticated
     if (isAuthenticated) {
       updatePreferences({ locale: language }).catch((error) => {
@@ -160,7 +160,7 @@ export function NavUser() {
     const transition = document.startViewTransition(() => {
       setTheme(newTheme);
       localStorage.setItem("theme", newTheme);
-      
+
       // Sync with database if authenticated
       if (isAuthenticated) {
         updatePreferences({ theme: newTheme }).catch((error) => {
@@ -250,18 +250,28 @@ export function NavUser() {
         setShowSystemMessages(newValue);
         localStorage.setItem("showSystemMessages", String(newValue));
         if (isAuthenticated) {
-          updatePreferences({ show_system_messages: newValue }).catch((error) => {
-            console.error("Failed to sync system messages preference:", error);
-          });
+          updatePreferences({ show_system_messages: newValue }).catch(
+            (error) => {
+              console.error(
+                "Failed to sync system messages preference:",
+                error
+              );
+            }
+          );
         }
         break;
       case "challenge":
         setShowChallengeToasts(newValue);
         localStorage.setItem("showChallengeToasts", String(newValue));
         if (isAuthenticated) {
-          updatePreferences({ show_challenge_toasts: newValue }).catch((error) => {
-            console.error("Failed to sync challenge toasts preference:", error);
-          });
+          updatePreferences({ show_challenge_toasts: newValue }).catch(
+            (error) => {
+              console.error(
+                "Failed to sync challenge toasts preference:",
+                error
+              );
+            }
+          );
         }
         break;
     }
@@ -312,7 +322,7 @@ export function NavUser() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <div
-                className={`w-10 h-10 ring-2 ${isAuthenticated ? 'ring-green-500' : 'ring-red-600'} rounded-full overflow-hidden flex items-center justify-center bg-gray-300`}
+                className={`w-10 h-10 ring-2 ${isAuthenticated ? "ring-green-500" : "ring-red-600"} rounded-full overflow-hidden flex items-center justify-center bg-gray-300`}
                 dangerouslySetInnerHTML={{ __html: avatarSvg! }}
               />
             </DropdownMenuTrigger>
@@ -324,32 +334,22 @@ export function NavUser() {
             >
               <DropdownMenuGroup>
                 {isAuthenticated && user ? (
-                  <>
-                    <DropdownMenuItem
-                      onClick={() => navigate(`/profile/${user.username}`)}
-                      className="cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Icon icon="mdi:account" className="w-4 h-4" />
-                        <div>
-                          <div className="font-semibold">
-                            {user.display_name || user.username}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {t("nav.viewProfile")}
-                          </div>
+                  <DropdownMenuItem
+                    onClick={() => navigate(`/profile/${user.username}`)}
+                    className="cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Icon icon="mdi:account" className="w-4 h-4" />
+                      <div>
+                        <div className="font-semibold">
+                          {user.display_name || user.username}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {t("nav.viewProfile")}
                         </div>
                       </div>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => navigate("/settings")}
-                      className="cursor-pointer"
-                    >
-                      <Icon icon="mdi:cog" className="mr-2 h-4 w-4" />
-                      <span>{t("nav.settings")}</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                  </>
+                    </div>
+                  </DropdownMenuItem>
                 ) : null}
 
                 {isAuthenticated ? (
@@ -357,11 +357,10 @@ export function NavUser() {
                     <DropdownMenuItem
                       onClick={() => {
                         logout();
-                        navigate("/");
-                      }}
-                      className="cursor-pointer"
+                        }}
+                      className="cursor-pointer text-red-600 focus:text-red-600"
                     >
-                      <Icon icon="mdi:logout" className="mr-2 h-4 w-4" />
+                      <Icon icon="mdi:logout" className="mr-2 h-4 w-4 text-red-600" />
                       <span>{t("auth.logout")}</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />

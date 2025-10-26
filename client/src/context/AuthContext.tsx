@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useMemo,
+} from "react";
 
 interface User {
   id: string;
@@ -31,8 +37,14 @@ interface AuthContextType {
   ) => Promise<void>;
   logout: () => void;
   updatePreferences: (preferences: Partial<UserPreferences>) => Promise<void>;
-  updateProfile: (updates: { display_name?: string; username?: string }) => Promise<void>;
-  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  updateProfile: (updates: {
+    display_name?: string;
+    username?: string;
+  }) => Promise<void>;
+  updatePassword: (
+    currentPassword: string,
+    newPassword: string
+  ) => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
@@ -87,8 +99,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.setItem("theme", prefs.theme);
     localStorage.setItem("locale", prefs.locale);
     localStorage.setItem("showBotMessages", String(prefs.show_bot_messages));
-    localStorage.setItem("showSystemMessages", String(prefs.show_system_messages));
-    localStorage.setItem("showChallengeToasts", String(prefs.show_challenge_toasts));
+    localStorage.setItem(
+      "showSystemMessages",
+      String(prefs.show_system_messages)
+    );
+    localStorage.setItem(
+      "showChallengeToasts",
+      String(prefs.show_challenge_toasts)
+    );
     // Note: soundEffectsEnabled is handled by useSound hook
   };
 
@@ -134,7 +152,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ username, email, password, displayName, clientId }),
+      body: JSON.stringify({
+        username,
+        email,
+        password,
+        displayName,
+        clientId,
+      }),
     });
 
     if (!response.ok) {
@@ -185,7 +209,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     applyPreferencesToLocalStorage(updatedPrefs);
   };
 
-  const updateProfile = async (updates: { display_name?: string; username?: string }) => {
+  const updateProfile = async (updates: {
+    display_name?: string;
+    username?: string;
+  }) => {
     if (!token) {
       throw new Error("Not authenticated");
     }
@@ -209,7 +236,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.setItem("user", JSON.stringify(updatedUser));
   };
 
-  const updatePassword = async (currentPassword: string, newPassword: string) => {
+  const updatePassword = async (
+    currentPassword: string,
+    newPassword: string
+  ) => {
     if (!token) {
       throw new Error("Not authenticated");
     }
@@ -246,11 +276,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     [user, token, preferences, isLoading]
   );
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

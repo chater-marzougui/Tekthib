@@ -40,7 +40,13 @@ router.post('/signup', async (req: Request, res: Response) => {
       });
     }
 
-    const result = await authService.signup(username, email, password, displayName, clientId);
+    const result = await authService.signup(
+      username,
+      email,
+      password,
+      displayName,
+      clientId,
+    );
 
     res.status(201).json(result);
   } catch (error) {
@@ -98,103 +104,126 @@ router.post('/refresh', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/profile', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Unauthorized' });
+router.get(
+  '/profile',
+  authMiddleware,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const profile = await authService.getUserProfile(req.user.id);
+
+      res.json(profile);
+    } catch (error) {
+      console.error('Get profile error:', error);
+      res.status(500).json({
+        error: 'Failed to get profile',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
+  },
+);
 
-    const profile = await authService.getUserProfile(req.user.id);
+router.put(
+  '/profile',
+  authMiddleware,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
 
-    res.json(profile);
-  } catch (error) {
-    console.error('Get profile error:', error);
-    res.status(500).json({
-      error: 'Failed to get profile',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-});
+      const { display_name, username, avatar_url } = req.body;
+      const updates: {
+        display_name?: string;
+        username?: string;
+        avatar_url?: string;
+      } = {};
 
-router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      if (display_name !== undefined) {
+        updates.display_name = display_name;
+      }
+
+      if (avatar_url !== undefined) {
+        updates.avatar_url = avatar_url;
+      }
+
+      if (username !== undefined) {
+        updates.username = username;
+      }
+
+      const profile = await authService.updateProfile(req.user.id, updates);
+
+      res.json(profile);
+    } catch (error) {
+      console.error('Update profile error:', error);
+      res.status(500).json({
+        error: 'Failed to update profile',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
+  },
+);
 
-    const { display_name, username, avatar_url } = req.body;
-    const updates: { display_name?: string; username?: string; avatar_url?: string } = {};
+router.get(
+  '/game-history',
+  authMiddleware,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
 
-    if (display_name !== undefined) {
-      updates.display_name = display_name;
+      const limit = Number.parseInt(req.query.limit as string) || 10;
+      const offset = Number.parseInt(req.query.offset as string) || 0;
+
+      const history = await gameHistoryService.getPlayerGameHistory(
+        req.user.id,
+        limit,
+        offset,
+      );
+
+      res.json(history);
+    } catch (error) {
+      console.error('Get game history error:', error);
+      res.status(500).json({
+        error: 'Failed to get game history',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
+  },
+);
 
-    if (avatar_url !== undefined) {
-      updates.avatar_url = avatar_url;
+router.get(
+  '/game/:gameId',
+  authMiddleware,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const gameDetails = await gameHistoryService.getGameDetails(
+        req.params.gameId,
+      );
+
+      res.json(gameDetails);
+    } catch (error) {
+      console.error('Get game details error:', error);
+      res.status(500).json({
+        error: 'Failed to get game details',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
-
-    if (username !== undefined) {
-      updates.username = username;
-    }
-
-    const profile = await authService.updateProfile(req.user.id, updates);
-
-    res.json(profile);
-  } catch (error) {
-    console.error('Update profile error:', error);
-    res.status(500).json({
-      error: 'Failed to update profile',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-});
-
-router.get('/game-history', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const limit = Number.parseInt(req.query.limit as string) || 10;
-    const offset = Number.parseInt(req.query.offset as string) || 0;
-
-    const history = await gameHistoryService.getPlayerGameHistory(
-      req.user.id,
-      limit,
-      offset,
-    );
-
-    res.json(history);
-  } catch (error) {
-    console.error('Get game history error:', error);
-    res.status(500).json({
-      error: 'Failed to get game history',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-});
-
-router.get('/game/:gameId', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const gameDetails = await gameHistoryService.getGameDetails(req.params.gameId);
-
-    res.json(gameDetails);
-  } catch (error) {
-    console.error('Get game details error:', error);
-    res.status(500).json({
-      error: 'Failed to get game details',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-});
+  },
+);
 
 router.get('/leaderboard', async (req: Request, res: Response) => {
   try {
-    const sortBy = (req.query.sortBy as 'wins' | 'win_rate' | 'total_games') || 'wins';
+    const sortBy =
+      (req.query.sortBy as 'wins' | 'win_rate' | 'total_games') || 'wins';
     const limit = Number.parseInt(req.query.limit as string) || 10;
 
     const leaderboard = await gameHistoryService.getLeaderboard(sortBy, limit);
@@ -225,32 +254,37 @@ router.get('/profile/:username', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/user/:userId/game-history', async (req: Request, res: Response) => {
-  try {
-    const { userId } = req.params;
-    const limit = Number.parseInt(req.query.limit as string) || 10;
-    const offset = Number.parseInt(req.query.offset as string) || 0;
+router.get(
+  '/user/:userId/game-history',
+  async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.params;
+      const limit = Number.parseInt(req.query.limit as string) || 10;
+      const offset = Number.parseInt(req.query.offset as string) || 0;
 
-    const history = await gameHistoryService.getPlayerGameHistory(
-      userId,
-      limit,
-      offset,
-    );
+      const history = await gameHistoryService.getPlayerGameHistory(
+        userId,
+        limit,
+        offset,
+      );
 
-    res.json(history);
-  } catch (error) {
-    console.error('Get user game history error:', error);
-    res.status(500).json({
-      error: 'Failed to get game history',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-});
+      res.json(history);
+    } catch (error) {
+      console.error('Get user game history error:', error);
+      res.status(500).json({
+        error: 'Failed to get game history',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  },
+);
 
 // Public endpoint to get game details for replay (no auth required)
 router.get('/replay/:gameId', async (req: Request, res: Response) => {
   try {
-    const gameDetails = await gameHistoryService.getGameDetails(req.params.gameId);
+    const gameDetails = await gameHistoryService.getGameDetails(
+      req.params.gameId,
+    );
 
     res.json(gameDetails);
   } catch (error) {
@@ -263,75 +297,98 @@ router.get('/replay/:gameId', async (req: Request, res: Response) => {
 });
 
 // User preferences endpoints
-router.get('/preferences', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
+router.get(
+  '/preferences',
+  authMiddleware,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
 
-    const preferences = await authService.getUserPreferences(req.user.id);
-    res.json(preferences);
-  } catch (error) {
-    console.error('Get preferences error:', error);
-    res.status(500).json({
-      error: 'Failed to get preferences',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-});
-
-router.put('/preferences', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const { theme, locale, sound_effects_enabled, show_bot_messages, show_system_messages, show_challenge_toasts } = req.body;
-
-    const preferences = await authService.updateUserPreferences(req.user.id, {
-      theme,
-      locale,
-      sound_effects_enabled,
-      show_bot_messages,
-      show_system_messages,
-      show_challenge_toasts,
-    });
-
-    res.json(preferences);
-  } catch (error) {
-    console.error('Update preferences error:', error);
-    res.status(500).json({
-      error: 'Failed to update preferences',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-});
-
-// Update password
-router.put('/profile/password', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const { currentPassword, newPassword } = req.body;
-
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({
-        error: 'Missing required fields',
-        message: 'Current password and new password are required',
+      const preferences = await authService.getUserPreferences(req.user.id);
+      res.json(preferences);
+    } catch (error) {
+      console.error('Get preferences error:', error);
+      res.status(500).json({
+        error: 'Failed to get preferences',
+        message: error instanceof Error ? error.message : 'Unknown error',
       });
     }
+  },
+);
 
-    await authService.updatePassword(req.user.id, currentPassword, newPassword);
-    res.json({ message: 'Password updated successfully' });
-  } catch (error) {
-    console.error('Update password error:', error);
-    res.status(400).json({
-      error: 'Failed to update password',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-});
+router.put(
+  '/preferences',
+  authMiddleware,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const {
+        theme,
+        locale,
+        sound_effects_enabled,
+        show_bot_messages,
+        show_system_messages,
+        show_challenge_toasts,
+      } = req.body;
+
+      const preferences = await authService.updateUserPreferences(req.user.id, {
+        theme,
+        locale,
+        sound_effects_enabled,
+        show_bot_messages,
+        show_system_messages,
+        show_challenge_toasts,
+      });
+
+      res.json(preferences);
+    } catch (error) {
+      console.error('Update preferences error:', error);
+      res.status(500).json({
+        error: 'Failed to update preferences',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  },
+);
+
+// Update password
+router.put(
+  '/profile/password',
+  authMiddleware,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({
+          error: 'Missing required fields',
+          message: 'Current password and new password are required',
+        });
+      }
+
+      await authService.updatePassword(
+        req.user.id,
+        currentPassword,
+        newPassword,
+      );
+      res.json({ message: 'Password updated successfully' });
+    } catch (error) {
+      console.error('Update password error:', error);
+      res.status(400).json({
+        error: 'Failed to update password',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  },
+);
 
 export default router;
