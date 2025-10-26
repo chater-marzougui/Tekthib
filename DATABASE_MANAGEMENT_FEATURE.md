@@ -28,7 +28,7 @@ New endpoints have been added to `/server/src/routes/adminRoutes.ts`:
 - `DELETE /api/admin/db/users/:userId` - Delete a user (cascades to all related data)
 
 #### Game Management
-- `GET /api/admin/db/games` - List all games with pagination (20 per page)
+- `GET /api/admin/db/games` - List all games with pagination (50 per page, configurable via limit parameter)
 - `DELETE /api/admin/db/games/:gameId` - Delete a specific game
 
 #### Statistics
@@ -75,7 +75,7 @@ Complete user management interface:
 #### Games Sub-Tab
 Complete game history management:
 - **List View**: Shows completed games with details
-- **Pagination**: 20 games per page with navigation controls
+- **Pagination**: 50 games per page (configurable) with navigation controls
 - **Search**: Filter games by room code or game ID
 - **Game Details**:
   - Room code and player count

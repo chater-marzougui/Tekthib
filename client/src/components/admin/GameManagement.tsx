@@ -50,7 +50,7 @@ export default function GameManagement({ baseUrl, password }: GameManagementProp
     setIsLoading(true);
     try {
       const response = await fetch(
-        `${baseUrl}/api/admin/db/games?password=${encodeURIComponent(password)}&page=${page}&limit=20`
+        `${baseUrl}/api/admin/db/games?password=${encodeURIComponent(password)}&page=${page}&limit=50`
       );
 
       if (!response.ok) {
