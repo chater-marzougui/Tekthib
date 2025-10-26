@@ -29,7 +29,7 @@ interface ChatBoxProps {
 
 function isDuplicateMessage(
   messages: ChatMessage[],
-  newMessage: ChatMessage,
+  newMessage: ChatMessage
 ): boolean {
   return (
     messages.some((msg) => msg.id === newMessage.id) ||
@@ -37,7 +37,7 @@ function isDuplicateMessage(
       (msg) =>
         msg.timestamp === newMessage.timestamp &&
         msg.playerId === newMessage.playerId &&
-        msg.message === newMessage.message,
+        msg.message === newMessage.message
     )
   );
 }
@@ -48,7 +48,9 @@ interface SystemMessageStyle {
   timeColor: string;
 }
 
-function getSystemMessageStyleClass(color: string | undefined): SystemMessageStyle {
+function getSystemMessageStyleClass(
+  color: string | undefined
+): SystemMessageStyle {
   switch (color) {
     case "red":
       return {
@@ -87,7 +89,8 @@ export default function ChatBox({
 
   // Get user settings from localStorage
   const showBotMessages = localStorage.getItem("showBotMessages") !== "false";
-  const showSystemMessages = localStorage.getItem("showSystemMessages") !== "false";
+  const showSystemMessages =
+    localStorage.getItem("showSystemMessages") !== "false";
 
   // Helper to check if a player is a bot
   const isPlayerBot = (messagePlayerId: string) => {
@@ -168,33 +171,46 @@ export default function ChatBox({
   // Scroll to bottom using scrollTop instead of scrollIntoView
   useEffect(() => {
     if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      messagesContainerRef.current.scrollTop =
+        messagesContainerRef.current.scrollHeight;
     }
   }, [allMessages]);
 
   return (
-    <Card className="h-96 flex flex-col w-full pt-3 pb-1 max-w-84" dir={direction}>
+    <Card
+      className="h-96 flex flex-col w-full pt-3 pb-1 max-w-84"
+      dir={direction}
+    >
       <CardHeader className="flex-shrink-0">
-        <CardTitle>{t('chat.title')}</CardTitle>
+        <CardTitle>{t("chat.title")}</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col p-0 min-h-0">
         {/* Messages Area */}
-        <div 
+        <div
           ref={messagesContainerRef}
-          className="flex-1 overflow-y-auto space-y-4 p-4 border-t"
+          className="flex-1 overflow-y-auto space-y-4 p-4 border-t bg-transparent"
+          style={{
+            scrollbarColor: "#5b35c7 transparent",
+          }}
         >
           {allMessages.length === 0 ? (
             <div className="flex items-center justify-center h-full text-muted-foreground">
-              {t('chat.noMessages')}
+              {t("chat.noMessages")}
             </div>
           ) : (
             allMessages.map((msg) => {
               if (msg.isSystem) {
-                const { containerClass, textColor, timeColor } = getSystemMessageStyleClass(msg.systemMessageColor);
+                const { containerClass, textColor, timeColor } =
+                  getSystemMessageStyleClass(msg.systemMessageColor);
                 return (
-                  <div key={msg.id} className={`flex p-1 justify-center rounded-lg my-2 ${containerClass}`}>
+                  <div
+                    key={msg.id}
+                    className={`flex p-1 justify-center rounded-lg my-2 ${containerClass}`}
+                  >
                     <div className={`p-2 max-w-md ${containerClass}`}>
-                      <div className={`text-sm text-center ${textColor} font-medium`}>
+                      <div
+                        className={`text-sm text-center ${textColor} font-medium`}
+                      >
                         {msg.message}
                       </div>
                       <div className={`text-xs text-center ${timeColor} mt-1`}>
@@ -265,7 +281,7 @@ export default function ChatBox({
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyUp={handleKeyPress}
-            placeholder={t('chat.typeMessage')}
+            placeholder={t("chat.typeMessage")}
             className="flex-1 border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
             autoComplete="off"
             dir={direction}
@@ -277,7 +293,7 @@ export default function ChatBox({
             className="flex-shrink-0"
           >
             <Icon icon="mdi:send" className="h-4 w-4" />
-            <span className="sr-only">{t('chat.sendMessage')}</span>
+            <span className="sr-only">{t("chat.sendMessage")}</span>
           </Button>
         </div>
       </CardContent>
