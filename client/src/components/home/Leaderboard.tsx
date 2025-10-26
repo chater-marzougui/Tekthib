@@ -23,9 +23,15 @@ interface LeaderboardEntry {
 
 export default function Leaderboard() {
   const { t } = useTranslation();
-  const [leaderboardByWins, setLeaderboardByWins] = useState<LeaderboardEntry[]>([]);
-  const [leaderboardByWinRate, setLeaderboardByWinRate] = useState<LeaderboardEntry[]>([]);
-  const [leaderboardByGames, setLeaderboardByGames] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardByWins, setLeaderboardByWins] = useState<
+    LeaderboardEntry[]
+  >([]);
+  const [leaderboardByWinRate, setLeaderboardByWinRate] = useState<
+    LeaderboardEntry[]
+  >([]);
+  const [leaderboardByGames, setLeaderboardByGames] = useState<
+    LeaderboardEntry[]
+  >([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,9 +41,15 @@ export default function Leaderboard() {
   const fetchLeaderboards = async () => {
     try {
       const [winsData, winRateData, gamesData] = await Promise.all([
-        fetch(`${SERVER_URL}/api/auth/leaderboard?sortBy=wins&limit=5`).then(r => r.json()),
-        fetch(`${SERVER_URL}/api/auth/leaderboard?sortBy=win_rate&limit=5`).then(r => r.json()),
-        fetch(`${SERVER_URL}/api/auth/leaderboard?sortBy=total_games&limit=5`).then(r => r.json()),
+        fetch(`${SERVER_URL}/api/auth/leaderboard?sortBy=wins&limit=5`).then(
+          (r) => r.json()
+        ),
+        fetch(
+          `${SERVER_URL}/api/auth/leaderboard?sortBy=win_rate&limit=5`
+        ).then((r) => r.json()),
+        fetch(
+          `${SERVER_URL}/api/auth/leaderboard?sortBy=total_games&limit=5`
+        ).then((r) => r.json()),
       ]);
 
       setLeaderboardByWins(winsData);
@@ -50,11 +62,17 @@ export default function Leaderboard() {
     }
   };
 
-  const renderLeaderboard = (entries: LeaderboardEntry[], metric: 'wins' | 'win_rate' | 'total_games') => {
+  const renderLeaderboard = (
+    entries: LeaderboardEntry[],
+    metric: "wins" | "win_rate" | "total_games"
+  ) => {
     if (loading) {
       return (
         <div className="text-center py-4 text-gray-500">
-          <Icon icon="mdi:loading" className="w-6 h-6 animate-spin inline-block" />
+          <Icon
+            icon="mdi:loading"
+            className="w-6 h-6 animate-spin inline-block"
+          />
         </div>
       );
     }
@@ -67,15 +85,18 @@ export default function Leaderboard() {
       );
     }
 
+    console.log(entries);
+
     return (
       <div className="space-y-2">
-        {entries.map((entry, index) => {
-          const displayName = entry.users?.display_name || entry.users?.username || "Unknown";
+        {entries?.map((entry, index) => {
+          const displayName =
+            entry.users?.display_name || entry.users?.username || "Unknown";
           let value: string;
-          
-          if (metric === 'wins') {
+
+          if (metric === "wins") {
             value = `${entry.wins} ${t("leaderboard.wins")}`;
-          } else if (metric === 'win_rate') {
+          } else if (metric === "win_rate") {
             value = `${entry.win_rate.toFixed(1)}%`;
           } else {
             value = `${entry.total_games} ${t("leaderboard.games")}`;
@@ -87,7 +108,7 @@ export default function Leaderboard() {
           return (
             <div
               key={entry.user_id}
-              className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-3 p-2 rounded-lg hover:bg-background transition-colors"
             >
               <div className="flex items-center justify-center w-8">
                 {index < 3 ? (
@@ -97,7 +118,9 @@ export default function Leaderboard() {
                     style={{ color: rankColors[index] }}
                   />
                 ) : (
-                  <span className="text-gray-500 font-semibold">{index + 1}</span>
+                  <span className="text-gray-500 font-semibold">
+                    {index + 1}
+                  </span>
                 )}
               </div>
               <div className="flex-1">
@@ -127,17 +150,19 @@ export default function Leaderboard() {
         <Tabs defaultValue="wins" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="wins">{t("leaderboard.byWins")}</TabsTrigger>
-            <TabsTrigger value="winRate">{t("leaderboard.byWinRate")}</TabsTrigger>
+            <TabsTrigger value="winRate">
+              {t("leaderboard.byWinRate")}
+            </TabsTrigger>
             <TabsTrigger value="games">{t("leaderboard.byGames")}</TabsTrigger>
           </TabsList>
           <TabsContent value="wins" className="mt-4">
-            {renderLeaderboard(leaderboardByWins, 'wins')}
+            {renderLeaderboard(leaderboardByWins, "wins")}
           </TabsContent>
           <TabsContent value="winRate" className="mt-4">
-            {renderLeaderboard(leaderboardByWinRate, 'win_rate')}
+            {renderLeaderboard(leaderboardByWinRate, "win_rate")}
           </TabsContent>
           <TabsContent value="games" className="mt-4">
-            {renderLeaderboard(leaderboardByGames, 'total_games')}
+            {renderLeaderboard(leaderboardByGames, "total_games")}
           </TabsContent>
         </Tabs>
       </CardContent>

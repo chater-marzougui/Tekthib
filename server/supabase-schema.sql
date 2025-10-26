@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- Player statistics table
 CREATE TABLE IF NOT EXISTS player_stats (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id TEXT UNIQUE NOT NULL,
+  user_id TEXT UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   total_games INTEGER DEFAULT 0,
   wins INTEGER DEFAULT 0,
   losses INTEGER DEFAULT 0,
@@ -203,3 +203,10 @@ CREATE POLICY "Service role can insert game history" ON game_history
 
 CREATE POLICY "Service role can update game history" ON game_history
   FOR UPDATE USING (true);
+
+-- Add foreign key constraint to player_stats if it doesn't exist
+ALTER TABLE player_stats
+  ADD CONSTRAINT fk_player_stats_user_id 
+  FOREIGN KEY (user_id) 
+  REFERENCES users(id) 
+  ON DELETE CASCADE;
