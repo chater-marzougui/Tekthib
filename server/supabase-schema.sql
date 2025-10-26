@@ -54,6 +54,21 @@ CREATE TABLE IF NOT EXISTS player_stats (
   UNIQUE(user_id)
 );
 
+-- User preferences table for storing UI customization settings
+CREATE TABLE IF NOT EXISTS user_preferences (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id TEXT UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  theme VARCHAR(20) DEFAULT 'dark',
+  locale VARCHAR(10) DEFAULT 'en',
+  sound_effects_enabled BOOLEAN DEFAULT TRUE,
+  show_bot_messages BOOLEAN DEFAULT TRUE,
+  show_system_messages BOOLEAN DEFAULT TRUE,
+  show_challenge_toasts BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id)
+);
+
 -- Games table to store completed games
 CREATE TABLE IF NOT EXISTS games (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -108,6 +123,7 @@ CREATE TABLE IF NOT EXISTS game_history (
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_player_stats_user_id ON player_stats(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_preferences_user_id ON user_preferences(user_id);
 CREATE INDEX IF NOT EXISTS idx_games_room_code ON games(room_code);
 CREATE INDEX IF NOT EXISTS idx_games_winner ON games(winner_user_id);
 CREATE INDEX IF NOT EXISTS idx_games_ended_at ON games(ended_at DESC);
@@ -146,10 +162,16 @@ CREATE TRIGGER update_player_stats_updated_at
   FOR EACH ROW 
   EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_user_preferences_updated_at 
+  BEFORE UPDATE ON user_preferences 
+  FOR EACH ROW 
+  EXECUTE FUNCTION update_updated_at_column();
+
 -- Row Level Security (RLS) policies
 -- Enable RLS on tables
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE player_stats ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_preferences ENABLE ROW LEVEL SECURITY;
 ALTER TABLE games ENABLE ROW LEVEL SECURITY;
 ALTER TABLE game_participants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE game_history ENABLE ROW LEVEL SECURITY;
@@ -172,6 +194,16 @@ CREATE POLICY "Service role can insert player stats" ON player_stats
   FOR INSERT WITH CHECK (true);
 
 CREATE POLICY "Service role can update player stats" ON player_stats
+  FOR UPDATE USING (true);
+
+-- User preferences: Service role can do everything, users can view their own
+CREATE POLICY "Users can view their own preferences" ON user_preferences
+  FOR SELECT USING (true);
+
+CREATE POLICY "Service role can insert user preferences" ON user_preferences
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Service role can update user preferences" ON user_preferences
   FOR UPDATE USING (true);
 
 -- Games: Service role can do everything, public can view

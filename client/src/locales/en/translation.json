@@ -19,7 +19,8 @@
     "showSystemMessages": "System Messages",
     "showChallengeToasts": "Challenge Notifications",
     "soundEffects": "Sound Effects",
-    "viewProfile": "View Profile"
+    "viewProfile": "View Profile",
+    "settings": "Settings"
   },
   "languages": {
     "english": "English",
