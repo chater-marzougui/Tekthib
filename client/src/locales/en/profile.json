@@ -19,6 +19,8 @@
     "players": "Players",
     "rounds": "Rounds",
     "challenges": "Challenges",
-    "watchReplay": "Watch Replay"
+    "watchReplay": "Watch Replay",
+    "hideSettings": "Hide Settings",
+    "showSettings": "Show Settings"
   }
 }

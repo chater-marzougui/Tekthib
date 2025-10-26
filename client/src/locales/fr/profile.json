@@ -19,6 +19,8 @@
     "players": "Joueurs",
     "rounds": "Rounds",
     "challenges": "Défis",
-    "watchReplay": "Regarder la Relecture"
+    "watchReplay": "Regarder la Relecture",
+    "hideSettings": "Masquer les paramètres",
+    "showSettings": "Afficher les paramètres"
   }
 }

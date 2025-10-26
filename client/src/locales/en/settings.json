@@ -2,6 +2,8 @@
   "settings": {
     "title": "Profile Settings",
     "description": "Manage your profile and account settings",
+    "profileInformation": "Profile Information",
+    "profileInformationDescription": "Update your display name and username",
     "displayName": "Display Name",
     "displayNameDescription": "This is the name that will be shown to other players",
     "displayNamePlaceholder": "Enter your display name",
@@ -24,6 +26,8 @@
     "passwordUpdated": "Password updated successfully",
     "updateFailed": "Failed to update",
     "passwordMismatch": "Passwords do not match",
-    "passwordTooShort": "Password must be at least 6 characters"
+    "passwordTooShort": "Password must be at least 6 characters",
+    "passwordMatch": "Passwords match",
+    "passwordMinLength": "Minimum 6 characters"
   }
 }

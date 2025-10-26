@@ -2,6 +2,8 @@
   "settings": {
     "title": "إعدادات الملف الشخصي",
     "description": "إدارة ملفك الشخصي وإعدادات الحساب",
+    "profileInformation": "معلومات الملف الشخصي",
+    "profileInformationDescription": "قم بتحديث اسم العرض واسم المستخدم الخاص بك",
     "displayName": "الاسم المعروض",
     "displayNameDescription": "هذا هو الاسم الذي سيظهر للاعبين الآخرين",
     "displayNamePlaceholder": "أدخل اسمك المعروض",
@@ -24,6 +26,8 @@
     "passwordUpdated": "تم تحديث كلمة المرور بنجاح",
     "updateFailed": "فشل التحديث",
     "passwordMismatch": "كلمات المرور غير متطابقة",
-    "passwordTooShort": "يجب أن تحتوي كلمة المرور على 6 أحرف على الأقل"
+    "passwordTooShort": "يجب أن تحتوي كلمة المرور على 6 أحرف على الأقل",
+    "passwordMatch": "كلمات المرور متطابقة",
+    "passwordMinLength": "6 أحرف على الأقل"
   }
 }

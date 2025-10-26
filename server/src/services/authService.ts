@@ -264,8 +264,27 @@ export class AuthService {
 
   async updateProfile(
     userId: string,
-    updates: { display_name?: string; avatar_url?: string },
+    updates: { display_name?: string; username?: string; avatar_url?: string },
   ): Promise<UserProfile> {
+    // Validate username if provided
+    if (updates.username !== undefined) {
+      if (updates.username.length < 3 || updates.username.length > 50) {
+        throw new Error('Username must be between 3 and 50 characters');
+      }
+
+      // Check if username is already taken
+      const { data: existingUser } = await supabase!
+        .from('users')
+        .select('id')
+        .eq('username', updates.username)
+        .neq('id', userId)
+        .single();
+
+      if (existingUser && existingUser.id !== userId) {
+        throw new Error('Username already taken: ' + existingUser.id + ' '  + userId);
+      }
+    }
+
     const { data: user, error } = await supabase!
       .from('users')
       .update(updates)
@@ -275,41 +294,6 @@ export class AuthService {
 
     if (error || !user) {
       throw new Error('Failed to update profile');
-    }
-
-    return user;
-  }
-
-  async updateUsername(
-    userId: string,
-    newUsername: string,
-  ): Promise<UserProfile> {
-    // Check if username is already taken
-    const { data: existingUser } = await supabase!
-      .from('users')
-      .select('id')
-      .eq('username', newUsername)
-      .neq('id', userId)
-      .single();
-
-    if (existingUser) {
-      throw new Error('Username already taken');
-    }
-
-    // Validate username
-    if (newUsername.length < 3 || newUsername.length > 50) {
-      throw new Error('Username must be between 3 and 50 characters');
-    }
-
-    const { data: user, error } = await supabase!
-      .from('users')
-      .update({ username: newUsername })
-      .eq('id', userId)
-      .select('id, username, email, display_name, avatar_url, created_at')
-      .single();
-
-    if (error || !user) {
-      throw new Error('Failed to update username');
     }
 
     return user;

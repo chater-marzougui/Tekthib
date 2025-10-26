@@ -31,8 +31,7 @@ interface AuthContextType {
   ) => Promise<void>;
   logout: () => void;
   updatePreferences: (preferences: Partial<UserPreferences>) => Promise<void>;
-  updateProfile: (updates: { display_name?: string }) => Promise<void>;
-  updateUsername: (username: string) => Promise<void>;
+  updateProfile: (updates: { display_name?: string; username?: string }) => Promise<void>;
   updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -186,7 +185,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     applyPreferencesToLocalStorage(updatedPrefs);
   };
 
-  const updateProfile = async (updates: { display_name?: string }) => {
+  const updateProfile = async (updates: { display_name?: string; username?: string }) => {
     if (!token) {
       throw new Error("Not authenticated");
     }
@@ -203,30 +202,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.message || "Failed to update profile");
-    }
-
-    const updatedUser = await response.json();
-    setUser(updatedUser);
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-  };
-
-  const updateUsername = async (username: string) => {
-    if (!token) {
-      throw new Error("Not authenticated");
-    }
-
-    const response = await fetch(`${SERVER_URL}/api/auth/profile/username`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ username }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Failed to update username");
     }
 
     const updatedUser = await response.json();
@@ -264,7 +239,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       logout,
       updatePreferences,
       updateProfile,
-      updateUsername,
       updatePassword,
       isAuthenticated: !!user && !!token,
       isLoading,

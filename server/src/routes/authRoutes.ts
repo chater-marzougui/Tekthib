@@ -122,12 +122,22 @@ router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) =
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { display_name, avatar_url } = req.body;
+    const { display_name, username, avatar_url } = req.body;
+    const updates: { display_name?: string; username?: string; avatar_url?: string } = {};
 
-    const profile = await authService.updateProfile(req.user.id, {
-      display_name,
-      avatar_url,
-    });
+    if (display_name !== undefined) {
+      updates.display_name = display_name;
+    }
+
+    if (avatar_url !== undefined) {
+      updates.avatar_url = avatar_url;
+    }
+
+    if (username !== undefined) {
+      updates.username = username;
+    }
+
+    const profile = await authService.updateProfile(req.user.id, updates);
 
     res.json(profile);
   } catch (error) {
@@ -292,33 +302,6 @@ router.put('/preferences', authMiddleware, async (req: AuthRequest, res: Respons
     console.error('Update preferences error:', error);
     res.status(500).json({
       error: 'Failed to update preferences',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-});
-
-// Update username
-router.put('/profile/username', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const { username } = req.body;
-
-    if (!username) {
-      return res.status(400).json({
-        error: 'Missing username',
-        message: 'Username is required',
-      });
-    }
-
-    const user = await authService.updateUsername(req.user.id, username);
-    res.json(user);
-  } catch (error) {
-    console.error('Update username error:', error);
-    res.status(400).json({
-      error: 'Failed to update username',
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }

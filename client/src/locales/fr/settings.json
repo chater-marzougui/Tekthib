@@ -2,6 +2,8 @@
   "settings": {
     "title": "Paramètres du Profil",
     "description": "Gérez votre profil et les paramètres de votre compte",
+    "profileInformation": "Informations du profil",
+    "profileInformationDescription": "Mettez à jour votre nom d'affichage et nom d'utilisateur",
     "displayName": "Nom d'Affichage",
     "displayNameDescription": "C'est le nom qui sera affiché aux autres joueurs",
     "displayNamePlaceholder": "Entrez votre nom d'affichage",
@@ -24,6 +26,8 @@
     "passwordUpdated": "Mot de passe mis à jour avec succès",
     "updateFailed": "Échec de la mise à jour",
     "passwordMismatch": "Les mots de passe ne correspondent pas",
-    "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères"
+    "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères",
+    "passwordMatch": "Les mots de passe correspondent",
+    "passwordMinLength": "Minimum 6 caractères"
   }
 }

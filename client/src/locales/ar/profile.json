@@ -19,6 +19,8 @@
     "players": "اللاعبون",
     "rounds": "الجولات",
     "challenges": "التحديات",
-    "watchReplay": "شاهد الإعادة"
+    "watchReplay": "شاهد الإعادة",
+    "hideSettings": "إخفاء الإعدادات",
+    "showSettings": "عرض الإعدادات"
   }
 }

@@ -168,3 +168,47 @@ export interface PlayAgainPayload {
   roomCode: string;
   playerId: string;
 }
+
+export interface UserProfile {
+  id: string;
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  stats: {
+    total_games: number;
+    wins: number;
+    losses: number;
+    total_cards_played: number;
+    total_bluffs: number;
+    successful_bluffs: number;
+    total_challenges: number;
+    successful_challenges: number;
+    failed_challenges: number;
+    win_rate: number;
+    bluff_success_rate: number;
+    challenge_success_rate: number;
+  };
+}
+
+export interface GameHistoryItem {
+  id: string;
+  player_name: string;
+  final_position: number;
+  cards_played: number;
+  bluffs_made: number;
+  successful_bluffs: number;
+  challenges_made: number;
+  successful_challenges: number;
+  is_winner: boolean;
+  is_loser: boolean;
+  created_at: string;
+  games: {
+    id: string;
+    room_code: string;
+    started_at: string;
+    ended_at: string;
+    total_players: number;
+    total_rounds: number;
+  };
+}
