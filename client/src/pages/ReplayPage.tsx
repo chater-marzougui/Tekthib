@@ -120,11 +120,6 @@ export default function ReplayPage() {
   };
 
   const initializeReplayState = (game: GameDetails) => {
-    // Sort events by timestamp
-    const sortedEvents = [...game.game_history].sort(
-      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-    );
-
     // Initialize players from participants
     const initialPlayers: Player[] = game.game_participants.map((p) => ({
       id: p.user_id || p.id,
@@ -223,7 +218,7 @@ export default function ReplayPage() {
           if (p.id === pileTakenBy) {
             return {
               ...p,
-              cardCount: p.cardCount + cardsCount,
+              cardCount: (p.cardCount ?? 0) + cardsCount,
             };
           }
           return p;
