@@ -139,8 +139,15 @@ router.get('/db/users', async (req: Request, res: Response) => {
     });
   }
 
+  if (!supabase) {
+    return res.status(503).json({
+      error: 'Service Unavailable',
+      message: 'Database features are disabled. Configure Supabase to enable.',
+    });
+  }
+
   try {
-    const { data: users, error } = await supabase
+    const { data: users, error } = await supabase!
       .from('users')
       .select(`
         id,
@@ -191,8 +198,15 @@ router.get('/db/games', async (req: Request, res: Response) => {
     });
   }
 
+  if (!supabase) {
+    return res.status(503).json({
+      error: 'Service Unavailable',
+      message: 'Database features are disabled. Configure Supabase to enable.',
+    });
+  }
+
   try {
-    const { data: games, error, count } = await supabase
+    const { data: games, error, count } = await supabase!
       .from('games')
       .select(`
         id,
@@ -254,8 +268,15 @@ router.delete('/db/games/:gameId', async (req: Request, res: Response) => {
     });
   }
 
+  if (!supabase) {
+    return res.status(503).json({
+      error: 'Service Unavailable',
+      message: 'Database features are disabled. Configure Supabase to enable.',
+    });
+  }
+
   try {
-    const { error } = await supabase
+    const { error } = await supabase!
       .from('games')
       .delete()
       .eq('id', gameId);
@@ -291,6 +312,13 @@ router.put('/db/users/:userId', async (req: Request, res: Response) => {
     });
   }
 
+  if (!supabase) {
+    return res.status(503).json({
+      error: 'Service Unavailable',
+      message: 'Database features are disabled. Configure Supabase to enable.',
+    });
+  }
+
   try {
     const updates: any = {};
     if (username !== undefined) updates.username = username;
@@ -298,7 +326,7 @@ router.put('/db/users/:userId', async (req: Request, res: Response) => {
     if (display_name !== undefined) updates.display_name = display_name;
     if (avatar_url !== undefined) updates.avatar_url = avatar_url;
 
-    const { data, error } = await supabase
+    const { data, error } = await supabase!
       .from('users')
       .update(updates)
       .eq('id', userId)
@@ -335,8 +363,15 @@ router.delete('/db/users/:userId', async (req: Request, res: Response) => {
     });
   }
 
+  if (!supabase) {
+    return res.status(503).json({
+      error: 'Service Unavailable',
+      message: 'Database features are disabled. Configure Supabase to enable.',
+    });
+  }
+
   try {
-    const { error } = await supabase
+    const { error } = await supabase!
       .from('users')
       .delete()
       .eq('id', userId);
@@ -363,16 +398,23 @@ router.get('/db/stats', async (req: Request, res: Response) => {
     });
   }
 
+  if (!supabase) {
+    return res.status(503).json({
+      error: 'Service Unavailable',
+      message: 'Database features are disabled. Configure Supabase to enable.',
+    });
+  }
+
   try {
     // Get user count
-    const { count: userCount, error: userError } = await supabase
+    const { count: userCount, error: userError } = await supabase!
       .from('users')
       .select('*', { count: 'exact', head: true });
 
     if (userError) throw userError;
 
     // Get game count
-    const { count: gameCount, error: gameError } = await supabase
+    const { count: gameCount, error: gameError } = await supabase!
       .from('games')
       .select('*', { count: 'exact', head: true });
 
@@ -380,7 +422,7 @@ router.get('/db/stats', async (req: Request, res: Response) => {
 
     // Get total games played in last 24 hours
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const { count: recentGames, error: recentError } = await supabase
+    const { count: recentGames, error: recentError } = await supabase!
       .from('games')
       .select('*', { count: 'exact', head: true })
       .gte('ended_at', oneDayAgo);

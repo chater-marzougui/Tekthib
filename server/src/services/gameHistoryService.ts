@@ -43,7 +43,7 @@ export class GameHistoryService {
   ): Promise<string> {
     try {
       // Insert game record
-      const { data: game, error: gameError } = await supabase
+      const { data: game, error: gameError } = await supabase!
         .from('games')
         .insert({
           room_code: gameData.roomCode,
@@ -86,7 +86,7 @@ export class GameHistoryService {
         is_bot: p.isBot,
       }));
 
-      const { error: participantsError } = await supabase
+      const { error: participantsError } = await supabase!
         .from('game_participants')
         .insert(participantInserts);
 
@@ -105,7 +105,7 @@ export class GameHistoryService {
           round_number: e.roundNumber || null,
         }));
 
-        const { error: eventsError } = await supabase
+        const { error: eventsError } = await supabase!
           .from('game_history')
           .insert(eventInserts);
 
@@ -133,7 +133,7 @@ export class GameHistoryService {
     event: GameEvent,
   ): Promise<void> {
     try {
-      await supabase.from('game_history').insert({
+      await supabase!.from('game_history').insert({
         game_id: gameId,
         event_type: event.eventType,
         player_user_id: event.playerUserId || null,
@@ -154,7 +154,7 @@ export class GameHistoryService {
 
       try {
         // Get current stats
-        const { data: currentStats, error: fetchError } = await supabase
+        const { data: currentStats, error: fetchError } = await supabase!
           .from('player_stats')
           .select('*')
           .eq('user_id', participant.userId)
@@ -162,7 +162,7 @@ export class GameHistoryService {
 
         if (fetchError) {
           // If stats don't exist, create them
-          await supabase.from('player_stats').insert({
+          await supabase!.from('player_stats').insert({
             user_id: participant.userId,
             total_games: 1,
             wins: participant.isWinner ? 1 : 0,
@@ -178,7 +178,7 @@ export class GameHistoryService {
         }
 
         // Update existing stats
-        const { error: updateError } = await supabase
+        const { error: updateError } = await supabase!
           .from('player_stats')
           .update({
             total_games: (currentStats.total_games || 0) + 1,
@@ -209,7 +209,7 @@ export class GameHistoryService {
     limit: number = 10,
     offset: number = 0,
   ): Promise<unknown[]> {
-    const { data, error } = await supabase
+    const { data, error } = await supabase!
       .from('game_participants')
       .select(
         `
@@ -236,7 +236,7 @@ export class GameHistoryService {
   }
 
   async getGameDetails(gameId: string): Promise<unknown> {
-    const { data: game, error: gameError } = await supabase
+    const { data: game, error: gameError } = await supabase!
       .from('games')
       .select(
         `
@@ -259,7 +259,7 @@ export class GameHistoryService {
     sortBy: 'wins' | 'win_rate' | 'total_games' = 'wins',
     limit: number = 10,
   ): Promise<unknown[]> {
-    const { data, error } = await supabase
+    const { data, error } = await supabase!
       .from('player_stats')
       .select(
         `

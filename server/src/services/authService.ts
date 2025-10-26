@@ -51,7 +51,7 @@ export class AuthService {
     clientId: string;
   }> {
     // Check if user exists
-    const { data: existingUser } = await supabase
+    const { data: existingUser } = await supabase!
       .from('users')
       .select('id')
       .or(`username.eq.${username},email.eq.${email}`)
@@ -66,7 +66,7 @@ export class AuthService {
 
     // Generate custom user ID
     if (clientId) {
-      const { data: existingUser } = await supabase
+      const { data: existingUser } = await supabase!
         .from('users')
         .select('id')
         .eq('id', clientId)
@@ -79,7 +79,7 @@ export class AuthService {
     const userId = clientId || this.generateUserId();
 
     // Create user
-    const { data: user, error } = await supabase
+    const { data: user, error } = await supabase!
       .from('users')
       .insert({
         id: userId,
@@ -96,7 +96,7 @@ export class AuthService {
     }
 
     // Initialize player stats
-    await supabase.from('player_stats').insert({
+    await supabase!.from('player_stats').insert({
       user_id: userId,
     });
 
@@ -105,7 +105,7 @@ export class AuthService {
     const refreshToken = this.generateRefreshToken(user);
 
     // Update last login
-    await supabase
+    await supabase!
       .from('users')
       .update({ last_login_at: new Date().toISOString() })
       .eq('id', user.id);
@@ -118,7 +118,7 @@ export class AuthService {
     password: string,
   ): Promise<{ user: UserProfile; token: string; refreshToken: string }> {
     // Find user
-    const { data: user, error } = await supabase
+    const { data: user, error } = await supabase!
       .from('users')
       .select(
         'id, username, email, password_hash, display_name, avatar_url, created_at',
@@ -137,7 +137,7 @@ export class AuthService {
     }
 
     // Update last login
-    await supabase
+    await supabase!
       .from('users')
       .update({ last_login_at: new Date().toISOString() })
       .eq('id', user.id);
@@ -163,7 +163,7 @@ export class AuthService {
       };
 
       // Verify user still exists
-      const { data: user, error } = await supabase
+      const { data: user, error } = await supabase!
         .from('users')
         .select('id, username, email')
         .eq('id', decoded.id)
@@ -186,7 +186,7 @@ export class AuthService {
   async getUserProfile(
     userId: string,
   ): Promise<UserProfile & { stats: UserStats }> {
-    const { data: user, error } = await supabase
+    const { data: user, error } = await supabase!
       .from('users')
       .select('id, username, email, display_name, avatar_url, created_at')
       .eq('id', userId)
@@ -197,7 +197,7 @@ export class AuthService {
     }
 
     // Get stats
-    const { data: stats } = await supabase
+    const { data: stats } = await supabase!
       .from('player_stats')
       .select('*')
       .eq('user_id', userId)
@@ -212,7 +212,7 @@ export class AuthService {
   async getUserProfileByUsername(
     username: string,
   ): Promise<UserProfile & { stats: UserStats }> {
-    const { data: user, error } = await supabase
+    const { data: user, error } = await supabase!
       .from('users')
       .select('id, username, email, display_name, avatar_url, created_at')
       .eq('username', username)
@@ -223,7 +223,7 @@ export class AuthService {
     }
 
     // Get stats
-    const { data: stats } = await supabase
+    const { data: stats } = await supabase!
       .from('player_stats')
       .select('*')
       .eq('user_id', user.id)
@@ -239,7 +239,7 @@ export class AuthService {
     userId: string,
     updates: { display_name?: string; avatar_url?: string },
   ): Promise<UserProfile> {
-    const { data: user, error } = await supabase
+    const { data: user, error } = await supabase!
       .from('users')
       .update(updates)
       .eq('id', userId)
