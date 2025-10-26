@@ -237,4 +237,19 @@ router.get('/user/:userId/game-history', async (req: Request, res: Response) => 
   }
 });
 
+// Public endpoint to get game details for replay (no auth required)
+router.get('/replay/:gameId', async (req: Request, res: Response) => {
+  try {
+    const gameDetails = await gameHistoryService.getGameDetails(req.params.gameId);
+
+    res.json(gameDetails);
+  } catch (error) {
+    console.error('Get game replay error:', error);
+    res.status(404).json({
+      error: 'Game not found',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
 export default router;

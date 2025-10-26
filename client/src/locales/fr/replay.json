@@ -1,0 +1,21 @@
+{
+  "replay": {
+    "replayMode": "MODE RELECTURE",
+    "gameInfo": "Informations de la partie",
+    "roomCode": "Code de la salle",
+    "players": "Joueurs",
+    "rounds": "Rounds",
+    "date": "Date",
+    "event": "Événement",
+    "reset": "Réinitialiser",
+    "stepBack": "Reculer",
+    "play": "Jouer",
+    "pause": "Pause",
+    "stepForward": "Avancer",
+    "speed": "Vitesse",
+    "currentEvent": "Événement actuel",
+    "notFound": "Partie non trouvée",
+    "goBack": "Retour",
+    "failedToLoad": "Échec du chargement de la relecture"
+  }
+}
