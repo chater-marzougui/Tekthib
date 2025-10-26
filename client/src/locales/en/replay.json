@@ -1,0 +1,21 @@
+{
+  "replay": {
+    "replayMode": "REPLAY MODE",
+    "gameInfo": "Game Information",
+    "roomCode": "Room Code",
+    "players": "Players",
+    "rounds": "Rounds",
+    "date": "Date",
+    "event": "Event",
+    "reset": "Reset",
+    "stepBack": "Step Back",
+    "play": "Play",
+    "pause": "Pause",
+    "stepForward": "Step Forward",
+    "speed": "Speed",
+    "currentEvent": "Current Event",
+    "notFound": "Game Not Found",
+    "goBack": "Go Back",
+    "failedToLoad": "Failed to load game replay"
+  }
+}

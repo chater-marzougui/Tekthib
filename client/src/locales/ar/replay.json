@@ -1,0 +1,21 @@
+{
+  "replay": {
+    "replayMode": "وضع الإعادة",
+    "gameInfo": "معلومات اللعبة",
+    "roomCode": "رمز الغرفة",
+    "players": "اللاعبون",
+    "rounds": "الجولات",
+    "date": "التاريخ",
+    "event": "الحدث",
+    "reset": "إعادة تعيين",
+    "stepBack": "خطوة للخلف",
+    "play": "تشغيل",
+    "pause": "إيقاف مؤقت",
+    "stepForward": "خطوة للأمام",
+    "speed": "السرعة",
+    "currentEvent": "الحدث الحالي",
+    "notFound": "اللعبة غير موجودة",
+    "goBack": "العودة",
+    "failedToLoad": "فشل تحميل إعادة اللعبة"
+  }
+}
