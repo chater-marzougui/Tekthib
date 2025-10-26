@@ -19,7 +19,8 @@
     "showSystemMessages": "رسائل النظام",
     "showChallengeToasts": "إشعارات التحدي",
     "soundEffects": "المؤثرات الصوتية",
-    "viewProfile": "عرض الملف الشخصي"
+    "viewProfile": "عرض الملف الشخصي",
+    "settings": "الإعدادات"
   },
   "languages": {
     "english": "الإنجليزية",

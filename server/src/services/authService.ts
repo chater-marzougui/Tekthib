@@ -15,6 +15,15 @@ interface UserProfile {
   created_at: string;
 }
 
+interface UserPreferences {
+  theme: string;
+  locale: string;
+  sound_effects_enabled: boolean;
+  show_bot_messages: boolean;
+  show_system_messages: boolean;
+  show_challenge_toasts: boolean;
+}
+
 interface UserStats {
   total_games: number;
   wins: number;
@@ -100,6 +109,17 @@ export class AuthService {
       user_id: userId,
     });
 
+    // Initialize user preferences with defaults
+    await supabase!.from('user_preferences').insert({
+      user_id: userId,
+      theme: 'dark',
+      locale: 'en',
+      sound_effects_enabled: true,
+      show_bot_messages: true,
+      show_system_messages: true,
+      show_challenge_toasts: true,
+    });
+
     // Generate tokens
     const token = this.generateToken(user);
     const refreshToken = this.generateRefreshToken(user);
@@ -116,7 +136,7 @@ export class AuthService {
   async login(
     usernameOrEmail: string,
     password: string,
-  ): Promise<{ user: UserProfile; token: string; refreshToken: string }> {
+  ): Promise<{ user: UserProfile; token: string; refreshToken: string; preferences: UserPreferences | null }> {
     // Find user
     const { data: user, error } = await supabase!
       .from('users')
@@ -142,6 +162,13 @@ export class AuthService {
       .update({ last_login_at: new Date().toISOString() })
       .eq('id', user.id);
 
+    // Get user preferences
+    const { data: preferences } = await supabase!
+      .from('user_preferences')
+      .select('theme, locale, sound_effects_enabled, show_bot_messages, show_system_messages, show_challenge_toasts')
+      .eq('user_id', user.id)
+      .single();
+
     // Generate tokens
     const token = this.generateToken(user);
     const refreshToken = this.generateRefreshToken(user);
@@ -149,7 +176,7 @@ export class AuthService {
     // Remove password hash from response
     const { password_hash, ...userProfile } = user;
 
-    return { user: userProfile, token, refreshToken };
+    return { user: userProfile, token, refreshToken, preferences };
   }
 
   async refreshToken(
@@ -251,6 +278,148 @@ export class AuthService {
     }
 
     return user;
+  }
+
+  async updateUsername(
+    userId: string,
+    newUsername: string,
+  ): Promise<UserProfile> {
+    // Check if username is already taken
+    const { data: existingUser } = await supabase!
+      .from('users')
+      .select('id')
+      .eq('username', newUsername)
+      .neq('id', userId)
+      .single();
+
+    if (existingUser) {
+      throw new Error('Username already taken');
+    }
+
+    // Validate username
+    if (newUsername.length < 3 || newUsername.length > 50) {
+      throw new Error('Username must be between 3 and 50 characters');
+    }
+
+    const { data: user, error } = await supabase!
+      .from('users')
+      .update({ username: newUsername })
+      .eq('id', userId)
+      .select('id, username, email, display_name, avatar_url, created_at')
+      .single();
+
+    if (error || !user) {
+      throw new Error('Failed to update username');
+    }
+
+    return user;
+  }
+
+  async updatePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
+    // Get current user
+    const { data: user, error } = await supabase!
+      .from('users')
+      .select('password_hash')
+      .eq('id', userId)
+      .single();
+
+    if (error || !user) {
+      throw new Error('User not found');
+    }
+
+    // Verify current password
+    const isValid = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!isValid) {
+      throw new Error('Current password is incorrect');
+    }
+
+    // Validate new password
+    if (newPassword.length < 6) {
+      throw new Error('Password must be at least 6 characters');
+    }
+
+    // Hash new password
+    const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+    // Update password
+    const { error: updateError } = await supabase!
+      .from('users')
+      .update({ password_hash: passwordHash })
+      .eq('id', userId);
+
+    if (updateError) {
+      throw new Error('Failed to update password');
+    }
+  }
+
+  async getUserPreferences(userId: string): Promise<UserPreferences> {
+    const { data: preferences, error } = await supabase!
+      .from('user_preferences')
+      .select('theme, locale, sound_effects_enabled, show_bot_messages, show_system_messages, show_challenge_toasts')
+      .eq('user_id', userId)
+      .single();
+
+    if (error || !preferences) {
+      // Return defaults if preferences don't exist
+      return {
+        theme: 'dark',
+        locale: 'en',
+        sound_effects_enabled: true,
+        show_bot_messages: true,
+        show_system_messages: true,
+        show_challenge_toasts: true,
+      };
+    }
+
+    return preferences;
+  }
+
+  async updateUserPreferences(
+    userId: string,
+    preferences: Partial<UserPreferences>,
+  ): Promise<UserPreferences> {
+    // Check if preferences exist
+    const { data: existing } = await supabase!
+      .from('user_preferences')
+      .select('id')
+      .eq('user_id', userId)
+      .single();
+
+    if (!existing) {
+      // Create new preferences
+      const { data: newPreferences, error } = await supabase!
+        .from('user_preferences')
+        .insert({
+          user_id: userId,
+          ...preferences,
+        })
+        .select('theme, locale, sound_effects_enabled, show_bot_messages, show_system_messages, show_challenge_toasts')
+        .single();
+
+      if (error || !newPreferences) {
+        throw new Error('Failed to create preferences');
+      }
+
+      return newPreferences;
+    }
+
+    // Update existing preferences
+    const { data: updatedPreferences, error } = await supabase!
+      .from('user_preferences')
+      .update(preferences)
+      .eq('user_id', userId)
+      .select('theme, locale, sound_effects_enabled, show_bot_messages, show_system_messages, show_challenge_toasts')
+      .single();
+
+    if (error || !updatedPreferences) {
+      throw new Error('Failed to update preferences');
+    }
+
+    return updatedPreferences;
   }
 
   private generateToken(user: {

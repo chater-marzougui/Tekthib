@@ -44,6 +44,7 @@ Once your project is ready:
 This will create:
 - **users** table - User profiles and authentication
 - **player_stats** table - Player statistics (games, wins, losses, etc.)
+- **user_preferences** table - User UI customization settings (theme, locale, sound, messages visibility)
 - **games** table - Completed game records
 - **game_participants** table - Player participation in games
 - **game_history** table - Detailed event history for each game
@@ -52,7 +53,7 @@ This will create:
 
 After running the SQL, verify the tables were created:
 1. Go to **Table Editor** in the Supabase dashboard
-2. You should see all 5 tables listed
+2. You should see all 6 tables listed (users, player_stats, user_preferences, games, game_participants, game_history)
 3. Check that each table has the correct columns and indexes
 
 ## Configure Environment Variables
@@ -192,7 +193,11 @@ All auth endpoints are under `/api/auth`:
 | `/login` | POST | Login to existing account | No |
 | `/refresh` | POST | Refresh JWT token | No |
 | `/profile` | GET | Get user profile with stats | Yes |
-| `/profile` | PUT | Update user profile | Yes |
+| `/profile` | PUT | Update user profile (display_name, avatar) | Yes |
+| `/profile/username` | PUT | Update username | Yes |
+| `/profile/password` | PUT | Update password | Yes |
+| `/preferences` | GET | Get user preferences | Yes |
+| `/preferences` | PUT | Update user preferences | Yes |
 | `/game-history` | GET | Get user's game history | Yes |
 | `/game/:gameId` | GET | Get detailed game info | Yes |
 
@@ -472,6 +477,8 @@ After setting up Supabase, these features are now available:
 1. **Detailed game history tracking**: All game events are recorded including rounds, card plays, and challenges
 2. **Leaderboards**: Top players displayed on home page sorted by wins, win rate, or total games
 3. **User profile pages**: View detailed stats and game history for any player
+4. **User preferences sync**: UI customization settings (theme, locale, sounds) are saved to database and loaded on login
+5. **Profile settings**: Users can update their display name, username, and password from the settings page
 
 🔮 **Future Enhancements:**
 4. **Add achievements**: Track special accomplishments (e.g., "Master Bluffer", "Challenge Champion")

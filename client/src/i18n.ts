@@ -35,6 +35,10 @@ import authAR from "./locales/ar/auth.json";
 import profileEN from "./locales/en/profile.json";
 import profileFR from "./locales/fr/profile.json";
 import profileAR from "./locales/ar/profile.json";
+// Import settings translation files
+import settingsEN from "./locales/en/settings.json";
+import settingsFR from "./locales/fr/settings.json";
+import settingsAR from "./locales/ar/settings.json";
 // Import replay translation files
 import replayEN from "./locales/en/replay.json";
 import replayFR from "./locales/fr/replay.json";
@@ -51,6 +55,7 @@ const resources = {
       ...botEN,
       ...authEN,
       ...profileEN,
+      ...settingsEN,
       ...replayEN,
     },
   },
@@ -64,6 +69,7 @@ const resources = {
       ...botFR,
       ...authFR,
       ...profileFR,
+      ...settingsFR,
       ...replayFR,
     },
   },
@@ -77,6 +83,7 @@ const resources = {
       ...botAR,
       ...authAR,
       ...profileAR,
+      ...settingsAR,
       ...replayAR,
     },
   },

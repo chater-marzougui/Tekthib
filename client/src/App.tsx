@@ -9,6 +9,7 @@ import GamePage from "./pages/GamePage";
 import AdminPage from "./pages/AdminPage";
 import AuthPage from "./pages/AuthPage";
 import UserProfilePage from "./pages/UserProfilePage";
+import ProfileSettingsPage from "./pages/ProfileSettingsPage";
 import ReplayPage from "./pages/ReplayPage";
 import { Toaster } from "sonner";
 import { SoundProvider } from "./context/SoundPlayerContext";
@@ -49,6 +50,7 @@ function App() {
                   path="/profile/:username"
                   element={<UserProfilePage />}
                 />
+                <Route path="/settings" element={<ProfileSettingsPage />} />
                 <Route path="/replay/:gameId" element={<ReplayPage />} />
                 <Route
                   path="/*"

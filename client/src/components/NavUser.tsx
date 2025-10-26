@@ -89,7 +89,7 @@ export function NavUser() {
   const { theme, setTheme } = useTheme();
   const { t, i18n } = useTranslation();
   const { soundEffectsEnabled, toggleSoundEffects } = useSound();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, updatePreferences } = useAuth();
   const navigate = useNavigate();
   const playerId = localStorage.getItem("clientId");
   const randomStr = Math.random().toString(36).substring(2, 15);
@@ -124,6 +124,13 @@ export function NavUser() {
     if (i18n.language === language) return;
     i18n.changeLanguage(language);
     localStorage.setItem("locale", language);
+    
+    // Sync with database if authenticated
+    if (isAuthenticated) {
+      updatePreferences({ locale: language }).catch((error) => {
+        console.error("Failed to sync locale preference:", error);
+      });
+    }
   };
 
   const handleChangeTheme = (
@@ -153,6 +160,13 @@ export function NavUser() {
     const transition = document.startViewTransition(() => {
       setTheme(newTheme);
       localStorage.setItem("theme", newTheme);
+      
+      // Sync with database if authenticated
+      if (isAuthenticated) {
+        updatePreferences({ theme: newTheme }).catch((error) => {
+          console.error("Failed to sync theme preference:", error);
+        });
+      }
     });
 
     // Animate the circular reveal
@@ -226,14 +240,29 @@ export function NavUser() {
       case "bot":
         setShowBotMessages(newValue);
         localStorage.setItem("showBotMessages", String(newValue));
+        if (isAuthenticated) {
+          updatePreferences({ show_bot_messages: newValue }).catch((error) => {
+            console.error("Failed to sync bot messages preference:", error);
+          });
+        }
         break;
       case "system":
         setShowSystemMessages(newValue);
         localStorage.setItem("showSystemMessages", String(newValue));
+        if (isAuthenticated) {
+          updatePreferences({ show_system_messages: newValue }).catch((error) => {
+            console.error("Failed to sync system messages preference:", error);
+          });
+        }
         break;
       case "challenge":
         setShowChallengeToasts(newValue);
         localStorage.setItem("showChallengeToasts", String(newValue));
+        if (isAuthenticated) {
+          updatePreferences({ show_challenge_toasts: newValue }).catch((error) => {
+            console.error("Failed to sync challenge toasts preference:", error);
+          });
+        }
         break;
     }
   };
@@ -311,6 +340,13 @@ export function NavUser() {
                           </div>
                         </div>
                       </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => navigate("/settings")}
+                      className="cursor-pointer"
+                    >
+                      <Icon icon="mdi:cog" className="mr-2 h-4 w-4" />
+                      <span>{t("nav.settings")}</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                   </>
