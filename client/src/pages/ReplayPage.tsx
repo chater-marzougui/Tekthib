@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -147,6 +147,78 @@ export default function ReplayPage() {
     setReplayState(initialState);
   };
 
+  /**
+   * Get ordered events by round and event type priority (memoized)
+   */
+  const orderedEvents = useMemo(() => {
+    if (!gameDetails) return [];
+
+    // Group events by round
+    const eventsByRound = new Map<number, GameEvent[]>();
+    
+    for (const event of gameDetails.game_history) {
+      const roundNum = event.round_number ?? 0;
+      if (!eventsByRound.has(roundNum)) {
+        eventsByRound.set(roundNum, []);
+      }
+      eventsByRound.get(roundNum)?.push(event);
+    }
+
+    // Define event type priority within each round
+    const eventPriority: Record<string, number> = {
+      "round_start": 0,
+      "game_start": 1,
+      "cards_played": 2,
+      "challenge": 3,
+      "round_end": 4,
+      "game_end": 5,
+    };
+
+    const ordered: GameEvent[] = [];
+
+    // Process rounds in order
+    const sortedRounds = Array.from(eventsByRound.keys()).sort((a, b) => a - b);
+    
+    for (const roundNum of sortedRounds) {
+      const roundEvents = eventsByRound.get(roundNum) || [];
+      
+      // Sort events in this round by priority
+      roundEvents.sort((a, b) => {
+        const priorityA = eventPriority[a.event_type] ?? 999;
+        const priorityB = eventPriority[b.event_type] ?? 999;
+        return priorityA - priorityB;
+      });
+
+      // For cards_played, sort by pileSize to show them in the correct order
+      let cardsPlayedIndex = -1;
+      for (let i = 0; i < roundEvents.length; i++) {
+        if (roundEvents[i].event_type === "cards_played") {
+          if (cardsPlayedIndex === -1) {
+            cardsPlayedIndex = i;
+          }
+        }
+      }
+
+      if (cardsPlayedIndex > -1) {
+        const beforeCards = roundEvents.slice(0, cardsPlayedIndex);
+        const cardsPlayed = roundEvents.slice(cardsPlayedIndex).filter((e) => e.event_type === "cards_played");
+        const afterCards = roundEvents.slice(cardsPlayedIndex).filter((e) => e.event_type !== "cards_played");
+
+        cardsPlayed.sort((a, b) => {
+          const sizeA = (a.event_data.pileSize as number) ?? 0;
+          const sizeB = (b.event_data.pileSize as number) ?? 0;
+          return sizeA - sizeB;
+        });
+
+        ordered.push(...beforeCards, ...cardsPlayed, ...afterCards);
+      } else {
+        ordered.push(...roundEvents);
+      }
+    }
+
+    return ordered;
+  }, [gameDetails?.game_history]);
+
   const applyEvent = (state: ReplayState, event: GameEvent): ReplayState => {
     const newState = { ...state };
 
@@ -252,13 +324,9 @@ export default function ReplayPage() {
   const stepForward = () => {
     if (!gameDetails || !replayState) return;
 
-    const events = [...gameDetails.game_history].sort(
-      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-    );
-
-    if (replayState.currentEventIndex < events.length - 1) {
+    if (replayState.currentEventIndex < orderedEvents.length - 1) {
       const nextIndex = replayState.currentEventIndex + 1;
-      const nextEvent = events[nextIndex];
+      const nextEvent = orderedEvents[nextIndex];
       const newState = applyEvent(replayState, nextEvent);
       setReplayState({ ...newState, currentEventIndex: nextIndex });
     }
@@ -269,9 +337,6 @@ export default function ReplayPage() {
 
     if (replayState.currentEventIndex >= 0) {
       // Replay from start up to previous event
-      const events = [...gameDetails.game_history].sort(
-        (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-      );
 
       // Reinitialize state
       initializeReplayState(gameDetails);
@@ -279,10 +344,10 @@ export default function ReplayPage() {
       // Apply events up to the previous index
       setTimeout(() => {
         const targetIndex = replayState.currentEventIndex - 1;
-        let newState = { ...replayState, currentEventIndex: -1 };
+        let newState = replayState;
         
         for (let i = 0; i <= targetIndex; i++) {
-          newState = applyEvent(newState, events[i]);
+          newState = applyEvent(newState, orderedEvents[i]);
           newState.currentEventIndex = i;
         }
         
@@ -294,19 +359,15 @@ export default function ReplayPage() {
   const jumpToEvent = (index: number) => {
     if (!gameDetails || !replayState) return;
 
-    const events = [...gameDetails.game_history].sort(
-      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-    );
-
     // Reinitialize state
     initializeReplayState(gameDetails);
     
     // Apply events up to the target index
     setTimeout(() => {
-      let newState = { ...replayState, currentEventIndex: -1 };
+      let newState = replayState;
       
       for (let i = 0; i <= index; i++) {
-        newState = applyEvent(newState, events[i]);
+        newState = applyEvent(newState, orderedEvents[i]);
         newState.currentEventIndex = i;
       }
       
@@ -317,11 +378,7 @@ export default function ReplayPage() {
   useEffect(() => {
     if (!isPlaying || !gameDetails || !replayState) return;
 
-    const events = [...gameDetails.game_history].sort(
-      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-    );
-
-    if (replayState.currentEventIndex >= events.length - 1) {
+    if (replayState.currentEventIndex >= orderedEvents.length - 1) {
       setIsPlaying(false);
       return;
     }
@@ -373,12 +430,8 @@ export default function ReplayPage() {
     );
   }
 
-  const events = [...gameDetails.game_history].sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-  );
-
-  const progress = events.length > 0 
-    ? ((replayState.currentEventIndex + 1) / events.length) * 100 
+  const progress = orderedEvents.length > 0 
+    ? ((replayState.currentEventIndex + 1) / orderedEvents.length) * 100 
     : 0;
 
   return (
@@ -469,13 +522,13 @@ export default function ReplayPage() {
               {/* Timeline */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>{t("replay.event")} {replayState.currentEventIndex + 1} / {events.length}</span>
+                  <span>{t("replay.event")} {replayState.currentEventIndex + 1} / {orderedEvents.length}</span>
                   <span>{Math.round(progress)}%</span>
                 </div>
                 <Slider
                   value={[replayState.currentEventIndex + 1]}
                   min={0}
-                  max={events.length}
+                  max={orderedEvents.length}
                   step={1}
                   onValueChange={(value) => jumpToEvent(value[0] - 1)}
                   className="cursor-pointer"
@@ -516,7 +569,7 @@ export default function ReplayPage() {
                   variant="outline"
                   size="icon"
                   onClick={stepForward}
-                  disabled={replayState.currentEventIndex >= events.length - 1}
+                  disabled={replayState.currentEventIndex >= orderedEvents.length - 1}
                   title={t("replay.stepForward")}
                 >
                   <Icon icon="mdi:skip-next" className="w-5 h-5" />
@@ -539,15 +592,15 @@ export default function ReplayPage() {
               </div>
 
               {/* Current Event Info */}
-              {replayState.currentEventIndex >= 0 && events[replayState.currentEventIndex] && (
+              {replayState.currentEventIndex >= 0 && orderedEvents[replayState.currentEventIndex] && (
                 <div className="mt-4 p-4 bg-muted rounded-lg">
                   <div className="text-sm">
                     <div className="font-semibold mb-2">
-                      {t("replay.currentEvent")}: {events[replayState.currentEventIndex].event_type}
+                      {t("replay.currentEvent")}: {orderedEvents[replayState.currentEventIndex].event_type}
                     </div>
                     <div className="text-muted-foreground">
-                      {events[replayState.currentEventIndex].player_name} -{" "}
-                      {new Date(events[replayState.currentEventIndex].timestamp).toLocaleTimeString()}
+                      {orderedEvents[replayState.currentEventIndex].player_name} -{" "}
+                      {new Date(orderedEvents[replayState.currentEventIndex].timestamp).toLocaleTimeString()}
                     </div>
                   </div>
                 </div>
