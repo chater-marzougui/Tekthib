@@ -37,11 +37,12 @@ A real-time multiplayer card game platform that brings the classic Tunisian bluf
 - **Admin Dashboard**: Real-time monitoring of rooms, players, and game states
 - **Responsive UI**: Dark/light themes, custom animations, mobile-friendly
 - **Database Backend**: Supabase integration for user authentication and game history
+- **Game Replay**: Watch replays of completed games with playback controls
+- **Python Bot Player**: Scriptable bot that connects via WebSocket for AI development
 
 ### 🚧 Future Enhancements
 - Link game history to authenticated users
 - Leaderboards and player rankings
-- Spectator mode and game replay
 - Tournament system
 - Custom game modes and rule variations
 - Enhanced mobile app experience
@@ -213,6 +214,43 @@ npm run build      # Production build
 
 ## 🎮 How to Play
 
+### Python Bot Player
+
+Use the Python bot to test AI strategies or fill rooms:
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the bot
+python python_bot_player.py --room-code ABC123 --player-name MyBot
+
+# With custom server
+python python_bot_player.py --room-code ABC123 --player-name MyBot --server-url ws://localhost:3001
+
+# Enable verbose logging
+python python_bot_player.py --room-code ABC123 --player-name MyBot --verbose
+```
+
+**Bot Features:**
+- Connects via WebSocket like a regular player
+- Implements basic random strategy (70% truth, 30% bluff, 30% challenge rate)
+- Comprehensive logging to console and `bot_player.log`
+- Foundation for developing sophisticated AI with LLMs or ML models
+
+**Bot Behavior:**
+- Automatically joins room and marks ready
+- Plays cards with human-like delays (1.5-3.5 seconds)
+- Randomly decides whether to tell truth or bluff
+- Challenges opponents 30% of the time
+- Logs all game events and decisions
+
+**Use Cases:**
+- Testing game logic and server performance
+- Developing AI players with machine learning
+- Filling rooms for testing multiplayer scenarios
+- Creating tournament bots with different strategies
+
 ### Creating a Game
 1. Open https://chater-marzougui.me/Tekthib/
 2. Enter your name (supports English, French, and Arabic)
@@ -250,6 +288,26 @@ Add AI bots to fill your room:
 - View detailed statistics (bluffs, challenges, etc.)
 - Earn titles: 🎭 Master Liar, 🔍 Detective, 😇 Saint, 🤔 False Accuser
 - Play again to continue with same players
+- Game is saved to history (if authenticated)
+
+### Game Replay
+After a game ends, authenticated users can watch replays:
+
+1. Visit your profile: `https://chater-marzougui.me/Tekthib/profile/username`
+2. Click on any completed game in your history
+3. Use playback controls:
+   - **Play/Pause**: Automatic playback at selected speed
+   - **Step Forward/Back**: Move one event at a time
+   - **Speed Control**: 0.5x, 1x, 1.5x, or 2x playback speed
+   - **Timeline Scrubber**: Jump to any point in the game
+4. View complete game state reconstruction at each event
+
+**Replay Features:**
+- Shows all card plays, challenges, and results
+- Displays pile size and current rank
+- Updates player card counts
+- Shows who wins/loses each round
+- Complete event-by-event reconstruction
 
 ## 📊 Performance & Optimization
 
@@ -277,7 +335,21 @@ See [BOT_AI_ENHANCEMENT_SUMMARY.md](./BOT_AI_ENHANCEMENT_SUMMARY.md) for:
 
 ## 🔧 Recent Fixes & Improvements
 
-### Challenge Suspense System (Latest)
+### Game Replay System (Latest)
+- **Replay Feature**: Watch replays of completed games from user profiles
+- **Playback Controls**: Play, pause, step forward/backward, and speed controls (0.5x to 2x)
+- **Event Timeline**: Scrubber to jump to any point in the game
+- **Visual Replay**: Reconstructs game state from event history with accurate player positions
+- **Multi-language**: Full i18n support for replay interface
+
+### Python Bot Player (Latest)
+- **WebSocket Bot**: Python script that connects to games and plays autonomously
+- **AI Development**: Foundation for developing LLM or ML-based game AI
+- **Comprehensive Logging**: Detailed logs of all game actions and decisions
+- **Random Strategy**: Placeholder AI with configurable bluffing and challenge rates
+- **Command-line**: Easy to run with `--room-code`, `--player-name`, and `--server-url` arguments
+
+### Challenge Suspense System
 - **Play Blocking**: Players can no longer play cards while a challenge is being processed during suspense
 - **Error Handling**: Clear "Processing Challenge" error message displayed to players who attempt to play
 - **State Management**: Added `canPlay` flag to game state for proper UI state management

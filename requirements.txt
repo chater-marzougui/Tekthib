@@ -1,0 +1,2 @@
+# Python Bot Player Requirements
+websocket-client>=1.6.0
