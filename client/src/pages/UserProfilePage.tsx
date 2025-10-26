@@ -332,7 +332,9 @@ export default function UserProfilePage() {
                           <span className="text-sm text-muted-foreground">
                             {new Date(game.games.ended_at).toLocaleDateString()}
                           </span>
-                          <Icon icon="mdi:play-circle" className="w-5 h-5 text-blue-500" />
+                          <span aria-label={t("profile.watchReplay")}>
+                            <Icon icon="mdi:play-circle" className="w-5 h-5 text-blue-500" />
+                          </span>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
