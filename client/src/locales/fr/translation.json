@@ -18,7 +18,8 @@
     "showBotMessages": "Messages des bots",
     "showSystemMessages": "Messages système",
     "showChallengeToasts": "Notifications de défi",
-    "soundEffects": "Effets sonores"
+    "soundEffects": "Effets sonores",
+    "viewProfile": "Voir le Profil"
   },
   "languages": {
     "english": "Anglais",
@@ -51,7 +52,8 @@
     "hostControls": "ℹ️ En tant qu'hôte, vous pouvez couper le micro des joueurs ou les expulser",
     "hostMutedYou": "L'hôte a coupé votre microphone",
     "hostUnmutedYou": "L'hôte a activé votre microphone",
-    "kickedByHost": "Vous avez été expulsé par l'hôte"
+    "kickedByHost": "Vous avez été expulsé par l'hôte",
+    "audioPlaybackFailed": "La lecture audio est bloquée. Cliquez n'importe où pour activer."
   },
   "errors": {
     "roomNotFound": "Salle introuvable. Redirection vers l'accueil...",
@@ -113,5 +115,13 @@
     "roomNotFound": "Salle introuvable",
     "roomDeleted": "Salle {{roomId}} supprimée",
     "failedToDelete": "Échec de la suppression de la salle"
+  },
+  "notFound": {
+    "title": "404 - Non trouvé",
+    "description": "Oups! La page que vous recherchez n'existe pas ou a été déplacée.",
+    "hint": "Elle a peut-être été pliée dans un autre jeu!",
+    "backHome": "Retour à l'accueil",
+    "goBack": "Retour",
+    "errorCode": "Code d'erreur: 404 | Page non trouvée"
   }
 }

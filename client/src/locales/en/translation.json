@@ -18,7 +18,8 @@
     "showBotMessages": "Bot Messages",
     "showSystemMessages": "System Messages",
     "showChallengeToasts": "Challenge Notifications",
-    "soundEffects": "Sound Effects"
+    "soundEffects": "Sound Effects",
+    "viewProfile": "View Profile"
   },
   "languages": {
     "english": "English",
@@ -51,7 +52,8 @@
     "hostControls": "ℹ️ As host, you can mute players or kick them",
     "hostMutedYou": "Host has muted your microphone",
     "hostUnmutedYou": "Host has unmuted your microphone",
-    "kickedByHost": "You have been kicked by the host"
+    "kickedByHost": "You have been kicked by the host",
+    "audioPlaybackFailed": "Audio playback blocked. Click anywhere to enable."
   },
   "errors": {
     "roomNotFound": "Room not found. Redirecting to home...",
@@ -113,5 +115,13 @@
     "roomNotFound": "Room not found",
     "roomDeleted": "Room {{roomId}} deleted",
     "failedToDelete": "Failed to delete room"
+  },
+  "notFound": {
+    "title": "404 - Not Found",
+    "description": "Oops! The page you're looking for doesn't exist or has been moved.",
+    "hint": "It might have been folded into a different deck!",
+    "backHome": "Back to Home",
+    "goBack": "Go Back",
+    "errorCode": "Error Code: 404 | Page Not Found"
   }
 }

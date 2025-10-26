@@ -7,7 +7,7 @@ import { Icon } from "@iconify/react";
 export default function NotFoundPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const randomNum = Math.floor(Math.random() * 10);
+  const randomNum = Math.floor(Math.random() * 9) + 1;
 
   return (
     <div className="flex-1 flex items-center justify-center">
@@ -60,19 +60,13 @@ export default function NotFoundPage() {
           {/* Error Message */}
           <div className="space-y-4 mb-8">
             <h1 className="text-4xl font-black bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
-              {t("notFound.title", "404 - Not Found")}
+              {t("notFound.title")}
             </h1>
             <p className="text-foreground/70 text-lg">
-              {t(
-                "notFound.description",
-                "Oops! The page you're looking for doesn't exist or has been moved."
-              )}
+              {t("notFound.description")}
             </p>
             <p className="text-sm text-foreground/50">
-              {t(
-                "notFound.hint",
-                "It might have been folded into a different deck!"
-              )}
+              {t("notFound.hint")}
             </p>
           </div>
 
@@ -83,7 +77,7 @@ export default function NotFoundPage() {
               className="gap-2 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700"
             >
               <Icon icon="mdi:home" width={20} />
-              {t("notFound.backHome", "Back to Home")}
+              {t("notFound.backHome")}
             </Button>
             <Button
               onClick={() => navigate(-1)}
@@ -91,14 +85,14 @@ export default function NotFoundPage() {
               className="gap-2"
             >
               <Icon icon="mdi:arrow-left" width={20} />
-              {t("notFound.goBack", "Go Back")}
+              {t("notFound.goBack")}
             </Button>
           </div>
 
           {/* Decorative element */}
           <div className="mt-6 pt-4 border-t border-foreground/10">
             <p className="text-xs text-foreground/40 font-mono">
-              Error Code: 404 | Page Not Found
+              {t("notFound.errorCode")}
             </p>
           </div>
         </div>

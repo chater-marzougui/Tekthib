@@ -58,12 +58,10 @@ const StatCard: React.FC<{
   value: string | number;
   textColor?: string;
 }> = ({ title, value, textColor = "text-gray-700" }) => (
-  <Card>
     <CardContent className="pt-2 text-center">
       <div className={`text-3xl font-bold ${textColor}`}>{value}</div>
       <div className="text-sm text-muted-foreground mt-2">{title}</div>
     </CardContent>
-  </Card>
 );
 
 const DetailledStatCard: React.FC<{

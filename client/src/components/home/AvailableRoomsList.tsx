@@ -127,8 +127,6 @@ export default function AvailableRoomsList({
                 icon="mdi:inbox-multiple"
                 className="w-12 h-12 mx-auto mb-4 opacity-30"
               />
-              <p className="font-medium">{t("home.noAvailableRooms")}</p>
-              <p className="text-sm">{t("home.createRoomToStart")}</p>
             </motion.div>
           )}
         </CardContent>
