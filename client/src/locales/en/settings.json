@@ -1,0 +1,29 @@
+{
+  "settings": {
+    "title": "Profile Settings",
+    "description": "Manage your profile and account settings",
+    "displayName": "Display Name",
+    "displayNameDescription": "This is the name that will be shown to other players",
+    "displayNamePlaceholder": "Enter your display name",
+    "username": "Username",
+    "usernameDescription": "Your unique username used for login and profile URL",
+    "usernamePlaceholder": "Enter your username",
+    "changePassword": "Change Password",
+    "passwordDescription": "Update your account password",
+    "currentPassword": "Current Password",
+    "currentPasswordPlaceholder": "Enter your current password",
+    "newPassword": "New Password",
+    "newPasswordPlaceholder": "Enter your new password",
+    "confirmPassword": "Confirm Password",
+    "confirmPasswordPlaceholder": "Confirm your new password",
+    "update": "Update",
+    "updatePassword": "Update Password",
+    "updating": "Updating...",
+    "profileUpdated": "Profile updated successfully",
+    "usernameUpdated": "Username updated successfully",
+    "passwordUpdated": "Password updated successfully",
+    "updateFailed": "Failed to update",
+    "passwordMismatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 6 characters"
+  }
+}
