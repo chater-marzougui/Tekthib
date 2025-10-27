@@ -502,6 +502,7 @@ export default function ReplayPage() {
               isCurrentTurn: p.id === replayState.currentPlayerId,
             }))}
             currentPlayerId=""
+            isReplay={true}
           />
 
           <div className="gap-4 flex flex-row flex-wrap w-full lg:flex-col lg:w-84">
