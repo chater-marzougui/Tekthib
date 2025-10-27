@@ -10,6 +10,8 @@ import GameBoard from "@/components/game/GameBoard";
 import PlayerList from "@/components/game/PlayerList";
 import type { Card as GameCard, Player } from "shared";
 import Seo from "@/components/SEO";
+import { useHeader } from "@/hooks/useHeader";
+import { Badge } from "@/components/ui/badge";
 
 const SERVER_URL =
   import.meta.env.VITE_API_URL || "https://takthib-a00f145250bc.herokuapp.com";
@@ -79,6 +81,7 @@ export default function ReplayPage() {
   const { gameId } = useParams<{ gameId: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { setHeaderConfig } = useHeader();
 
   const [gameDetails, setGameDetails] = useState<GameDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -155,7 +158,7 @@ export default function ReplayPage() {
 
     // Group events by round
     const eventsByRound = new Map<number, GameEvent[]>();
-    
+
     for (const event of gameDetails.game_history) {
       const roundNum = event.round_number ?? 0;
       if (!eventsByRound.has(roundNum)) {
@@ -166,22 +169,22 @@ export default function ReplayPage() {
 
     // Define event type priority within each round
     const eventPriority: Record<string, number> = {
-      "round_start": 0,
-      "game_start": 1,
-      "cards_played": 2,
-      "challenge": 3,
-      "round_end": 4,
-      "game_end": 5,
+      round_start: 0,
+      game_start: 1,
+      cards_played: 2,
+      challenge: 3,
+      round_end: 4,
+      game_end: 5,
     };
 
     const ordered: GameEvent[] = [];
 
     // Process rounds in order
     const sortedRounds = Array.from(eventsByRound.keys()).sort((a, b) => a - b);
-    
+
     for (const roundNum of sortedRounds) {
       const roundEvents = eventsByRound.get(roundNum) || [];
-      
+
       // Sort events in this round by priority
       roundEvents.sort((a, b) => {
         const priorityA = eventPriority[a.event_type] ?? 999;
@@ -201,8 +204,12 @@ export default function ReplayPage() {
 
       if (cardsPlayedIndex > -1) {
         const beforeCards = roundEvents.slice(0, cardsPlayedIndex);
-        const cardsPlayed = roundEvents.slice(cardsPlayedIndex).filter((e) => e.event_type === "cards_played");
-        const afterCards = roundEvents.slice(cardsPlayedIndex).filter((e) => e.event_type !== "cards_played");
+        const cardsPlayed = roundEvents
+          .slice(cardsPlayedIndex)
+          .filter((e) => e.event_type === "cards_played");
+        const afterCards = roundEvents
+          .slice(cardsPlayedIndex)
+          .filter((e) => e.event_type !== "cards_played");
 
         cardsPlayed.sort((a, b) => {
           const sizeA = (a.event_data.pileSize as number) ?? 0;
@@ -227,7 +234,7 @@ export default function ReplayPage() {
         newState.phase = "playing";
         const startingPlayerId = event.event_data.startingPlayerId as string;
         newState.currentPlayerId = startingPlayerId;
-        
+
         // Set initial hand sizes (assuming standard distribution)
         const totalCards = 104; // 2 decks
         const cardsPerPlayer = Math.floor(totalCards / newState.players.length);
@@ -270,7 +277,8 @@ export default function ReplayPage() {
         const currentPlayerIndex = newState.players.findIndex(
           (p) => p.id === playerId || p.name === event.player_name
         );
-        const nextPlayerIndex = (currentPlayerIndex + 1) % newState.players.length;
+        const nextPlayerIndex =
+          (currentPlayerIndex + 1) % newState.players.length;
         newState.currentPlayerId = newState.players[nextPlayerIndex].id;
         break;
       }
@@ -300,7 +308,8 @@ export default function ReplayPage() {
         if (wasLying) {
           newState.currentPlayerId = event.event_data.challengerId as string;
         } else {
-          newState.currentPlayerId = event.event_data.challengedPlayerId as string;
+          newState.currentPlayerId = event.event_data
+            .challengedPlayerId as string;
         }
         break;
       }
@@ -340,17 +349,17 @@ export default function ReplayPage() {
 
       // Reinitialize state
       initializeReplayState(gameDetails);
-      
+
       // Apply events up to the previous index
       setTimeout(() => {
         const targetIndex = replayState.currentEventIndex - 1;
         let newState = replayState;
-        
+
         for (let i = 0; i <= targetIndex; i++) {
           newState = applyEvent(newState, orderedEvents[i]);
           newState.currentEventIndex = i;
         }
-        
+
         setReplayState(newState);
       }, 50);
     }
@@ -361,16 +370,16 @@ export default function ReplayPage() {
 
     // Reinitialize state
     initializeReplayState(gameDetails);
-    
+
     // Apply events up to the target index
     setTimeout(() => {
       let newState = replayState;
-      
+
       for (let i = 0; i <= index; i++) {
         newState = applyEvent(newState, orderedEvents[i]);
         newState.currentEventIndex = i;
       }
-      
+
       setReplayState(newState);
     }, 50);
   };
@@ -401,6 +410,40 @@ export default function ReplayPage() {
     }
   };
 
+  const handleLeaveGame = () => {
+    navigate(-1);
+  };
+
+  useEffect(() => {
+    setHeaderConfig({
+      actionButton: {
+        label: t("game.leaveGame"),
+        onClick: () => handleLeaveGame(),
+        variant: "destructive",
+        color: "default",
+      },
+      middleElement: replayState?.lastPlay && (
+        <div className="flex items-center gap-1.5">
+          {replayState.lastPlay.cardCount}×
+          <Badge
+            variant="destructive"
+            className="text-base sm:text-md font-bold px-3 py-1"
+          >
+            {replayState.lastPlay.claimedRank}
+          </Badge>
+        </div>
+      ),
+      showNameInMobile: false,
+    });
+    return () => {
+      setHeaderConfig({
+        actionButton: undefined,
+        middleElement: undefined,
+        showNameInMobile: true,
+      });
+    };
+  }, [t, loading, replayState?.lastPlay]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -423,16 +466,15 @@ export default function ReplayPage() {
           {t("replay.notFound")}
         </h2>
         <p className="text-gray-500 mb-4">{error}</p>
-        <Button onClick={() => navigate(-1)}>
-          {t("replay.goBack")}
-        </Button>
+        <Button onClick={() => navigate(-1)}>{t("replay.goBack")}</Button>
       </div>
     );
   }
 
-  const progress = orderedEvents.length > 0 
-    ? ((replayState.currentEventIndex + 1) / orderedEvents.length) * 100 
-    : 0;
+  const progress =
+    orderedEvents.length > 0
+      ? ((replayState.currentEventIndex + 1) / orderedEvents.length) * 100
+      : 0;
 
   return (
     <div>
@@ -460,19 +502,27 @@ export default function ReplayPage() {
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
-                <span className="text-muted-foreground">{t("replay.roomCode")}:</span>{" "}
+                <span className="text-muted-foreground">
+                  {t("replay.roomCode")}:
+                </span>{" "}
                 <span className="font-bold">{gameDetails.room_code}</span>
               </div>
               <div>
-                <span className="text-muted-foreground">{t("replay.players")}:</span>{" "}
+                <span className="text-muted-foreground">
+                  {t("replay.players")}:
+                </span>{" "}
                 {gameDetails.total_players}
               </div>
               <div>
-                <span className="text-muted-foreground">{t("replay.rounds")}:</span>{" "}
+                <span className="text-muted-foreground">
+                  {t("replay.rounds")}:
+                </span>{" "}
                 {gameDetails.total_rounds}
               </div>
               <div>
-                <span className="text-muted-foreground">{t("replay.date")}:</span>{" "}
+                <span className="text-muted-foreground">
+                  {t("replay.date")}:
+                </span>{" "}
                 {new Date(gameDetails.ended_at).toLocaleDateString()}
               </div>
             </div>
@@ -485,7 +535,9 @@ export default function ReplayPage() {
             lastPlay={replayState.lastPlay}
             pileCount={replayState.pileCount}
             currentPlayer={
-              replayState.players.find((p) => p.id === replayState.currentPlayerId)?.name || ""
+              replayState.players.find(
+                (p) => p.id === replayState.currentPlayerId
+              )?.name || ""
             }
             canChallenge={false}
             onChallenge={() => {}}
@@ -512,6 +564,8 @@ export default function ReplayPage() {
                 isCurrentTurn: p.id === replayState.currentPlayerId,
               }))}
               currentPlayerId=""
+              loserId={replayState.loser}
+              winners={replayState.winners}
             />
           </div>
         </div>
@@ -523,7 +577,10 @@ export default function ReplayPage() {
               {/* Timeline */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>{t("replay.event")} {replayState.currentEventIndex + 1} / {orderedEvents.length}</span>
+                  <span>
+                    {t("replay.event")} {replayState.currentEventIndex + 1} /{" "}
+                    {orderedEvents.length}
+                  </span>
                   <span>{Math.round(progress)}%</span>
                 </div>
                 <Slider
@@ -570,7 +627,9 @@ export default function ReplayPage() {
                   variant="outline"
                   size="icon"
                   onClick={stepForward}
-                  disabled={replayState.currentEventIndex >= orderedEvents.length - 1}
+                  disabled={
+                    replayState.currentEventIndex >= orderedEvents.length - 1
+                  }
                   title={t("replay.stepForward")}
                 >
                   <Icon icon="mdi:skip-next" className="w-5 h-5" />
@@ -579,7 +638,9 @@ export default function ReplayPage() {
 
               {/* Speed Control */}
               <div className="flex items-center justify-center gap-4">
-                <span className="text-sm text-muted-foreground">{t("replay.speed")}:</span>
+                <span className="text-sm text-muted-foreground">
+                  {t("replay.speed")}:
+                </span>
                 {[0.5, 1, 1.5, 2].map((speed) => (
                   <Button
                     key={speed}
@@ -593,29 +654,37 @@ export default function ReplayPage() {
               </div>
 
               {/* Current Event Info */}
-              {replayState.currentEventIndex >= 0 && orderedEvents[replayState.currentEventIndex] && (
-                <div className="mt-4 p-4 bg-muted rounded-lg">
-                  <div className="text-sm">
-                    <div className="font-semibold mb-2">
-                      {t("replay.currentEvent")}: {orderedEvents[replayState.currentEventIndex].event_type}
-                    </div>
-                    <div className="text-muted-foreground">
-                      {orderedEvents[replayState.currentEventIndex].player_name} -{" "}
-                      {new Date(orderedEvents[replayState.currentEventIndex].timestamp).toLocaleTimeString()}
+              {replayState.currentEventIndex >= 0 &&
+                orderedEvents[replayState.currentEventIndex] && (
+                  <div className="mt-4 p-4 bg-muted rounded-lg">
+                    <div className="text-sm">
+                      <div className="font-semibold mb-2">
+                        {t("replay.currentEvent")}:{" "}
+                        {
+                          orderedEvents[replayState.currentEventIndex]
+                            .event_type
+                        }
+                      </div>
+                      <div className="text-muted-foreground">
+                        {
+                          orderedEvents[replayState.currentEventIndex]
+                            .player_name
+                        }{" "}
+                        -{" "}
+                        {new Date(
+                          orderedEvents[replayState.currentEventIndex].timestamp
+                        ).toLocaleTimeString()}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           </CardContent>
         </Card>
 
         {/* Back Button */}
         <div className="mt-6 text-center">
-          <Button
-            variant="ghost"
-            onClick={() => navigate(-1)}
-          >
+          <Button variant="ghost" onClick={() => navigate(-1)}>
             ← {t("replay.goBack")}
           </Button>
         </div>

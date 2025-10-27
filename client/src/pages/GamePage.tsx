@@ -546,6 +546,8 @@ export default function GamePage() {
     return () => {
       setHeaderConfig({
         actionButton: undefined,
+        middleElement: undefined,
+        showNameInMobile: true,
       });
     };
   }, [t, isLoading, lastPlay]);
@@ -970,7 +972,12 @@ export default function GamePage() {
                   players={players}
                 />
               )}
-              <PlayerList players={players} currentPlayerId={playerId} />
+              <PlayerList
+                players={players}
+                currentPlayerId={playerId}
+                loserId={gameState.loser}
+                winners={gameState.winners}
+              />
             </div>
           </div>
 

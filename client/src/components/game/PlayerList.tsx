@@ -11,18 +11,24 @@ interface Player extends BasePlayer {
 interface PlayerListProps {
   players: Player[];
   currentPlayerId: string;
+  winners?: string[];
+  loserId?: string | null;
 }
 
 export default function PlayerList({
   players,
   currentPlayerId,
+  loserId,
+  winners,
 }: Readonly<PlayerListProps>) {
   const { t } = useTranslation();
-  
+
   return (
     <Card className="m-0 lg:max-w-md min-w-32 w-full max-w-84">
       <CardHeader>
-        <CardTitle>{t('playerList.title', { count: players.length })}</CardTitle>
+        <CardTitle>
+          {t("playerList.title", { count: players.length })}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
@@ -32,7 +38,9 @@ export default function PlayerList({
               className={`
                 p-3 rounded-lg border-2 transition-all
                 ${player.isCurrentTurn ? "border-blue-500 shadow-md" : "border-gray-200"}
-                ${player.id === currentPlayerId ? "ring-2 ring-green-300" : ""}
+                ${player.id === currentPlayerId ? "ring-1 ring-green-500" : ""}
+                ${winners?.includes(player.id) ? "ring-1 ring-yellow-500 border-yellow-400" : ""}
+                ${player.id === loserId ? "ring-1 ring-red-500 border-red-400" : ""}
               `}
             >
               <div className="flex items-center justify-between">
@@ -42,16 +50,23 @@ export default function PlayerList({
                     <div className="font-medium">
                       {player.name}
                       {player.isBot && (
-                        <Icon icon="mdi:robot" className="w-4 h-4 inline-block ml-1" style={{ color: '#8b5cf6' }} />
+                        <Icon
+                          icon="mdi:robot"
+                          className="w-4 h-4 inline-block ml-1"
+                          style={{ color: "#8b5cf6" }}
+                        />
                       )}
                       {player.id === currentPlayerId && (
                         <span className="text-xs text-green-600 ml-2">
-                          ({t('playerList.you')})
+                          ({t("playerList.you")})
                         </span>
                       )}
                     </div>
                     <div className="text-sm text-gray-600">
-                      {player.cardCount} {player.cardCount! > 1 ? t('playerList.cards') : t('playerList.card')}
+                      {player.cardCount}{" "}
+                      {player.cardCount! > 1
+                        ? t("playerList.cards")
+                        : t("playerList.card")}
                     </div>
                   </div>
                 </div>
@@ -59,12 +74,17 @@ export default function PlayerList({
                 <div className="text-right">
                   {player.isCurrentTurn && (
                     <div className="text-blue-600 font-semibold text-sm animate-pulse">
-                      {t('playerList.currentTurn')}
+                      {t("playerList.currentTurn")}
                     </div>
                   )}
-                  {player.cardCount === 0 && (
+                  {winners?.includes(player.id) && (
                     <div className="flex items-center gap-1 text-green-600 font-semibold text-sm">
-                      <Icon icon="mdi:trophy" className="w-4 h-4" style={{ color: '#eab308' }} /> {t('playerList.winner')}
+                      <Icon
+                        icon="mdi:trophy"
+                        className="w-4 h-4"
+                        style={{ color: "#eab308" }}
+                      />{" "}
+                      {t("playerList.winner")}
                     </div>
                   )}
                 </div>
