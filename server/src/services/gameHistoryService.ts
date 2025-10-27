@@ -33,6 +33,7 @@ interface GameEvent {
   playerName: string;
   eventData: Record<string, unknown>;
   roundNumber?: number;
+  timestamp: Date;
 }
 
 export class GameHistoryService {
@@ -103,6 +104,7 @@ export class GameHistoryService {
           player_name: e.playerName,
           event_data: e.eventData,
           round_number: e.roundNumber || null,
+          timestamp: e.timestamp,
         }));
 
         const { error: eventsError } = await supabase!

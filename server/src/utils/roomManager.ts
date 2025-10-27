@@ -49,7 +49,7 @@ class RoomManager {
    */
   private getAvailableBotName(room: Room): string {
     const existingNames = new Set(
-      Array.from(room.players.values()).map(p => p.name)
+      Array.from(room.players.values()).map((p) => p.name),
     );
 
     // Shuffle bot names for variety
@@ -358,14 +358,14 @@ class RoomManager {
       return { success: false, error: 'Room not found' };
     }
 
-    room.players.forEach((player) => {
+    for (const player of room.players.values()) {
       if (!player.isBot && player.id !== playerId) {
         player.isReady = false;
       } else {
         player.isReady = true; // Bots and host are always ready
       }
       player.hand = [];
-    });
+    }
 
     // Clear game engine, state, and start time
     this.gameEngines.delete(roomId);
@@ -506,7 +506,9 @@ class RoomManager {
     const startTime = this.gameStartTimes.get(roomId);
 
     if (!room || !gameEngine || !startTime) {
-      console.error('Cannot save game history: room, game engine, or start time not found');
+      console.error(
+        'Cannot save game history: room, game engine, or start time not found',
+      );
       return;
     }
 
@@ -518,53 +520,73 @@ class RoomManager {
 
     try {
       const endTime = new Date();
-      const participants = Array.from(room.players.entries()).map(([playerId, player], index) => {
-        const stats = gameState.playerStats.get(playerId);
-        const isWinner = gameState.winners.includes(playerId);
-        const isLoser = gameState.loser === playerId;
+      const participants = Array.from(room.players.entries()).map(
+        ([playerId, player], index) => {
+          const stats = gameState.playerStats.get(playerId);
+          const isWinner = gameState.winners.includes(playerId);
+          const isFirstPlace = gameState.winners[0] === playerId;
+          const isLoser = gameState.loser === playerId;
 
-        // Calculate stats from PlayerStats interface
-        const bluffsMade = (stats?.timesBluffedSuccessfully || 0) + (stats?.timesCaughtBluffing || 0);
-        const successfulBluffs = stats?.timesBluffedSuccessfully || 0;
-        const challengesMade = (stats?.timesCaughtBluffing || 0) + (stats?.timesFalselyAccused || 0);
-        const successfulChallenges = stats?.timesCaughtBluffing || 0;
-        const failedChallenges = stats?.timesFalselyAccused || 0;
-        const cardsPlayed = (stats?.timesToldTruth || 0) + bluffsMade;
+          // Calculate stats from PlayerStats interface
+          const bluffsMade =
+            (stats?.timesBluffedSuccessfully || 0) +
+            (stats?.timesCaughtBluffing || 0);
+          const successfulBluffs = stats?.timesBluffedSuccessfully || 0;
+          const challengesMade =
+            (stats?.timesCaughtBluffing || 0) +
+            (stats?.timesFalselyAccused || 0);
+          const successfulChallenges = stats?.timesCaughtBluffing || 0;
+          const failedChallenges = stats?.timesFalselyAccused || 0;
+          const cardsPlayed = (stats?.timesToldTruth || 0) + bluffsMade;
+          const finalPos = this.calculateFinalPosition(
+            isWinner,
+            isLoser,
+            gameState.winners,
+            playerId,
+            room.players.size,
+            index,
+          );
 
-        return {
-          userId: playerId,
-          playerName: player.name,
-          finalPosition: isWinner ? gameState.winners.indexOf(playerId) + 1 : 
-                        isLoser ? room.players.size : index + 1,
-          cardsPlayed,
-          bluffsMade,
-          successfulBluffs,
-          challengesMade,
-          successfulChallenges,
-          failedChallenges,
-          isWinner,
-          isLoser,
-          isBot: player.isBot || false,
-        };
-      });
+          return {
+            userId: playerId,
+            playerName: player.name,
+            finalPosition: finalPos,
+            cardsPlayed,
+            bluffsMade,
+            successfulBluffs,
+            challengesMade,
+            successfulChallenges,
+            failedChallenges,
+            isWinner: isFirstPlace,
+            isLoser,
+            isBot: player.isBot || false,
+          };
+        },
+      );
 
       // Calculate total challenges from player stats
       const totalChallenges = Array.from(gameState.playerStats.values()).reduce(
-        (sum, stats) => sum + ((stats?.timesCaughtBluffing || 0) + (stats?.timesFalselyAccused || 0)),
+        (sum, stats) =>
+          sum +
+          ((stats?.timesCaughtBluffing || 0) +
+            (stats?.timesFalselyAccused || 0)),
         0,
       );
 
       // Get game events from the game engine
-      const gameEvents = gameEngine.getGameEvents().map(event => ({
+      const gameEvents = gameEngine.getGameEvents().map((event) => ({
         eventType: event.eventType,
         playerUserId: event.playerUserId,
         playerName: event.playerName,
         eventData: event.eventData,
         roundNumber: event.roundNumber,
+        timestamp: event.timestamp,
       }));
 
       // Calculate total rounds from events
-      const totalRounds = gameEngine.getGameEvents().filter(e => e.eventType === 'round_start').length;
+      const totalRounds = gameEngine
+        .getGameEvents()
+        .filter((e) => e.eventType === 'round_start').length;
 
       await gameHistoryService.saveGame(
         {
@@ -588,11 +610,34 @@ class RoomManager {
 
       console.log(`Game history saved for room ${room.code}`);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error(`Error saving game history for room ${roomId}:`, errorMessage);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error(
+        `Error saving game history for room ${roomId}:`,
+        errorMessage,
+      );
       if (error instanceof Error) {
         console.error('Stack trace:', error.stack);
       }
+    }
+  }
+
+  private calculateFinalPosition(
+    isWinner: boolean,
+    isLoser: boolean,
+    winnersList: string[],
+    playerId: string,
+    roomSize: number,
+    index: number,
+  ) {
+    if (isWinner) {
+      return winnersList.indexOf(playerId) + 1;
+    }
+
+    if (isLoser) {
+      return roomSize;
+    } else {
+      return index + 1;
     }
   }
 }

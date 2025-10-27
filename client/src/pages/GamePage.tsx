@@ -633,7 +633,7 @@ export default function GamePage() {
 
   const handleChallenge = () => {
     // Play challenge button sound (100% probability)
-    playSound(SOUNDS.CHALLENGE_BUTTON_CLICKED);
+    if (challengeSuspenseEnabled) playSound(SOUNDS.CHALLENGE_BUTTON_CLICKED);
 
     sendMessage({
       type: "CHALLENGE",
