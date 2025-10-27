@@ -35,7 +35,7 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler('bot_player.log')
+        logging.FileHandler(f'bot_player-{time.time()}.log')
     ]
 )
 logger = logging.getLogger(__name__)
@@ -43,8 +43,8 @@ logger = logging.getLogger(__name__)
 
 class TekthibBot:
     """A bot player for the Tekthib card game."""
-    
-    def __init__(self, server_url: str, room_code: str, player_name: str):
+
+    def __init__(self, server_url: str, room_code: str, player_name: str, is_host: bool, bots_to_add: int):
         """
         Initialize the bot player.
         
@@ -72,9 +72,15 @@ class TekthibBot:
         self.winners: List[str] = []
         
         # WebSocket
+        self.connection_initialized = False
+        self.currently_playing = False
         self.ws: Optional[websocket.WebSocketApp] = None
         self.connected_event = Event()
         self.in_game = False
+        
+        """Bot configuration"""
+        self.is_host = is_host
+        self.bots_to_add = bots_to_add
         
         logger.info(f"Bot initialized: {player_name} (ID: {self.client_id})")
     
@@ -129,6 +135,8 @@ class TekthibBot:
                 self._handle_connected(payload)
             elif msg_type == "ROOM_JOINED":
                 self._handle_room_joined(payload)
+            elif msg_type == "ROOM_CREATED":
+                self._handle_room_created(payload)
             elif msg_type == "GAME_STARTED":
                 self._handle_game_started()
             elif msg_type == "INITIAL_GAME_STATE":
@@ -141,8 +149,12 @@ class TekthibBot:
                 self._handle_challenge_result(payload)
             elif msg_type == "GAME_ENDED":
                 self._handle_game_ended(payload)
+            elif msg_type == "BOTS_ADDED":
+                self._start_game(payload)
             elif msg_type == "ERROR":
                 self._handle_error(payload)
+            elif msg_type == "CHAT_MESSAGE":
+                pass  # Ignore chat messages
             else:
                 logger.debug(f"Unhandled message type: {msg_type}")
                 
@@ -171,19 +183,37 @@ class TekthibBot:
     
     def _handle_connected(self, payload: Dict):
         """Handle CONNECTED message."""
+        if self.connection_initialized:
+            logger.warning("Already connected, ignoring duplicate CONNECTED message")
+            return
+        
+        self.connection_initialized = True
         logger.info(f"Connected to server with client ID: {self.client_id}")
         self.connected_event.set()
         
         # Join the room
         time.sleep(0.5)
-        logger.info(f"Joining room: {self.room_code}")
-        self._send_message({
-            "type": "JOIN_ROOM",
-            "payload": {
-                "roomCode": self.room_code,
-                "playerName": self.player_name
-            }
-        })
+        if self.is_host:
+            logger.info("Creating new room as host")
+            self._send_message({
+                "type": "CREATE_ROOM",
+                "payload": {
+                    "playerName": self.player_name,
+                    "botsToAdd": self.bots_to_add,
+                    "isPublic": False,
+                    "challengeSuspenseEnabled": False
+                }
+            })
+            
+        else:
+            logger.info(f"Joining room: {self.room_code}")
+            self._send_message({
+                "type": "JOIN_ROOM",
+                "payload": {
+                    "roomCode": self.room_code,
+                    "playerName": self.player_name
+                }
+            })
     
     def _handle_room_joined(self, payload: Dict):
         """Handle ROOM_JOINED message."""
@@ -197,7 +227,42 @@ class TekthibBot:
             "payload": { "ready": True }
         })
         logger.info("Marked as ready")
+        
+    def _handle_room_created(self, payload: Dict):
+        """Handle ROOM_CREATED message."""
+        room_code = payload.get("room", {}).get("code", "UNKNOWN")
+        logger.info(f"Room created with code: {room_code}")
+        self.room_code = room_code
+        self.in_game = True
+        
+        # Mark as ready
+        time.sleep(0.5)
+        self._send_message({
+            "type": "READY",
+            "payload": { "ready": True }
+        })
+        logger.info("Marked as ready")
+        
+        time.sleep(0.3)
+        self._send_message({
+            "type": "ADD_BOTS",
+            "payload": {
+                "count": self.bots_to_add
+            }
+        })
     
+    def _start_game(self, payload: Dict):
+        """Start the game after bots are added."""
+        logger.info(f"Added {self.bots_to_add} bot(s) to the room. Starting game...")
+        time.sleep(0.5)
+        self._send_message({
+            "type": "START_GAME",
+            "payload": {
+                "autoPlayTimeout": 0,
+                "challengeSuspenseEnabled": False
+            }
+        })
+        
     def _handle_game_started(self):
         """Handle GAME_STARTED message."""
         logger.info("Game started!")
@@ -239,7 +304,9 @@ class TekthibBot:
         card_count = payload.get("cardCount", 0)
         claimed_rank = payload.get("claimedRank", "Unknown")
         was_auto_played = payload.get("wasAutoPlayed", False)
-        
+
+        self.currently_playing = False
+
         if was_auto_played:
             logger.info(f"{player_name} timed out - {card_count} cards auto-played as {claimed_rank}")
         else:
@@ -322,9 +389,10 @@ class TekthibBot:
     
     def _handle_my_turn(self):
         """Handle playing cards when it's our turn."""
-        if not self.is_my_turn or len(self.hand) == 0:
+        if not self.is_my_turn or len(self.hand) == 0 or self.currently_playing:
             return
         
+        self.currently_playing = True  # Lock to prevent re-entry
         logger.info("It's my turn!")
         
         # Determine what rank to claim
@@ -467,10 +535,13 @@ def main():
     SERVER_URL = os.getenv("SERVER_URL", "ws://localhost:3001")
     ROOM_CODE = os.getenv("ROOM_CODE", "")
     PLAYER_NAME = os.getenv("PLAYER_NAME", "PythonBot-1")
-    if not ROOM_CODE:
-        logger.error("ROOM_CODE environment variable is not set.")
+    IS_HOST = os.getenv("IS_HOST", "False").lower() == "true"
+    BOTS_TO_ADD = int(os.getenv("BOTS_TO_ADD", "0"))
+    if not ROOM_CODE and not IS_HOST:
+        logger.error("ROOM_CODE environment variable is not set. Either be a host to create a room or provide a ROOM_CODE to join.")
         return
-    bot = TekthibBot(SERVER_URL, ROOM_CODE, PLAYER_NAME)
+    
+    bot = TekthibBot(SERVER_URL, ROOM_CODE, PLAYER_NAME, IS_HOST, BOTS_TO_ADD)
     bot.run()
 
 

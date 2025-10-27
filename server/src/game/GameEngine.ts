@@ -428,6 +428,16 @@ export class GameEngine {
     error?: string;
     mismatch?: boolean;
   } {
+    if (this.processingChallenge) {
+      return {
+        success: false,
+        wasLying: false,
+        playerId: '',
+        challengerId: '',
+        revealedCards: [],
+        error: 'Already processing a challenge',
+      };
+    }
     if (!this.gameState.lastPlayerId) {
       return {
         success: false,

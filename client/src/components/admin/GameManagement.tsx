@@ -246,12 +246,12 @@ export default function GameManagement({
                         .map((participant, idx) => (
                           <div
                             key={idx + 1}
-                            className={`px-3 py-1 rounded-full text-xs flex items-center gap-1 ${getBgColor(
+                            className={`px-3 py-1 text-background rounded-full text-xs flex items-center gap-1 ${getBgColor(
                               participant
                             )}`}
                           >
                             {participant.is_winner && (
-                              <Icon icon="mdi:trophy" className="w-3 h-3" />
+                              <Icon icon="mdi:trophy" className="w-3 h-3 text-yellow-500" />
                             )}
                             {participant.player_name}
                             {participant.is_bot && " (Bot)"}

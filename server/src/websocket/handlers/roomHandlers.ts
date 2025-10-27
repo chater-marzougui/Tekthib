@@ -322,7 +322,11 @@ function handleAddBots(
     return;
   }
 
-  const result = roomManager.addBotsToRoom(clientInfo.roomId, payload.count);
+  const botsCount = room.players.size + payload.count > room.maxPlayers
+    ? room.maxPlayers - room.players.size
+    : payload.count;
+
+  const result = roomManager.addBotsToRoom(clientInfo.roomId, botsCount);
 
   if (!result.success) {
     sendToClient(ws, {

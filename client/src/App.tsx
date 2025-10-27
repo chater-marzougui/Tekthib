@@ -32,6 +32,7 @@ function App() {
                 duration={3500}
                 position="top-center"
                 closeButton={true}
+                visibleToasts={1}
                 swipeDirections={["left", "right", "top", "bottom"]}
                 toastOptions={{
                   style: { fontSize: "0.9rem" },
