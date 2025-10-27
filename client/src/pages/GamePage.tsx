@@ -21,7 +21,14 @@ import PlayerNameDialog from "@/components/room/PlayerNameDialog";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useHeader } from "@/hooks/useHeader";
 import { useSound } from "@/hooks/useSound";
-import { SOUNDS, WIN_SOUNDS, LOSE_SOUNDS, WIN_ROUND_SOUNDS, LOSE_ROUND_SOUNDS } from "@/lib/sounds";
+import {
+  SOUNDS,
+  WIN_SOUNDS,
+  LOSE_SOUNDS,
+  WIN_ROUND_SOUNDS,
+  LOSE_ROUND_SOUNDS,
+} from "@/lib/sounds";
+import { Badge } from "@/components/ui/badge";
 
 interface GamePlayer extends Player {
   isCurrentTurn: boolean;
@@ -47,7 +54,12 @@ export default function GamePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { roomId } = useParams<{ roomId: string }>();
-  const { sendMessage, registerHandler, isConnected, autoPlayTimeout: wsAutoPlayTimeout } = useWebSocketContext();
+  const {
+    sendMessage,
+    registerHandler,
+    isConnected,
+    autoPlayTimeout: wsAutoPlayTimeout,
+  } = useWebSocketContext();
   const { disableVoiceChat } = useVoiceChatContext();
   const { setHeaderConfig } = useHeader();
   const { playSound, playRandomSound } = useSound();
@@ -60,7 +72,8 @@ export default function GamePage() {
   const [systemMessages, setSystemMessages] = useState<SystemMessage[]>([]);
   const [showNameDialog, setShowNameDialog] = useState(false);
   const [nameInput, setNameInput] = useState("");
-  const [challengeSuspenseEnabled, setChallengeSuspenseEnabled] = useState(true);
+  const [challengeSuspenseEnabled, setChallengeSuspenseEnabled] =
+    useState(true);
   const [pilePosition, setPilePosition] = useState({ x: 0, y: 0 });
   const [handPosition, setHandPosition] = useState({ x: 0, y: 0 });
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
@@ -270,7 +283,7 @@ export default function GamePage() {
         if (message.type !== "CHALLENGE_SUBMITTED") {
           return;
         }
-        
+
         // Play suspense drums sound immediately when challenge is submitted
         // Only if the setting is enabled
         if (challengeSuspenseEnabled) {
@@ -309,9 +322,13 @@ export default function GamePage() {
 
         // Play challenge result sound (70% probability)
         // If I won the challenge, play win sound; if I lost, play lose sound
-        const iWon = (wasLying && challengerId === playerId) || (!wasLying && lastPlayerId === playerId);
-        const iLost = (wasLying && lastPlayerId === playerId) || (!wasLying && challengerId === playerId);
-        
+        const iWon =
+          (wasLying && challengerId === playerId) ||
+          (!wasLying && lastPlayerId === playerId);
+        const iLost =
+          (wasLying && lastPlayerId === playerId) ||
+          (!wasLying && challengerId === playerId);
+
         if (iWon) {
           playRandomSound(WIN_ROUND_SOUNDS, { probability: 0.7 });
         } else if (iLost) {
@@ -319,8 +336,9 @@ export default function GamePage() {
         }
 
         // Check user settings for showing challenge toasts
-        const showChallengeToasts = localStorage.getItem("showChallengeToasts") !== "false";
-        
+        const showChallengeToasts =
+          localStorage.getItem("showChallengeToasts") !== "false";
+
         if (showChallengeToasts) {
           if (toastColor === "red") {
             toast.error(resultMessage, { description: resultDescription });
@@ -512,13 +530,25 @@ export default function GamePage() {
         variant: "destructive",
         color: "default",
       },
+      middleElement: lastPlay && (
+        <div className="flex items-center gap-1.5">
+          {lastPlay.cardCount}×
+          <Badge
+            variant={isMyTurn ? "destructive" : "default"}
+            className="text-base sm:text-md font-bold px-3 py-1"
+          >
+            {lastPlay.claimedRank}
+          </Badge>
+        </div>
+      ),
+      showNameInMobile: false,
     });
     return () => {
       setHeaderConfig({
         actionButton: undefined,
       });
     };
-  }, [t, isLoading]);
+  }, [t, isLoading, lastPlay]);
 
   useEffect(() => {
     const updatePositions = () => {
@@ -554,7 +584,7 @@ export default function GamePage() {
   const handleCardSelect = (cardId: string) => {
     // Play card select sound (100% probability)
     playSound(SOUNDS.CARD_SELECT);
-    
+
     setPlayerHand((prev) =>
       prev.map((card) =>
         card.id === cardId ? { ...card, selected: !card.selected } : card
@@ -602,7 +632,7 @@ export default function GamePage() {
   const handleChallenge = () => {
     // Play challenge button sound (100% probability)
     playSound(SOUNDS.CHALLENGE_BUTTON_CLICKED);
-    
+
     sendMessage({
       type: "CHALLENGE",
       payload: {
@@ -678,7 +708,7 @@ export default function GamePage() {
         handlePlayAgain={handlePlayAgain}
       />
 
-      {playingCardsAnimation?.show && pilePosition.x > 0 && (
+      {playingCardsAnimation?.show && pilePosition.x > 1 && (
         <div className="fixed inset-0 z-40 pointer-events-none">
           {playingCardsAnimation.cards.map((card, index) => {
             const totalCards = playingCardsAnimation.cards.length;
@@ -746,14 +776,14 @@ export default function GamePage() {
                   x: startX,
                   y: startY,
                   scale: 1,
-                  opacity: 1,
+                  opacity: 0.8,
                   rotate: 0,
                 }}
                 animate={{
                   x: endX,
                   y: endY,
                   scale: 0.8,
-                  opacity: 0.8,
+                  opacity: 0.1,
                   rotate: rotation,
                 }}
                 transition={{ duration, delay, ease: "easeInOut" }}

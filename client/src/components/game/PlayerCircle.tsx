@@ -12,12 +12,14 @@ interface PlayerCircleProps {
   players: Player[];
   currentPlayerId: string;
   radius: number;
+  centerPile?: React.ReactNode;
 }
 
 export default function PlayerCircle({
   players,
   currentPlayerId,
   radius,
+  centerPile,
 }: Readonly<PlayerCircleProps>) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [center, setCenter] = useState({ x: 0, y: 0 });
@@ -37,12 +39,12 @@ export default function PlayerCircle({
   // Reorder players so the current player is first (will be positioned at bottom)
   // Then arrange others in play order
   const reorderedPlayers =
-    currentPlayerIndex !== -1
-      ? [
+    currentPlayerIndex === -1
+      ? players
+      : [
           ...players.slice(currentPlayerIndex),
           ...players.slice(0, currentPlayerIndex),
-        ]
-      : players;
+        ];
 
   const totalPlayers = reorderedPlayers.length;
 
@@ -55,7 +57,7 @@ export default function PlayerCircle({
     const angleStep = (2 * Math.PI) / totalPlayers;
     const angle = startAngle - angleStep * index; // Subtract to go clockwise
 
-    const x = center.x * 0.75 + radius * Math.cos(angle);
+    const x = center.x * 0.8 + radius * Math.cos(angle);
     const y = center.y * 0.75 + radius * Math.sin(angle);
 
     return { x, y };
@@ -64,13 +66,19 @@ export default function PlayerCircle({
   return (
     <div
       ref={containerRef}
-      className="player-circle-container absolute"
+      className="player-circle-container w-full flex justify-center items-center"
       style={{
         pointerEvents: "none",
-        width: "100%",
-        height: "100%",
+        position: "relative",
+        minHeight: "360px",
       }}
     >
+      {/* Center content - always centered using flex */}
+      <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
+        {centerPile}
+      </div>
+
+      {/* Player positions around the circle */}
       {reorderedPlayers.map((player, index) => {
         const position = getPlayerPosition(index);
         const isCurrentPlayer = player.id === currentPlayerId;

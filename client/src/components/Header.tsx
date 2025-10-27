@@ -1,11 +1,23 @@
 import { NavUser } from "./NavUser";
 import { Button } from "@/components/ui/button";
 import { useHeader } from "@/hooks/useHeader";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function Header() {
   const { headerState } = useHeader();
-  const { actionButton, showLogo, logoUrl, showName, appName, middleElement } =
-    headerState;
+  const {
+    actionButton,
+    showLogo,
+    logoUrl,
+    showName,
+    appName,
+    middleElement,
+    showNameInMobile,
+  } = headerState;
+  const isMobile = useIsMobile();
+
+  const displayShowName =
+    showName && (isMobile ? showNameInMobile !== false : true);
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
       <div className="container flex h-16 items-center justify-between px-4 md:px-6">
@@ -16,7 +28,7 @@ export function Header() {
               <img src={logoUrl} alt={`${appName} Logo`} draggable="false" />
             </div>
           )}
-          {showName && (
+          {displayShowName && (
             <h1 className="text-xl font-bold tracking-tight md:text-2xl">
               {appName}
             </h1>

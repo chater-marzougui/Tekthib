@@ -21,6 +21,7 @@ interface HeaderState {
   showLogo: boolean;
   logoUrl: string;
   showName: boolean;
+  showNameInMobile?: boolean;
   appName: string;
   middleElement?: ReactNode;
 }
@@ -40,6 +41,7 @@ const defaultHeaderState: HeaderState = {
   showName: true,
   appName: "Tekthib",
   middleElement: undefined,
+  showNameInMobile: true,
 };
 
 export const HeaderContext = createContext<HeaderContextType | undefined>(undefined);

@@ -34,6 +34,7 @@ interface MergedGameBoardProps {
   serverTimer?: number;
   players: Player[];
   currentPlayerId: string;
+  isReplay?: boolean;
 }
 
 export default function GameBoard({
@@ -52,6 +53,7 @@ export default function GameBoard({
   serverTimer,
   players,
   currentPlayerId,
+  isReplay = false,
 }: Readonly<MergedGameBoardProps>) {
   const [claimedRank, setClaimedRank] = useState(
     lastPlay ? lastPlay.claimedRank : ""
@@ -105,15 +107,16 @@ export default function GameBoard({
     const width = window.innerWidth;
     if (width >= 899) return "xlarge"; // Extra Large for very wide screens
     return "large"; // Small for mobile devices
-  }
+  };
 
   const getWidthBySize = (size: "large" | "xlarge") => {
     return CardsSizes[size].overlapOffset + 22; // +12 for some padding/margin
-  }
+  };
 
-
-
-  const maxCardsPerHand = Math.min(Math.floor(window.innerWidth / getWidthBySize(getCardSize())), 24);
+  const maxCardsPerHand = Math.min(
+    Math.floor(window.innerWidth / getWidthBySize(getCardSize())),
+    24
+  );
   const numberOfHands = Math.ceil(sortedCards.length / maxCardsPerHand);
 
   return (
@@ -173,17 +176,21 @@ export default function GameBoard({
               )}
 
               {/* Center pile with player circle around it */}
-              <div className="relative flex justify-center items-center top-4" style={{ minHeight: '360px' }} ref={centerAreaRef}>
-                <CenterPile pileCount={pileCount} lastPlay={lastPlay} />
-                {/* Player circle positioned around center pile */}
-                <PlayerCircle 
+              <div
+                className="relative w-full flex justify-center items-center"
+                ref={centerAreaRef}
+              >
+                <PlayerCircle
                   players={players}
                   currentPlayerId={currentPlayerId}
                   radius={140}
+                  centerPile={
+                    <CenterPile pileCount={pileCount} lastPlay={lastPlay} />
+                  }
                 />
               </div>
 
-              {(lastPlay || !isMyTurn) && (
+              {(lastPlay || !isMyTurn) && !isReplay && (
                 <div className="flex justify-center">
                   <Button
                     onClick={onChallenge}

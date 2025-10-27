@@ -21,12 +21,11 @@ const CenterPile: React.FC<CenterPileProps> = ({ pileCount, lastPlay }) => {
   }
 
   return (
-    <div className="flex justify-center center-pile-container">
-      <div className="flex-shrink-0">
-        <p className="text-xs font-semibold text-gray-600 mb-2 text-center">
-          {t('centerPile.title')}
-        </p>
-        <div className="relative h-36 w-28">
+    <div className="flex flex-col items-center justify-center center-pile-container">
+      <p className="text-xs font-semibold text-gray-600 mb-2 text-center">
+        {t('centerPile.title')}
+      </p>
+      <div className="relative h-36 w-28">
           <AnimatePresence>
             {Array.from({ length: Math.min(pileCount, 6) }).map((_, i) => {
               const rotation = Math.sin(i) * 15 - 7.5;
@@ -81,7 +80,6 @@ const CenterPile: React.FC<CenterPileProps> = ({ pileCount, lastPlay }) => {
             </motion.div>
           )}
         </div>
-      </div>
     </div>
   );
 };
