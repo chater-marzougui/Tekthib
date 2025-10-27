@@ -17,6 +17,7 @@ import type { Room as BaseRoom, GameState } from "@/types";
 import { Icon } from "@iconify/react";
 import { useHeader } from "@/hooks/useHeader";
 import DatabaseManagement from "@/components/admin/DatabaseManagement";
+import SpectatorView from "@/components/admin/SpectatorView";
 
 interface Room extends BaseRoom {
   gameState: GameState | null;
@@ -43,6 +44,7 @@ export default function AdminPage() {
   const [systemState, setSystemState] = useState<SystemState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [spectatingRoom, setSpectatingRoom] = useState<string | null>(null);
   const { setHeaderConfig } = useHeader();
 
   const fetchSystemState = async (pwd: string) => {
@@ -302,6 +304,16 @@ export default function AdminPage() {
   return (
     <div className="p-4">
       <div className="max-w-7xl mx-auto space-y-6">
+        {/* Spectator View */}
+        {spectatingRoom && (
+          <div className="mb-6">
+            <SpectatorView
+              roomCode={spectatingRoom}
+              onClose={() => setSpectatingRoom(null)}
+            />
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
@@ -437,7 +449,21 @@ export default function AdminPage() {
                                   {new Date(room.createdAt).toLocaleString()}
                                 </CardDescription>
                               </div>
-                              <div className="text-right">
+                              <div className="text-right flex gap-2">
+                                {room.gameState && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setSpectatingRoom(room.code)}
+                                    title="Watch Game"
+                                  >
+                                    <Icon
+                                      icon="mdi:eye"
+                                      className="w-4 h-4 mr-2"
+                                    />
+                                    Spectate
+                                  </Button>
+                                )}
                                 <Button
                                   variant="ghost"
                                   size="icon"

@@ -5,12 +5,14 @@ import { handleGameMessages } from './handlers/gameHandlers';
 import { handleWebRTCMessages } from './handlers/webrtcHandlers';
 import { handleRoomMessages } from './handlers/roomHandlers';
 import { handleChatMessages } from './handlers/chatHandlers';
+import { handleSpectatorMessages } from './handlers/spectatorHandlers';
 import { roomManager } from '../utils/roomManager';
 
 interface ClientInfo {
   id: string;
   roomId?: string;
   name?: string;
+  isSpectator?: boolean;
 }
 
 const clients = new Map<WebSocket, ClientInfo>();
@@ -105,6 +107,11 @@ function handleMessage(ws: WebSocket, message: WSMessage): void {
       handleWebRTCMessages(ws, clients, message);
       break;
 
+    case 'SPECTATE_ROOM':
+    case 'LEAVE_SPECTATE':
+      handleSpectatorMessages(ws, clients, message);
+      break;
+
     default:
       sendToClient(ws, {
         type: 'ERROR',
@@ -153,6 +160,7 @@ export function broadcastToRoom(
   excludeClientId?: string,
 ): void {
   for (const [ws, clientInfo] of clients) {
+    // Send to players and spectators in the room
     if (clientInfo.roomId === roomId && clientInfo.id !== excludeClientId) {
       sendToClient(ws, message, roomId);
     }

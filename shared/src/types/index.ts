@@ -91,7 +91,11 @@ export type WSMessageType =
   | 'SWITCH_PLAYER_MIC'
   | 'PLAYER_MIC_SWITCHED'
   | 'PLAY_AGAIN'
-  | 'GAME_RESET';
+  | 'GAME_RESET'
+  | 'SPECTATE_ROOM'
+  | 'SPECTATOR_JOINED'
+  | 'LEAVE_SPECTATE'
+  | 'SPECTATOR_LEFT';
 
   
 export interface WSMessage {
