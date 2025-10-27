@@ -35,6 +35,7 @@ interface MergedGameBoardProps {
   players: Player[];
   currentPlayerId: string;
   isReplay?: boolean;
+  suspenseBlock?: boolean;
 }
 
 export default function GameBoard({
@@ -54,6 +55,7 @@ export default function GameBoard({
   players,
   currentPlayerId,
   isReplay = false,
+  suspenseBlock = false,
 }: Readonly<MergedGameBoardProps>) {
   const [claimedRank, setClaimedRank] = useState(
     lastPlay ? lastPlay.claimedRank : ""
@@ -190,7 +192,7 @@ export default function GameBoard({
                 />
               </div>
 
-              {(lastPlay || !isMyTurn) && !isReplay && (
+              {(lastPlay || !isMyTurn || suspenseBlock) && !isReplay && (
                 <div className="flex justify-center">
                   <Button
                     onClick={onChallenge}
@@ -219,7 +221,7 @@ export default function GameBoard({
       {/* Play Controls */}
       <PlayerControls
         isMyTurn={isMyTurn}
-        canPlay={playerCards.length > 0}
+        canPlay={playerCards.length > 0 && !suspenseBlock}
         setClaimedRank={setClaimedRank}
         claimedRank={claimedRank}
         selectedCards={selectedCards}

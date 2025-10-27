@@ -10,6 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Icon } from "@iconify/react";
+import LoadingSpinner from "../LoadingSpinner";
 
 interface GameParticipant {
   player_name: string;
@@ -38,7 +39,20 @@ interface GameManagementProps {
   password: string;
 }
 
-export default function GameManagement({ baseUrl, password }: GameManagementProps) {
+function getBgColor(p: GameParticipant): string {
+  if (p.is_winner) {
+    return "bg-green-100";
+  }
+  if (p.is_loser) {
+    return "bg-red-100";
+  }
+  return "bg-gray-100";
+}
+
+export default function GameManagement({
+  baseUrl,
+  password,
+}: Readonly<GameManagementProps>) {
   const [games, setGames] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -75,21 +89,22 @@ export default function GameManagement({ baseUrl, password }: GameManagementProp
   }, []);
 
   const handleDeleteGame = async (gameId: string, roomCode: string) => {
-    if (!confirm(`Are you sure you want to delete game ${roomCode}? This action cannot be undone.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete game ${roomCode}? This action cannot be undone.`
+      )
+    ) {
       return;
     }
 
     try {
-      const response = await fetch(
-        `${baseUrl}/api/admin/db/games/${gameId}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ password }),
-        }
-      );
+      const response = await fetch(`${baseUrl}/api/admin/db/games/${gameId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ password }),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to delete game");
@@ -103,11 +118,24 @@ export default function GameManagement({ baseUrl, password }: GameManagementProp
     }
   };
 
+  const handleSeeReplay = (gameId: string) => {
+    const replayUrl = `/Tekthib/replay/${gameId}`;
+    window.open(replayUrl, "_blank");
+  };
+
   const filteredGames = games.filter(
     (game) =>
       game.room_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
       game.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (isLoading) {
+    return (
+      <div className="flex-1">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -119,13 +147,9 @@ export default function GameManagement({ baseUrl, password }: GameManagementProp
           </p>
         </div>
         <Button onClick={() => fetchGames(currentPage)} disabled={isLoading}>
-          {isLoading ? (
-            "Loading..."
-          ) : (
-            <>
-              <Icon icon="mdi:refresh" className="w-4 h-4 mr-2" /> Refresh
-            </>
-          )}
+          <>
+            <Icon icon="mdi:refresh" className="w-4 h-4 mr-2" /> Refresh
+          </>
         </Button>
       </div>
 
@@ -138,12 +162,12 @@ export default function GameManagement({ baseUrl, password }: GameManagementProp
         />
       </div>
 
-      {isLoading ? (
-        <div className="text-center py-8">Loading games...</div>
-      ) : filteredGames.length === 0 ? (
+      {filteredGames.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center text-gray-500">
-            {searchTerm ? "No games found matching your search" : "No games in database"}
+            {searchTerm
+              ? "No games found matching your search"
+              : "No games in database"}
           </CardContent>
         </Card>
       ) : (
@@ -164,14 +188,27 @@ export default function GameManagement({ baseUrl, password }: GameManagementProp
                         Game ID: {game.id.slice(0, 24)}...
                       </CardDescription>
                     </div>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDeleteGame(game.id, game.room_code)}
-                    >
-                      <Icon icon="mdi:delete" className="w-4 h-4 mr-1" />
-                      Delete
-                    </Button>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() =>
+                          handleDeleteGame(game.id, game.room_code)
+                        }
+                      >
+                        <Icon icon="mdi:delete" className="w-4 h-4 mr-1" />
+                        Delete
+                      </Button>
+
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => handleSeeReplay(game.id)}
+                      >
+                        <Icon icon="mdi:delete" className="w-4 h-4 mr-1" />
+                        See Replay
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -208,14 +245,10 @@ export default function GameManagement({ baseUrl, password }: GameManagementProp
                         .sort((a, b) => a.final_position - b.final_position)
                         .map((participant, idx) => (
                           <div
-                            key={idx}
-                            className={`px-3 py-1 rounded-full text-xs flex items-center gap-1 ${
-                              participant.is_winner
-                                ? "bg-green-100 text-green-800"
-                                : participant.is_loser
-                                ? "bg-red-100 text-red-800"
-                                : "bg-gray-100 text-gray-800"
-                            }`}
+                            key={idx + 1}
+                            className={`px-3 py-1 rounded-full text-xs flex items-center gap-1 ${getBgColor(
+                              participant
+                            )}`}
                           >
                             {participant.is_winner && (
                               <Icon icon="mdi:trophy" className="w-3 h-3" />

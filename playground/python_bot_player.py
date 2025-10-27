@@ -14,16 +14,20 @@ Requirements:
     - python 3.7+
 """
 
+import os
 import websocket
 import json
 import time
-import argparse
 import logging
 import sys
 import random
 import uuid
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional
 from threading import Thread, Event
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(
@@ -126,7 +130,7 @@ class TekthibBot:
             elif msg_type == "ROOM_JOINED":
                 self._handle_room_joined(payload)
             elif msg_type == "GAME_STARTED":
-                self._handle_game_started(payload)
+                self._handle_game_started()
             elif msg_type == "INITIAL_GAME_STATE":
                 self._handle_initial_game_state(payload)
             elif msg_type == "GAME_STATE_UPDATE":
@@ -190,11 +194,11 @@ class TekthibBot:
         time.sleep(0.5)
         self._send_message({
             "type": "READY",
-            "payload": {}
+            "payload": { "ready": True }
         })
         logger.info("Marked as ready")
     
-    def _handle_game_started(self, payload: Dict):
+    def _handle_game_started(self):
         """Handle GAME_STARTED message."""
         logger.info("Game started!")
         self.game_phase = "playing"
@@ -457,35 +461,16 @@ class TekthibBot:
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(description="Tekthib Bot Player")
-    parser.add_argument(
-        "--server-url",
-        default="ws://localhost:3001",
-        help="WebSocket server URL (default: ws://localhost:3001)"
-    )
-    parser.add_argument(
-        "--room-code",
-        required=True,
-        help="Room code to join"
-    )
-    parser.add_argument(
-        "--player-name",
-        default="PythonBot",
-        help="Name for the bot player (default: PythonBot)"
-    )
-    parser.add_argument(
-        "--verbose",
-        action="store_true",
-        help="Enable verbose logging"
-    )
-    
-    args = parser.parse_args()
-    
-    if args.verbose:
-        logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.DEBUG)
     
     # Create and run the bot
-    bot = TekthibBot(args.server_url, args.room_code, args.player_name)
+    SERVER_URL = os.getenv("SERVER_URL", "ws://localhost:3001")
+    ROOM_CODE = os.getenv("ROOM_CODE", "")
+    PLAYER_NAME = os.getenv("PLAYER_NAME", "PythonBot-1")
+    if not ROOM_CODE:
+        logger.error("ROOM_CODE environment variable is not set.")
+        return
+    bot = TekthibBot(SERVER_URL, ROOM_CODE, PLAYER_NAME)
     bot.run()
 
 

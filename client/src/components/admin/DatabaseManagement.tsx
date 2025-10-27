@@ -11,7 +11,7 @@ interface DatabaseManagementProps {
 export default function DatabaseManagement({
   baseUrl,
   password,
-}: DatabaseManagementProps) {
+}: Readonly<DatabaseManagementProps>) {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="overview" className="w-full">

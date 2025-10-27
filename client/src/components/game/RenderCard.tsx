@@ -204,6 +204,7 @@ const RenderOneHand = (
         WebkitUserSelect: "none",
         MozUserSelect: "none",
         msUserSelect: "none",
+        opacity: isMyTurn ? 1 : 0.6,
       }}
     >
       {handCards.map((card, idx) => {

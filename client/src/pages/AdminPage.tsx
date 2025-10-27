@@ -349,7 +349,8 @@ export default function AdminPage() {
                     "Refreshing..."
                   ) : (
                     <>
-                      <Icon icon="mdi:refresh" className="w-4 h-4 mr-2" /> Refresh
+                      <Icon icon="mdi:refresh" className="w-4 h-4 mr-2" />{" "}
+                      Refresh
                     </>
                   )}
                 </Button>
@@ -360,7 +361,8 @@ export default function AdminPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Icon icon="mdi:home" className="w-5 h-5" /> Total Active Rooms
+                      <Icon icon="mdi:home" className="w-5 h-5" /> Total Active
+                      Rooms
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -372,8 +374,8 @@ export default function AdminPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Icon icon="mdi:account-group" className="w-5 h-5" /> Total
-                      Players Online
+                      <Icon icon="mdi:account-group" className="w-5 h-5" />{" "}
+                      Total Players Online
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -431,7 +433,8 @@ export default function AdminPage() {
                                   Room Code: {room.code}
                                 </CardTitle>
                                 <CardDescription>
-                                  Created: {new Date(room.createdAt).toLocaleString()}
+                                  Created:{" "}
+                                  {new Date(room.createdAt).toLocaleString()}
                                 </CardDescription>
                               </div>
                               <div className="text-right">
@@ -466,7 +469,9 @@ export default function AdminPage() {
                             {/* Game State */}
                             {room.gameState && (
                               <div className="p-3 rounded border">
-                                <h4 className="font-semibold mb-2">Game State</h4>
+                                <h4 className="font-semibold mb-2">
+                                  Game State
+                                </h4>
                                 <div className="grid grid-cols-2 gap-2 text-sm">
                                   <div>
                                     Phase:{" "}
@@ -477,7 +482,8 @@ export default function AdminPage() {
                                   <div>
                                     Current Player:{" "}
                                     <span className="font-medium">
-                                      Player {room.gameState.currentPlayerIndex + 1}
+                                      Player{" "}
+                                      {room.gameState.currentPlayerIndex + 1}
                                     </span>
                                   </div>
                                   <div>
@@ -506,7 +512,9 @@ export default function AdminPage() {
                                     className="flex justify-between items-center p-2 rounded border"
                                   >
                                     <div className="flex items-center gap-2">
-                                      <span className="font-medium">#{idx + 1}</span>
+                                      <span className="font-medium">
+                                        #{idx + 1}
+                                      </span>
                                       <span>{player.name}</span>
                                       {player.id === room.hostId && (
                                         <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
@@ -535,7 +543,9 @@ export default function AdminPage() {
                                               : "text-red-600"
                                           }`}
                                         />
-                                        {player.isConnected ? "Online" : "Offline"}
+                                        {player.isConnected
+                                          ? "Online"
+                                          : "Offline"}
                                       </span>
                                       <span
                                         className={

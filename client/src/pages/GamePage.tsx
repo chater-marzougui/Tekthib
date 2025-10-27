@@ -77,6 +77,7 @@ export default function GamePage() {
   const [pilePosition, setPilePosition] = useState({ x: 0, y: 0 });
   const [handPosition, setHandPosition] = useState({ x: 0, y: 0 });
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
+  const [suspenseBlock, setSuspenseBlock] = useState(false);
 
   const playerName = localStorage.getItem("playerName") || "";
   const playerId = localStorage.getItem("clientId") || "";
@@ -287,6 +288,7 @@ export default function GamePage() {
         // Play suspense drums sound immediately when challenge is submitted
         // Only if the setting is enabled
         if (challengeSuspenseEnabled) {
+          setSuspenseBlock(true);
           playSound(SOUNDS.CHALLENGE_SUSPENSE_DRUMS);
         }
       }
@@ -395,6 +397,8 @@ export default function GamePage() {
           setGameState(newGameState);
           setIsMyTurn(newGameState.currentPlayerId === playerId);
         }
+
+        setSuspenseBlock(false);
       }
     );
 
@@ -961,6 +965,7 @@ export default function GamePage() {
               serverTimer={gameState.remainingTime}
               players={players}
               currentPlayerId={playerId}
+              suspenseBlock={suspenseBlock}
             />
 
             <div className="gap-4 flex flex-row flex-wrap w-full lg:flex-col lg:w-84">
