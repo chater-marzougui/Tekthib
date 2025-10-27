@@ -1,13 +1,43 @@
 import { WebSocket } from 'ws';
 import { WSMessage } from 'shared';
 import { roomManager } from '../../utils/roomManager';
-import { sendToClient, broadcastToRoom } from '../index';
+import { sendToClient } from '../index';
 
+// Import ClientInfo from parent module to avoid duplication
 interface ClientInfo {
   id: string;
   roomId?: string;
   name?: string;
   isSpectator?: boolean;
+}
+
+/**
+ * Helper function to transform game state for spectators
+ */
+function buildSpectatorGameState(room: any) {
+  if (!room.gameState) return null;
+
+  const currentPlayerId =
+    room.gameState.playerOrder[room.gameState.currentPlayerIndex];
+
+  return {
+    phase: room.gameState.phase,
+    currentPlayerIndex: room.gameState.currentPlayerIndex,
+    currentPlayerId: currentPlayerId,
+    pileCount: room.gameState.pile.length,
+    currentRank: room.gameState.currentRank,
+    lastPlayerId: room.gameState.lastPlayerId,
+    lastPlayedCount: room.gameState.lastPlayedCards.length,
+    winners: room.gameState.winners,
+    players: Array.from(room.players.values()).map((player: any) => ({
+      id: player.id,
+      name: player.name,
+      cardCount: player.hand.length,
+      isConnected: player.isConnected,
+      isReady: player.isReady,
+      isBot: player.isBot,
+    })),
+  };
 }
 
 /**
@@ -79,27 +109,7 @@ function handleSpectateRoom(
 
   // Send current game state to spectator
   if (room.gameState) {
-    const currentPlayerId =
-      room.gameState.playerOrder[room.gameState.currentPlayerIndex];
-
-    const spectatorGameState = {
-      phase: room.gameState.phase,
-      currentPlayerIndex: room.gameState.currentPlayerIndex,
-      currentPlayerId: currentPlayerId,
-      pileCount: room.gameState.pile.length,
-      currentRank: room.gameState.currentRank,
-      lastPlayerId: room.gameState.lastPlayerId,
-      lastPlayedCount: room.gameState.lastPlayedCards.length,
-      winners: room.gameState.winners,
-      players: Array.from(room.players.values()).map((player) => ({
-        id: player.id,
-        name: player.name,
-        cardCount: player.hand.length,
-        isConnected: player.isConnected,
-        isReady: player.isReady,
-        isBot: player.isBot,
-      })),
-    };
+    const spectatorGameState = buildSpectatorGameState(room);
 
     sendToClient(ws, {
       type: 'INITIAL_GAME_STATE',

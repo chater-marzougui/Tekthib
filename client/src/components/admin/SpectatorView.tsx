@@ -80,7 +80,10 @@ export default function SpectatorView({ roomCode, onClose }: SpectatorViewProps)
 
       registerHandler("spectator-view-ended", (message) => {
         if (message.type === "GAME_ENDED") {
-          // Game ended, update state
+          // Update game state to show final results
+          if (message.payload.gameState) {
+            setGameState(message.payload.gameState);
+          }
         }
       }),
 
