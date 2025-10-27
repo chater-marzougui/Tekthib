@@ -13,7 +13,13 @@ import { BotPlayer } from './BotPlayer';
 import { GameState } from '../types';
 
 export interface GameEvent {
-  eventType: 'game_start' | 'round_start' | 'cards_played' | 'challenge' | 'round_end' | 'game_end';
+  eventType:
+    | 'game_start'
+    | 'round_start'
+    | 'cards_played'
+    | 'challenge'
+    | 'round_end'
+    | 'game_end';
   playerUserId?: string;
   playerName: string;
   eventData: Record<string, unknown>;
@@ -43,25 +49,33 @@ export class GameEngine {
   private botChatCallback?: (botId: string, message: string) => void;
   private turnTimer: NodeJS.Timeout | null = null;
   private turnStartTime: number = 0;
-  private autoPlayCallback?: (playerId: string, cardIds: string[], claimedRank: Rank) => void;
+  private autoPlayCallback?: (
+    playerId: string,
+    cardIds: string[],
+    claimedRank: Rank,
+  ) => void;
   private processingChallenge: boolean = false;
   private gameEndCallback?: () => void;
   private readonly gameEvents: GameEvent[] = [];
   private currentRoundNumber: number = 0;
 
-  constructor(players: Map<string, PlayerWithHand>, autoPlayTimeout: number = 0) {
+  constructor(
+    players: Map<string, PlayerWithHand>,
+    autoPlayTimeout: number = 0,
+  ) {
     this.players = players;
     this.autoPlayTimeout = autoPlayTimeout;
     this.gameState = this.initializeGame();
 
     // Initialize bot players with their personalities
-    players.forEach((player, playerId) => {
+    for (const [playerId, player] of players) {
       if (player.isBot) {
-        const personality = player.botPersonality || this.assignRandomPersonality();
+        const personality =
+          player.botPersonality || this.assignRandomPersonality();
         const botPlayer = new BotPlayer(this, playerId, personality);
         this.botPlayers.set(playerId, botPlayer);
       }
-    });
+    }
   }
 
   /**
@@ -69,19 +83,21 @@ export class GameEngine {
    */
   setBotChatCallback(callback: (botId: string, message: string) => void): void {
     this.botChatCallback = callback;
-    
+
     // Set chat callback for all bot players
-    this.botPlayers.forEach((bot, botId) => {
+    for (const [botId, bot] of this.botPlayers) {
       bot.setChatCallback((message: string) => {
         callback(botId, message);
       });
-    });
+    }
   }
 
   /**
    * Set callback for auto-play events
    */
-  setAutoPlayCallback(callback: (playerId: string, cardIds: string[], claimedRank: Rank) => void): void {
+  setAutoPlayCallback(
+    callback: (playerId: string, cardIds: string[], claimedRank: Rank) => void,
+  ): void {
     this.autoPlayCallback = callback;
   }
 
@@ -96,7 +112,11 @@ export class GameEngine {
    * Assign a random personality to a bot
    */
   private assignRandomPersonality(): BotPersonality {
-    const personalities: BotPersonality[] = ['aggressive', 'truthful', 'unpredictable'];
+    const personalities: BotPersonality[] = [
+      'aggressive',
+      'truthful',
+      'unpredictable',
+    ];
     return personalities[Math.floor(Math.random() * personalities.length)];
   }
 
@@ -114,24 +134,24 @@ export class GameEngine {
     const hands = deck.distributeCards(this.players.size);
     const removedCards: Card[] = [];
 
-    playerOrder.forEach((playerId, index) => {
+    for (const [index, playerId] of playerOrder.entries()) {
       const player = this.players.get(playerId);
       if (player) {
         player.hand = hands[index];
         removedCards.push(...this.checkAndRemoveFourOfKind(player, true));
       }
-    });
+    }
 
     // Initialize player stats
     const playerStats = new Map<string, import('shared').PlayerStats>();
-    playerOrder.forEach((playerId) => {
+    for (const playerId of playerOrder) {
       playerStats.set(playerId, {
         timesCaughtBluffing: 0,
         timesBluffedSuccessfully: 0,
         timesFalselyAccused: 0,
         timesToldTruth: 0,
       });
-    });
+    }
 
     return {
       phase: 'waiting',
@@ -155,7 +175,7 @@ export class GameEngine {
   recordGameStart(): void {
     // Build initial state data
     const playerData: Record<string, unknown>[] = [];
-    this.gameState.playerOrder.forEach((playerId) => {
+    for (const playerId of this.gameState.playerOrder) {
       const player = this.players.get(playerId);
       if (player) {
         playerData.push({
@@ -165,7 +185,7 @@ export class GameEngine {
           initialHandSize: player.hand.length,
         });
       }
-    });
+    }
 
     this.addGameEvent({
       eventType: 'game_start',
@@ -188,8 +208,10 @@ export class GameEngine {
    */
   private startNewRound(): void {
     this.currentRoundNumber++;
-    const currentPlayer = this.players.get(this.gameState.playerOrder[this.gameState.currentPlayerIndex]);
-    
+    const currentPlayer = this.players.get(
+      this.gameState.playerOrder[this.gameState.currentPlayerIndex],
+    );
+
     this.addGameEvent({
       eventType: 'round_start',
       playerUserId: currentPlayer?.id,
@@ -255,8 +277,8 @@ export class GameEngine {
     }
 
     // Verify player has these cards
-    const playerCardIds = player.hand.map((c) => c.id);
-    const allCardsValid = cardIds.every((id) => playerCardIds.includes(id));
+    const playerCardIds = new Set(player.hand.map((c) => c.id));
+    const allCardsValid = cardIds.every((id) => playerCardIds.has(id));
     if (!allCardsValid) {
       return { success: false, error: 'Invalid cards' };
     }
@@ -292,18 +314,18 @@ export class GameEngine {
       if (previousPlayerStats) {
         if (wasBluff) {
           previousPlayerStats.timesBluffedSuccessfully++;
-          
+
           // Record for bot learning
-          this.botPlayers.forEach((bot) => {
+          for (const bot of this.botPlayers.values()) {
             bot.recordUnchallengedPlay(previousPlayerId, true);
-          });
+          }
         } else {
           previousPlayerStats.timesToldTruth++;
-          
+
           // Record for bot learning
-          this.botPlayers.forEach((bot) => {
+          for (const bot of this.botPlayers.values()) {
             bot.recordUnchallengedPlay(previousPlayerId, false);
-          });
+          }
         }
       }
     }
@@ -324,7 +346,7 @@ export class GameEngine {
       playerUserId: playerId,
       playerName: player.name,
       eventData: {
-        cardsPlayed: playedCards.map(c => ({ rank: c.rank, suit: c.suit })),
+        cardsPlayed: playedCards.map((c) => ({ rank: c.rank, suit: c.suit })),
         claimedRank,
         cardsCount: playedCards.length,
         remainingHandSize: player.hand.length,
@@ -361,7 +383,7 @@ export class GameEngine {
     if (remainingPlayers.length === 1) {
       this.gameState.loser = remainingPlayers[0];
       this.gameState.phase = 'ended';
-      
+
       // Record game end event
       this.addGameEvent({
         eventType: 'game_end',
@@ -370,11 +392,13 @@ export class GameEngine {
           winners: this.gameState.winners,
           loser: this.gameState.loser,
           totalRounds: this.currentRoundNumber,
-          finalStats: Array.from(this.gameState.playerStats.entries()).map(([playerId, stats]) => ({
-            playerId,
-            playerName: this.players.get(playerId)?.name,
-            stats,
-          })),
+          finalStats: Array.from(this.gameState.playerStats.entries()).map(
+            ([playerId, stats]) => ({
+              playerId,
+              playerName: this.players.get(playerId)?.name,
+              stats,
+            }),
+          ),
         },
         timestamp: new Date(),
       });
@@ -394,7 +418,7 @@ export class GameEngine {
 
   challenge(
     challengerId: string,
-    lastPlayInfo?: { playerId: string; claimedRank: Rank }
+    lastPlayInfo?: { playerId: string; claimedRank: Rank },
   ): {
     success: boolean;
     wasLying: boolean;
@@ -467,21 +491,29 @@ export class GameEngine {
     if (wasLying) {
       // Last player was lying - caught bluffing
       if (lastPlayerStats) lastPlayerStats.timesCaughtBluffing++;
-      
+
       // Record for bot learning
-      this.botPlayers.forEach((bot) => {
-        bot.recordChallengeResult(challengerId, this.gameState.lastPlayerId!, true);
-      });
+      for (const bot of this.botPlayers.values()) {
+        bot.recordChallengeResult(
+          challengerId,
+          this.gameState.lastPlayerId,
+          true,
+        );
+      }
     } else {
       // Last player was telling truth
       if (lastPlayerStats) lastPlayerStats.timesToldTruth++;
       // Challenger falsely accused
       if (challengerStats) challengerStats.timesFalselyAccused++;
-      
+
       // Record for bot learning
-      this.botPlayers.forEach((bot) => {
-        bot.recordChallengeResult(challengerId, this.gameState.lastPlayerId!, false);
-      });
+      for (const bot of this.botPlayers.values()) {
+        bot.recordChallengeResult(
+          challengerId,
+          this.gameState.lastPlayerId,
+          false,
+        );
+      }
     }
 
     // Liar takes the pile
@@ -501,7 +533,10 @@ export class GameEngine {
         challengedPlayerName: lastPlayer.name,
         wasLying,
         claimedRank,
-        revealedCards: this.gameState.pile.map(c => ({ rank: c.rank, suit: c.suit })),
+        revealedCards: this.gameState.pile.map((c) => ({
+          rank: c.rank,
+          suit: c.suit,
+        })),
         cardsCount: this.gameState.pile.length,
         pileTakenBy: getsThePile.id,
         pileTakenByName: getsThePile.name,
@@ -573,27 +608,27 @@ export class GameEngine {
     const removedCardsList: Card[] = []; // This will be the return value
 
     // Group cards by rank (excluding Jokers)
-    player.hand.forEach((card) => {
+    for (const card of player.hand) {
       if (card.rank !== 'Joker') {
         if (!rankGroups.has(card.rank)) {
           rankGroups.set(card.rank, []);
         }
         rankGroups.get(card.rank)!.push(card);
       }
-    });
+    }
 
     // Check each rank group for suit-complete four-of-a-kind or eight-of-a-kind
-    rankGroups.forEach((cards, _) => {
+    for (const cards of rankGroups.values()) {
       if (cards.length >= 4) {
         const suitCounts = new Map<Suit, Card[]>();
-        cards.forEach((card) => {
+        for (const card of cards) {
           if (card.suit !== 'joker') {
             if (!suitCounts.has(card.suit)) {
               suitCounts.set(card.suit, []);
             }
             suitCounts.get(card.suit)!.push(card);
           }
-        });
+        }
 
         const hasAllSuits = SuitTypes.every((suit) => suitCounts.has(suit));
 
@@ -606,18 +641,18 @@ export class GameEngine {
           const cardsToTrack: Card[] = []; // Temporary array for this rank group
 
           if (canRemoveEight) {
-            SuitTypes.forEach((suit) => {
+            for (const suit of SuitTypes) {
               const cardsOfSuit = suitCounts.get(suit)!;
               cardsToRemove.add(cardsOfSuit[0].id);
               cardsToRemove.add(cardsOfSuit[1].id);
               cardsToTrack.push(cardsOfSuit[0], cardsOfSuit[1]);
-            });
+            }
           } else {
-            SuitTypes.forEach((suit) => {
+            for (const suit of SuitTypes) {
               const cardOfSuit = suitCounts.get(suit)![0];
               cardsToRemove.add(cardOfSuit.id);
               cardsToTrack.push(cardOfSuit);
-            });
+            }
           }
 
           // Add to game state if not initial check
@@ -631,7 +666,7 @@ export class GameEngine {
           player.hand = player.hand.filter((c) => !cardsToRemove.has(c.id));
         }
       }
-    });
+    }
 
     if (
       player.hand.length === 0 &&
@@ -671,11 +706,13 @@ export class GameEngine {
             winners: this.gameState.winners,
             loser: this.gameState.loser,
             totalRounds: this.currentRoundNumber,
-            finalStats: Array.from(this.gameState.playerStats.entries()).map(([playerId, stats]) => ({
-              playerId,
-              playerName: this.players.get(playerId)?.name,
-              stats,
-            })),
+            finalStats: Array.from(this.gameState.playerStats.entries()).map(
+              ([playerId, stats]) => ({
+                playerId,
+                playerName: this.players.get(playerId)?.name,
+                stats,
+              }),
+            ),
           },
           timestamp: new Date(),
         });
@@ -794,7 +831,7 @@ export class GameEngine {
   triggerRandomBotChat(): void {
     const currentPlayerId =
       this.gameState.playerOrder[this.gameState.currentPlayerIndex];
-    
+
     for (const [botId, bot] of this.botPlayers) {
       // Only non-current-turn bots can send random chat
       if (botId !== currentPlayerId) {
@@ -817,7 +854,7 @@ export class GameEngine {
 
     // Check if there's at least one connected human player
     const hasHumanPlayers = Array.from(this.players.values()).some(
-      (p) => !p.isBot && p.isConnected
+      (p) => !p.isBot && p.isConnected,
     );
 
     if (!hasHumanPlayers) {
@@ -859,7 +896,11 @@ export class GameEngine {
    * Handle auto-play when timer expires
    * Returns the play details if successful, null otherwise
    */
-  handleAutoPlay(): { playerId: string; cardIds: string[]; claimedRank: Rank } | null {
+  handleAutoPlay(): {
+    playerId: string;
+    cardIds: string[];
+    claimedRank: Rank;
+  } | null {
     this.stopTurnTimer();
 
     const currentPlayerId =
@@ -881,13 +922,13 @@ export class GameEngine {
     // Auto-play random cards for the human player
     const numCards = Math.min(
       Math.floor(Math.random() * 4) + 1,
-      player.hand.length
+      player.hand.length,
     );
     const cardIds = player.hand.slice(0, numCards).map((c) => c.id);
 
     // Determine rank to claim
-    const rankToClaim = this.gameState.currentRank || 
-      this.getRandomPlayableRank();
+    const rankToClaim =
+      this.gameState.currentRank || this.getRandomPlayableRank();
 
     // Execute the play
     const result = this.playCards(currentPlayerId, cardIds, rankToClaim);
@@ -897,7 +938,7 @@ export class GameEngine {
       if (this.autoPlayCallback) {
         this.autoPlayCallback(currentPlayerId, cardIds, rankToClaim);
       }
-      
+
       // Return the auto-play details
       return { playerId: currentPlayerId, cardIds, claimedRank: rankToClaim };
     }
@@ -909,7 +950,21 @@ export class GameEngine {
    * Get a random playable rank
    */
   private getRandomPlayableRank(): Rank {
-    const playableRanks: Rank[] = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+    const playableRanks: Rank[] = [
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+      '7',
+      '8',
+      '9',
+      '10',
+      'J',
+      'Q',
+      'K',
+      'A',
+    ];
     return playableRanks[Math.floor(Math.random() * playableRanks.length)];
   }
 
