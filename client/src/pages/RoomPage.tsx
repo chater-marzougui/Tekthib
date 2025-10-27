@@ -49,7 +49,7 @@ export default function RoomPage() {
   const roomCodeRef = useRef(roomCode);
 
   // Get isPublic from URL params if creating room
-  const searchParams = new URLSearchParams(window.location.search);
+  const searchParams = new URLSearchParams(globalThis.location.search);
   const isPublic = searchParams.get("isPublic") !== "false";
 
   // Check if player name is set on mount
@@ -99,8 +99,8 @@ export default function RoomPage() {
           room.players.find((p: Player) => p.id === playerId)?.isReady || false
         );
         // Update URL to reflect actual room code
-        const basePath = window.location.pathname.split("/room")[0];
-        window.history.replaceState(null, "", `${basePath}/room/${room.code}`);
+        const basePath = globalThis.location.pathname.split("/room")[0];
+        globalThis.history.replaceState(null, "", `${basePath}/room/${room.code}`);
       }
     });
 
@@ -330,7 +330,7 @@ export default function RoomPage() {
       localStorage.setItem("playerName", nameInput.trim());
       setShowNameDialog(false);
       // Reload the page to use the new name
-      window.location.reload();
+      globalThis.location.reload();
     } else {
       toast.error(t("game.pleaseEnterValidName"));
     }

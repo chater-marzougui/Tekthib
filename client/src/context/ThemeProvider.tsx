@@ -29,7 +29,7 @@ export function ThemeProvider({
 }: Readonly<ThemeProviderProps>) {
   const [theme, setTheme] = useState<Theme>(() => {
     // Check if we're in the browser
-    if (typeof window === "undefined") {
+    if (typeof globalThis === "undefined") {
       return defaultTheme;
     }
 
@@ -39,7 +39,7 @@ export function ThemeProvider({
       return storedTheme;
     } else {
       // If no stored theme, check system preference
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+      const systemTheme = globalThis.matchMedia("(prefers-color-scheme: dark)")
         .matches
         ? "dark"
         : "light";
@@ -49,12 +49,12 @@ export function ThemeProvider({
   });
 
   useEffect(() => {
-    const root = window.document.documentElement;
+    const root = globalThis.document.documentElement;
 
     root.classList.remove("light", "dark");
 
     if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+      const systemTheme = globalThis.matchMedia("(prefers-color-scheme: dark)")
         .matches
         ? "dark"
         : "light";

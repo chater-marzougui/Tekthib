@@ -6,7 +6,7 @@ const WS_URL = import.meta.env.VITE_WS_URL || "wss://localhost:3001";
 export function useWebSocket() {
   const [lastMessage, setLastMessage] = useState<WSMessage | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<number | undefined>(undefined);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const messageHandlersRef = useRef<Map<string, (message: WSMessage) => void>>(
     new Map(),
   );
@@ -52,9 +52,9 @@ export function useWebSocket() {
         isConnectedRef.current = true;
 
         // Call registered handlers
-        messageHandlersRef.current.forEach((handler) => {
+        for (const handler of messageHandlersRef.current.values()) {
           handler(message);
-        });
+        }
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
       }
@@ -65,7 +65,7 @@ export function useWebSocket() {
       if (reconnectTimeoutRef.current) return;
 
       // Attempt to reconnect after 3 seconds
-      reconnectTimeoutRef.current = window.setTimeout(() => {
+      reconnectTimeoutRef.current = globalThis.setTimeout(() => {
         if (isConnectedRef.current) {
           return;
         }

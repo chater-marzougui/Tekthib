@@ -1,5 +1,5 @@
 export const BASE_PREFIX = "/Tekthib";
-export const BASE_URL = `${window.location.origin}${BASE_PREFIX}`;
+export const BASE_URL = `${globalThis.location.origin}${BASE_PREFIX}`;
 
 
 interface SizeProps {

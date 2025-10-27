@@ -581,10 +581,10 @@ export default function GamePage() {
     };
 
     updatePositions();
-    window.addEventListener("resize", updatePositions);
+    globalThis.addEventListener("resize", updatePositions);
     setTimeout(updatePositions, 100);
 
-    return () => window.removeEventListener("resize", updatePositions);
+    return () => globalThis.removeEventListener("resize", updatePositions);
   }, [lastPlay]);
 
   const handleCardSelect = (cardId: string) => {
@@ -668,7 +668,7 @@ export default function GamePage() {
     if (nameInput.trim()) {
       localStorage.setItem("playerName", nameInput.trim());
       setShowNameDialog(false);
-      window.location.reload();
+      globalThis.location.reload();
     } else {
       toast.error(t("game.pleaseEnterValidName"));
     }

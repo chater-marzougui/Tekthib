@@ -595,12 +595,12 @@ function handleKickPlayer(
   }
 
   // Clear the kicked player's room info
-  clients.forEach((client, _) => {
+  for (const client of clients.values()) {
     if (client.id === payload.playerId) {
       client.roomId = undefined;
       client.name = undefined;
     }
-  });
+  }
 }
 
 function handleMutePlayer(
@@ -749,9 +749,9 @@ function handlePlayAgain(
   room.hostId = payload.playerId;
 
   // Reset all players' ready status
-  room.players.forEach((player) => {
+  for (const player of room.players.values()) {
     player.isReady = player.id === payload.playerId;
-  });
+  }
 
   // Broadcast to all players that game has been reset
   broadcastToRoom(clients, room.id, {

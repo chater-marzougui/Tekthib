@@ -48,9 +48,9 @@ interface QRCodeCardProps {
 export const QRCodeCard: React.FC<QRCodeCardProps> = ({ roomCode }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { t } = useTranslation();
-  const pathname = window.location.pathname.split("/")[1]; // 'Tekthib'
+  const pathname = globalThis.location.pathname.split("/")[1]; // 'Tekthib'
   const pathSegment = pathname ? `/${pathname}` : "";
-  const baseUrl = `${window.location.origin}${pathSegment}`;
+  const baseUrl = `${globalThis.location.origin}${pathSegment}`;
   const roomUrl = `${baseUrl}/room/${roomCode}`;
 
   const copyRoomUrl = () => {

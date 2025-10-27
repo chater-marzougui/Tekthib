@@ -9,7 +9,7 @@ export function useTextDirection(): "rtl" | "ltr" {
   const { i18n } = useTranslation();
 
   const direction = useMemo(() => {
-    const currentLang = i18n.language || window.navigator.language;
+    const currentLang = i18n.language || globalThis.navigator.language;
     const langCode = currentLang.split("-")[0].toLowerCase();
     
     // List of RTL language codes

@@ -1,4 +1,4 @@
-import { Server } from 'http';
+import { Server } from 'node:http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { WSMessage } from 'shared';
 import { handleGameMessages } from './handlers/gameHandlers';
@@ -113,18 +113,22 @@ function handleMessage(ws: WebSocket, message: WSMessage): void {
   }
 }
 
-export function sendToClient(ws: WebSocket, message: WSMessage, roomId?: string): void {
+export function sendToClient(
+  ws: WebSocket,
+  message: WSMessage,
+  roomId?: string,
+): void {
   if (ws.readyState === WebSocket.OPEN) {
     // Attach autoPlayTimeout to the message if client is in a room
     let autoPlayTimeout: number | undefined;
-    
+
     // Try to get roomId from parameter first, then from clients map
     let effectiveRoomId = roomId;
     if (!effectiveRoomId) {
       const clientInfo = clients.get(ws);
       effectiveRoomId = clientInfo?.roomId;
     }
-    
+
     if (effectiveRoomId) {
       const room = roomManager.getRoom(effectiveRoomId);
       if (room) {
@@ -148,11 +152,11 @@ export function broadcastToRoom(
   message: WSMessage,
   excludeClientId?: string,
 ): void {
-  clients.forEach((clientInfo, ws) => {
+  for (const [ws, clientInfo] of clients) {
     if (clientInfo.roomId === roomId && clientInfo.id !== excludeClientId) {
       sendToClient(ws, message, roomId);
     }
-  });
+  }
 }
 
 export function sendToPlayer(
@@ -160,22 +164,18 @@ export function sendToPlayer(
   playerId: string,
   message: WSMessage,
 ): void {
-  clients.forEach((clientInfo, ws) => {
+  for (const [ws, clientInfo] of clients) {
     if (clientInfo.id === playerId) {
       sendToClient(ws, message, clientInfo.roomId);
     }
-  });
+  }
 }
 
 function handleConnect(ws: WebSocket, message: WSMessage): void {
   const payload = message.payload as { clientId?: string };
   let clientId = payload.clientId;
 
-  if (!clientId) {
-    // New client
-    clientId = `client_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
-    clients.set(ws, { id: clientId });
-  } else {
+  if (clientId) {
     // Reconnecting client - check if they were in a room
     let existingRoom: string | undefined;
     let existingName: string | undefined;
@@ -197,6 +197,10 @@ function handleConnect(ws: WebSocket, message: WSMessage): void {
       roomId: existingRoom,
       name: existingName,
     });
+  } else {
+    // New client
+    clientId = `client_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+    clients.set(ws, { id: clientId });
   }
 
   sendToClient(ws, {
