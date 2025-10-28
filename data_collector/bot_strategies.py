@@ -75,7 +75,8 @@ class AggressiveStrategy(BotStrategy):
             return matching
         else:
             # Bluff with 2-3 cards
-            num_to_play = random.randint(2, min(3, len(game_state.hand)))
+            max_cards = min(3, len(game_state.hand))
+            num_to_play = random.randint(1, max(1, max_cards))
             return random.sample(game_state.hand, num_to_play)
     
     def should_challenge(self, game_state: GameState) -> bool:
@@ -139,7 +140,9 @@ class SmartStrategy(BotStrategy):
             # We have matching cards
             if len(matching) >= 2:
                 # Play 2-3 matching cards for credibility
-                return matching[:random.randint(2, min(3, len(matching)))]
+                max_to_play = min(3, len(matching))
+                num_to_play = random.randint(2, max(2, max_to_play))
+                return matching[:num_to_play]
             else:
                 # Play our single matching card
                 return matching
@@ -208,7 +211,6 @@ class MyCustomStrategy(BotStrategy):
         super().__init__()
         # Add any initialization here
         # e.g., load your ML model, set up parameters, etc.
-        pass
     
     def select_cards(self, game_state: GameState, claimed_rank: str) -> List[Dict]:
         """

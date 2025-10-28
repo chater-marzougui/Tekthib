@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Tekthib Simulation Server
+Tekthib Simulation Server - Fixed Version
 
-FastAPI server that runs automated bot matches in the background using all
-available strategies from bot_strategies.py and logs their performance.
+FastAPI server that runs automated bot matches in parallel.
+Each game has 1-2 custom strategy bots playing against 3-6 built-in game bots.
 
 Usage:
     python simulation_server.py
@@ -34,18 +34,21 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, StreamingResponse
 from sqlalchemy import (
     Column,
     Float,
     Integer,
     String,
-    create_engine,
     select,
 )
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
+from fastapi.templating import Jinja2Templates
+
+# Initialize Jinja2 templates
+templates = Jinja2Templates(directory="templates")
 
 # Import bot SDK and strategies
 from bot_strategies import BotStrategy
@@ -73,6 +76,7 @@ class GameResult(Base):
     timestamp = Column(String, nullable=False)
     room_code = Column(String, nullable=False)
     strategies = Column(String, nullable=False)  # JSON string
+    num_game_bots = Column(Integer, nullable=False)  # Number of built-in bots
     winner = Column(String, nullable=False)
     rounds = Column(Integer, default=0)
     challenges = Column(Integer, default=0)
@@ -92,8 +96,9 @@ class SimulationState:
         self.active_games: List[Dict] = []
         self.completed_games = 0
         self.strategies: List[type] = []
-        self.simulation_thread: Optional[threading.Thread] = None
+        self.simulation_threads: List[threading.Thread] = []
         self.lock = threading.Lock()
+        self.max_parallel_games = 5  # Maximum number of parallel games
         
     def add_active_game(self, game_info: Dict):
         """Add a game to active games list."""
@@ -109,6 +114,11 @@ class SimulationState:
         """Increment completed games counter."""
         with self.lock:
             self.completed_games += 1
+    
+    def get_active_game_count(self) -> int:
+        """Get number of active games."""
+        with self.lock:
+            return len(self.active_games)
 
 
 sim_state = SimulationState()
@@ -178,10 +188,11 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down...")
     sim_state.stop_requested = True
     
-    # Wait for simulation thread to finish
-    if sim_state.simulation_thread and sim_state.simulation_thread.is_alive():
-        logger.info("Waiting for simulation thread to finish...")
-        sim_state.simulation_thread.join(timeout=10)
+    # Wait for simulation threads to finish
+    logger.info("Waiting for simulation threads to finish...")
+    for thread in sim_state.simulation_threads:
+        if thread.is_alive():
+            thread.join(timeout=10)
     
     await close_db()
     logger.info("Shutdown complete")
@@ -196,34 +207,41 @@ app = FastAPI(
 )
 
 
-def run_single_game(server_url: str, strategies: List[type]) -> Optional[Dict]:
+def run_single_game(server_url: str, strategies: List[type], game_id: int) -> Optional[Dict]:
     """
-    Run a single game with random strategies.
+    Run a single game with 1-2 custom strategy bots + 3-6 built-in game bots.
     
     Args:
         server_url: WebSocket server URL
         strategies: List of available strategy classes
+        game_id: Unique game identifier for logging
         
     Returns:
         Game result dictionary or None if failed
     """
     import random
     
-    # Select random strategies for this game
-    num_bots = random.randint(3, 6)
-    selected_strategies = random.choices(strategies, k=num_bots)
+    # Select 1-2 custom bot strategies for this game
+    num_custom_bots = random.randint(1, 2)
+    selected_strategies = random.sample(strategies, min(num_custom_bots, len(strategies)))
     
-    # Create strategy instances
-    strategy_instances = [StrategyClass() for StrategyClass in selected_strategies]
-    strategy_names = [s.__class__.__name__ for s in strategy_instances]
+    # Select 3-6 built-in game bots
+    num_game_bots = random.randint(3, 6)
     
-    logger.info(f"Starting game with {num_bots} bots: {strategy_names}")
+    # Total players = custom bots + game bots
+    total_players = num_custom_bots + num_game_bots
+    
+    strategy_names = [s.__name__ for s in selected_strategies]
+    
+    logger.info(f"[Game {game_id}] Starting game with {num_custom_bots} custom bot(s) + {num_game_bots} game bots = {total_players} total")
+    logger.info(f"[Game {game_id}] Custom strategies: {strategy_names}")
     
     # Game state tracking
     game_data = {
         "room_code": None,
         "start_time": time.time(),
         "strategies": strategy_names,
+        "num_game_bots": num_game_bots,
         "winner": None,
         "winner_strategy": None,
         "rounds": 0,
@@ -232,8 +250,9 @@ def run_single_game(server_url: str, strategies: List[type]) -> Optional[Dict]:
         "challenges_failed": 0,
     }
     
-    # Create host bot (first strategy)
-    host_strategy = strategy_instances[0]
+    # Create host bot (first custom strategy)
+    host_strategy_class = selected_strategies[0]
+    host_strategy = host_strategy_class()
     host_name = f"Bot-{strategy_names[0][:8]}-{str(uuid.uuid4())[:4]}"
     
     host_sdk = TekthibBotSDK(
@@ -241,8 +260,8 @@ def run_single_game(server_url: str, strategies: List[type]) -> Optional[Dict]:
         room_code="",
         player_name=host_name,
         is_host=True,
-        bots_to_add=0,  # We'll add our own bots
-        logger=logging.getLogger(f"SDK.Host.{host_name}")
+        bots_to_add=num_game_bots,  # Add the built-in game bots
+        logger=logging.getLogger(f"SDK.Game{game_id}.Host")
     )
     host_sdk.set_strategy(host_strategy)
     
@@ -253,15 +272,16 @@ def run_single_game(server_url: str, strategies: List[type]) -> Optional[Dict]:
     def on_room_created(payload):
         room = payload.get("room", {})
         game_data["room_code"] = room.get("code")
-        logger.info(f"Game room created: {game_data['room_code']}")
+        logger.info(f"[Game {game_id}] Room created: {game_data['room_code']}")
         sim_state.add_active_game({
             "room_code": game_data["room_code"],
             "strategies": strategy_names,
+            "num_game_bots": num_game_bots,
             "start_time": datetime.fromtimestamp(game_data["start_time"]).isoformat()
         })
     
     def on_game_started(payload):
-        logger.info(f"Game started in room {game_data['room_code']}")
+        logger.info(f"[Game {game_id}] Game started in room {game_data['room_code']}")
     
     def on_cards_played(payload):
         game_data["rounds"] += 1
@@ -286,10 +306,11 @@ def run_single_game(server_url: str, strategies: List[type]) -> Optional[Dict]:
                     break
             
             if not game_data["winner"]:
-                game_data["winner"] = "Unknown"
-                game_data["winner_strategy"] = "Unknown"
+                # Winner is a built-in game bot
+                game_data["winner"] = "GameBot"
+                game_data["winner_strategy"] = "GameBot"
         
-        logger.info(f"Game ended. Winner: {game_data['winner']} ({game_data['winner_strategy']})")
+        logger.info(f"[Game {game_id}] Game ended. Winner: {game_data['winner']} ({game_data['winner_strategy']})")
     
     # Register events
     host_sdk.on_event("room_created", on_room_created)
@@ -300,7 +321,7 @@ def run_single_game(server_url: str, strategies: List[type]) -> Optional[Dict]:
     
     # Connect host
     if not host_sdk.connect():
-        logger.error("Failed to connect host bot")
+        logger.error(f"[Game {game_id}] Failed to connect host bot")
         return None
     
     # Wait for room creation
@@ -310,14 +331,15 @@ def run_single_game(server_url: str, strategies: List[type]) -> Optional[Dict]:
         time.sleep(0.5)
     
     if not game_data["room_code"]:
-        logger.error("Failed to create room")
+        logger.error(f"[Game {game_id}] Failed to create room")
         host_sdk.ws.close()
         return None
     
-    # Add other bots
+    # Add other custom bots (if we have 2 custom bots)
     room_code = game_data["room_code"]
     
-    for i, strategy in enumerate(strategy_instances[1:], start=1):
+    for i, strategy_class in enumerate(selected_strategies[1:], start=1):
+        strategy = strategy_class()
         bot_name = f"Bot-{strategy_names[i][:8]}-{str(uuid.uuid4())[:4]}"
         
         bot_sdk = TekthibBotSDK(
@@ -326,7 +348,7 @@ def run_single_game(server_url: str, strategies: List[type]) -> Optional[Dict]:
             player_name=bot_name,
             is_host=False,
             bots_to_add=0,
-            logger=logging.getLogger(f"SDK.Bot{i}.{bot_name}")
+            logger=logging.getLogger(f"SDK.Game{game_id}.Bot{i}")
         )
         bot_sdk.set_strategy(strategy)
         
@@ -334,22 +356,11 @@ def run_single_game(server_url: str, strategies: List[type]) -> Optional[Dict]:
         bot_sdk.on_event("game_ended", on_game_ended)
         
         if not bot_sdk.connect():
-            logger.error(f"Failed to connect bot {i}")
+            logger.error(f"[Game {game_id}] Failed to connect bot {i}")
             continue
         
         bot_sdks.append(bot_sdk)
         time.sleep(0.5)  # Small delay between joins
-    
-    # Start the game (host)
-    time.sleep(2)
-    logger.info(f"Starting game with {len(bot_sdks)} bots")
-    host_sdk._send_message({
-        "type": "START_GAME",
-        "payload": {
-            "autoPlayTimeout": 0,
-            "challengeSuspenseEnabled": False
-        }
-    })
     
     # Wait for game to complete (with timeout)
     max_game_duration = 300  # 5 minutes max
@@ -362,7 +373,7 @@ def run_single_game(server_url: str, strategies: List[type]) -> Optional[Dict]:
         # Check timeout
         elapsed = time.time() - start
         if elapsed > max_game_duration:
-            logger.warning(f"Game {room_code} timed out after {elapsed:.1f}s")
+            logger.warning(f"[Game {game_id}] Game {room_code} timed out after {elapsed:.1f}s")
             break
         
         # Check if game ended
@@ -376,8 +387,8 @@ def run_single_game(server_url: str, strategies: List[type]) -> Optional[Dict]:
         try:
             if sdk.ws:
                 sdk.ws.close()
-        except:
-            pass
+        except Exception as e:
+            logger.error(f"[Game {game_id}] Error closing WebSocket: {e}")
     
     # Calculate final stats
     game_data["duration"] = time.time() - game_data["start_time"]
@@ -386,7 +397,7 @@ def run_single_game(server_url: str, strategies: List[type]) -> Optional[Dict]:
     if game_data["room_code"]:
         sim_state.remove_active_game(game_data["room_code"])
     
-    logger.info(f"Game completed: {game_data['room_code']} - Winner: {game_data['winner']} "
+    logger.info(f"[Game {game_id}] Completed: {game_data['room_code']} - Winner: {game_data['winner']} "
                 f"- Duration: {game_data['duration']:.1f}s - Rounds: {game_data['rounds']}")
     
     return game_data
@@ -399,6 +410,7 @@ async def save_game_result(game_data: Dict):
             timestamp=datetime.fromtimestamp(game_data["start_time"]).isoformat(),
             room_code=game_data["room_code"] or "UNKNOWN",
             strategies=json.dumps(game_data["strategies"]),
+            num_game_bots=game_data["num_game_bots"],
             winner=game_data["winner"] or "Unknown",
             rounds=game_data["rounds"],
             challenges=game_data["challenges"],
@@ -413,426 +425,92 @@ async def save_game_result(game_data: Dict):
     logger.info(f"Saved game result: {game_data['room_code']}")
 
 
-def simulation_worker(server_url: str):
+def simulation_worker(server_url: str, worker_id: int):
     """
     Background worker that runs simulations continuously.
+    Each worker runs games sequentially.
     
     Args:
         server_url: WebSocket server URL
+        worker_id: Worker identifier
     """
-    logger.info("Simulation worker started")
+    logger.info(f"[Worker {worker_id}] Simulation worker started")
+    
+    game_counter = 0
     
     while sim_state.running and not sim_state.stop_requested:
         try:
+            game_counter += 1
+            game_id = worker_id * 10000 + game_counter
+            
             # Run a single game
-            game_result = run_single_game(server_url, sim_state.strategies)
+            game_result = run_single_game(server_url, sim_state.strategies, game_id)
             
             if game_result:
                 # Save result
                 asyncio.run(save_game_result(game_result))
                 sim_state.increment_completed()
             else:
-                logger.warning("Game failed to complete")
+                logger.warning(f"[Worker {worker_id}] Game failed to complete")
             
             # Small delay between games
             time.sleep(2)
             
         except Exception as e:
-            logger.error(f"Error in simulation worker: {e}", exc_info=True)
+            logger.error(f"[Worker {worker_id}] Error in simulation worker: {e}", exc_info=True)
             time.sleep(5)
     
-    logger.info("Simulation worker stopped")
-    sim_state.running = False
+    logger.info(f"[Worker {worker_id}] Simulation worker stopped")
 
 
 @app.get("/", response_class=HTMLResponse)
-async def home():
+async def home(request: Request):
     """Serve the analytics dashboard."""
-    html_content = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tekthib Simulation Dashboard</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-        header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-        h1 { font-size: 2.5em; margin-bottom: 10px; }
-        .subtitle { opacity: 0.9; font-size: 1.1em; }
-        .controls {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            padding: 25px;
-            background: #f7f7f7;
-            border-bottom: 2px solid #ddd;
-        }
-        button {
-            padding: 12px 30px;
-            font-size: 16px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 600;
-        }
-        .btn-start {
-            background: #4caf50;
-            color: white;
-        }
-        .btn-start:hover { background: #45a049; }
-        .btn-stop {
-            background: #f44336;
-            color: white;
-        }
-        .btn-stop:hover { background: #da190b; }
-        .btn-refresh {
-            background: #2196F3;
-            color: white;
-        }
-        .btn-refresh:hover { background: #0b7dda; }
-        .btn-download {
-            background: #ff9800;
-            color: white;
-        }
-        .btn-download:hover { background: #e68900; }
-        .content {
-            padding: 30px;
-        }
-        .section {
-            margin-bottom: 30px;
-            padding: 20px;
-            background: #f9f9f9;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-        }
-        .section h2 {
-            color: #667eea;
-            margin-bottom: 15px;
-            font-size: 1.5em;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        .stat-value {
-            font-size: 2em;
-            font-weight: bold;
-            color: #667eea;
-            margin-bottom: 5px;
-        }
-        .stat-label {
-            color: #666;
-            font-size: 0.9em;
-        }
-        .strategy-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        .strategy-table th {
-            background: #667eea;
-            color: white;
-            padding: 12px;
-            text-align: left;
-        }
-        .strategy-table td {
-            padding: 10px 12px;
-            border-bottom: 1px solid #ddd;
-        }
-        .strategy-table tr:hover {
-            background: #f5f5f5;
-        }
-        .active-games {
-            list-style: none;
-        }
-        .active-game {
-            padding: 10px;
-            margin: 8px 0;
-            background: white;
-            border-radius: 6px;
-            border-left: 3px solid #4caf50;
-        }
-        .status-badge {
-            display: inline-block;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 0.9em;
-        }
-        .status-running { background: #4caf50; color: white; }
-        .status-stopped { background: #f44336; color: white; }
-        .loading { text-align: center; padding: 20px; color: #666; }
-        footer {
-            text-align: center;
-            padding: 20px;
-            color: #666;
-            border-top: 1px solid #ddd;
-            font-size: 0.9em;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1>🎮 Tekthib Simulation Dashboard</h1>
-            <p class="subtitle">Automated Bot Performance Tracking & Analysis</p>
-        </header>
-        
-        <div class="controls">
-            <button class="btn-start" onclick="startSimulation()">▶️ Start Simulation</button>
-            <button class="btn-stop" onclick="stopSimulation()">⏹️ Stop Simulation</button>
-            <button class="btn-refresh" onclick="loadData()">🔄 Refresh</button>
-            <button class="btn-download" onclick="downloadData()">📥 Download Data</button>
-        </div>
-        
-        <div class="content">
-            <!-- Status Section -->
-            <div class="section">
-                <h2>📊 Simulation Status</h2>
-                <div id="status-content" class="loading">Loading...</div>
-            </div>
-            
-            <!-- Analytics Section -->
-            <div class="section">
-                <h2>📈 Performance Analytics</h2>
-                <div id="analytics-content" class="loading">Loading...</div>
-            </div>
-            
-            <!-- Active Games Section -->
-            <div class="section">
-                <h2>🎯 Active Games</h2>
-                <div id="active-games-content" class="loading">Loading...</div>
-            </div>
-        </div>
-        
-        <footer>
-            <p>Tekthib Simulation Server v1.0.0 | Built with FastAPI & Love 💜</p>
-        </footer>
-    </div>
-
-    <script>
-        async function startSimulation() {
-            try {
-                const response = await fetch('/start', { method: 'POST' });
-                const data = await response.json();
-                alert(data.message || 'Simulation started!');
-                loadData();
-            } catch (error) {
-                alert('Error starting simulation: ' + error.message);
-            }
-        }
-
-        async function stopSimulation() {
-            try {
-                const response = await fetch('/stop', { method: 'POST' });
-                const data = await response.json();
-                alert(data.message || 'Simulation stopped!');
-                loadData();
-            } catch (error) {
-                alert('Error stopping simulation: ' + error.message);
-            }
-        }
-
-        async function downloadData() {
-            window.location.href = '/download';
-        }
-
-        async function loadData() {
-            await Promise.all([loadStatus(), loadAnalytics()]);
-        }
-
-        async function loadStatus() {
-            try {
-                const response = await fetch('/status');
-                const data = await response.json();
-                
-                const statusHtml = `
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-value">${data.running ? '🟢' : '🔴'}</div>
-                            <div class="stat-label">Status</div>
-                            <span class="status-badge ${data.running ? 'status-running' : 'status-stopped'}">
-                                ${data.running ? 'Running' : 'Stopped'}
-                            </span>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${data.completed_games}</div>
-                            <div class="stat-label">Completed Games</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${data.active_games}</div>
-                            <div class="stat-label">Active Games</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${data.strategies.length}</div>
-                            <div class="stat-label">Strategies</div>
-                        </div>
-                    </div>
-                `;
-                document.getElementById('status-content').innerHTML = statusHtml;
-                
-                // Active games list
-                let activeGamesHtml = '';
-                if (data.active_games_list && data.active_games_list.length > 0) {
-                    activeGamesHtml = '<ul class="active-games">';
-                    data.active_games_list.forEach(game => {
-                        activeGamesHtml += `
-                            <li class="active-game">
-                                <strong>Room:</strong> ${game.room_code} | 
-                                <strong>Strategies:</strong> ${game.strategies.join(', ')} | 
-                                <strong>Started:</strong> ${new Date(game.start_time).toLocaleTimeString()}
-                            </li>
-                        `;
-                    });
-                    activeGamesHtml += '</ul>';
-                } else {
-                    activeGamesHtml = '<p style="color: #666; text-align: center;">No active games</p>';
-                }
-                document.getElementById('active-games-content').innerHTML = activeGamesHtml;
-                
-            } catch (error) {
-                document.getElementById('status-content').innerHTML = 
-                    '<p style="color: red;">Error loading status</p>';
-            }
-        }
-
-        async function loadAnalytics() {
-            try {
-                const response = await fetch('/analyze');
-                const data = await response.json();
-                
-                if (data.total_games === 0) {
-                    document.getElementById('analytics-content').innerHTML = 
-                        '<p style="color: #666; text-align: center;">No data yet. Start some simulations!</p>';
-                    return;
-                }
-                
-                const analyticsHtml = `
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-value">${data.total_games}</div>
-                            <div class="stat-label">Total Games</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${data.avg_duration.toFixed(1)}s</div>
-                            <div class="stat-label">Avg Duration</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${data.avg_rounds.toFixed(1)}</div>
-                            <div class="stat-label">Avg Rounds</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${data.challenge_success_rate.toFixed(1)}%</div>
-                            <div class="stat-label">Challenge Success Rate</div>
-                        </div>
-                    </div>
-                    
-                    <h3 style="margin-top: 25px; margin-bottom: 10px; color: #667eea;">Strategy Performance</h3>
-                    <table class="strategy-table">
-                        <thead>
-                            <tr>
-                                <th>Strategy</th>
-                                <th>Wins</th>
-                                <th>Games</th>
-                                <th>Win Rate</th>
-                                <th>Avg Duration</th>
-                                <th>Avg Rounds</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${Object.entries(data.strategy_stats).map(([strategy, stats]) => `
-                                <tr>
-                                    <td><strong>${strategy}</strong></td>
-                                    <td>${stats.wins}</td>
-                                    <td>${stats.games}</td>
-                                    <td><strong>${stats.win_rate.toFixed(1)}%</strong></td>
-                                    <td>${stats.avg_duration.toFixed(1)}s</td>
-                                    <td>${stats.avg_rounds.toFixed(1)}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                `;
-                document.getElementById('analytics-content').innerHTML = analyticsHtml;
-                
-            } catch (error) {
-                document.getElementById('analytics-content').innerHTML = 
-                    '<p style="color: red;">Error loading analytics</p>';
-            }
-        }
-
-        // Auto-refresh every 5 seconds
-        setInterval(loadData, 5000);
-        
-        // Initial load
-        loadData();
-    </script>
-</body>
-</html>
-    """
-    return HTMLResponse(content=html_content)
+    return templates.TemplateResponse("dashboard.html", {"request": request})
 
 
 @app.post("/start")
-async def start_simulation():
-    """Start automated simulations."""
+async def start_simulation(parallel_games: int = 3):
+    """
+    Start automated simulations.
+    
+    Args:
+        parallel_games: Number of parallel games to run (default: 3, max: 10)
+    """
     if sim_state.running:
         raise HTTPException(status_code=400, detail="Simulation already running")
     
     if not sim_state.strategies:
         raise HTTPException(status_code=400, detail="No strategies available")
     
+    # Validate parallel_games
+    parallel_games = max(1, min(parallel_games, 10))
+    sim_state.max_parallel_games = parallel_games
+    
     # Get server URL from environment or use default
     server_url = os.getenv("SERVER_URL", "ws://localhost:3001")
     
-    # Start simulation thread
+    # Start simulation threads
     sim_state.running = True
     sim_state.stop_requested = False
-    sim_state.simulation_thread = threading.Thread(
-        target=simulation_worker,
-        args=(server_url,),
-        daemon=True
-    )
-    sim_state.simulation_thread.start()
+    sim_state.simulation_threads = []
     
-    logger.info("Simulation started")
+    for i in range(parallel_games):
+        thread = threading.Thread(
+            target=simulation_worker,
+            args=(server_url, i + 1),
+            daemon=True
+        )
+        thread.start()
+        sim_state.simulation_threads.append(thread)
+        time.sleep(1)  # Stagger thread starts
+    
+    logger.info(f"Simulation started with {parallel_games} parallel games")
     
     return {
         "message": "Simulation started",
         "server_url": server_url,
+        "parallel_games": parallel_games,
         "strategies": [s.__name__ for s in sim_state.strategies]
     }
 
@@ -859,6 +537,7 @@ async def get_status():
         "stop_requested": sim_state.stop_requested,
         "completed_games": sim_state.completed_games,
         "active_games": len(sim_state.active_games),
+        "max_parallel_games": sim_state.max_parallel_games,
         "active_games_list": sim_state.active_games,
         "strategies": [s.__name__ for s in sim_state.strategies]
     }
@@ -880,6 +559,7 @@ async def get_results(limit: int = 100):
                     "timestamp": game.timestamp,
                     "room_code": game.room_code,
                     "strategies": json.loads(game.strategies),
+                    "num_game_bots": game.num_game_bots,
                     "winner": game.winner,
                     "winner_strategy": game.winner_strategy,
                     "rounds": game.rounds,
@@ -907,7 +587,9 @@ async def analyze_results():
                 "avg_duration": 0,
                 "avg_rounds": 0,
                 "challenge_success_rate": 0,
-                "strategy_stats": {}
+                "strategy_stats": {},
+                "gamebot_wins": 0,
+                "gamebot_win_rate": 0
             }
         
         # Calculate overall stats
@@ -922,13 +604,17 @@ async def analyze_results():
             if total_challenges > 0 else 0
         )
         
+        # Count GameBot wins
+        gamebot_wins = sum(1 for g in games if g.winner_strategy == "GameBot")
+        gamebot_win_rate = (gamebot_wins / total_games * 100) if total_games > 0 else 0
+        
         # Calculate per-strategy stats
         strategy_stats = {}
         
         for game in games:
             winner_strategy = game.winner_strategy or "Unknown"
             
-            # Count games for each strategy in this game
+            # Count games for each custom strategy in this game
             strategies_list = json.loads(game.strategies)
             for strategy in strategies_list:
                 if strategy not in strategy_stats:
@@ -966,6 +652,8 @@ async def analyze_results():
             "avg_duration": avg_duration,
             "avg_rounds": avg_rounds,
             "challenge_success_rate": challenge_success_rate,
+            "gamebot_wins": gamebot_wins,
+            "gamebot_win_rate": gamebot_win_rate,
             "strategy_stats": strategy_stats
         }
 
@@ -1007,6 +695,19 @@ async def download_data():
             f"{stats['challenge_success_rate']:.2f}"
         ])
     
+    # Add GameBot row
+    writer.writerow([
+        "GameBot (Built-in)",
+        analysis["total_games"],
+        analysis["gamebot_wins"],
+        f"{analysis['gamebot_win_rate']:.2f}",
+        "-",
+        "-",
+        "-",
+        "-",
+        "-"
+    ])
+    
     # Return as streaming response
     output.seek(0)
     return StreamingResponse(
@@ -1033,7 +734,7 @@ if __name__ == "__main__":
     signal.signal(signal.SIGTERM, handle_shutdown)
     
     # Get configuration
-    host = os.getenv("HOST", "0.0.0.0")
+    host = os.getenv("HOST", "localhost")
     port = int(os.getenv("SIMULATION_PORT", "8000"))
     
     logger.info(f"Starting server on {host}:{port}")

@@ -10,6 +10,8 @@
     "build:server": "cd server && npm run build",
     "build:client": "cd client && npm run build",
     "build:all": "npm run build:server && npm run build:client",
+    "deploy:server": "git push heroku main",
+    "deploy:collector": "git subtree push --prefix data_collector heroku-data-collector main",
     "lint": "cd server && npm run lint && cd ../client && npm run lint",
     "lint:server": "cd server && npm run lint",
     "lint:client": "cd client && npm run lint",
