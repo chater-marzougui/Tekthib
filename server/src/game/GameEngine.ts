@@ -264,6 +264,16 @@ export class GameEngine {
       return { success: false, error: 'Processing Challenge' };
     }
 
+    // Check if all cards has been played (end the game)
+    const countEmptyHands = Array.from(this.players.values()).filter(
+      (player) => player.hand.length === 0,
+    ).length;
+
+    if (countEmptyHands === this.players.size - 1) {
+      this.endGame();
+      return { success: false, error: 'Game has ended' };
+    }
+
     // Verify it's the player's turn
     const currentPlayerId =
       this.gameState.playerOrder[this.gameState.currentPlayerIndex];
@@ -382,31 +392,8 @@ export class GameEngine {
 
     if (remainingPlayers.length === 1) {
       this.gameState.loser = remainingPlayers[0];
-      this.gameState.phase = 'ended';
+      this.endGame();
 
-      // Record game end event
-      this.addGameEvent({
-        eventType: 'game_end',
-        playerName: 'System',
-        eventData: {
-          winners: this.gameState.winners,
-          loser: this.gameState.loser,
-          totalRounds: this.currentRoundNumber,
-          finalStats: Array.from(this.gameState.playerStats.entries()).map(
-            ([playerId, stats]) => ({
-              playerId,
-              playerName: this.players.get(playerId)?.name,
-              stats,
-            }),
-          ),
-        },
-        timestamp: new Date(),
-      });
-
-      // Trigger game end callback
-      if (this.gameEndCallback) {
-        this.gameEndCallback();
-      }
       return { success: true, newRank: claimedRank };
     }
 
@@ -702,36 +689,7 @@ export class GameEngine {
 
       // If we've looped through all players and they're all winners except one
       if (skippedCount >= this.gameState.playerOrder.length) {
-        this.gameState.phase = 'ended';
-        this.gameState.loser =
-          this.gameState.playerOrder.find(
-            (id) => !this.gameState.winners.includes(id),
-          ) || null;
-
-        // Record game end event
-        this.addGameEvent({
-          eventType: 'game_end',
-          playerName: 'System',
-          eventData: {
-            winners: this.gameState.winners,
-            loser: this.gameState.loser,
-            totalRounds: this.currentRoundNumber,
-            finalStats: Array.from(this.gameState.playerStats.entries()).map(
-              ([playerId, stats]) => ({
-                playerId,
-                playerName: this.players.get(playerId)?.name,
-                stats,
-              }),
-            ),
-          },
-          timestamp: new Date(),
-        });
-
-        // Trigger game end callback
-        if (this.gameEndCallback) {
-          this.gameEndCallback();
-        }
-
+        this.endGame();
         return;
       }
     }
@@ -976,6 +934,38 @@ export class GameEngine {
       'A',
     ];
     return playableRanks[Math.floor(Math.random() * playableRanks.length)];
+  }
+
+  private endGame(): void {
+    this.gameState.phase = 'ended';
+    this.gameState.loser =
+      this.gameState.playerOrder.find(
+        (id) => !this.gameState.winners.includes(id),
+      ) || null;
+
+    // Record game end event
+    this.addGameEvent({
+      eventType: 'game_end',
+      playerName: 'System',
+      eventData: {
+        winners: this.gameState.winners,
+        loser: this.gameState.loser,
+        totalRounds: this.currentRoundNumber,
+        finalStats: Array.from(this.gameState.playerStats.entries()).map(
+          ([playerId, stats]) => ({
+            playerId,
+            playerName: this.players.get(playerId)?.name,
+            stats,
+          }),
+        ),
+      },
+      timestamp: new Date(),
+    });
+
+    // Trigger game end callback
+    if (this.gameEndCallback) {
+      this.gameEndCallback();
+    }
   }
 
   /**

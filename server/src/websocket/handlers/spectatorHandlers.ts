@@ -14,11 +14,17 @@ interface ClientInfo {
 /**
  * Helper function to transform game state for spectators
  */
-function buildSpectatorGameState(room: any) {
+export function buildSpectatorGameState(room: any) {
   if (!room.gameState) return null;
 
   const currentPlayerId =
     room.gameState.playerOrder[room.gameState.currentPlayerIndex];
+
+  // Build playerHandCounts mapping
+  const playerHandCounts: Record<string, number> = {};
+  for (const [, player] of room.players) {
+    playerHandCounts[player.id] = player.hand.length;
+  }
 
   return {
     phase: room.gameState.phase,
@@ -29,6 +35,10 @@ function buildSpectatorGameState(room: any) {
     lastPlayerId: room.gameState.lastPlayerId,
     lastPlayedCount: room.gameState.lastPlayedCards.length,
     winners: room.gameState.winners,
+    playerOrder: room.gameState.playerOrder,
+    playerHandCounts: playerHandCounts,
+    pile: room.gameState.pile,
+    removedCards: room.gameState.removedCards || [],
     players: Array.from(room.players.values()).map((player: any) => ({
       id: player.id,
       name: player.name,
@@ -157,7 +167,7 @@ function handleLeaveSpectate(
   message: WSMessage,
 ): void {
   const clientInfo = clients.get(ws);
-  if (!clientInfo || !clientInfo.isSpectator) return;
+  if (!clientInfo?.isSpectator) return;
 
   const roomId = clientInfo.roomId;
   clientInfo.roomId = undefined;

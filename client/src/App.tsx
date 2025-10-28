@@ -10,6 +10,7 @@ import AdminPage from "./pages/AdminPage";
 import AuthPage from "./pages/AuthPage";
 import UserProfilePage from "./pages/UserProfilePage";
 import ReplayPage from "./pages/ReplayPage";
+import SpectatorPage from "./pages/SpectatorPage";
 import { Toaster } from "sonner";
 import { SoundProvider } from "./context/SoundPlayerContext";
 import { ThemeProvider } from "./context/ThemeProvider";
@@ -45,7 +46,6 @@ function App() {
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/auth" element={<AuthPage />} />
-                <Route path="/admin" element={<AdminPage />} />
                 <Route
                   path="/profile/:username"
                   element={<UserProfilePage />}
@@ -57,6 +57,8 @@ function App() {
                     <WebSocketProvider>
                       <WebRTCWrapper>
                         <Routes>
+                          <Route path="/admin" element={<AdminPage />} />
+                          <Route path="/spectate/:roomId" element={<SpectatorPage />} />
                           <Route path="/room/:roomId" element={<RoomPage />} />
                           <Route path="/game/:roomId" element={<GamePage />} />
                           <Route path="*" element={<NotFoundPage />} />

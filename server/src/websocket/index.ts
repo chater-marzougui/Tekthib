@@ -5,7 +5,7 @@ import { handleGameMessages } from './handlers/gameHandlers';
 import { handleWebRTCMessages } from './handlers/webrtcHandlers';
 import { handleRoomMessages } from './handlers/roomHandlers';
 import { handleChatMessages } from './handlers/chatHandlers';
-import { handleSpectatorMessages } from './handlers/spectatorHandlers';
+import { handleSpectatorMessages, buildSpectatorGameState } from './handlers/spectatorHandlers';
 import { roomManager } from '../utils/roomManager';
 
 interface ClientInfo {
@@ -159,10 +159,31 @@ export function broadcastToRoom(
   message: WSMessage,
   excludeClientId?: string,
 ): void {
+  const room = roomManager.getRoom(roomId);
+
   for (const [ws, clientInfo] of clients) {
     // Send to players and spectators in the room
     if (clientInfo.roomId === roomId && clientInfo.id !== excludeClientId) {
-      sendToClient(ws, message, roomId);
+      // For spectators with game state updates, transform the payload
+      if (
+        clientInfo.isSpectator &&
+        (message.type === 'GAME_STATE_UPDATE' ||
+          message.type === 'CARDS_PLAYED' ||
+          message.type === 'CHALLENGE_RESULT') &&
+        room
+      ) {
+        const transformedGameState = buildSpectatorGameState(room);
+        const transformedMessage = {
+          ...message,
+          payload: {
+            ...message.payload,
+            gameState: transformedGameState,
+          },
+        };
+        sendToClient(ws, transformedMessage, roomId);
+      } else {
+        sendToClient(ws, message, roomId);
+      }
     }
   }
 }
