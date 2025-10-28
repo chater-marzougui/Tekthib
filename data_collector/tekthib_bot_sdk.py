@@ -341,7 +341,7 @@ class TekthibBotSDK:
     
     def _handle_bots_added(self, payload: Dict):
         """Handle BOTS_ADDED message."""
-        self.logger.info(f"Bots added. Starting game...")
+        self.logger.info("Bots added. Starting game...")
         time.sleep(0.5)
         self._send_message({
             "type": "START_GAME",
@@ -401,7 +401,6 @@ class TekthibBotSDK:
     
     def _handle_challenge_result(self, payload: Dict):
         """Handle CHALLENGE_RESULT message."""
-        challenger = payload.get("challengerName", "Unknown")
         player = payload.get("playerName", "Unknown")
         was_lying = payload.get("wasLying", False)
         

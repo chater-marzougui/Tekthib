@@ -9,16 +9,12 @@ Usage:
     python example_custom_bot.py
 """
 
-import os
 import logging
-from dotenv import load_dotenv
-
+from random import randint
 # Import the SDK and a strategy
 from tekthib_bot_sdk import TekthibBotSDK
 from bot_strategies import SmartStrategy  # Or use any other strategy
 
-# Load environment variables
-load_dotenv()
 
 # Configure logging
 logging.basicConfig(
@@ -28,15 +24,19 @@ logging.basicConfig(
 
 def main():
     # Get configuration from environment
-    server_url = os.getenv("SERVER_URL", "ws://localhost:3001")
-    room_code = os.getenv("ROOM_CODE", "")
-    player_name = os.getenv("PLAYER_NAME", "SmartBot")
-    is_host = os.getenv("IS_HOST", "False").lower() == "true"
-    bots_to_add = int(os.getenv("BOTS_TO_ADD", "0"))
+    server_url = "ws://localhost:3001"
+    room_code = None
+    player_name = "BackyardBot"
+    is_host = True
+    bots_to_add = randint(2, 6)  # Add 2-6 additional bots
     
     # Validate configuration
     if not room_code and not is_host:
         print("ERROR: Either set ROOM_CODE or IS_HOST=true")
+        return
+    
+    if room_code and is_host:
+        print("ERROR: Cannot set both ROOM_CODE and IS_HOST=true")
         return
     
     # Create bot SDK instance
