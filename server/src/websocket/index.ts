@@ -169,7 +169,8 @@ export function broadcastToRoom(
         clientInfo.isSpectator &&
         (message.type === 'GAME_STATE_UPDATE' ||
           message.type === 'CARDS_PLAYED' ||
-          message.type === 'CHALLENGE_RESULT') &&
+          message.type === 'CHALLENGE_RESULT' ||
+          message.type === 'GAME_ENDED') &&
         room
       ) {
         const transformedGameState = buildSpectatorGameState(room);
