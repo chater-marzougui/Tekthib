@@ -13,6 +13,7 @@ interface PlayerCircleProps {
   currentPlayerId: string;
   radius: number;
   centerPile?: React.ReactNode;
+  spectatorMode?: boolean;
 }
 
 export default function PlayerCircle({
@@ -20,6 +21,7 @@ export default function PlayerCircle({
   currentPlayerId,
   radius,
   centerPile,
+  spectatorMode = false,
 }: Readonly<PlayerCircleProps>) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [center, setCenter] = useState({ x: 0, y: 0 });
@@ -34,7 +36,7 @@ export default function PlayerCircle({
     }
   }, []);
   // Find the current player's index in the array
-  const currentPlayerIndex = players.findIndex((p) => p.id === currentPlayerId);
+  const currentPlayerIndex = spectatorMode ? 0 : players.findIndex((p) => p.id === currentPlayerId);
 
   // Reorder players so the current player is first (will be positioned at bottom)
   // Then arrange others in play order

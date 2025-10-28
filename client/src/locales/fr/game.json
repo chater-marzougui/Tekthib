@@ -49,6 +49,8 @@
     "sets": "séries",
     "claimed": "a déclaré",
     "autoPlayed": "{{pName}} a joué automatiquement {{cardCount}} carte(s) en tant que {{claimedRank}}",
-    "autoPlayWarning": "Vous avez été joué automatiquement en raison de l'inactivité."
+    "autoPlayWarning": "Vous avez été joué automatiquement en raison de l'inactivité.",
+    "connecting": "Connexion en cours...",
+    "waitingForGame": "En attente du démarrage du jeu..."
   }
 }

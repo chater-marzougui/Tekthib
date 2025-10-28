@@ -49,6 +49,8 @@
     "sets": "مجموعات",
     "claimed": "أعلن",
     "autoPlayed": "{{pName}} لعب تلقائيًا {{cardCount}} ورقة كـ {{claimedRank}}",
-    "autoPlayWarning": "تم اللعب تلقائيًا بسبب عدم النشاط."
+    "autoPlayWarning": "تم اللعب تلقائيًا بسبب عدم النشاط.",
+    "connecting": "جاري الاتصال...",
+    "waitingForGame": "في انتظار بدء اللعبة..."
   }
 }

@@ -49,6 +49,8 @@
     "sets": "sets",
     "claimed": "claimed",
     "autoPlayed": "{{pName}} Auto-played {{cardCount}} card(s) as {{claimedRank}}",
-    "autoPlayWarning": "You were auto-played due to inactivity."
+    "autoPlayWarning": "You were auto-played due to inactivity.",
+    "connecting": "Connecting...",
+    "waitingForGame": "Waiting for game to start..."
   }
 }

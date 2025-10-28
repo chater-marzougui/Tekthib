@@ -14,7 +14,7 @@ Requirements:
     - python 3.7+
 """
 
-import os
+import webbrowser
 import websocket
 import json
 import time
@@ -24,27 +24,31 @@ import random
 import uuid
 from typing import Dict, List, Optional
 from threading import Thread, Event
-from dotenv import load_dotenv
+import os
 
-# Load environment variables from .env file
-load_dotenv()
 
+# Delete existing log file
+log_file_path = 'bot_player.log'
+if os.path.exists(log_file_path):
+    os.remove(log_file_path)
+    
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler(f'bot_player-{time.time()}.log')
+        logging.FileHandler(log_file_path)
     ]
 )
+
 logger = logging.getLogger(__name__)
 
 
 class TekthibBot:
     """A bot player for the Tekthib card game."""
 
-    def __init__(self, server_url: str, room_code: str, player_name: str, is_host: bool, bots_to_add: int):
+    def __init__(self, server_url: str, spectator_url: str, room_code: str, player_name: str, is_host: bool, bots_to_add: int):
         """
         Initialize the bot player.
         
@@ -54,6 +58,7 @@ class TekthibBot:
             player_name: Name for the bot player
         """
         self.server_url = server_url
+        self.spectator_url = spectator_url
         self.room_code = room_code
         self.player_name = player_name
         self.client_id = str(uuid.uuid4())
@@ -264,10 +269,11 @@ class TekthibBot:
         })
         
     def _handle_game_started(self):
-        """Handle GAME_STARTED message."""
+        """Handle GAME_STARTED message, Open a webpage to spectate."""
         logger.info("Game started!")
         self.game_phase = "playing"
-    
+        webbrowser.open(self.spectator_url)
+
     def _handle_initial_game_state(self, payload: Dict):
         """Handle INITIAL_GAME_STATE message."""
         logger.info("Received initial game state")
@@ -532,16 +538,22 @@ def main():
     logger.setLevel(logging.DEBUG)
     
     # Create and run the bot
-    SERVER_URL = os.getenv("SERVER_URL", "ws://localhost:3001")
-    ROOM_CODE = os.getenv("ROOM_CODE", "")
-    PLAYER_NAME = os.getenv("PLAYER_NAME", "PythonBot-1")
-    IS_HOST = os.getenv("IS_HOST", "False").lower() == "true"
-    BOTS_TO_ADD = int(os.getenv("BOTS_TO_ADD", "0"))
+    SERVER_URL="ws://localhost:3001"
+    PLAYER_NAME="PythonBot-1"
+    SPECTATOR_URL="http://localhost:5173/spectate/"
+    
+    # Set Room code to join a room, or leave empty to create a new room
+    ROOM_CODE=""
+    
+    # Set to True to create a new room, False to join existing
+    IS_HOST=True
+    # Set the number of bots to add to the game, if hosting
+    BOTS_TO_ADD=3
     if not ROOM_CODE and not IS_HOST:
         logger.error("ROOM_CODE environment variable is not set. Either be a host to create a room or provide a ROOM_CODE to join.")
         return
     
-    bot = TekthibBot(SERVER_URL, ROOM_CODE, PLAYER_NAME, IS_HOST, BOTS_TO_ADD)
+    bot = TekthibBot(SERVER_URL, SPECTATOR_URL, ROOM_CODE, PLAYER_NAME, IS_HOST, BOTS_TO_ADD)
     bot.run()
 
 

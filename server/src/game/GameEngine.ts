@@ -270,7 +270,7 @@ export class GameEngine {
     ).length;
 
     if (countEmptyHands === this.players.size - 1) {
-      this.endGame();
+      this.endGame(playerId);
       return { success: false, error: 'Game has ended' };
     }
 
@@ -392,7 +392,7 @@ export class GameEngine {
 
     if (remainingPlayers.length === 1) {
       this.gameState.loser = remainingPlayers[0];
-      this.endGame();
+      this.endGame(this.gameState.loser);
 
       return { success: true, newRank: claimedRank };
     }
@@ -936,12 +936,21 @@ export class GameEngine {
     return playableRanks[Math.floor(Math.random() * playableRanks.length)];
   }
 
-  private endGame(): void {
+  private endGame(loserId?: string | null): void {
     this.gameState.phase = 'ended';
-    this.gameState.loser =
-      this.gameState.playerOrder.find(
-        (id) => !this.gameState.winners.includes(id),
-      ) || null;
+    if (loserId) {
+      this.gameState.loser = loserId;
+      this.gameState.winners.push(
+        ...this.gameState.playerOrder.filter(
+          (id) => id !== loserId && !this.gameState.winners.includes(id),
+        ),
+      );
+    } else {
+      this.gameState.loser =
+        this.gameState.playerOrder.find(
+          (id) => !this.gameState.winners.includes(id),
+        ) || null;
+    }
 
     // Record game end event
     this.addGameEvent({

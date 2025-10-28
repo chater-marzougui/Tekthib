@@ -36,6 +36,7 @@ interface MergedGameBoardProps {
   currentPlayerId: string;
   isReplay?: boolean;
   suspenseBlock?: boolean;
+  spectatorMode?: boolean;
 }
 
 export default function GameBoard({
@@ -56,6 +57,7 @@ export default function GameBoard({
   currentPlayerId,
   isReplay = false,
   suspenseBlock = false,
+  spectatorMode = false,
 }: Readonly<MergedGameBoardProps>) {
   const [claimedRank, setClaimedRank] = useState(
     lastPlay ? lastPlay.claimedRank : ""
@@ -189,6 +191,7 @@ export default function GameBoard({
                   centerPile={
                     <CenterPile pileCount={pileCount} lastPlay={lastPlay} />
                   }
+                  spectatorMode={spectatorMode}
                 />
               </div>
 

@@ -221,10 +221,6 @@ export default function SpectatorPage() {
       }
     : null;
 
-    console.log("Spectator GameState:", gameState);
-    console.log("Spectator Current Player:", currentPlayer);
-    console.log("Spectator Last Play:", lastPlay);
-
   const spectatorPlayers: Player[] = (gameState.playerOrder || []).map((id) => {
     const playerData = gameState.players.find((p) => p.id === id);
     return {
@@ -252,39 +248,6 @@ export default function SpectatorPage() {
           </div>
         </div>
 
-        {/* Game Info */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-lg">Game Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Phase</p>
-                <Badge variant="default">{gameState.phase}</Badge>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Pile Count</p>
-                <Badge variant="outline" className="font-bold">
-                  {gameState.pileCount} cards
-                </Badge>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Current Rank</p>
-                <Badge variant="secondary">
-                  {gameState.currentRank || "None"}
-                </Badge>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Current Turn</p>
-                <Badge className="bg-green-600 hover:bg-green-700">
-                  {currentPlayer?.name || "Unknown"}
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Game Board */}
         <div className="flex flex-col lg:flex-row gap-6 mb-6">
           <GameBoard
@@ -308,6 +271,7 @@ export default function SpectatorPage() {
             currentPlayerId={gameState.currentPlayerId}
             isReplay={true}
             suspenseBlock={false}
+            spectatorMode={true}
           />
 
           <div className="gap-4 flex flex-row flex-wrap w-full lg:flex-col lg:w-84">
