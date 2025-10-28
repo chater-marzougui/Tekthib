@@ -95,9 +95,9 @@ The server automatically discovers all `BotStrategy` classes from `bot_strategie
 
 ### Game Simulation
 1. A host bot creates a game room
-2. 2-5 additional bots join the room (3-6 total players)
+2. 2-5 additional bots join the room (1 host + 2-5 bots = 3-6 total players)
 3. Each bot uses a randomly selected strategy
-4. The game runs to completion
+4. The game runs to completion (max 5 minutes timeout)
 5. Results are logged to SQLite database
 
 ### Data Tracking
