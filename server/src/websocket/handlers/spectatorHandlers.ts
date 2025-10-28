@@ -13,36 +13,34 @@ interface ClientInfo {
 
 /**
  * Helper function to transform game state for spectators
+ * Gets the current game state from GameEngine (authoritative source)
  */
 export function buildSpectatorGameState(room: any) {
-  if (!room.gameState) return null;
+  // Get the GameEngine which has the authoritative game state
+  const gameEngine = roomManager.getGameEngine(room.id);
+  
+  // If no game engine exists, the game hasn't started yet
+  if (!gameEngine) return null;
 
-  const currentPlayerId =
-    room.gameState.playerOrder[room.gameState.currentPlayerIndex];
-
-  // Build playerHandCounts mapping
-  const playerHandCounts: Record<string, number> = {};
-  for (const [, player] of room.players) {
-    playerHandCounts[player.id] = player.hand.length;
-  }
+  // Get the current public game state from the engine
+  const publicGameState = gameEngine.getPublicGameState();
 
   return {
-    phase: room.gameState.phase,
-    currentPlayerIndex: room.gameState.currentPlayerIndex,
-    currentPlayerId: currentPlayerId,
-    pileCount: room.gameState.pile.length,
-    currentRank: room.gameState.currentRank,
-    lastPlayerId: room.gameState.lastPlayerId,
-    lastPlayedCount: room.gameState.lastPlayedCards.length,
-    winners: room.gameState.winners,
-    playerOrder: room.gameState.playerOrder,
-    playerHandCounts: playerHandCounts,
-    pile: room.gameState.pile,
-    removedCards: room.gameState.removedCards || [],
-    players: Array.from(room.players.values()).map((player: any) => ({
+    phase: publicGameState.phase,
+    currentPlayerIndex: publicGameState.currentPlayerIndex,
+    currentPlayerId: publicGameState.currentPlayerId,
+    pileCount: publicGameState.pileCount,
+    currentRank: publicGameState.currentRank,
+    lastPlayerId: publicGameState.lastPlayerId,
+    lastPlayedCount: publicGameState.lastPlayedCount,
+    winners: publicGameState.winners,
+    playerOrder: publicGameState.playerOrder,
+    playerHandCounts: publicGameState.playerHandCounts,
+    removedCards: publicGameState.removedCards || [],
+    players: publicGameState.players.map((player: any) => ({
       id: player.id,
       name: player.name,
-      cardCount: player.hand.length,
+      cardCount: player.cardCount,
       isConnected: player.isConnected,
       isReady: player.isReady,
       isBot: player.isBot,
@@ -118,7 +116,9 @@ function handleSpectateRoom(
   });
 
   // Send current game state to spectator
-  if (room.gameState) {
+  const gameEngine = roomManager.getGameEngine(room.id);
+  if (gameEngine) {
+    // Game is in progress - send the current game state
     const spectatorGameState = buildSpectatorGameState(room);
 
     sendToClient(ws, {
