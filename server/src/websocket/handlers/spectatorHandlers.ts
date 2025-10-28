@@ -1,5 +1,5 @@
 import { WebSocket } from 'ws';
-import { WSMessage } from 'shared';
+import { WSMessage, Player } from 'shared';
 import { roomManager } from '../../utils/roomManager';
 import { sendToClient } from '../index';
 
@@ -37,7 +37,7 @@ export function buildSpectatorGameState(room: any) {
     playerOrder: publicGameState.playerOrder,
     playerHandCounts: publicGameState.playerHandCounts,
     removedCards: publicGameState.removedCards || [],
-    players: publicGameState.players.map((player: any) => ({
+    players: publicGameState.players.map((player: Player) => ({
       id: player.id,
       name: player.name,
       cardCount: player.cardCount,
