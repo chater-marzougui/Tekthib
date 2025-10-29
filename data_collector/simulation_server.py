@@ -363,7 +363,7 @@ def run_single_game(server_url: str, strategies: List[type], game_id: int) -> Op
         time.sleep(0.5)  # Small delay between joins
     
     # Wait for game to complete (with timeout)
-    max_game_duration = 300  # 5 minutes max
+    max_game_duration = 900  # 15 minutes max
     start = time.time()
     
     while True:
@@ -470,12 +470,12 @@ async def home(request: Request):
 
 
 @app.post("/start")
-async def start_simulation(parallel_games: int = 3):
+async def start_simulation(parallel_games: int = 20):
     """
     Start automated simulations.
     
     Args:
-        parallel_games: Number of parallel games to run (default: 3, max: 10)
+        parallel_games: Number of parallel games to run (default: 20, max: 100)
     """
     if sim_state.running:
         raise HTTPException(status_code=400, detail="Simulation already running")
@@ -484,7 +484,7 @@ async def start_simulation(parallel_games: int = 3):
         raise HTTPException(status_code=400, detail="No strategies available")
     
     # Validate parallel_games
-    parallel_games = max(1, min(parallel_games, 10))
+    parallel_games = max(1, min(parallel_games, 100))
     sim_state.max_parallel_games = parallel_games
     
     # Get server URL from environment or use default
