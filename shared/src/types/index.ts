@@ -10,7 +10,7 @@ export const playableRanks = RankTypes.filter(rank => rank !== 'Joker');
 
 export type GamePhase = 'waiting' | 'playing' | 'ended';
 
-export type BotPersonality = 'aggressive' | 'truthful' | 'unpredictable';
+export type BotPersonality = 'aggressive' | 'truthful' | 'unpredictable' | 'strategic';
 
 export interface Card {
   id: string;

@@ -34,6 +34,14 @@ export class BotPlayer {
     }
   }
 
+  // Challenge probability adjustment constants
+  private static readonly FIRST_PLAY_REDUCTION = 0.4; // 60% reduction (multiply by 0.4)
+  private static readonly SMALL_PILE_REDUCTION = 0.8; // 20% reduction
+  private static readonly LARGE_PILE_INCREASE = 1.15; // 15% increase
+  private static readonly MEDIUM_CARD_COUNT_MIN = 3;
+  private static readonly MEDIUM_CARD_COUNT_MAX = 6;
+  private static readonly MEDIUM_CARD_REDUCTION = 0.5; // 50% reduction
+
   /**
    * Determines if the bot should challenge the current play
    * @param isCurrentPlayer - whether it's the bot's turn
@@ -48,11 +56,28 @@ export class BotPlayer {
     // Initialize memory for the player being considered for challenge
     this.memory.initializePlayer(lastPlayerId);
 
+    // CRITICAL ENDGAME: If bot is the only non-winner left
+    const nonWinners = gameState.players.filter((p: Player) => !gameState.winners.includes(p.id));
+    if (nonWinners.length === 1 && nonWinners[0].id === this.playerId) {
+      // Bot is the only one left with cards
+      const myCardCount = gameState.playerHandCounts[this.playerId] || 0;
+      const pileSize = gameState.pileCount;
+      
+      // If bot has very few cards and pile is large, challenging is too risky
+      if (myCardCount <= 3 && pileSize > 10) {
+        // High risk - use normal logic but with increased probability
+        return Math.random() < 0.7; // 70% chance still high but not guaranteed
+      }
+      
+      // Otherwise, must challenge to have any chance of winning
+      return true;
+    }
+
     // Get personality modifiers
     const personalityMod = this.memory.getPersonalityModifier();
     
-    // Base probability based on whose turn it is
-    let challengeProbability = isCurrentPlayer ? 0.3 : 0.2;
+    // REDUCED base probability (was 0.3/0.2, now 0.2/0.15)
+    let challengeProbability = isCurrentPlayer ? 0.2 : 0.15;
     
     // Apply personality modifier
     challengeProbability += personalityMod.challengeBonus;
@@ -64,17 +89,38 @@ export class BotPlayer {
       challengeProbability *= (1 - reductionFactor);
     }
 
+    // PILE SIZE CONSIDERATION: Larger piles are more suspicious but also riskier to challenge
+    const pileSize = gameState.pileCount;
+    if (pileSize === 0) {
+      // FIRST PLAY: No history, much less likely to challenge
+      challengeProbability *= BotPlayer.FIRST_PLAY_REDUCTION;
+    } else if (pileSize < 5) {
+      // Small pile, less reward for challenging
+      challengeProbability *= BotPlayer.SMALL_PILE_REDUCTION;
+    } else if (pileSize > 15) {
+      // Large pile, more suspicious but higher stakes
+      challengeProbability *= BotPlayer.LARGE_PILE_INCREASE;
+    }
+
     // Check opponent's bluff rate
     if (this.memory.isRiskyPlayer(lastPlayerId)) {
       challengeProbability += 0.15; // More likely to challenge known bluffers
     }
 
-    // Adjust based on number of cards played
+    // CARD COUNT ANALYSIS: Playing many cards truthfully is more likely
     const lastPlayedCount = gameState.lastPlayedCount;
-    if (lastPlayedCount > 4) {
-      challengeProbability += 0.05 * lastPlayedCount; // Large plays are suspicious
+    if (lastPlayedCount >= BotPlayer.MEDIUM_CARD_COUNT_MIN && 
+        lastPlayedCount <= BotPlayer.MEDIUM_CARD_COUNT_MAX) {
+      // Playing 3-6 cards is often truthful (player has those cards)
+      // REDUCE challenge probability significantly
+      challengeProbability *= BotPlayer.MEDIUM_CARD_REDUCTION;
+    } else if (lastPlayedCount > BotPlayer.MEDIUM_CARD_COUNT_MAX) {
+      // Playing 7+ cards is extremely suspicious
+      challengeProbability += 0.1 * lastPlayedCount;
     } else if (lastPlayedCount === 1) {
       challengeProbability *= 0.6; // Single cards more likely to be true
+    } else if (lastPlayedCount === 2) {
+      challengeProbability *= 0.8; // Two cards reasonably likely to be true
     }
 
     // Game position adjustment
@@ -92,7 +138,7 @@ export class BotPlayer {
     challengeProbability += positionAdjustment;
 
     // Ensure probability stays in valid range
-    challengeProbability = Math.max(0.05, Math.min(0.9, challengeProbability));
+    challengeProbability = Math.max(0.02, Math.min(0.85, challengeProbability));
 
     return Math.random() < challengeProbability;
   }

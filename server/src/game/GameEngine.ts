@@ -116,6 +116,7 @@ export class GameEngine {
       'aggressive',
       'truthful',
       'unpredictable',
+      'strategic',
     ];
     return personalities[Math.floor(Math.random() * personalities.length)];
   }

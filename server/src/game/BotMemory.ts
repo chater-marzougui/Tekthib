@@ -130,6 +130,9 @@ export class BotMemory {
       case 'truthful':
         baseRate = 0.15;
         break;
+      case 'strategic':
+        baseRate = 0.35;
+        break;
       case 'unpredictable':
         baseRate = 0.4;
         break;
@@ -158,15 +161,21 @@ export class BotMemory {
     switch (this.personality) {
       case 'aggressive':
         return {
-          challengeBonus: 0.15,
+          challengeBonus: 0.1, // Reduced from 0.15
           bluffBonus: 0.2,
           riskTolerance: 0.7,
         };
       case 'truthful':
         return {
-          challengeBonus: -0.1,
+          challengeBonus: -0.15, // More reduction from -0.1
           bluffBonus: -0.15,
           riskTolerance: 0.3,
+        };
+      case 'strategic':
+        return {
+          challengeBonus: -0.05,
+          bluffBonus: 0.1,
+          riskTolerance: 0.5,
         };
       case 'unpredictable':
         return {
