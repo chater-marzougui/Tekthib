@@ -131,7 +131,7 @@ export default function GameManagement({
 
   if (isLoading) {
     return (
-      <div className="flex-1">
+      <div className="flex-1 p-4">
         <LoadingSpinner />
       </div>
     );

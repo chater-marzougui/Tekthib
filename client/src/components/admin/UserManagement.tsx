@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Icon } from "@iconify/react";
+import LoadingSpinner from "../LoadingSpinner";
 
 interface UserStats {
   total_games: number;
@@ -50,7 +51,10 @@ interface UserManagementProps {
   password: string;
 }
 
-export default function UserManagement({ baseUrl, password }: UserManagementProps) {
+export default function UserManagement({
+  baseUrl,
+  password,
+}: Readonly<UserManagementProps>) {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -130,21 +134,22 @@ export default function UserManagement({ baseUrl, password }: UserManagementProp
   };
 
   const handleDeleteUser = async (userId: string, username: string) => {
-    if (!confirm(`Are you sure you want to delete user ${username}? This will also delete all their data.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete user ${username}? This will also delete all their data.`
+      )
+    ) {
       return;
     }
 
     try {
-      const response = await fetch(
-        `${baseUrl}/api/admin/db/users/${userId}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ password }),
-        }
-      );
+      const response = await fetch(`${baseUrl}/api/admin/db/users/${userId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ password }),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to delete user");
@@ -162,21 +167,27 @@ export default function UserManagement({ baseUrl, password }: UserManagementProp
     (user) =>
       user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.display_name?.toLowerCase() || "").includes(searchTerm.toLowerCase())
+      (user.display_name?.toLowerCase() || "").includes(
+        searchTerm.toLowerCase()
+      )
   );
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 p-4">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">User Management</h2>
         <Button onClick={fetchUsers} disabled={isLoading}>
-          {isLoading ? (
-            "Loading..."
-          ) : (
-            <>
-              <Icon icon="mdi:refresh" className="w-4 h-4 mr-2" /> Refresh
-            </>
-          )}
+          <>
+            <Icon icon="mdi:refresh" className="w-4 h-4 mr-2" /> Refresh
+          </>
         </Button>
       </div>
 
@@ -189,12 +200,12 @@ export default function UserManagement({ baseUrl, password }: UserManagementProp
         />
       </div>
 
-      {isLoading ? (
-        <div className="text-center py-8">Loading users...</div>
-      ) : filteredUsers.length === 0 ? (
+      {filteredUsers.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center text-gray-500">
-            {searchTerm ? "No users found matching your search" : "No users in database"}
+            {searchTerm
+              ? "No users found matching your search"
+              : "No users in database"}
           </CardContent>
         </Card>
       ) : (
@@ -253,7 +264,9 @@ export default function UserManagement({ baseUrl, password }: UserManagementProp
                     {stats && (
                       <>
                         <div>
-                          <div className="text-muted-foreground">Games Played</div>
+                          <div className="text-muted-foreground">
+                            Games Played
+                          </div>
                           <div className="font-medium">{stats.total_games}</div>
                         </div>
                         <div>
@@ -263,23 +276,33 @@ export default function UserManagement({ baseUrl, password }: UserManagementProp
                           </div>
                         </div>
                         <div>
-                          <div className="text-muted-foreground">Wins / Losses</div>
+                          <div className="text-muted-foreground">
+                            Wins / Losses
+                          </div>
                           <div className="font-medium">
                             {stats.wins} / {stats.losses}
                           </div>
                         </div>
                         <div>
-                          <div className="text-muted-foreground">Cards Played</div>
-                          <div className="font-medium">{stats.total_cards_played}</div>
+                          <div className="text-muted-foreground">
+                            Cards Played
+                          </div>
+                          <div className="font-medium">
+                            {stats.total_cards_played}
+                          </div>
                         </div>
                         <div>
-                          <div className="text-muted-foreground">Bluff Success</div>
+                          <div className="text-muted-foreground">
+                            Bluff Success
+                          </div>
                           <div className="font-medium">
                             {stats.bluff_success_rate?.toFixed(1)}%
                           </div>
                         </div>
                         <div>
-                          <div className="text-muted-foreground">Challenge Success</div>
+                          <div className="text-muted-foreground">
+                            Challenge Success
+                          </div>
                           <div className="font-medium">
                             {stats.challenge_success_rate?.toFixed(1)}%
                           </div>

@@ -17,7 +17,7 @@ interface DataVisualizationProps {
 export default function DataVisualization({
   baseUrl,
   password,
-}: DataVisualizationProps) {
+}: Readonly<DataVisualizationProps>) {
   const [stats, setStats] = useState<DbStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -124,13 +124,17 @@ export default function DataVisualization({
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <p>
-            • <strong>Users:</strong> View, edit, and delete user accounts. Deleting a user will cascade delete all their game history and stats.
+            • <strong>Users:</strong> View, edit, and delete user accounts.
+            Deleting a user will cascade delete all their game history and
+            stats.
           </p>
           <p>
-            • <strong>Games:</strong> View completed game records with detailed information. Delete games to clean up old data.
+            • <strong>Games:</strong> View completed game records with detailed
+            information. Delete games to clean up old data.
           </p>
           <p>
-            • <strong>Statistics:</strong> Real-time overview of database metrics, updated every 30 seconds.
+            • <strong>Statistics:</strong> Real-time overview of database
+            metrics, updated every 30 seconds.
           </p>
         </CardContent>
       </Card>

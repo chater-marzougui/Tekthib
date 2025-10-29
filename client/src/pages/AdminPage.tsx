@@ -256,7 +256,7 @@ export default function AdminPage() {
   // Login screen
   if (!isAuthenticated) {
     return (
-      <div className="flex items-center justify-center p-4 h-full">
+      <div className="flex-1 flex items-center justify-center p-4 h-full">
         <Card className="w-96">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -302,7 +302,7 @@ export default function AdminPage() {
 
   // Admin dashboard
   return (
-    <div className="p-4">
+    <div className="flex-1 p-4">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
