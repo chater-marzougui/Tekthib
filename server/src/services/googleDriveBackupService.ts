@@ -155,7 +155,7 @@ export class GoogleDriveBackupService {
     ];
     yield headers.join(',') + '\n';
 
-    const batchSize = 5000; // Smaller batches to reduce memory usage
+    const batchSize = 1000; // Match Supabase's default row limit
     let offset = 0;
     let hasMore = true;
     let totalProcessed = 0;
