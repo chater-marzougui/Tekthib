@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase';
+import { googleDriveBackupService } from './googleDriveBackupService';
 
 interface GameData {
   roomCode: string;
@@ -67,7 +68,9 @@ export class GameHistoryService {
 
       const gameId = game?.id;
       if (!gameId) {
-        throw new Error('Failed to save game: No game ID returned from database');
+        throw new Error(
+          'Failed to save game: No game ID returned from database',
+        );
       }
 
       // Insert participants
@@ -92,7 +95,10 @@ export class GameHistoryService {
         .insert(participantInserts);
 
       if (participantsError) {
-        console.error('Failed to save participants:', participantsError?.message || participantsError);
+        console.error(
+          'Failed to save participants:',
+          participantsError?.message || participantsError,
+        );
       }
 
       // Insert events
@@ -112,7 +118,10 @@ export class GameHistoryService {
           .insert(eventInserts);
 
         if (eventsError) {
-          console.error('Failed to save game events:', eventsError?.message || eventsError);
+          console.error(
+            'Failed to save game events:',
+            eventsError?.message || eventsError,
+          );
         }
       }
 
@@ -121,7 +130,8 @@ export class GameHistoryService {
 
       return gameId;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       console.error('Error saving game:', errorMessage);
       if (error instanceof Error && error.stack) {
         console.debug('Stack trace:', error.stack);
@@ -130,10 +140,7 @@ export class GameHistoryService {
     }
   }
 
-  async saveGameEvent(
-    gameId: string,
-    event: GameEvent,
-  ): Promise<void> {
+  async saveGameEvent(gameId: string, event: GameEvent): Promise<void> {
     try {
       await supabase!.from('game_history').insert({
         game_id: gameId,
@@ -148,7 +155,9 @@ export class GameHistoryService {
     }
   }
 
-  private async updatePlayerStats(participants: ParticipantData[]): Promise<void> {
+  private async updatePlayerStats(
+    participants: ParticipantData[],
+  ): Promise<void> {
     for (const participant of participants) {
       if (!participant.userId || participant.isBot) {
         continue;
@@ -186,14 +195,21 @@ export class GameHistoryService {
             total_games: (currentStats.total_games || 0) + 1,
             wins: (currentStats.wins || 0) + (participant.isWinner ? 1 : 0),
             losses: (currentStats.losses || 0) + (participant.isLoser ? 1 : 0),
-            total_cards_played: (currentStats.total_cards_played || 0) + participant.cardsPlayed,
-            total_bluffs: (currentStats.total_bluffs || 0) + participant.bluffsMade,
-            successful_bluffs: (currentStats.successful_bluffs || 0) + participant.successfulBluffs,
-            total_challenges: (currentStats.total_challenges || 0) + participant.challengesMade,
+            total_cards_played:
+              (currentStats.total_cards_played || 0) + participant.cardsPlayed,
+            total_bluffs:
+              (currentStats.total_bluffs || 0) + participant.bluffsMade,
+            successful_bluffs:
+              (currentStats.successful_bluffs || 0) +
+              participant.successfulBluffs,
+            total_challenges:
+              (currentStats.total_challenges || 0) + participant.challengesMade,
             successful_challenges:
-              (currentStats.successful_challenges || 0) + participant.successfulChallenges,
+              (currentStats.successful_challenges || 0) +
+              participant.successfulChallenges,
             failed_challenges:
-              (currentStats.failed_challenges || 0) + participant.failedChallenges,
+              (currentStats.failed_challenges || 0) +
+              participant.failedChallenges,
           })
           .eq('user_id', participant.userId);
 
@@ -282,6 +298,21 @@ export class GameHistoryService {
 
     return data || [];
   }
-}
 
+  async checkAndBackup(): Promise<void> {
+    try {
+      const result = await googleDriveBackupService.backupGameHistory();
+
+      if (result.success) {
+        console.log(`✅ Backup completed: ${result.filename}`);
+        console.log(`   Records backed up: ${result.recordsBackedUp}`);
+        console.log(`   Records deleted: ${result.recordsDeleted}`);
+        console.log(`   Google Drive File ID: ${result.fileId}`);
+      }
+    } catch (error) {
+      console.error('Failed to backup game history:', error);
+      // Don't throw - we don't want backup failures to break game saving
+    }
+  }
+}
 export const gameHistoryService = new GameHistoryService();

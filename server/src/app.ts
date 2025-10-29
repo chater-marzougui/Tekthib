@@ -3,6 +3,8 @@ import cors from 'cors';
 import { roomManager } from './utils/roomManager';
 import adminRoutes from './routes/adminRoutes';
 import authRoutes from './routes/authRoutes';
+import backupRoutes from './routes/backupCron';
+import { backupCronService } from './services/backupCron';
 
 const app: Express = express();
 const ORIGINS = process.env.NODE_ENV === 'production'
@@ -91,6 +93,9 @@ app.use('/api/auth', authRoutes);
 
 // Admin routes
 app.use('/api/admin', adminRoutes);
+
+// Backup cron routes
+app.use('/api', backupRoutes);
 
 // Error handling middleware
 app.use(
