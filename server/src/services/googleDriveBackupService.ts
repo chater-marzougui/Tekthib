@@ -1,7 +1,7 @@
 // services/googleDriveBackup.ts
 import { google } from 'googleapis';
 import { supabase } from '../config/supabase';
-import { Readable } from 'node:stream';
+import { PassThrough } from 'node:stream';
 
 interface GameHistoryRecord {
   id: string;
@@ -26,11 +26,10 @@ export class GoogleDriveBackupService {
         GOOGLE_CLIENT_SECRET,
         GOOGLE_REFRESH_TOKEN,
       } = process.env;
-      // Read OAuth credentials
-        if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_REFRESH_TOKEN) {
-      throw new Error("Missing required Google OAuth environment variables");
-    }
 
+      if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_REFRESH_TOKEN) {
+        throw new Error("Missing required Google OAuth environment variables");
+      }
 
       this.oAuth2Client = new google.auth.OAuth2(
         GOOGLE_CLIENT_ID,
@@ -58,7 +57,6 @@ export class GoogleDriveBackupService {
 
     const folderName = 'Tekthib_Game_History_Backups';
 
-    // Check if folder exists
     const response = await this.drive.files.list({
       q: `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
       fields: 'files(id, name)',
@@ -71,7 +69,6 @@ export class GoogleDriveBackupService {
       return this.folderId;
     }
 
-    // Create folder if it doesn't exist
     const fileMetadata = {
       name: folderName,
       mimeType: 'application/vnd.google-apps.folder',
@@ -89,14 +86,6 @@ export class GoogleDriveBackupService {
 
   /**
    * Check if backup is needed based on row count threshold
-   *
-   * Calculations based on actual data:
-   * - Current: 218,010 rows = ~93 MB
-   * - Average: 452 bytes per row
-   * - Target: 400 MB threshold (leaving buffer before 450 MB)
-   * - Formula: 400 MB / 452 bytes = ~884,955 rows
-   *
-   * Testing threshold: 150,000 rows (~66 MB) - ALREADY EXCEEDED!
    */
   async shouldBackup(): Promise<{
     needsBackup: boolean;
@@ -107,7 +96,6 @@ export class GoogleDriveBackupService {
       throw new Error('Supabase is not configured');
     }
 
-    // Count total rows in game_history
     const { count, error } = await supabase
       .from('game_history')
       .select('*', { count: 'exact', head: true });
@@ -117,11 +105,9 @@ export class GoogleDriveBackupService {
     }
 
     const rowCount = count || 0;
-    const estimatedSizeMB = (rowCount * 452) / (1024 * 1024); // 452 bytes per row
+    const estimatedSizeMB = (rowCount * 452) / (1024 * 1024);
 
-    // Testing threshold: 150,000 rows (~66 MB)
-    // Production threshold: 884,955 rows (~400 MB)
-    const THRESHOLD_ROWS = 150000; // Start with testing threshold
+    const THRESHOLD_ROWS = 150000;
 
     return {
       needsBackup: rowCount >= THRESHOLD_ROWS,
@@ -131,12 +117,32 @@ export class GoogleDriveBackupService {
   }
 
   /**
-   * Convert game history records to CSV format
+   * Convert a single record to CSV row
    */
-  private convertToCSV(records: GameHistoryRecord[]): string {
-    if (records.length === 0) return '';
+  private recordToCSVRow(record: GameHistoryRecord): string {
+    const row = [
+      record.id,
+      record.game_id,
+      record.event_type,
+      record.player_user_id || '',
+      `"${record.player_name.replace(/"/g, '""')}"`,
+      `"${JSON.stringify(record.event_data).replace(/"/g, '""')}"`,
+      record.round_number?.toString() || '',
+      record.timestamp,
+    ];
+    return row.join(',');
+  }
 
-    // CSV Headers
+  /**
+   * Create a streaming CSV generator
+   * Fetches data in batches and yields CSV rows without loading everything into memory
+   */
+  private async *streamCSVData(): AsyncGenerator<string, void, unknown> {
+    if (!supabase) {
+      throw new Error('Supabase is not configured');
+    }
+
+    // Yield CSV header first
     const headers = [
       'id',
       'game_id',
@@ -147,41 +153,14 @@ export class GoogleDriveBackupService {
       'round_number',
       'timestamp',
     ];
+    yield headers.join(',') + '\n';
 
-    const csvRows = [headers.join(',')];
-
-    // Add data rows
-    for (const record of records) {
-      const row = [
-        record.id,
-        record.game_id,
-        record.event_type,
-        record.player_user_id || '',
-        `"${record.player_name.replace(/"/g, '""')}"`, // Escape quotes
-        `"${JSON.stringify(record.event_data).replace(/"/g, '""')}"`,
-        record.round_number?.toString() || '',
-        record.timestamp,
-      ];
-      csvRows.push(row.join(','));
-    }
-
-    return csvRows.join('\n');
-  }
-
-  /**
-   * Fetch all game history records from Supabase
-   */
-  private async fetchAllGameHistory(): Promise<GameHistoryRecord[]> {
-    if (!supabase) {
-      throw new Error('Supabase is not configured');
-    }
-
-    const allRecords: GameHistoryRecord[] = [];
-    const batchSize = 1000;
+    const batchSize = 5000; // Smaller batches to reduce memory usage
     let offset = 0;
     let hasMore = true;
+    let totalProcessed = 0;
 
-    console.log('Fetching game history records...');
+    console.log('Streaming CSV data in batches...');
 
     while (hasMore) {
       const { data, error } = await supabase
@@ -198,29 +177,38 @@ export class GoogleDriveBackupService {
         break;
       }
 
-      allRecords.push(...(data as GameHistoryRecord[]));
+      // Convert batch to CSV rows and yield
+      const rows = (data as GameHistoryRecord[])
+        .map(record => this.recordToCSVRow(record))
+        .join('\n');
+      
+      yield rows + '\n';
+
+      totalProcessed += data.length;
       offset += batchSize;
 
-      if (allRecords.length % 50000 === 0) {
-        console.log(`Fetched ${allRecords.length} records so far...`);
+      if (totalProcessed % 50000 === 0) {
+        console.log(`Streamed ${totalProcessed} records...`);
       }
 
       if (data.length < batchSize) {
         hasMore = false;
       }
+
+      // Small delay to avoid overwhelming the database
+      await new Promise(resolve => setTimeout(resolve, 50));
     }
 
-    console.log(`Total records fetched: ${allRecords.length}`);
-    return allRecords;
+    console.log(`Total records streamed: ${totalProcessed}`);
   }
 
   /**
-   * Upload CSV to Google Drive
+   * Upload CSV to Google Drive using streaming
+   * This avoids loading the entire CSV into memory
    */
-  private async uploadToGoogleDrive(
-    csvContent: string,
+  private async uploadToGoogleDriveStreaming(
     filename: string,
-  ): Promise<string> {
+  ): Promise<{ fileId: string; latestTimestamp: string; recordCount: number }> {
     const folderId = await this.getOrCreateFolder();
 
     const fileMetadata = {
@@ -229,15 +217,41 @@ export class GoogleDriveBackupService {
       mimeType: 'text/csv',
     };
 
-    // Convert string to stream
-    const stream = Readable.from([csvContent]);
+    console.log(`📤 Uploading ${filename} to Google Drive (streaming)...`);
+
+    // Create a PassThrough stream to pipe data to Google Drive
+    const stream = new PassThrough();
+    
+    let latestTimestamp = '';
+    let recordCount = 0;
+
+    // Start streaming data in the background
+    (async () => {
+      try {
+        for await (const chunk of this.streamCSVData()) {
+          stream.write(chunk);
+          recordCount += chunk.split('\n').filter(line => line.trim()).length - 1;
+          
+          // Extract latest timestamp from chunks
+          const lines = chunk.split('\n').filter(line => line.trim());
+          if (lines.length > 0) {
+            const lastLine = lines[lines.length - 1];
+            const match = lastLine.match(/(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}\+\d{2}:\d{2})$/);
+            if (match) {
+              latestTimestamp = match[1];
+            }
+          }
+        }
+        stream.end();
+      } catch (error) {
+        stream.destroy(error as Error);
+      }
+    })();
 
     const media = {
       mimeType: 'text/csv',
       body: stream,
     };
-
-    console.log(`Uploading ${filename} to Google Drive...`);
 
     const response = await this.drive.files.create({
       requestBody: fileMetadata,
@@ -245,13 +259,17 @@ export class GoogleDriveBackupService {
       fields: 'id, name, webViewLink',
     });
 
-    console.log(`Upload complete! File ID: ${response.data.id}`);
-    return response.data.id!;
+    console.log(`✅ Upload complete! File ID: ${response.data.id}`);
+    
+    return {
+      fileId: response.data.id!,
+      latestTimestamp,
+      recordCount: recordCount - 1, // Subtract header row
+    };
   }
 
   /**
    * Delete game history records that were backed up
-   * Uses the IDs from backed up records to prevent race conditions
    */
   private async deleteBackedUpRecords(
     latestTimestamp: string,
@@ -260,45 +278,66 @@ export class GoogleDriveBackupService {
 
     const batchSize = 20000;
     let totalDeleted = 0;
-    let done = false;
-    let cutoff = latestTimestamp;
 
     console.log(
-      `🧹 Deleting all records up to ${latestTimestamp} in chunks...`,
+      `🧹 Deleting all records up to ${latestTimestamp} in batches of ${batchSize}...`,
     );
 
-    while (!done) {
-      // 1️⃣ Get the timestamp at the Nth row (the cutoff for this batch)
-      const { data, error } = await supabase
+    while (true) {
+      // Check how many records are left to delete
+      const { count: remainingCount, error: countError } = await supabase
         .from('game_history')
-        .select('timestamp')
-        .lte('timestamp', cutoff)
-        .order('timestamp', { ascending: true })
-        .range(batchSize - 1, batchSize - 1); // get only the 20 000th record
+        .select('*', { count: 'exact', head: true })
+        .lte('timestamp', latestTimestamp);
 
-      if (error)
-        throw new Error(`Fetch for delete batch failed: ${error.message}`);
+      if (countError) {
+        throw new Error(`Failed to count remaining records: ${countError.message}`);
+      }
 
-      // If less than one result → this is the last chunk
-      if (!data || data.length === 0) {
+      if (!remainingCount || remainingCount === 0) {
+        console.log('✅ All records deleted successfully');
         break;
       }
 
-      const boundary = data[0].timestamp;
+      console.log(`📊 ${remainingCount} records remaining to delete...`);
 
-      // 2️⃣ Delete everything up to that timestamp
-      const { error: delErr, count } = await supabase
+      // Get the boundary timestamp for this batch
+      const { data: boundaryData, error: boundaryError } = await supabase
+        .from('game_history')
+        .select('timestamp')
+        .lte('timestamp', latestTimestamp)
+        .order('timestamp', { ascending: true })
+        .range(batchSize - 1, batchSize - 1);
+
+      if (boundaryError) {
+        throw new Error(`Failed to get batch boundary: ${boundaryError.message}`);
+      }
+
+      const deleteTimestamp = boundaryData && boundaryData.length > 0 
+        ? boundaryData[0].timestamp 
+        : latestTimestamp;
+
+      // Delete this batch
+      const { error: deleteError, count: deletedCount } = await supabase
         .from('game_history')
         .delete({ count: 'exact' })
-        .lte('timestamp', boundary);
+        .lte('timestamp', deleteTimestamp);
 
-      if (delErr) throw new Error(`Delete batch failed: ${delErr.message}`);
+      if (deleteError) {
+        throw new Error(`Delete batch failed: ${deleteError.message}`);
+      }
 
-      totalDeleted += count || 0;
-      console.log(`🗑️ Deleted batch up to ${boundary} (${count} records)`);
+      const actualDeleted = deletedCount || 0;
+      totalDeleted += actualDeleted;
+      
+      console.log(`🗑️  Deleted batch up to ${deleteTimestamp} (${actualDeleted} records, ${totalDeleted} total)`);
 
-      // 3️⃣ Prepare next loop iteration
-      cutoff = boundary;
+      if (actualDeleted < batchSize) {
+        console.log('✅ Deletion complete - last batch processed');
+        break;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
 
     console.log(`✅ Total deleted: ${totalDeleted} records`);
@@ -306,7 +345,7 @@ export class GoogleDriveBackupService {
   }
 
   /**
-   * Main backup method
+   * Main backup method with streaming
    */
   async backupGameHistory(): Promise<{
     success: boolean;
@@ -319,7 +358,6 @@ export class GoogleDriveBackupService {
     try {
       console.log('Starting game history backup process...');
 
-      // Check if backup is needed
       const { needsBackup, count, sizeMB } = await this.shouldBackup();
       console.log(`Current game_history: ${count} rows (~${sizeMB} MB)`);
 
@@ -332,40 +370,19 @@ export class GoogleDriveBackupService {
         };
       }
 
-      console.log('⚠️  Backup threshold exceeded! Starting backup...');
+      console.log('⚠️  Backup threshold exceeded! Starting streaming backup...');
 
-      // Fetch all records
-      const records = await this.fetchAllGameHistory();
+      // Generate filename
+      const timestamp = new Date().toISOString();
+      const filename = `game_history_backup_${timestamp}.csv`;
 
-      if (records.length === 0) {
-        console.log('No records to backup');
-        return {
-          success: false,
-          recordsBackedUp: 0,
-          recordsDeleted: 0,
-        };
-      }
+      // Upload using streaming (memory efficient)
+      const { fileId, latestTimestamp, recordCount } = 
+        await this.uploadToGoogleDriveStreaming(filename);
 
-      const latestTimestamp = records[records.length - 1].timestamp;
-      console.log(`Latest record timestamp: ${latestTimestamp}`);
+      console.log(`Backed up ${recordCount} records, preparing to delete...`);
 
-      // Convert to CSV
-      console.log('Converting records to CSV...');
-      const csvContent = this.convertToCSV(records);
-
-      // Generate filename with timestamp
-      const filename = `game_history_backup_${latestTimestamp}.csv`;
-
-      // Upload to Google Drive
-      const fileId = await this.uploadToGoogleDrive(csvContent, filename);
-
-      // Extract IDs of records that were backed up
-      const backedUpIds = records.map((r) => r.id);
-      console.log(
-        `Backed up ${backedUpIds.length} records, preparing to delete...`,
-      );
-
-      // Delete ONLY the records that were backed up (prevents race condition)
+      // Delete the backed up records
       const deletedCount = await this.deleteBackedUpRecords(latestTimestamp);
 
       console.log('✅ Backup process completed successfully');
@@ -374,7 +391,7 @@ export class GoogleDriveBackupService {
         success: true,
         fileId,
         filename,
-        recordsBackedUp: records.length,
+        recordsBackedUp: recordCount,
         recordsDeleted: deletedCount,
         sizeMB,
       };
