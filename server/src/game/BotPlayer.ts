@@ -48,11 +48,18 @@ export class BotPlayer {
     // Initialize memory for the player being considered for challenge
     this.memory.initializePlayer(lastPlayerId);
 
+    // CRITICAL ENDGAME: If bot is the only non-winner left, must challenge to stay in game
+    const nonWinners = gameState.players.filter((p: Player) => !gameState.winners.includes(p.id));
+    if (nonWinners.length === 1 && nonWinners[0].id === this.playerId) {
+      // Bot is the only one left with cards - MUST challenge to have any chance
+      return true;
+    }
+
     // Get personality modifiers
     const personalityMod = this.memory.getPersonalityModifier();
     
-    // Base probability based on whose turn it is
-    let challengeProbability = isCurrentPlayer ? 0.3 : 0.2;
+    // REDUCED base probability (was 0.3/0.2, now 0.2/0.15)
+    let challengeProbability = isCurrentPlayer ? 0.2 : 0.15;
     
     // Apply personality modifier
     challengeProbability += personalityMod.challengeBonus;
@@ -64,17 +71,37 @@ export class BotPlayer {
       challengeProbability *= (1 - reductionFactor);
     }
 
+    // PILE SIZE CONSIDERATION: Larger piles are more suspicious but also riskier to challenge
+    const pileSize = gameState.pileCount;
+    if (pileSize === 0) {
+      // FIRST PLAY: No history, much less likely to challenge
+      challengeProbability *= 0.4; // Significant reduction for first play
+    } else if (pileSize < 5) {
+      // Small pile, less reward for challenging
+      challengeProbability *= 0.8;
+    } else if (pileSize > 15) {
+      // Large pile, more suspicious but higher stakes
+      challengeProbability *= 1.15;
+    }
+
     // Check opponent's bluff rate
     if (this.memory.isRiskyPlayer(lastPlayerId)) {
       challengeProbability += 0.15; // More likely to challenge known bluffers
     }
 
-    // Adjust based on number of cards played
+    // CARD COUNT ANALYSIS: Playing many cards truthfully is more likely
     const lastPlayedCount = gameState.lastPlayedCount;
-    if (lastPlayedCount > 4) {
-      challengeProbability += 0.05 * lastPlayedCount; // Large plays are suspicious
+    if (lastPlayedCount >= 3 && lastPlayedCount <= 6) {
+      // Playing 3-6 cards is often truthful (player has those cards)
+      // REDUCE challenge probability significantly
+      challengeProbability *= 0.5; // 50% reduction
+    } else if (lastPlayedCount > 6) {
+      // Playing 7+ cards is extremely suspicious
+      challengeProbability += 0.1 * lastPlayedCount;
     } else if (lastPlayedCount === 1) {
       challengeProbability *= 0.6; // Single cards more likely to be true
+    } else if (lastPlayedCount === 2) {
+      challengeProbability *= 0.8; // Two cards reasonably likely to be true
     }
 
     // Game position adjustment
@@ -92,7 +119,7 @@ export class BotPlayer {
     challengeProbability += positionAdjustment;
 
     // Ensure probability stays in valid range
-    challengeProbability = Math.max(0.05, Math.min(0.9, challengeProbability));
+    challengeProbability = Math.max(0.02, Math.min(0.85, challengeProbability));
 
     return Math.random() < challengeProbability;
   }
