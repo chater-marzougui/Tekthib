@@ -85,11 +85,14 @@ function handleCreateRoom(
     payload.challengeSuspenseEnabled,
     payload.maxPlayers || 10,
     payload.isPublic ?? true,
+    payload.testMode ?? false,
   );
 
   clientInfo.roomId = room.id;
   clientInfo.name = payload.playerName;
-  for (const p of room.players.values()) { p.isReady = true; }
+  for (const p of room.players.values()) {
+    p.isReady = true;
+  }
 
   sendToClient(ws, {
     type: 'ROOM_CREATED',
@@ -134,13 +137,13 @@ function handleJoinRoom(
   // Check if game has already started
   const gameEngine = roomManager.getGameEngine(room.id);
   const wasPlayerInGame = room.players.has(clientInfo.id);
-  
+
   // If game is in progress and player was not in it originally, deny joining
   if (gameEngine && !wasPlayerInGame) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { 
-        message: 'Game already in progress', 
+      payload: {
+        message: 'Game already in progress',
         code: 'GAME_IN_PROGRESS',
         roomCode: payload.roomCode,
       },
@@ -151,8 +154,9 @@ function handleJoinRoom(
   // If game is in progress and player was in it, redirect to game page
   if (gameEngine && wasPlayerInGame) {
     clientInfo.roomId = room.id;
-    clientInfo.name = room.players.get(clientInfo.id)?.name || payload.playerName;
-    
+    clientInfo.name =
+      room.players.get(clientInfo.id)?.name || payload.playerName;
+
     // Update player connection status
     const player = room.players.get(clientInfo.id);
     if (player) {
@@ -322,9 +326,10 @@ function handleAddBots(
     return;
   }
 
-  const botsCount = room.players.size + payload.count > room.maxPlayers
-    ? room.maxPlayers - room.players.size
-    : payload.count;
+  const botsCount =
+    room.players.size + payload.count > room.maxPlayers
+      ? room.maxPlayers - room.players.size
+      : payload.count;
 
   const result = roomManager.addBotsToRoom(clientInfo.roomId, botsCount);
 
@@ -354,7 +359,6 @@ function handleAddBots(
   }
 }
 
-
 function handleRemoveBot(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
@@ -379,7 +383,10 @@ function handleRemoveBot(
     return;
   }
 
-  const result = roomManager.removeBotFromRoom(clientInfo.roomId, payload.botId);
+  const result = roomManager.removeBotFromRoom(
+    clientInfo.roomId,
+    payload.botId,
+  );
 
   if (!result.success) {
     sendToClient(ws, {
@@ -441,7 +448,10 @@ function handleStartGame(
   }
 
   roomManager.setAutoPlayTimeout(clientInfo.roomId, payload.autoPlayTimeout);
-  roomManager.setChallengeSuspense(clientInfo.roomId, payload.challengeSuspenseEnabled);
+  roomManager.setChallengeSuspense(
+    clientInfo.roomId,
+    payload.challengeSuspenseEnabled,
+  );
 
   // Create bot chat callback
   const botChatCallback = (botId: string, message: string) => {
@@ -460,7 +470,10 @@ function handleStartGame(
     }
   };
 
-  const gameEngine = roomManager.startGame(clientInfo.roomId, botChatCallback);
+  const gameEngine = roomManager.startGame(
+    clientInfo.roomId,
+    botChatCallback,
+  );
   if (!gameEngine) {
     sendToClient(ws, {
       type: 'ERROR',
@@ -691,7 +704,7 @@ function handlePlayAgain(
 
   // Check if player is already in the room
   const existingPlayer = room.players.get(payload.playerId);
-  
+
   if (!existingPlayer) {
     // Player needs to rejoin the room
     sendToClient(ws, {

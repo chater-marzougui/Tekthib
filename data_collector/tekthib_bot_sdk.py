@@ -293,7 +293,8 @@ class TekthibBotSDK:
                     "playerName": self.player_name,
                     "botsToAdd": self.bots_to_add,
                     "isPublic": False,
-                    "challengeSuspenseEnabled": False
+                    "challengeSuspenseEnabled": False,
+                    "testMode": True
                 }
             })
         else:
@@ -347,7 +348,8 @@ class TekthibBotSDK:
             "type": "START_GAME",
             "payload": {
                 "autoPlayTimeout": 0,
-                "challengeSuspenseEnabled": False
+                "challengeSuspenseEnabled": False,
+                "testMode": True
             }
         })
     

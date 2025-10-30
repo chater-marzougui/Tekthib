@@ -133,11 +133,13 @@ export interface CreateRoomPayload {
   maxPlayers?: number;
   isPublic?: boolean;
   challengeSuspenseEnabled: boolean;
+  testMode?: boolean;
 }
 
 export interface StartGamePayload {
   autoPlayTimeout: number;
   challengeSuspenseEnabled: boolean;
+  testMode?: boolean;
 }
 
 export interface PlayCardsPayload {

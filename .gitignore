@@ -49,8 +49,12 @@ coverage/
 # Temporary files
 tmp/
 temp/
-STM32PAGE.tsx
-certs/.backup
 
 # Simulation server database
 simulation_results.db
+
+# Datasets
+**/data/*.csv
+
+# Models
+*.pkl

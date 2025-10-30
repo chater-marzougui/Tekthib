@@ -77,6 +77,7 @@ class RoomManager {
     challengeSuspenseEnabled: boolean,
     maxPlayers: number = 10,
     isPublic: boolean = true,
+    testMode: boolean = false,
   ): Room {
     const roomId = `room_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const code = this.generateRoomCode();
@@ -102,6 +103,7 @@ class RoomManager {
       hostName,
       autoPlayTimeout,
       challengeSuspenseEnabled,
+      testMode,
     };
 
     this.rooms.set(roomId, room);
@@ -326,12 +328,16 @@ class RoomManager {
       gameEngine.setBotChatCallback(botChatCallback);
     }
 
-    // Set up game end callback to save history
-    gameEngine.setGameEndCallback(() => {
-      this.saveGameHistory(roomId).catch((error) => {
-        console.error('Failed to save game history:', error);
+    // Set up game end callback to save history (skip if test mode)
+    if (room.testMode) {
+      console.log(`Game in test mode - history will NOT be saved for room ${room.code}`);
+    } else {
+      gameEngine.setGameEndCallback(() => {
+        this.saveGameHistory(roomId).catch((error) => {
+          console.error('Failed to save game history:', error);
+        });
       });
-    });
+    }
 
     // Track game start time
     this.gameStartTimes.set(roomId, new Date());

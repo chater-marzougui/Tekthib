@@ -12,6 +12,7 @@ export interface Room {
   hostName: string;
   autoPlayTimeout: number;
   challengeSuspenseEnabled: boolean;
+  testMode?: boolean;
 }
 
 export interface GameState {
