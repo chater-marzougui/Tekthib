@@ -34,8 +34,8 @@ import sys
 from typing import Dict, List
 
 # Add the data_collector directory to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'data_collector'))
-from tekthib_bot_sdk import BotStrategy, GameState
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from data_collector.tekthib_bot_sdk import BotStrategy, GameState
 
 
 class DQNetwork(nn.Module):
@@ -59,6 +59,9 @@ class DQNetwork(nn.Module):
         
         # Dropout for regularization
         self.dropout = nn.Dropout(0.2)
+        
+        print(f"CUDA available: {torch.cuda.is_available()}")
+        print(f"Device: {torch.device('cuda' if torch.cuda.is_available() else 'cpu')}")
     
     def forward(self, state):
         """Forward pass through network."""
