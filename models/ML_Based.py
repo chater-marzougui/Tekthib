@@ -255,6 +255,8 @@ class MLBotStrategy(BotStrategy):
             
             elif event_type == 'challenge':
                 challenger_id = event_data.get('challengerId')
+                was_lying = event_data.get('wasLying', False)
+                challenged_player_id = event_data.get('challengedPlayerId')
                 
                 # Extract features
                 features = self._create_challenge_features(
@@ -263,11 +265,24 @@ class MLBotStrategy(BotStrategy):
                     last_played_count=last_played_count
                 )
                 
-                # If winner challenged, use as training example
+                # Enhanced challenge training:
+                # Learn from successful challenges regardless of who won the game
                 if challenger_id == winner_user_id:
+                    # Winner challenged - use as positive example
                     challenge_examples.append({
                         'features': features,
-                        'label': 1  # Challenged
+                        'label': 1,  # Challenged
+                        'was_successful': was_lying  # Track if challenge was successful
+                    })
+                
+                # Also learn from successful challenges by any player
+                # This helps bot learn when challenging is actually correct
+                if was_lying:
+                    # Challenge was successful - pile had bluffs
+                    challenge_examples.append({
+                        'features': features,
+                        'label': 1,  # Should challenge
+                        'was_successful': True
                     })
                 
                 # Reset pile on challenge
@@ -301,12 +316,23 @@ class MLBotStrategy(BotStrategy):
                                    pile_count: int,
                                    current_rank: Optional[str],
                                    last_played_count: int) -> np.ndarray:
-        """Create feature vector for challenge decision."""
+        """
+        Create feature vector for challenge decision.
+        
+        Enhanced features for better challenge prediction:
+        - Pile size (larger piles are more suspicious and valuable)
+        - Number of cards just played (more cards = more suspicious)
+        - Derived features for common bluffing patterns
+        """
         features = [
             pile_count / 52.0,  # Normalize pile size
             last_played_count / 4.0,  # Normalize last play count
-            1.0 if last_played_count >= 3 else 0.0,  # Many cards played
-            1.0 if pile_count > 10 else 0.0,  # Large pile
+            1.0 if last_played_count >= 3 else 0.0,  # Many cards played (suspicious)
+            1.0 if pile_count > 10 else 0.0,  # Large pile (valuable to challenge)
+            1.0 if pile_count > 20 else 0.0,  # Very large pile (critical)
+            (pile_count * last_played_count) / 100.0,  # Interaction: pile size × card count
+            1.0 if last_played_count == 4 else 0.0,  # Maximum cards (very suspicious)
+            1.0 if pile_count > 5 and last_played_count >= 3 else 0.0,  # High risk pattern
         ]
         return np.array(features)
     
@@ -462,6 +488,33 @@ class MLBotStrategy(BotStrategy):
         except Exception as e:
             print(f"Challenge prediction error: {e}")
             return False
+    
+    def on_challenge_result(self, challenge_result, game_state: GameState):
+        """
+        Called when challenge result is received.
+        For ML model, we can track statistics but don't retrain online.
+        
+        Args:
+            challenge_result: ChallengeResult object with detailed outcome
+            game_state: Current game state after challenge
+        """
+        # Track challenge statistics for logging/debugging
+        if not hasattr(self, 'challenge_stats'):
+            self.challenge_stats = {
+                'total_challenges': 0,
+                'successful_challenges': 0,
+                'my_challenges': 0,
+                'my_successful_challenges': 0
+            }
+        
+        if challenge_result.i_was_challenger:
+            self.challenge_stats['my_challenges'] += 1
+            if challenge_result.i_won:
+                self.challenge_stats['my_successful_challenges'] += 1
+        
+        self.challenge_stats['total_challenges'] += 1
+        if challenge_result.was_lying:
+            self.challenge_stats['successful_challenges'] += 1
     
     def save_models(self, path: str):
         """Save trained models to disk."""

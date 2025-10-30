@@ -42,20 +42,25 @@ class DQNetwork(nn.Module):
     """
     Deep Q-Network for learning optimal actions.
     
-    Architecture:
-    - Input layer: Game state features
-    - Hidden layers: Learn complex patterns
+    Enhanced Architecture:
+    - Input layer: Game state features (25 dimensions)
+    - Hidden layers: Learn complex patterns with deeper network
     - Output layers: Q-values for each action
+    - Batch normalization for stable training
     """
     
     def __init__(self, state_size: int, action_size: int):
         super(DQNetwork, self).__init__()
         
-        # Network architecture
-        self.fc1 = nn.Linear(state_size, 128)
-        self.fc2 = nn.Linear(128, 128)
-        self.fc3 = nn.Linear(128, 64)
-        self.fc4 = nn.Linear(64, action_size)
+        # Enhanced network architecture with more capacity
+        self.fc1 = nn.Linear(state_size, 256)
+        self.bn1 = nn.BatchNorm1d(256)
+        self.fc2 = nn.Linear(256, 256)
+        self.bn2 = nn.BatchNorm1d(256)
+        self.fc3 = nn.Linear(256, 128)
+        self.bn3 = nn.BatchNorm1d(128)
+        self.fc4 = nn.Linear(128, 64)
+        self.fc5 = nn.Linear(64, action_size)
         
         # Dropout for regularization
         self.dropout = nn.Dropout(0.2)
@@ -65,12 +70,13 @@ class DQNetwork(nn.Module):
     
     def forward(self, state):
         """Forward pass through network."""
-        x = F.relu(self.fc1(state))
+        x = F.relu(self.bn1(self.fc1(state)))
         x = self.dropout(x)
-        x = F.relu(self.fc2(x))
+        x = F.relu(self.bn2(self.fc2(x)))
         x = self.dropout(x)
-        x = F.relu(self.fc3(x))
-        x = self.fc4(x)
+        x = F.relu(self.bn3(self.fc3(x)))
+        x = F.relu(self.fc4(x))
+        x = self.fc5(x)
         return x
 
 
@@ -112,8 +118,8 @@ class RLBotStrategy(BotStrategy):
     - Challenge: Yes/No
     """
     
-    # State features (20 dimensions)
-    STATE_SIZE = 20
+    # Enhanced state features (25 dimensions for better learning)
+    STATE_SIZE = 25
     
     # Action space: 4 actions for card count (1-4)
     CARD_COUNT_ACTIONS = 4
@@ -163,6 +169,15 @@ class RLBotStrategy(BotStrategy):
         self.episode_rewards = []
         self.episode_count = 0
         
+        # Challenge tracking for better learning
+        self.last_challenge_state = None
+        self.last_challenge_action = None
+        self.challenge_outcomes = {
+            'won': 0,
+            'lost': 0,
+            'success_rate': 0.0
+        }
+        
         # Load model if provided
         if model_path and os.path.exists(model_path):
             self.load_model(model_path)
@@ -171,14 +186,19 @@ class RLBotStrategy(BotStrategy):
         """
         Extract state features from game state.
         
-        Features (20 dimensions):
-        1-14: Card rank counts in hand (one-hot encoded)
+        Enhanced features (25 dimensions):
+        1-14: Card rank counts in hand (normalized)
         15: Hand size (normalized)
         16: Pile size (normalized)
         17: Last played count (normalized)
         18: My turn flag
         19: Can challenge flag
         20: Claimed rank matches current rank
+        21: Number of players remaining
+        22: Pile size is large (>15)
+        23: Last play was suspicious (>=3 cards)
+        24: Hand is small (<10 cards)
+        25: Challenge success rate (learned)
         """
         features = []
         
@@ -189,9 +209,13 @@ class RLBotStrategy(BotStrategy):
             features.append(rank_counts.get(rank, 0) / 4.0)  # Normalize by max count
         
         # Game state features
-        features.append(len(game_state.hand) / 52.0)  # Hand size
-        features.append(game_state.pile_count / 52.0)  # Pile size
-        features.append(game_state.last_played_count / 4.0)  # Last play count
+        hand_size = len(game_state.hand)
+        pile_count = game_state.pile_count
+        last_played = game_state.last_played_count
+        
+        features.append(hand_size / 52.0)  # Hand size
+        features.append(pile_count / 52.0)  # Pile size
+        features.append(last_played / 4.0)  # Last play count
         features.append(1.0 if game_state.is_my_turn else 0.0)  # My turn
         features.append(1.0 if game_state.can_challenge else 0.0)  # Can challenge
         
@@ -200,6 +224,14 @@ class RLBotStrategy(BotStrategy):
             features.append(1.0 if claimed_rank == game_state.current_rank else 0.0)
         else:
             features.append(0.0)
+        
+        # Enhanced contextual features
+        num_players = len(game_state.players) if game_state.players else 4
+        features.append(num_players / 10.0)  # Number of players
+        features.append(1.0 if pile_count > 15 else 0.0)  # Large pile
+        features.append(1.0 if last_played >= 3 else 0.0)  # Suspicious play
+        features.append(1.0 if hand_size < 10 else 0.0)  # Small hand
+        features.append(self.challenge_outcomes['success_rate'])  # Learned challenge success
         
         return np.array(features, dtype=np.float32)
     
@@ -280,9 +312,55 @@ class RLBotStrategy(BotStrategy):
         
         # Store experience for training
         if self.training_mode:
-            self._store_challenge_experience(state, 1 if should_challenge else 0)
+            self.last_challenge_state = state
+            self.last_challenge_action = 1 if should_challenge else 0
+            self._store_challenge_experience(state, self.last_challenge_action)
         
         return should_challenge
+    
+    def on_challenge_result(self, challenge_result, game_state: GameState):
+        """
+        Called when challenge result is received.
+        Provides immediate reward signal for challenge decisions.
+        
+        Args:
+            challenge_result: ChallengeResult object with detailed outcome
+            game_state: Current game state after challenge
+        """
+        if not self.training_mode:
+            return
+        
+        # Calculate immediate reward for challenge
+        immediate_reward = 0.0
+        
+        if challenge_result.i_was_challenger or challenge_result.i_was_challenged:
+            if challenge_result.i_won:
+                # Successfully challenged or defended
+                immediate_reward = 0.5
+                self.challenge_outcomes['won'] += 1
+            else:
+                # Failed challenge or caught bluffing
+                immediate_reward = -0.5
+                self.challenge_outcomes['lost'] += 1
+            
+            # Update success rate
+            total = self.challenge_outcomes['won'] + self.challenge_outcomes['lost']
+            self.challenge_outcomes['success_rate'] = self.challenge_outcomes['won'] / total if total > 0 else 0.0
+            
+            # Store refined challenge experience with immediate reward
+            if self.last_challenge_state is not None and self.last_challenge_action is not None:
+                next_state = self._get_state_features(game_state)
+                self.challenge_memory.push(
+                    self.last_challenge_state,
+                    self.last_challenge_action,
+                    immediate_reward,
+                    next_state,
+                    False  # Not done yet
+                )
+                
+                # Train on this experience immediately for faster learning
+                if len(self.challenge_memory) >= self.batch_size:
+                    self._train_challenge_network()
     
     def _store_card_play_experience(self, state, action):
         """Store card play experience for later training."""
@@ -339,7 +417,21 @@ class RLBotStrategy(BotStrategy):
         
         if self.episode_count % 10 == 0:
             avg_reward = np.mean(self.episode_rewards[-10:])
-            print(f"Episode {self.episode_count}, Avg Reward: {avg_reward:.3f}, Epsilon: {self.epsilon:.3f}")
+            challenge_rate = self.challenge_outcomes['success_rate']
+            print(f"Episode {self.episode_count}, Avg Reward: {avg_reward:.3f}, Epsilon: {self.epsilon:.3f}, Challenge Success: {challenge_rate:.1%}")
+    
+    def _train_challenge_network(self):
+        """Train challenge network immediately after challenge result."""
+        if len(self.challenge_memory) < self.batch_size:
+            return
+        
+        self._train_network(
+            self.challenge_net,
+            self.target_challenge_net,
+            self.challenge_memory,
+            self.challenge_optimizer,
+            0  # No final reward for immediate training
+        )
     
     def _train_network(self, network, target_network, memory, optimizer, final_reward):
         """
@@ -359,7 +451,7 @@ class RLBotStrategy(BotStrategy):
         
         states = torch.FloatTensor([exp[0] for exp in batch]).to(self.device)
         actions = torch.LongTensor([exp[1] for exp in batch]).to(self.device)
-        rewards = torch.FloatTensor([final_reward for _ in batch]).to(self.device)
+        rewards = torch.FloatTensor([exp[2] if exp[2] != 0 else final_reward for exp in batch]).to(self.device)
         next_states = torch.FloatTensor([exp[3] for exp in batch]).to(self.device)
         dones = torch.FloatTensor([exp[4] for exp in batch]).to(self.device)
         

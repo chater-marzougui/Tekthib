@@ -28,6 +28,36 @@ from threading import Thread, Event
 from abc import ABC, abstractmethod
 
 
+class ChallengeResult:
+    """Represents the result of a challenge."""
+    
+    def __init__(self, payload: Dict = None):
+        self.challenger_id: Optional[str] = None
+        self.challenger_name: Optional[str] = None
+        self.challenged_player_id: Optional[str] = None
+        self.challenged_player_name: Optional[str] = None
+        self.was_lying: bool = False
+        self.revealed_cards: List[Dict] = []
+        self.cards_revealed_count: int = 0
+        self.i_won: bool = False  # Did the bot win this challenge?
+        self.i_lost: bool = False  # Did the bot lose this challenge?
+        self.i_was_challenger: bool = False  # Was the bot the challenger?
+        self.i_was_challenged: bool = False  # Was the bot challenged?
+        
+        if payload:
+            self.update(payload)
+    
+    def update(self, payload: Dict):
+        """Update from challenge result payload."""
+        self.challenger_id = payload.get('challengerId')
+        self.challenger_name = payload.get('challengerName')
+        self.challenged_player_id = payload.get('playerId')
+        self.challenged_player_name = payload.get('playerName')
+        self.was_lying = payload.get('wasLying', False)
+        self.revealed_cards = payload.get('revealedCards', [])
+        self.cards_revealed_count = len(self.revealed_cards)
+
+
 class GameState:
     """Represents the current game state."""
     
@@ -43,6 +73,7 @@ class GameState:
         self.game_phase: str = "waiting"
         self.players: List[Dict] = []
         self.winners: List[str] = []
+        self.last_challenge_result: Optional[ChallengeResult] = None
         
     def update(self, data: Dict):
         """Update game state from server data."""
@@ -107,6 +138,17 @@ class BotStrategy(ABC):
         if rank_counts:
             return max(rank_counts.items(), key=lambda x: x[1])[0]
         return "2"
+    
+    def on_challenge_result(self, challenge_result: ChallengeResult, game_state: GameState):
+        """
+        Called when a challenge result is received.
+        Override this to learn from challenge outcomes.
+        
+        Args:
+            challenge_result: Details about the challenge outcome
+            game_state: Current game state after challenge
+        """
+        pass
 
 
 class TekthibBotSDK:
@@ -403,16 +445,55 @@ class TekthibBotSDK:
     
     def _handle_challenge_result(self, payload: Dict):
         """Handle CHALLENGE_RESULT message."""
-        player = payload.get("playerName", "Unknown")
+        challenger_name = payload.get("challengerName", "Unknown")
+        challenged_name = payload.get("playerName", "Unknown")
         was_lying = payload.get("wasLying", False)
         
-        if was_lying:
-            self.logger.info(f"Challenge success! {player} was bluffing")
-        else:
-            self.logger.info(f"Challenge failed! {player} was truthful")
+        # Create detailed challenge result
+        challenge_result = ChallengeResult(payload)
         
+        # Determine if bot won/lost the challenge
+        # Bot wins if: (was lying and bot was challenger) OR (not lying and bot was challenged)
+        challenger_id = payload.get("challengerId")
+        challenged_id = payload.get("playerId")
+        
+        challenge_result.i_was_challenger = (challenger_id == self.client_id)
+        challenge_result.i_was_challenged = (challenged_id == self.client_id)
+        
+        if challenge_result.i_was_challenger:
+            challenge_result.i_won = was_lying
+            challenge_result.i_lost = not was_lying
+        elif challenge_result.i_was_challenged:
+            challenge_result.i_won = not was_lying
+            challenge_result.i_lost = was_lying
+        
+        # Log with detailed information
+        if challenge_result.i_was_challenger:
+            if challenge_result.i_won:
+                self.logger.info(f"✅ My challenge succeeded! {challenged_name} was bluffing ({challenge_result.cards_revealed_count} cards revealed)")
+            else:
+                self.logger.info(f"❌ My challenge failed! {challenged_name} was truthful ({challenge_result.cards_revealed_count} cards revealed)")
+        elif challenge_result.i_was_challenged:
+            if challenge_result.i_won:
+                self.logger.info(f"✅ I survived challenge! {challenger_name} was wrong ({challenge_result.cards_revealed_count} cards revealed)")
+            else:
+                self.logger.info(f"❌ I was caught bluffing! {challenger_name} was right ({challenge_result.cards_revealed_count} cards revealed)")
+        else:
+            if was_lying:
+                self.logger.info(f"Challenge: {challenger_name} caught {challenged_name} bluffing")
+            else:
+                self.logger.info(f"Challenge: {challenger_name} failed against {challenged_name}")
+        
+        # Update game state
         if "gameState" in payload:
             self._update_game_state(payload["gameState"])
+        
+        # Store challenge result in game state
+        self.game_state.last_challenge_result = challenge_result
+        
+        # Call strategy callback
+        if self.strategy:
+            self.strategy.on_challenge_result(challenge_result, self.game_state)
         
         self._trigger_event("challenge_result", payload)
     

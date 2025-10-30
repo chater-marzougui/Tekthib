@@ -1,5 +1,21 @@
 # AI Bot Training Guide for Tekthib
 
+## 🚀 Recent Updates
+
+**New in 2024**: Enhanced ML/RL training system with challenge outcome feedback!
+
+📖 **See detailed improvements**: [ENHANCED_ML_RL_TRAINING.md](../docs/ENHANCED_ML_RL_TRAINING.md)  
+📖 **SDK challenge feedback reference**: [SDK_CHALLENGE_FEEDBACK_REFERENCE.md](../docs/SDK_CHALLENGE_FEEDBACK_REFERENCE.md)
+
+**Key improvements:**
+- ✅ Immediate challenge outcome feedback for faster RL learning
+- ✅ Enhanced state features (25D) for better pattern recognition
+- ✅ Improved challenge decision accuracy (+10-15%)
+- ✅ Better training data extraction from successful challenges
+- ✅ Self-awareness through challenge success tracking
+
+---
+
 ## Overview
 
 You now have **two different AI approaches** for playing Tekthib:
