@@ -138,7 +138,8 @@ class RLBotStrategy(BotStrategy):
     def __init__(self, 
                  model_path: str = None,
                  training_mode: bool = False,
-                 epsilon: float = 1.0):
+                 epsilon: float = 1.0,
+                 training_lock = None):
         """
         Initialize RL bot.
         
@@ -146,8 +147,12 @@ class RLBotStrategy(BotStrategy):
             model_path: Path to saved model. If None, starts with random weights.
             training_mode: If True, bot will explore and learn. If False, only exploit.
             epsilon: Exploration rate (1.0 = full random, 0.0 = fully trained)
+            training_lock: Thread lock for synchronizing training operations (parallel training)
         """
         super().__init__()
+        
+        # Thread safety
+        self.training_lock = training_lock
         
         # Device
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -373,9 +378,13 @@ class RLBotStrategy(BotStrategy):
                     False  # Not done yet
                 )
                 
-                # Train on this experience immediately for faster learning
+                # Train on this experience immediately for faster learning (with thread safety)
                 if len(self.challenge_memory) >= self.batch_size:
-                    self._train_challenge_network()
+                    if self.training_lock:
+                        with self.training_lock:
+                            self._train_challenge_network()
+                    else:
+                        self._train_challenge_network()
     
     def _store_card_play_experience(self, state, action):
         """Store card play experience for later training."""
@@ -400,9 +409,15 @@ class RLBotStrategy(BotStrategy):
         if not self.training_mode:
             return
         
-        # Update all recent experiences with this reward
-        # (simplified - in full implementation, would use TD learning)
-        
+        # Thread-safe training
+        if self.training_lock:
+            with self.training_lock:
+                self._perform_training_update(reward)
+        else:
+            self._perform_training_update(reward)
+    
+    def _perform_training_update(self, reward: float):
+        """Internal method to perform training update (called within lock if parallel)."""
         # Train card count network
         if len(self.card_count_memory) >= self.batch_size:
             self._train_network(
@@ -464,11 +479,19 @@ class RLBotStrategy(BotStrategy):
         # Sample batch
         batch = memory.sample(min(self.batch_size, len(memory)))
         
-        states = torch.FloatTensor([exp[0] for exp in batch]).to(self.device)
-        actions = torch.FloatTensor([exp[1] for exp in batch]).to(self.device)  # Changed to FloatTensor
-        rewards = torch.FloatTensor([exp[2] if exp[2] != 0 else final_reward for exp in batch]).to(self.device)
-        next_states = torch.FloatTensor([exp[3] for exp in batch]).to(self.device)
-        dones = torch.FloatTensor([exp[4] for exp in batch]).to(self.device)
+        # Convert to numpy arrays first to avoid slow tensor creation warning
+        states_np = np.array([exp[0] for exp in batch], dtype=np.float32)
+        actions_np = np.array([exp[1] for exp in batch], dtype=np.float32)
+        rewards_np = np.array([exp[2] if exp[2] != 0 else final_reward for exp in batch], dtype=np.float32)
+        next_states_np = np.array([exp[3] for exp in batch], dtype=np.float32)
+        dones_np = np.array([exp[4] for exp in batch], dtype=np.float32)
+        
+        # Now convert to tensors efficiently
+        states = torch.from_numpy(states_np).to(self.device)
+        actions = torch.from_numpy(actions_np).to(self.device)
+        rewards = torch.from_numpy(rewards_np).to(self.device)
+        next_states = torch.from_numpy(next_states_np).to(self.device)
+        dones = torch.from_numpy(dones_np).to(self.device)
         
         # Check if this is regression (output size 1) or classification (output size > 1)
         output = network(states)
