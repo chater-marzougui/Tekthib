@@ -475,7 +475,7 @@ class TekthibBotSDK:
                 self.logger.info(f"❌ My challenge failed! {challenged_name} was truthful ({challenge_result.cards_revealed_count} cards revealed)")
         elif challenge_result.i_was_challenged:
             if challenge_result.i_won:
-                self.logger.info(f"✅ I survived challenge! {challenger_name} was wrong ({challenge_result.cards_revealed_count} cards revealed)")
+                self.logger.info(f"✅ I was challenged! {challenger_name} was wrong ({challenge_result.cards_revealed_count} cards revealed)")
             else:
                 self.logger.info(f"❌ I was caught bluffing! {challenger_name} was right ({challenge_result.cards_revealed_count} cards revealed)")
         else:
