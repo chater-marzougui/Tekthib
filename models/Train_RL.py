@@ -19,6 +19,8 @@ from random import randint
 import sys
 import logging
 import time
+import json
+from datetime import datetime
 from RL_based import RLBotStrategy
 
 # Add parent directory to path
@@ -28,18 +30,20 @@ from data_collector.tekthib_bot_sdk import TekthibBotSDK
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%H:%M:%S'
 )
 
 # Training configuration
 TRAINING_CONFIG = {
-    'total_episodes': 1000,
+    'total_episodes': 300,
     'initial_epsilon': 1.0,
     'final_epsilon': 0.01,
-    'epsilon_decay_episodes': 700,  # Decay over first 700 episodes
-    'checkpoint_interval': 100,
-    'target_update_interval': 50,  # Update target networks every 50 episodes
-    'save_dir': 'rl_checkpoints'
+    'epsilon_decay_episodes': 200,  # Decay over first 200 episodes
+    'checkpoint_interval': 50,  # Save checkpoint every 50 episodes
+    'target_update_interval': 25,  # Update target networks every 25 episodes
+    'save_dir': 'rl_checkpoints',
+    'stats_file': 'training_stats.json'  # Stats tracking file
 }
 
 # Create checkpoint directory
@@ -54,17 +58,40 @@ class TrainingStats:
         self.placements = []  # Track finish positions
         self.episode_start_time = None
         self.total_training_time = 0
+        self.stats_file = os.path.join(TRAINING_CONFIG['save_dir'], TRAINING_CONFIG['stats_file'])
+        self.episodes_data = []  # Store all episode data
+        self._load_existing_stats()
+    
+    def _load_existing_stats(self):
+        """Load existing stats if file exists."""
+        if os.path.exists(self.stats_file):
+            try:
+                with open(self.stats_file, 'r') as f:
+                    data = json.load(f)
+                    self.episodes_data = data.get('episodes', [])
+                    # Restore state from loaded data
+                    if self.episodes_data:
+                        self.episode = len(self.episodes_data)
+                        self.wins = sum(1 for ep in self.episodes_data if ep['placement'] == 1)
+                        self.losses = self.episode - self.wins
+                        self.placements = [ep['placement'] for ep in self.episodes_data]
+                        self.total_training_time = data.get('total_training_time', 0)
+                        logging.info(f"📂 Loaded {self.episode} episodes from {self.stats_file}")
+            except Exception as e:
+                logging.warning(f"Could not load existing stats: {e}")
         
     def start_episode(self):
         self.episode += 1
         self.episode_start_time = time.time()
         
-    def end_episode(self, placement: int):
+    def end_episode(self, placement: int, reward: float, epsilon: float, total_players: int = 4):
         """
-        Record episode results.
+        Record episode results and save to JSON.
         
         Args:
             placement: Finish position (1 = winner, 2 = second, etc.)
+            reward: Reward value for this episode
+            epsilon: Current epsilon value
             total_players: Total number of players in game
         """
         episode_time = time.time() - self.episode_start_time
@@ -79,12 +106,52 @@ class TrainingStats:
         # Calculate statistics
         win_rate = self.wins / self.episode if self.episode > 0 else 0
         avg_placement = sum(self.placements[-100:]) / len(self.placements[-100:]) if self.placements else 0
+        avg_placement_all = sum(self.placements) / len(self.placements) if self.placements else 0
+        
+        # Store episode data
+        episode_data = {
+            'episode': self.episode,
+            'placement': placement,
+            'total_players': total_players,
+            'reward': reward,
+            'epsilon': epsilon,
+            'episode_time': episode_time,
+            'win_rate': win_rate,
+            'avg_placement_recent': avg_placement,
+            'avg_placement_all': avg_placement_all,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        self.episodes_data.append(episode_data)
+        
+        # Save to JSON
+        self._save_stats()
         
         return {
             'episode_time': episode_time,
             'win_rate': win_rate,
             'avg_placement': avg_placement
         }
+    
+    def _save_stats(self):
+        """Save all statistics to JSON file."""
+        try:
+            stats_data = {
+                'total_episodes': self.episode,
+                'total_wins': self.wins,
+                'total_losses': self.losses,
+                'total_training_time': self.total_training_time,
+                'overall_win_rate': self.wins / self.episode if self.episode > 0 else 0,
+                'overall_avg_placement': sum(self.placements) / len(self.placements) if self.placements else 0,
+                'last_updated': datetime.now().isoformat(),
+                'episodes': self.episodes_data
+            }
+            
+            with open(self.stats_file, 'w') as f:
+                json.dump(stats_data, f, indent=2)
+                
+        except Exception as e:
+            logging.error(f"Failed to save stats: {e}")
     
     def print_summary(self):
         """Print training summary."""
@@ -119,12 +186,12 @@ def play_single_episode(bot: RLBotStrategy, episode_num: int):
     """Play a single game episode and return placement."""
     
     placement = None
-    total_players = 4
+    total_players = 1 + randint(2, 6)  # Will be updated on game start
     game_ended = False
     
     def on_game_started(payload):
         nonlocal total_players
-        total_players = payload.get('playerCount', 4)
+        total_players = payload.get('playerCount', total_players)
         print(f"🎮 Episode {episode_num} started (ε={bot.epsilon:.3f})")
     
     def on_game_ended(payload):
@@ -138,12 +205,14 @@ def play_single_episode(bot: RLBotStrategy, episode_num: int):
             placement = total_players
     
     # Create new SDK for this game
+    bots_to_add = total_players - 1
+    print("Adding", bots_to_add, 'bots')
     sdk = TekthibBotSDK(
         server_url='ws://localhost:3001',
         player_name='RL_Training',
         room_code=None,
         is_host=True,
-        bots_to_add=randint(2, 6)
+        bots_to_add=bots_to_add
     )
     
     sdk.set_strategy(bot)
@@ -187,18 +256,13 @@ def train_rl_bot():
             placement, total_players = play_single_episode(bot, stats.episode)
             
             # Calculate reward
-            if placement == 1:
-                reward = 1.0
-            elif placement <= 3:
-                reward = 0.5
-            else:
-                reward = -1.0
+            reward = 1 - 2 * (placement - 1) / (total_players - 1)
             
             # Update bot
             bot.update_with_reward(reward)
             
-            # Record stats
-            episode_stats = stats.end_episode(placement)
+            # Record stats (now includes saving to JSON)
+            episode_stats = stats.end_episode(placement, reward, bot.epsilon, total_players)
             
             # Print summary
             result_emoji = "🏆" if placement == 1 else "📊"
@@ -209,6 +273,7 @@ def train_rl_bot():
             print(f"  - Avg Placement: {episode_stats['avg_placement']:.2f}")
             print(f"  - Episode Time: {episode_stats['episode_time']:.1f}s")
             print(f"  - Epsilon: {bot.epsilon:.3f}")
+            print(f"  - Stats saved to: {stats.stats_file}")
             
             # Update epsilon
             bot.epsilon = calculate_epsilon(stats.episode, TRAINING_CONFIG)

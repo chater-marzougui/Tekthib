@@ -64,12 +64,16 @@ class DQNetwork(nn.Module):
         
         # Dropout for regularization
         self.dropout = nn.Dropout(0.2)
-        
-        print(f"CUDA available: {torch.cuda.is_available()}")
-        print(f"Device: {torch.device('cuda' if torch.cuda.is_available() else 'cpu')}")
     
     def forward(self, state):
         """Forward pass through network."""
+        # Handle single sample case for batch norm
+        if state.size(0) == 1:
+            # Use eval mode for batch norm when batch size is 1
+            self.bn1.eval()
+            self.bn2.eval()
+            self.bn3.eval()
+        
         x = F.relu(self.bn1(self.fc1(state)))
         x = self.dropout(x)
         x = F.relu(self.bn2(self.fc2(x)))
@@ -77,6 +81,13 @@ class DQNetwork(nn.Module):
         x = F.relu(self.bn3(self.fc3(x)))
         x = F.relu(self.fc4(x))
         x = self.fc5(x)
+        
+        # Restore training mode if needed
+        if state.size(0) == 1 and self.training:
+            self.bn1.train()
+            self.bn2.train()
+            self.bn3.train()
+        
         return x
 
 
@@ -229,7 +240,7 @@ class RLBotStrategy(BotStrategy):
         num_players = len(game_state.players) if game_state.players else 4
         features.append(num_players / 10.0)  # Number of players
         features.append(1.0 if pile_count > 15 else 0.0)  # Large pile
-        features.append(1.0 if last_played >= 3 else 0.0)  # Suspicious play
+        features.append(1.0 if last_played >= 5 else 0.0)  # Suspicious play
         features.append(1.0 if hand_size < 10 else 0.0)  # Small hand
         features.append(self.challenge_outcomes['success_rate'])  # Learned challenge success
         
@@ -259,9 +270,12 @@ class RLBotStrategy(BotStrategy):
             card_count = random.randint(1, len(game_state.hand))
         else:
             # Exploit: use Q-network (regression output)
+            self.card_count_net.eval()  # Set to eval mode for inference
             with torch.no_grad():
                 predicted_count = self.card_count_net(state_tensor).item()
                 card_count = round(predicted_count)
+            if self.training_mode:
+                self.card_count_net.train()  # Restore training mode
         
         # Clip to valid range
         card_count = max(1, min(card_count, len(game_state.hand)))
@@ -304,10 +318,12 @@ class RLBotStrategy(BotStrategy):
             should_challenge = random.random() < 0.3  # 30% challenge rate during exploration
         else:
             # Exploit: use Q-network
+            self.challenge_net.eval()  # Set to eval mode for inference
             with torch.no_grad():
                 q_values = self.challenge_net(state_tensor)
-                action = q_values.argmax().item()
-                should_challenge = (action == 1)
+                should_challenge = q_values.argmax().item() == 1
+            if self.training_mode:
+                self.challenge_net.train()  # Restore training mode
         
         # Store experience for training
         if self.training_mode:
