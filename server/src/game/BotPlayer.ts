@@ -1,7 +1,18 @@
-import { Card, playableRanks, Player, PlayerWithHand, Rank, BotPersonality } from 'shared';
+import {
+  Card,
+  playableRanks,
+  Player,
+  PlayerWithHand,
+  Rank,
+  BotPersonality,
+} from 'shared';
 import { GameEngine } from './GameEngine';
 import { BotMemory } from './BotMemory';
-import { getBotChatMessage, shouldBotChat, BotChatContext } from './BotChatMessages';
+import {
+  getBotChatMessage,
+  shouldBotChat,
+  BotChatContext,
+} from './BotChatMessages';
 
 export class BotPlayer {
   private readonly gameEngine: GameEngine;
@@ -10,7 +21,11 @@ export class BotPlayer {
   private readonly memory: BotMemory;
   private chatCallback?: (message: string) => void;
 
-  constructor(gameEngine: GameEngine, playerId: string, personality: BotPersonality) {
+  constructor(
+    gameEngine: GameEngine,
+    playerId: string,
+    personality: BotPersonality,
+  ) {
     this.gameEngine = gameEngine;
     this.playerId = playerId;
     this.personality = personality;
@@ -40,7 +55,7 @@ export class BotPlayer {
   private static readonly LARGE_PILE_INCREASE = 1.15; // 15% increase
   private static readonly MEDIUM_CARD_COUNT_MIN = 3;
   private static readonly MEDIUM_CARD_COUNT_MAX = 6;
-  private static readonly MEDIUM_CARD_REDUCTION = 0.5; // 50% reduction
+  private static readonly MEDIUM_CARD_REDUCTION = 0.8; // 20% reduction
 
   /**
    * Determines if the bot should challenge the current play
@@ -50,48 +65,44 @@ export class BotPlayer {
   shouldChallenge(isCurrentPlayer: boolean): boolean {
     const gameState = this.gameEngine.getPublicGameState();
     const lastPlayerId = gameState.lastPlayerId;
-    
+
     if (!lastPlayerId) return false;
+    const lastPlayedCount = gameState.lastPlayedCount;
+
+    if (lastPlayedCount === 0) return false; // No cards played, nothing to challenge
+    if (lastPlayedCount >= 8) return true; // Impossible play, must challenge
 
     // Initialize memory for the player being considered for challenge
     this.memory.initializePlayer(lastPlayerId);
 
     // CRITICAL ENDGAME: If bot is the only non-winner left
-    const nonWinners = gameState.players.filter((p: Player) => !gameState.winners.includes(p.id));
+    const nonWinners = gameState.players.filter(
+      (p: Player) => p.cardCount !== 0,
+    );
     if (nonWinners.length === 1 && nonWinners[0].id === this.playerId) {
-      // Bot is the only one left with cards
-      const myCardCount = gameState.playerHandCounts[this.playerId] || 0;
-      const pileSize = gameState.pileCount;
-      
-      // If bot has very few cards and pile is large, challenging is too risky
-      if (myCardCount <= 3 && pileSize > 10) {
-        // High risk - use normal logic but with increased probability
-        return Math.random() < 0.7; // 70% chance still high but not guaranteed
-      }
-      
-      // Otherwise, must challenge to have any chance of winning
+      // Must challenge to have any chance of winning
       return true;
     }
 
     // Get personality modifiers
     const personalityMod = this.memory.getPersonalityModifier();
-    
+
     // REDUCED base probability (was 0.3/0.2, now 0.2/0.15)
     let challengeProbability = isCurrentPlayer ? 0.2 : 0.15;
-    
+
     // Apply personality modifier
     challengeProbability += personalityMod.challengeBonus;
 
     // Count bots to reduce excessive challenging
     const botCount = gameState.players.filter((p: Player) => p.isBot).length;
     if (botCount > 1) {
-      const reductionFactor = Math.min(0.8, botCount * 0.075);
-      challengeProbability *= (1 - reductionFactor);
+      const reductionFactor = Math.min(0.5, botCount * 0.075);
+      challengeProbability *= 1 - reductionFactor;
     }
 
     // PILE SIZE CONSIDERATION: Larger piles are more suspicious but also riskier to challenge
     const pileSize = gameState.pileCount;
-    if (pileSize === 0) {
+    if (pileSize === 0 && lastPlayedCount < 4) {
       // FIRST PLAY: No history, much less likely to challenge
       challengeProbability *= BotPlayer.FIRST_PLAY_REDUCTION;
     } else if (pileSize < 5) {
@@ -108,11 +119,12 @@ export class BotPlayer {
     }
 
     // CARD COUNT ANALYSIS: Playing many cards truthfully is more likely
-    const lastPlayedCount = gameState.lastPlayedCount;
-    if (lastPlayedCount >= BotPlayer.MEDIUM_CARD_COUNT_MIN && 
-        lastPlayedCount <= BotPlayer.MEDIUM_CARD_COUNT_MAX) {
+    if (
+      lastPlayedCount >= BotPlayer.MEDIUM_CARD_COUNT_MIN &&
+      lastPlayedCount <= BotPlayer.MEDIUM_CARD_COUNT_MAX
+    ) {
       // Playing 3-6 cards is often truthful (player has those cards)
-      // REDUCE challenge probability significantly
+      // REDUCE challenge probability slightly
       challengeProbability *= BotPlayer.MEDIUM_CARD_REDUCTION;
     } else if (lastPlayedCount > BotPlayer.MEDIUM_CARD_COUNT_MAX) {
       // Playing 7+ cards is extremely suspicious
@@ -120,14 +132,14 @@ export class BotPlayer {
     } else if (lastPlayedCount === 1) {
       challengeProbability *= 0.6; // Single cards more likely to be true
     } else if (lastPlayedCount === 2) {
-      challengeProbability *= 0.8; // Two cards reasonably likely to be true
+      challengeProbability *= 0.7; // Two cards reasonably likely to be true
     }
 
     // Game position adjustment
     const myCardCount = gameState.playerHandCounts[this.playerId] || 0;
     const opponentCardCount = gameState.playerHandCounts[lastPlayerId] || 0;
-    const averageCardCount = 
-      Object.values(gameState.playerHandCounts).reduce((a, b) => a + b, 0) / 
+    const averageCardCount =
+      Object.values(gameState.playerHandCounts).reduce((a, b) => a + b, 0) /
       Object.keys(gameState.playerHandCounts).length;
 
     const positionAdjustment = this.memory.getPositionBasedChallengeAdjustment(
@@ -138,7 +150,7 @@ export class BotPlayer {
     challengeProbability += positionAdjustment;
 
     // Ensure probability stays in valid range
-    challengeProbability = Math.max(0.02, Math.min(0.85, challengeProbability));
+    challengeProbability = Math.max(0.05, Math.min(0.95, challengeProbability));
 
     return Math.random() < challengeProbability;
   }
@@ -158,33 +170,36 @@ export class BotPlayer {
   } {
     const hand = botPlayer.hand;
     const gameState = this.gameEngine.getPublicGameState();
-    
+
     // Calculate game position
     const myCardCount = hand.length;
-    const averageCardCount = 
-      Object.values(gameState.playerHandCounts).reduce((a, b) => a + b, 0) / 
+    const averageCardCount =
+      Object.values(gameState.playerHandCounts).reduce((a, b) => a + b, 0) /
       Object.keys(gameState.playerHandCounts).length;
 
     // Get personality-adjusted bluff rate
-    const bluffRate = this.memory.getPositionBasedBluffRate(myCardCount, averageCardCount);
+    const bluffRate = this.memory.getPositionBasedBluffRate(
+      myCardCount,
+      averageCardCount,
+    );
 
     if (currentRank) {
       const result = this.playWithCurrentRank(hand, currentRank, bluffRate);
-      
+
       // Check if we're playing more than 3 cards (big play)
       if (result.cardIds.length > 3) {
         this.maybeSendChat('bigPlay');
       }
-      
+
       return result;
     } else {
       const result = this.playNewRank(hand);
-      
+
       // Check if we're playing more than 3 cards (big play)
       if (result.cardIds.length > 3) {
         this.maybeSendChat('bigPlay');
       }
-      
+
       return result;
     }
   }
@@ -262,7 +277,7 @@ export class BotPlayer {
     );
 
     const someMatchingCards = matchingCards.slice(0, numMatchingToPlay);
-    
+
     return {
       cardIds: someMatchingCards.map((c) => c.id),
       claimedRank: currentRank,
@@ -287,7 +302,7 @@ export class BotPlayer {
 
     const numCards = Math.floor(Math.random() * maxCards) + 1;
     const cardsToPlay = hand.slice(0, Math.min(numCards, hand.length));
-    
+
     return {
       cardIds: cardsToPlay.map((c) => c.id),
       claimedRank: currentRank,
@@ -299,35 +314,35 @@ export class BotPlayer {
    */
   private playNewRank(hand: Card[]): { cardIds: string[]; claimedRank: Rank } {
     const rankCounts = new Map<Rank, Card[]>();
-    
+
     // Group cards by rank (excluding Jokers)
-    hand.forEach((card) => {
+    for (const card of hand) {
       if (card.rank !== 'Joker') {
         if (!rankCounts.has(card.rank)) {
           rankCounts.set(card.rank, []);
         }
         rankCounts.get(card.rank)!.push(card);
       }
-    });
+    }
 
     // Find the most common rank
     let bestRank: Rank | null = null;
     let maxCount = 0;
-    rankCounts.forEach((cards, rank) => {
+    for (const [rank, cards] of rankCounts) {
       if (cards.length > maxCount) {
         maxCount = cards.length;
         bestRank = rank;
       }
-    });
+    }
 
     // Fallback if no rank found (only has Jokers)
     if (!bestRank) {
-      const nonJoker = hand.find((c) => c.rank !== 'Joker');
-      if (nonJoker) {
-        bestRank = nonJoker.rank;
-      } else {
-        bestRank = playableRanks[Math.floor(Math.random() * playableRanks.length)];
-      }
+      bestRank =
+        playableRanks[Math.floor(Math.random() * playableRanks.length)];
+      return {
+        cardIds: hand.map((c) => c.id),
+        claimedRank: bestRank,
+      };
     }
 
     const cardsOfBestRank = rankCounts.get(bestRank) || [];
@@ -364,15 +379,16 @@ export class BotPlayer {
     if (wasLying) {
       this.memory.recordFailedBluff(playerId);
       this.memory.recordSuccessfulChallenge(challengerId);
-      
+
       // Bot caught someone bluffing
       if (challengerId === this.playerId) {
         this.maybeSendChat('caughtBluff');
       }
-    } else {
-      this.memory.recordSuccessfulBluff(playerId);
-      this.memory.recordFailedChallenge(challengerId);
+
+      return;
     }
+    this.memory.recordSuccessfulBluff(playerId);
+    this.memory.recordFailedChallenge(challengerId);
   }
 
   /**
@@ -381,7 +397,7 @@ export class BotPlayer {
   recordUnchallengedPlay(playerId: string, wasBluff: boolean): void {
     if (wasBluff) {
       this.memory.recordSuccessfulBluff(playerId);
-      
+
       // Bot got away with a bluff
       if (playerId === this.playerId) {
         this.maybeSendChat('successfulBluff');

@@ -10,7 +10,7 @@ interface PlayerRiskProfile {
 }
 
 export class BotMemory {
-  private playerProfiles: Map<string, PlayerRiskProfile> = new Map();
+  private readonly playerProfiles: Map<string, PlayerRiskProfile> = new Map();
   private readonly personality: BotPersonality;
 
   constructor(personality: BotPersonality) {
@@ -106,6 +106,11 @@ export class BotMemory {
     }
 
     // If opponent is close to winning (very few cards), challenge more
+    if (opponentCardCount === 0) {
+      return 10;
+    }
+
+    // If opponent is low on cards, be more aggressive
     if (opponentCardCount <= 3) {
       return 0.2;
     }

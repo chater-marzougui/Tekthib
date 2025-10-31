@@ -15,6 +15,7 @@ Recommended: Train for 1000+ episodes for good performance
 """
 
 import os
+from random import randint
 import sys
 import logging
 import time
@@ -135,17 +136,14 @@ def play_single_episode(bot: RLBotStrategy, episode_num: int):
             placement = winners.index(sdk.client_id) + 1
         else:
             placement = total_players
-        
-        # Stop SDK after game ends
-        sdk.stop()
     
     # Create new SDK for this game
     sdk = TekthibBotSDK(
-        server_url='wss://takthib-a00f145250bc.herokuapp.com',
+        server_url='ws://localhost:3001',
         player_name='RL_Training',
         room_code=None,
         is_host=True,
-        bots_to_add=3
+        bots_to_add=randint(2, 6)
     )
     
     sdk.set_strategy(bot)

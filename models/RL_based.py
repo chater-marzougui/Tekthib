@@ -114,15 +114,15 @@ class RLBotStrategy(BotStrategy):
     - Saves best performing models
     
     Action Space:
-    - Card count: 1-4 cards to play
+    - Card count: 1-56 cards to play (regression)
     - Challenge: Yes/No
     """
     
     # Enhanced state features (25 dimensions for better learning)
     STATE_SIZE = 25
     
-    # Action space: 4 actions for card count (1-4)
-    CARD_COUNT_ACTIONS = 4
+    # Action space: 1 output for card count (regression)
+    CARD_COUNT_ACTIONS = 1
     
     def __init__(self, 
                  model_path: str = None,
@@ -206,16 +206,16 @@ class RLBotStrategy(BotStrategy):
         rank_counts = Counter([card['rank'] for card in game_state.hand])
         all_ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', 'Joker']
         for rank in all_ranks:
-            features.append(rank_counts.get(rank, 0) / 4.0)  # Normalize by max count
+            features.append(rank_counts.get(rank, 0) / 8.0)  # Normalize by max count (2 decks)
         
         # Game state features
         hand_size = len(game_state.hand)
         pile_count = game_state.pile_count
         last_played = game_state.last_played_count
         
-        features.append(hand_size / 52.0)  # Hand size
-        features.append(pile_count / 52.0)  # Pile size
-        features.append(last_played / 4.0)  # Last play count
+        features.append(hand_size / 108.0)  # Hand size (2 decks)
+        features.append(pile_count / 108.0)  # Pile size (2 decks)
+        features.append(last_played / 56.0)  # Last play count (max possible)
         features.append(1.0 if game_state.is_my_turn else 0.0)  # My turn
         features.append(1.0 if game_state.can_challenge else 0.0)  # Can challenge
         
@@ -237,13 +237,13 @@ class RLBotStrategy(BotStrategy):
     
     def select_cards(self, game_state: GameState, claimed_rank: str) -> List[Dict]:
         """
-        Select cards using Q-network.
+        Select cards using Q-network (regression).
         
         Logic:
         1. Get state features
         2. If training: epsilon-greedy (explore vs exploit)
         3. If not training: always exploit (use learned policy)
-        4. Select action (card count) from Q-network
+        4. Predict card count from Q-network (continuous value)
         5. Choose actual cards (prefer matching)
         """
         if not game_state.hand:
@@ -256,20 +256,19 @@ class RLBotStrategy(BotStrategy):
         # Epsilon-greedy action selection
         if self.training_mode and random.random() < self.epsilon:
             # Explore: random action
-            card_count = random.randint(1, min(4, len(game_state.hand)))
+            card_count = random.randint(1, len(game_state.hand))
         else:
-            # Exploit: use Q-network
+            # Exploit: use Q-network (regression output)
             with torch.no_grad():
-                q_values = self.card_count_net(state_tensor)
-                action = q_values.argmax().item()
-                card_count = action + 1  # Actions are 0-3, card counts are 1-4
+                predicted_count = self.card_count_net(state_tensor).item()
+                card_count = round(predicted_count)
         
         # Clip to valid range
         card_count = max(1, min(card_count, len(game_state.hand)))
         
         # Store experience for training
         if self.training_mode:
-            self._store_card_play_experience(state, card_count - 1)
+            self._store_card_play_experience(state, card_count)
         
         # Select actual cards (prefer matching)
         matching = [c for c in game_state.hand 
@@ -437,34 +436,45 @@ class RLBotStrategy(BotStrategy):
         """
         Train a Q-network using experience replay.
         
-        Q-Learning Update:
+        For regression (card count): Uses MSE loss directly on predicted value
+        For classification (challenge): Uses Q-learning with max over actions
+        
+        Q-Learning Update (classification):
         Q(s,a) = Q(s,a) + α[r + γ*max(Q(s',a')) - Q(s,a)]
         
-        Where:
-        - Q(s,a) = current Q-value
-        - r = reward
-        - γ = discount factor
-        - max(Q(s',a')) = best future Q-value
+        Regression Update (card count):
+        predicted_count = network(s), loss = MSE(predicted_count, target_count)
         """
         # Sample batch
         batch = memory.sample(min(self.batch_size, len(memory)))
         
         states = torch.FloatTensor([exp[0] for exp in batch]).to(self.device)
-        actions = torch.LongTensor([exp[1] for exp in batch]).to(self.device)
+        actions = torch.FloatTensor([exp[1] for exp in batch]).to(self.device)  # Changed to FloatTensor
         rewards = torch.FloatTensor([exp[2] if exp[2] != 0 else final_reward for exp in batch]).to(self.device)
         next_states = torch.FloatTensor([exp[3] for exp in batch]).to(self.device)
         dones = torch.FloatTensor([exp[4] for exp in batch]).to(self.device)
         
-        # Current Q values
-        current_q = network(states).gather(1, actions.unsqueeze(1))
+        # Check if this is regression (output size 1) or classification (output size > 1)
+        output = network(states)
+        is_regression = (output.shape[1] == 1)
         
-        # Target Q values
-        with torch.no_grad():
-            next_q = target_network(next_states).max(1)[0]
-            target_q = rewards + (1 - dones) * self.gamma * next_q
-        
-        # Compute loss
-        loss = F.smooth_l1_loss(current_q.squeeze(), target_q)
+        if is_regression:
+            # Regression: direct MSE loss between predicted and target card count
+            current_q = output.squeeze()
+            # For regression, action IS the target card count
+            target_q = actions
+            loss = F.mse_loss(current_q, target_q)
+        else:
+            # Classification: Q-learning with action selection
+            actions_int = actions.long()
+            current_q = output.gather(1, actions_int.unsqueeze(1))
+            
+            # Target Q values
+            with torch.no_grad():
+                next_q = target_network(next_states).max(1)[0]
+                target_q = rewards + (1 - dones) * self.gamma * next_q
+            
+            loss = F.smooth_l1_loss(current_q.squeeze(), target_q)
         
         # Optimize
         optimizer.zero_grad()
