@@ -138,8 +138,7 @@ class RLBotStrategy(BotStrategy):
     def __init__(self, 
                  model_path: str = None,
                  training_mode: bool = False,
-                 epsilon: float = 1.0,
-                 training_lock = None):
+                 epsilon: float = 1.0):
         """
         Initialize RL bot.
         
@@ -147,12 +146,8 @@ class RLBotStrategy(BotStrategy):
             model_path: Path to saved model. If None, starts with random weights.
             training_mode: If True, bot will explore and learn. If False, only exploit.
             epsilon: Exploration rate (1.0 = full random, 0.0 = fully trained)
-            training_lock: Thread lock for synchronizing training operations (parallel training)
         """
         super().__init__()
-        
-        # Thread safety
-        self.training_lock = training_lock
         
         # Device
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -275,11 +270,12 @@ class RLBotStrategy(BotStrategy):
             card_count = random.randint(1, len(game_state.hand))
         else:
             # Exploit: use Q-network (regression output)
+            was_training = self.card_count_net.training
             self.card_count_net.eval()  # Set to eval mode for inference
             with torch.no_grad():
                 predicted_count = self.card_count_net(state_tensor).item()
                 card_count = round(predicted_count)
-            if self.training_mode:
+            if was_training:
                 self.card_count_net.train()  # Restore training mode
         
         # Clip to valid range
@@ -323,11 +319,12 @@ class RLBotStrategy(BotStrategy):
             should_challenge = random.random() < 0.3  # 30% challenge rate during exploration
         else:
             # Exploit: use Q-network
+            was_training = self.challenge_net.training
             self.challenge_net.eval()  # Set to eval mode for inference
             with torch.no_grad():
                 q_values = self.challenge_net(state_tensor)
                 should_challenge = q_values.argmax().item() == 1
-            if self.training_mode:
+            if was_training:
                 self.challenge_net.train()  # Restore training mode
         
         # Store experience for training
@@ -378,13 +375,9 @@ class RLBotStrategy(BotStrategy):
                     False  # Not done yet
                 )
                 
-                # Train on this experience immediately for faster learning (with thread safety)
+                # Train on this experience immediately for faster learning
                 if len(self.challenge_memory) >= self.batch_size:
-                    if self.training_lock:
-                        with self.training_lock:
-                            self._train_challenge_network()
-                    else:
-                        self._train_challenge_network()
+                    self._train_challenge_network()
     
     def _store_card_play_experience(self, state, action):
         """Store card play experience for later training."""
@@ -409,12 +402,7 @@ class RLBotStrategy(BotStrategy):
         if not self.training_mode:
             return
         
-        # Thread-safe training
-        if self.training_lock:
-            with self.training_lock:
-                self._perform_training_update(reward)
-        else:
-            self._perform_training_update(reward)
+        self._perform_training_update(reward)
     
     def _perform_training_update(self, reward: float):
         """Internal method to perform training update (called within lock if parallel)."""
@@ -509,6 +497,49 @@ class RLBotStrategy(BotStrategy):
             current_q = output.gather(1, actions_int.unsqueeze(1))
             
             # Target Q values
+            with torch.no_grad():
+                next_q = target_network(next_states).max(1)[0]
+                target_q = rewards + (1 - dones) * self.gamma * next_q
+            
+            loss = F.smooth_l1_loss(current_q.squeeze(), target_q)
+        
+        # Optimize
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+    
+    def _train_from_batch(self, batch, network, target_network, optimizer):
+        """
+        Train network from a given batch (called by central trainer).
+        
+        This is separated from _train_network to allow external training.
+        """
+        # Convert to numpy arrays first
+        states_np = np.array([exp[0] for exp in batch], dtype=np.float32)
+        actions_np = np.array([exp[1] for exp in batch], dtype=np.float32)
+        rewards_np = np.array([exp[2] for exp in batch], dtype=np.float32)
+        next_states_np = np.array([exp[3] for exp in batch], dtype=np.float32)
+        dones_np = np.array([exp[4] for exp in batch], dtype=np.float32)
+        
+        # Convert to tensors
+        states = torch.from_numpy(states_np).to(self.device)
+        actions = torch.from_numpy(actions_np).to(self.device)
+        rewards = torch.from_numpy(rewards_np).to(self.device)
+        next_states = torch.from_numpy(next_states_np).to(self.device)
+        dones = torch.from_numpy(dones_np).to(self.device)
+        
+        # Check if regression or classification
+        output = network(states)
+        is_regression = (output.shape[1] == 1)
+        
+        if is_regression:
+            current_q = output.squeeze()
+            target_q = actions
+            loss = F.mse_loss(current_q, target_q)
+        else:
+            actions_int = actions.long()
+            current_q = output.gather(1, actions_int.unsqueeze(1))
+            
             with torch.no_grad():
                 next_q = target_network(next_states).max(1)[0]
                 target_q = rewards + (1 - dones) * self.gamma * next_q

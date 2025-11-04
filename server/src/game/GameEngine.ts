@@ -7,6 +7,7 @@ import {
   Suit,
   SuitTypes,
   BotPersonality,
+  playableRanks,
 } from 'shared';
 import { Deck } from './Deck';
 import { BotPlayer } from './BotPlayer';
@@ -155,7 +156,7 @@ export class GameEngine {
     }
 
     return {
-      phase: 'waiting',
+      phase: 'playing',
       currentPlayerIndex: 0,
       currentRank: null,
       pile: [],
@@ -272,7 +273,7 @@ export class GameEngine {
 
     if (countEmptyHands === this.players.size - 1) {
       this.endGame(playerId);
-      return { success: false, error: 'Game has ended' };
+      return { success: true, newRank: 'A' };
     }
 
     // Verify it's the player's turn
@@ -919,21 +920,6 @@ export class GameEngine {
    * Get a random playable rank
    */
   private getRandomPlayableRank(): Rank {
-    const playableRanks: Rank[] = [
-      '2',
-      '3',
-      '4',
-      '5',
-      '6',
-      '7',
-      '8',
-      '9',
-      '10',
-      'J',
-      'Q',
-      'K',
-      'A',
-    ];
     return playableRanks[Math.floor(Math.random() * playableRanks.length)];
   }
 

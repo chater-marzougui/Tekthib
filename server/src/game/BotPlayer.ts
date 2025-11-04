@@ -50,7 +50,7 @@ export class BotPlayer {
   }
 
   // Challenge probability adjustment constants
-  private static readonly FIRST_PLAY_REDUCTION = 0.4; // 60% reduction (multiply by 0.4)
+  private static readonly FIRST_PLAY_REDUCTION = 0.6; // 40% reduction (multiply by 0.6)
   private static readonly SMALL_PILE_REDUCTION = 0.8; // 20% reduction
   private static readonly LARGE_PILE_INCREASE = 1.15; // 15% increase
   private static readonly MEDIUM_CARD_COUNT_MIN = 3;
@@ -72,23 +72,22 @@ export class BotPlayer {
     if (lastPlayedCount === 0) return false; // No cards played, nothing to challenge
     if (lastPlayedCount >= 8) return true; // Impossible play, must challenge
 
-    // Initialize memory for the player being considered for challenge
-    this.memory.initializePlayer(lastPlayerId);
+    const nonWinners = Object.entries(gameState.playerHandCounts)
+      .filter(([, count]) => count > 0)
+      .map(([pid]) => ({ id: pid }));
 
-    // CRITICAL ENDGAME: If bot is the only non-winner left
-    const nonWinners = gameState.players.filter(
-      (p: Player) => p.cardCount !== 0,
-    );
-    if (nonWinners.length === 1 && nonWinners[0].id === this.playerId) {
-      // Must challenge to have any chance of winning
+    if (nonWinners.length === 1) {
       return true;
     }
+
+    // Initialize memory for the player being considered for challenge
+    this.memory.initializePlayer(lastPlayerId);
 
     // Get personality modifiers
     const personalityMod = this.memory.getPersonalityModifier();
 
     // REDUCED base probability (was 0.3/0.2, now 0.2/0.15)
-    let challengeProbability = isCurrentPlayer ? 0.2 : 0.15;
+    let challengeProbability = isCurrentPlayer ? 0.25 : 0.2;
 
     // Apply personality modifier
     challengeProbability += personalityMod.challengeBonus;

@@ -58,3 +58,4 @@ simulation_results.db
 
 # Models
 *.pkl
+rl_checkpoints_parallel

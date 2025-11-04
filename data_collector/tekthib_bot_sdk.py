@@ -26,6 +26,7 @@ import uuid
 from typing import Dict, List, Optional, Callable
 from threading import Thread, Event
 from abc import ABC, abstractmethod
+from datetime import datetime
 
 
 class ChallengeResult:
@@ -166,7 +167,8 @@ class TekthibBotSDK:
         player_name: str,
         is_host: bool = False,
         bots_to_add: int = 0,
-        logger: Optional[logging.Logger] = None
+        logger: Optional[logging.Logger] = None,
+        worker_id: Optional[int] = None
     ):
         """
         Initialize the bot SDK.
@@ -178,6 +180,7 @@ class TekthibBotSDK:
             is_host: Whether to create a new room as host
             bots_to_add: Number of bots to add (only if is_host=True)
             logger: Optional custom logger
+            worker_id: Optional worker ID for logging thread context
         """
         self.server_url = server_url
         self.room_code = room_code
@@ -185,6 +188,11 @@ class TekthibBotSDK:
         self.client_id = str(uuid.uuid4())
         self.is_host = is_host
         self.bots_to_add = bots_to_add
+        self.worker_id = worker_id
+        self.last_update_time = None
+        self.update_timeout_count = 0
+        self.update_check_thread = None
+        self.running = False
         
         # Game state
         self.game_state = GameState()
@@ -243,8 +251,10 @@ class TekthibBotSDK:
             on_close=self._on_close
         )
         
-        # Run WebSocket in a separate thread
+        # Run WebSocket in a separate thread with worker ID context if available
         ws_thread = Thread(target=self.ws.run_forever)
+        if self.worker_id is not None:
+            ws_thread.name = f"{self.worker_id}-{ws_thread.name}"
         ws_thread.daemon = True
         ws_thread.start()
         
@@ -270,6 +280,7 @@ class TekthibBotSDK:
     def _on_message(self, ws, message: str):
         """Handle incoming WebSocket messages."""
         try:
+            self.last_update_time = datetime.now()
             data = json.loads(message)
             msg_type = data.get("type")
             payload = data.get("payload", {})
@@ -308,6 +319,8 @@ class TekthibBotSDK:
         """Handle WebSocket connection close."""
         self.logger.info(f"Connection closed: {close_status_code} - {close_msg}")
         self.in_game = False
+        if hasattr(self, 'ws') and self.ws:
+            self.ws.keep_running = False
     
     def _send_message(self, message: Dict):
         """Send a message to the server."""
@@ -484,10 +497,6 @@ class TekthibBotSDK:
             else:
                 self.logger.info(f"Challenge: {challenger_name} failed against {challenged_name}")
         
-        # Update game state
-        if "gameState" in payload:
-            self._update_game_state(payload["gameState"])
-        
         # Store challenge result in game state
         self.game_state.last_challenge_result = challenge_result
         
@@ -516,6 +525,13 @@ class TekthibBotSDK:
     def _handle_error(self, payload: Dict):
         """Handle ERROR message."""
         error_msg = payload.get("message", "Unknown error")
+        if error_msg == "Game has ended":
+            self.logger.info("Game has ended. Exiting...")
+            self.in_game = False
+            self._trigger_event("game_ended", payload)
+            self.game_state.game_phase = "ended"
+            return
+        
         self.logger.error(f"Server error: {error_msg}")
         self._trigger_event("error", payload)
     
@@ -601,6 +617,41 @@ class TekthibBotSDK:
                 
         except Exception as e:
             self.logger.error(f"Error in challenge decision: {e}")
+            
+    def _start_timeout_monitor(self):
+        """Start monitoring for update timeouts."""
+        def check_timeout():
+            while self.running and self.in_game:
+                time.sleep(5)  # Check every 5 seconds
+                if not self.last_update_time:
+                    continue
+                
+                elapsed = (datetime.now() - self.last_update_time).total_seconds()
+                if elapsed >= 30:
+                    self.update_timeout_count += 1
+                    self.logger.warning(f"No updates for 30 seconds (timeout #{self.update_timeout_count})")
+                    
+                    if self.update_timeout_count == 1:
+                        # First timeout: request game state
+                        self.logger.info("Requesting game state...")
+                        self._send_message({
+                            "type": "GET_GAME_STATE",
+                            "payload": {
+                                "roomCode": self.room_code,
+                                "playerId": self.client_id
+                            }
+                        })
+                        self.last_update_time = datetime.now()
+                    else:
+                        # Second timeout: exit gracefully
+                        self.logger.info("Second timeout reached. Exiting gracefully...")
+                        self.in_game = False
+                        self.running = False
+                        self.game_state.game_phase = "ended"
+        
+        self.update_check_thread = Thread(target=check_timeout)
+        self.update_check_thread.daemon = True
+        self.update_check_thread.start()
     
     def run(self):
         """Run the bot."""
@@ -613,6 +664,9 @@ class TekthibBotSDK:
             return
         
         self.logger.info("Bot is running. Press Ctrl+C to stop.")
+        self.running = True
+        self.last_update_time = datetime.now()
+        self._start_timeout_monitor()
         
         try:
             while self.in_game or self.game_state.game_phase == "waiting":
@@ -625,3 +679,4 @@ class TekthibBotSDK:
         finally:
             if self.ws:
                 self.ws.close()
+            time.sleep(0.2)  # Allow time for clean shutdown
