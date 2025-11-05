@@ -287,14 +287,10 @@ export function useWebRTC({
   /**
    * Create and setup a RTCPeerConnection for a remote player
    * Uses "perfect negotiation" pattern to avoid glare
+   * Can create connections for data channels only (without audio)
    */
   const createPeerConnection = useCallback(
     (remotePlayerId: string): RTCPeerConnection => {
-      if (!localStreamRef.current) {
-        console.error("Cannot create peer connection - no local stream");
-        throw new Error("Local stream not initialized");
-      }
-
       // Determine if this peer should be polite
       const polite = isPolite(localPlayerId, remotePlayerId);
       console.log(
@@ -310,10 +306,12 @@ export function useWebRTC({
       };
       peerConnectionsRef.current.set(remotePlayerId, peerConn);
 
-      // Add local audio tracks
-      for (const track of localStreamRef.current.getTracks()) {
-        console.log(`Adding ${track.kind} track to peer: ${remotePlayerId}`);
-        pc.addTrack(track, localStreamRef.current);
+      // Add local audio tracks if available (voice chat enabled)
+      if (localStreamRef.current) {
+        for (const track of localStreamRef.current.getTracks()) {
+          console.log(`Adding ${track.kind} track to peer: ${remotePlayerId}`);
+          pc.addTrack(track, localStreamRef.current);
+        }
       }
 
       // Create data channel only if we're the impolite peer (to avoid duplicates)
@@ -448,11 +446,7 @@ export function useWebRTC({
    */
   const handleOffer = useCallback(
     async (fromPlayerId: string, offer: RTCSessionDescriptionInit) => {
-      if (!isVoiceEnabled || !localStreamRef.current) {
-        console.log("Ignoring offer - voice chat not enabled");
-        return;
-      }
-
+      // Accept offers for both voice and data channel connections
       let peerConn = peerConnectionsRef.current.get(fromPlayerId);
       if (!peerConn) {
         createPeerConnection(fromPlayerId);
@@ -510,7 +504,7 @@ export function useWebRTC({
         console.error("Error handling offer:", error);
       }
     },
-    [localPlayerId, isVoiceEnabled, createPeerConnection, sendMessage]
+    [localPlayerId, createPeerConnection, sendMessage]
   );
 
   /**
@@ -617,6 +611,29 @@ export function useWebRTC({
     localPlayerId,
     createPeerConnection,
   ]);
+
+  /**
+   * Initialize data channels for chat (without voice)
+   * This allows chat to work even when voice is disabled
+   */
+  const initializeChatChannels = useCallback(() => {
+    console.log("Initializing data channels for chat");
+
+    // Get other players (not self, not bots, connected only)
+    const otherPlayers = players.filter(
+      (p) => p.id !== localPlayerId && !p.isBot && p.isConnected
+    );
+
+    console.log(`Creating data channels for ${otherPlayers.length} players`);
+
+    // Create peer connections for all other players (data channels only)
+    for (const player of otherPlayers) {
+      if (!peerConnectionsRef.current.has(player.id)) {
+        console.log("Creating peer connection for chat:", player.id);
+        createPeerConnection(player.id);
+      }
+    }
+  }, [players, localPlayerId, createPeerConnection]);
 
   /**
    * Disable voice chat - cleanup all connections
@@ -959,6 +976,14 @@ export function useWebRTC({
       }
     }
   }, [players, localPlayerId, isVoiceEnabled, createPeerConnection]);
+
+  // Initialize chat data channels on mount (independent of voice)
+  useEffect(() => {
+    // Only initialize if voice is not enabled (voice chat handles its own connections)
+    if (!isVoiceEnabled && players.length > 0) {
+      initializeChatChannels();
+    }
+  }, [players, isVoiceEnabled, initializeChatChannels]);
 
   return {
     // Voice state
