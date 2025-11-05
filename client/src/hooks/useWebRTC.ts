@@ -80,7 +80,13 @@ export function useWebRTC({
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<DataChannelChatPayload[]>([]);
+  const chatMessagesRef = useRef<DataChannelChatPayload[]>([]);
   const chatCallbackRef = useRef<((message: DataChannelChatPayload) => void) | null>(null);
+
+  // Keep chatMessagesRef in sync with chatMessages state
+  useEffect(() => {
+    chatMessagesRef.current = chatMessages;
+  }, [chatMessages]);
 
   // Refs for managing connections
   const audioContextsRef = useRef<Map<string, AudioContext>>(new Map());
@@ -238,7 +244,7 @@ export function useWebRTC({
               const response: DataChannelMessage = {
                 type: "CHAT_HISTORY_RESPONSE",
                 payload: {
-                  messages: chatMessages,
+                  messages: chatMessagesRef.current,
                   responderId: localPlayerId,
                 } as ChatHistoryResponsePayload,
                 timestamp: Date.now(),
@@ -284,7 +290,7 @@ export function useWebRTC({
         console.error(`[DataChannel] Error with ${remotePlayerId}:`, error);
       };
     },
-    [localPlayerId, chatMessages]
+    [localPlayerId]
   );
 
   /**

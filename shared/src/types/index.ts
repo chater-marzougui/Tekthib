@@ -170,7 +170,7 @@ export type DataChannelMessageType =
 
 export interface DataChannelMessage {
   type: DataChannelMessageType;
-  payload: any;
+  payload: DataChannelChatPayload | ChatHistoryRequestPayload | ChatHistoryResponsePayload;
   timestamp?: number;
 }
 
