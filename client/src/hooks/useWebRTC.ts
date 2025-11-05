@@ -926,14 +926,19 @@ export function useWebRTC({
         console.log("Player left, cleaning up connection:", peerId);
         const peerConn = peerConnectionsRef.current.get(peerId);
         if (peerConn) {
+          // Cleanup audio element (if voice was enabled)
           if (peerConn.audioElement) {
             peerConn.audioElement.pause();
             peerConn.audioElement.srcObject = null;
             peerConn.audioElement.remove();
           }
+          
+          // Cleanup data channel (for chat)
           if (peerConn.dataChannel) {
             peerConn.dataChannel.close();
           }
+          
+          // Close peer connection
           peerConn.connection.close();
           peerConnectionsRef.current.delete(peerId);
         }

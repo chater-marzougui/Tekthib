@@ -197,8 +197,9 @@ export default function ChatBox({
   useEffect(() => {
     if (messagesContainerRef.current) {
       const container = messagesContainerRef.current;
+      const SCROLL_THRESHOLD_PX = 50; // Distance from bottom to consider "at bottom"
       const isScrolledToBottom = 
-        container.scrollHeight - container.scrollTop <= container.clientHeight + 50; // 50px threshold
+        container.scrollHeight - container.scrollTop <= container.clientHeight + SCROLL_THRESHOLD_PX;
       
       // Auto-scroll if user is at the bottom or if there are very few messages (initial load)
       if (isScrolledToBottom || allMessages.length <= 1) {
