@@ -622,29 +622,6 @@ export function useWebRTC({
   ]);
 
   /**
-   * Initialize data channels for chat (without voice)
-   * This allows chat to work even when voice is disabled
-   */
-  const initializeChatChannels = useCallback(() => {
-    console.log("Initializing data channels for chat");
-
-    // Get other players (not self, not bots, connected only)
-    const otherPlayers = players.filter(
-      (p) => p.id !== localPlayerId && !p.isBot && p.isConnected
-    );
-
-    console.log(`Creating data channels for ${otherPlayers.length} players`);
-
-    // Create peer connections for all other players (data channels only)
-    for (const player of otherPlayers) {
-      if (!peerConnectionsRef.current.has(player.id)) {
-        console.log("Creating peer connection for chat:", player.id);
-        createPeerConnection(player.id);
-      }
-    }
-  }, [players, localPlayerId, createPeerConnection]);
-
-  /**
    * Disable voice chat - cleanup all connections
    */
   const disableVoiceChat = useCallback(() => {
@@ -927,10 +904,8 @@ export function useWebRTC({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Handle players joining/leaving
+  // Handle players joining/leaving (for both voice and chat)
   useEffect(() => {
-    if (!isVoiceEnabled) return;
-
     const currentPeerIds = new Set(peerConnectionsRef.current.keys());
     const activePlayers = players.filter(
       (p) => p.id !== localPlayerId && !p.isBot && p.isConnected
@@ -951,14 +926,19 @@ export function useWebRTC({
         console.log("Player left, cleaning up connection:", peerId);
         const peerConn = peerConnectionsRef.current.get(peerId);
         if (peerConn) {
-          if (peerConn.audioElement) {
-            peerConn.audioElement.pause();
+          // Cleanup audio element (if voice was enabled)
           if (peerConn.audioElement) {
             peerConn.audioElement.pause();
             peerConn.audioElement.srcObject = null;
             peerConn.audioElement.remove();
           }
+          
+          // Cleanup data channel (for chat)
+          if (peerConn.dataChannel) {
+            peerConn.dataChannel.close();
           }
+          
+          // Close peer connection
           peerConn.connection.close();
           peerConnectionsRef.current.delete(peerId);
         }
@@ -984,15 +964,7 @@ export function useWebRTC({
         });
       }
     }
-  }, [players, localPlayerId, isVoiceEnabled, createPeerConnection]);
-
-  // Initialize chat data channels on mount (independent of voice)
-  useEffect(() => {
-    // Only initialize if voice is not enabled (voice chat handles its own connections)
-    if (!isVoiceEnabled && players.length > 0) {
-      initializeChatChannels();
-    }
-  }, [players, isVoiceEnabled, initializeChatChannels]);
+  }, [players, localPlayerId, createPeerConnection]);
 
   return {
     // Voice state
