@@ -5,6 +5,7 @@ import { sendToClient, broadcastToRoom } from '../index';
 import { GameEngine } from '../../game/GameEngine';
 import { serializeRoom } from '../../utils/serialization';
 import { buildErrorPayload } from '../../utils/messageBuilder';
+import { validateRoomExists } from '../../utils/validation';
 import {
   broadcastGameStateUpdate,
   checkAndBroadcastGameEnd,
@@ -113,16 +114,20 @@ function handleGetGameState(
   const { roomCode, playerId } = payload;
   const room = roomManager.getRoomByCode(roomCode);
 
-  if (!room) {
+  const roomValidation = validateRoomExists(room);
+  if (!roomValidation.valid) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: buildErrorPayload('Room not found'),
+      payload: buildErrorPayload(roomValidation.error!),
     });
     return;
   }
 
+  // At this point room is validated
+  const validatedRoom = room!;
+
   // Check if player is in the room
-  const player = room.players.get(playerId);
+  const player = validatedRoom.players.get(playerId);
   if (!player) {
     sendToClient(ws, {
       type: 'ERROR',
@@ -134,18 +139,18 @@ function handleGetGameState(
   // Update client info to reconnect to room
   const clientInfo = clients.get(ws);
   if (clientInfo) {
-    clientInfo.roomId = room.id;
+    clientInfo.roomId = validatedRoom.id;
     clientInfo.name = player.name;
   }
 
-  const gameEngine = roomManager.getGameEngine(room.id);
+  const gameEngine = roomManager.getGameEngine(validatedRoom.id);
   
   if (!gameEngine) {
     // Game not started yet, send room info
     sendToClient(ws, {
       type: 'ROOM_JOINED',
       payload: {
-        room: serializeRoom(room),
+        room: serializeRoom(validatedRoom),
         playerId,
       },
     });
@@ -161,7 +166,7 @@ function handleGetGameState(
     payload: {
       hand: playerHand,
       gameState: publicGameState,
-      room: serializeRoom(room),
+      room: serializeRoom(validatedRoom),
     },
   });
 }

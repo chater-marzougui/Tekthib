@@ -8,17 +8,18 @@ export function generateUniqueId(prefix: string): string {
 }
 
 /**
- * Reassign host to the first available player in the room
+ * Reassign host to the first available player if current host left
  * @param players - Map of players in the room
- * @param currentHostId - Current host ID to check
+ * @param playerLeavingId - ID of player leaving/being removed
  * @returns New host ID if reassignment was needed, undefined otherwise
  */
 export function reassignHostIfNeeded(
   players: Map<string, { id: string }>,
+  playerLeavingId: string,
   currentHostId: string,
 ): string | undefined {
-  // Check if current host is still in the room
-  if (players.has(currentHostId)) {
+  // Only reassign if the player leaving is the current host
+  if (playerLeavingId !== currentHostId) {
     return undefined;
   }
 

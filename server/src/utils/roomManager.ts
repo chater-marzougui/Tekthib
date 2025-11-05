@@ -242,7 +242,7 @@ class RoomManager {
     room.players.delete(botId);
 
     // Reassign host if the bot was the host
-    const newHostId = reassignHostIfNeeded(room.players, botId);
+    const newHostId = reassignHostIfNeeded(room.players, botId, room.hostId);
     if (newHostId) {
       room.hostId = newHostId;
     }
@@ -273,7 +273,7 @@ class RoomManager {
     }
 
     // Reassign host if player leaving was the host
-    const newHostId = reassignHostIfNeeded(room.players, playerId);
+    const newHostId = reassignHostIfNeeded(room.players, playerId, room.hostId);
     if (newHostId) {
       room.hostId = newHostId;
     }

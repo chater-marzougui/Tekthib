@@ -108,7 +108,7 @@ function handleCreateRoom(
   clientInfo.roomId = room.id;
   clientInfo.name = payload.playerName;
   
-  // Set all players (just the host at this point) as ready
+  // Set the host as ready
   for (const p of room.players.values()) {
     p.isReady = true;
   }
@@ -137,9 +137,12 @@ function handleJoinRoom(
     return;
   }
 
+  // At this point room is validated, so we can safely use it
+  const validatedRoom = room!;
+
   // Check if game has already started
-  const gameEngine = roomManager.getGameEngine(room!.id);
-  const wasPlayerInGame = room!.players.has(clientInfo.id);
+  const gameEngine = roomManager.getGameEngine(validatedRoom.id);
+  const wasPlayerInGame = validatedRoom.players.has(clientInfo.id);
 
   // If game is in progress and player was not in it originally, deny joining
   if (gameEngine && !wasPlayerInGame) {
@@ -152,11 +155,11 @@ function handleJoinRoom(
 
   // If game is in progress and player was in it, redirect to game page
   if (gameEngine && wasPlayerInGame) {
-    clientInfo.roomId = room!.id;
-    clientInfo.name = room!.players.get(clientInfo.id)?.name || payload.playerName;
+    clientInfo.roomId = validatedRoom.id;
+    clientInfo.name = validatedRoom.players.get(clientInfo.id)?.name || payload.playerName;
 
     // Update player connection status
-    const player = room!.players.get(clientInfo.id);
+    const player = validatedRoom.players.get(clientInfo.id);
     if (player) {
       player.isConnected = true;
     }
@@ -169,7 +172,7 @@ function handleJoinRoom(
   }
 
   const result = roomManager.addPlayerToRoom(
-    room!.id,
+    validatedRoom.id,
     clientInfo.id,
     payload.playerName,
   );
@@ -182,19 +185,19 @@ function handleJoinRoom(
     return;
   }
 
-  clientInfo.roomId = room!.id;
+  clientInfo.roomId = validatedRoom.id;
   clientInfo.name = payload.playerName;
 
   // Notify the joining player
   sendToClient(ws, {
     type: 'ROOM_JOINED',
-    payload: buildRoomJoinedPayload(serializeRoom(room!), clientInfo.id),
+    payload: buildRoomJoinedPayload(serializeRoom(validatedRoom), clientInfo.id),
   });
 
   // Notify other players in room
   broadcastToRoom(
     clients,
-    room!.id,
+    validatedRoom.id,
     {
       type: 'PLAYER_JOINED',
       payload: buildPlayerJoinedPayload(clientInfo.id, payload.playerName),
