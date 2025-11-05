@@ -9,9 +9,7 @@
     "start": "node dist/server.js",
     "dev": "nodemon --watch src --ext ts --exec \"npx tsx src/server.ts\"",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "format": "prettier --write src/**/*.ts",
-    "postinstall": "npm run build",
-    "heroku-postbuild": "npm run build"
+    "format": "prettier --write src/**/*.ts"
   },
   "keywords": [],
   "author": "",
