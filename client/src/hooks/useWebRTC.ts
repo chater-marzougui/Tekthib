@@ -206,7 +206,7 @@ export function useWebRTC({
           console.log(`[DataChannel] Message from ${remotePlayerId}:`, message);
           
           switch (message.type) {
-            case "CHAT_MESSAGE":
+            case "CHAT_MESSAGE": {
               // Handle incoming chat message
               const chatPayload = message.payload as DataChannelChatPayload;
               setChatMessages((prev) => {
@@ -228,8 +228,9 @@ export function useWebRTC({
                 chatCallbackRef.current(chatPayload);
               }
               break;
+            }
               
-            case "REQUEST_CHAT_HISTORY":
+            case "REQUEST_CHAT_HISTORY": {
               // Send our chat history to the requester
               const historyPayload = message.payload as ChatHistoryRequestPayload;
               console.log(`[DataChannel] Received chat history request from ${historyPayload.requesterId}`);
@@ -244,8 +245,9 @@ export function useWebRTC({
               };
               dataChannel.send(JSON.stringify(response));
               break;
+            }
               
-            case "CHAT_HISTORY_RESPONSE":
+            case "CHAT_HISTORY_RESPONSE": {
               // Merge received chat history
               const historyResponse = message.payload as ChatHistoryResponsePayload;
               console.log(`[DataChannel] Received chat history from ${historyResponse.responderId}:`, historyResponse.messages.length, "messages");
@@ -267,6 +269,7 @@ export function useWebRTC({
                 return merged.sort((a, b) => a.timestamp - b.timestamp);
               });
               break;
+            }
           }
         } catch (error) {
           console.error(`[DataChannel] Failed to parse message:`, error);
