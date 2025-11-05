@@ -193,11 +193,17 @@ export default function ChatBox({
     }
   };
 
-  // Scroll to bottom using scrollTop instead of scrollIntoView
+  // Scroll to bottom only when user is already at bottom (or on first render)
   useEffect(() => {
     if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop =
-        messagesContainerRef.current.scrollHeight;
+      const container = messagesContainerRef.current;
+      const isScrolledToBottom = 
+        container.scrollHeight - container.scrollTop <= container.clientHeight + 50; // 50px threshold
+      
+      // Auto-scroll if user is at the bottom or if there are very few messages (initial load)
+      if (isScrolledToBottom || allMessages.length <= 1) {
+        container.scrollTop = container.scrollHeight;
+      }
     }
   }, [allMessages]);
 
