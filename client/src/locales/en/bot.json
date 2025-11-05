@@ -2,128 +2,173 @@
   "bot": {
     "aggressive": {
       "successfulBluff": {
-        "thinkLyingAgain": "You think I'm lying again, human? 😏",
-        "callMeDare": "Call me if you dare!",
-        "tooScaredChallenge": "Too scared to challenge?",
+        "thinkLyingAgain": "Think I'm bluffing again? Try me 😏",
+        "callMeDare": "Call me out if you've got the guts!",
+        "tooScaredChallenge": "What's wrong? Too scared to challenge?",
         "couldDoAllDay": "I could do this all day! 💪",
-        "notBraveEnough": "Not brave enough?",
-        "thatsWhatThought": "That's what I thought...",
-        "easyMoney": "Easy money!",
-        "yallTooPredictable": "Y'all too predictable 😎",
-        "whosNext": "Who's next?",
-        "watchAndLearn": "Watch and learn!",
+        "notBraveEnough": "Not brave enough, huh?",
+        "thatsWhatThought": "Yeah... that's what I thought",
+        "easyMoney": "Easy money! Thanks for playing 💸",
+        "yallTooPredictable": "Y'all are way too predictable 😎",
+        "whosNext": "Who's next? Come on!",
+        "watchAndLearn": "Watch and learn, folks!",
         "iRunThisTable": "I run this table! 🔥",
-        "sittingPretty": "Sitting pretty with these cards!"
+        "sittingPretty": "Sitting pretty with these beauties!"
       },
       "caughtBluff": {
-        "gotcha": "GOTCHA! Knew you were lying! 🎯",
-        "calledIt": "Called it! Take those cards!",
-        "tooObvious": "Too obvious, my friend!",
-        "smellLiar": "I can smell a liar from miles away!",
-        "readLikeBook": "Read you like a book! 📖",
-        "notOnWatch": "Not on my watch!",
-        "thatsHowDone": "That's how it's done!",
-        "cantFoolTwice": "You can't fool me twice!",
+        "gotcha": "GOTCHA! Knew you were bluffing! 🎯",
+        "calledIt": "Called it! Now take those cards!",
+        "tooObvious": "Way too obvious, my friend!",
+        "smellLiar": "I can smell a bluffer from a mile away!",
+        "readLikeBook": "Read you like an open book! 📖",
+        "notOnWatch": "Not on my watch, buddy!",
+        "thatsHowDone": "THAT'S how it's done!",
+        "cantFoolTwice": "You can't fool me twice, nice try!",
         "justiceServed": "Justice served! ⚖️",
-        "sawThroughImmediately": "Saw through that immediately!"
+        "sawThroughImmediately": "Saw right through that one!"
       },
       "bigPlay": {
         "bigMovesOnly": "Big moves only! 💥",
-        "goingAllIn": "Going all in!",
-        "thisHowYouPlay": "This is how you play!",
-        "watchThis": "Watch this!",
+        "goingAllIn": "Going all in! No holding back!",
+        "thisHowYouPlay": "THIS is how you play the game!",
+        "watchThis": "Watch this move!",
         "timeToDominate": "Time to dominate! 👑",
-        "makingPowerMoves": "Making power moves!",
-        "shakeThingsUp": "Let's shake things up!",
-        "noFear": "No fear!"
+        "makingPowerMoves": "Making power moves over here!",
+        "shakeThingsUp": "Time to shake things up!",
+        "noFear": "No fear! Let's go!"
       },
       "random": {
-        "feelingConfident": "Feeling confident today!",
-        "moveWontSave": "Your move won't save you...",
-        "cardsOnMySide": "The cards are on my side!",
-        "speedThisUp": "Let's speed this up!",
-        "anyoneElse": "Anyone else want some? 😤"
+        "feelingConfident": "Feeling pretty confident today!",
+        "moveWontSave": "That move won't save you...",
+        "cardsOnMySide": "The cards are on my side today!",
+        "speedThisUp": "Can we speed this up a bit?",
+        "anyoneElse": "Anyone else want a piece of this? 😤"
       }
     },
     "truthful": {
       "successfulBluff": {
         "honestyNotBest": "Sometimes honesty isn't the best policy... 🤫",
-        "neverLie": "I never lie... or do I?",
-        "wasUnexpected": "That was... unexpected for me",
-        "surpriseMyself": "Even I surprise myself sometimes",
-        "rareMoment": "A rare moment of deception",
-        "dontGetUsed": "Don't get used to this!",
-        "conscienceHurts": "My conscience hurts a little 😅",
-        "feelsWrong": "This feels wrong but... it worked!"
+        "neverLie": "I never lie... or do I? This feels weird",
+        "wasUnexpected": "That was... completely unexpected for me",
+        "surpriseMyself": "Even I surprise myself sometimes!",
+        "rareMoment": "A rare moment of deception from me",
+        "dontGetUsed": "Don't get used to this, seriously!",
+        "conscienceHurts": "My conscience hurts a bit 😅",
+        "feelsWrong": "This feels so wrong but... it actually worked!"
       },
       "caughtBluff": {
         "justicePrevails": "Justice prevails! ⚖️",
-        "cardsSpeakTruth": "These cards speak the truth!",
-        "honestyBest": "Honesty is the best policy!",
-        "truthComesOut": "The truth always comes out!",
-        "couldTellStart": "I could tell from the start!",
-        "liarsNever": "Liars never prosper!",
-        "thatsKarma": "That's karma for you!",
+        "cardsSpeakTruth": "The cards don't lie, unlike you!",
+        "honestyBest": "Honesty really is the best policy!",
+        "truthComesOut": "The truth always comes out in the end!",
+        "couldTellStart": "I could tell something was off from the start!",
+        "liarsNever": "Liars never prosper in this game!",
+        "thatsKarma": "That's karma right there!",
         "truthWins": "Truth wins again! ✨",
-        "knewSomethingOff": "I knew something was off!",
-        "instinctsRight": "My instincts were right!"
+        "knewSomethingOff": "I knew something felt off about that!",
+        "instinctsRight": "My instincts were spot on!"
       },
       "bigPlay": {
-        "allLegitimate": "All legitimate cards, I assure you!",
-        "noTricks": "No tricks here, just skill!",
-        "honestPays": "Honest play pays off!",
-        "theseAllReal": "These are all real!",
+        "allLegitimate": "All legitimate cards here, I promise!",
+        "noTricks": "No tricks, just pure skill!",
+        "honestPays": "See? Honest play really does pay off!",
+        "theseAllReal": "These are all real, trust me!",
         "playingByRules": "Playing by the rules! 📜",
-        "cleanPlayOnly": "Clean play only!"
+        "cleanPlayOnly": "Clean play is the only way!"
       },
       "random": {
-        "believeFairPlay": "I believe in fair play",
-        "letCardsDecide": "Let the cards decide",
-        "playingSafe": "Playing it safe...",
-        "noNonsense": "No nonsense here!",
-        "justHonest": "Just being honest 😊"
+        "believeFairPlay": "I believe in playing fair and square",
+        "letCardsDecide": "Let's let the cards decide our fate",
+        "playingSafe": "Playing it safe this round...",
+        "noNonsense": "No funny business from me!",
+        "justHonest": "Just being honest here 😊"
       }
     },
     "unpredictable": {
       "successfulBluff": {
-        "feelingLucky": "Feeling lucky? 🎲",
-        "dontKnow": "Even I don't know what I'm doing!",
-        "chaosStrategy": "Chaos is my strategy!",
-        "randomWinning": "Random = winning?",
-        "actuallyWorked": "That... actually worked? 😂",
-        "pureInstinct": "Pure instinct!",
-        "noPlanVibes": "No plan, all vibes!",
+        "feelingLucky": "Feeling lucky today? 🎲",
+        "dontKnow": "Even I don't know what I'm doing half the time!",
+        "chaosStrategy": "Chaos is literally my strategy!",
+        "randomWinning": "Wait... random actually equals winning?",
+        "actuallyWorked": "Hold on... that actually worked? 😂",
+        "pureInstinct": "Pure instinct, baby!",
+        "noPlanVibes": "No plan, just vibes!",
         "spontaneityWin": "Spontaneity for the win!",
-        "calculated": "Calculated? No. Lucky? Maybe!",
-        "rollingDice": "Rolling the dice! 🎰"
+        "calculated": "Calculated? Nah. Lucky? Probably!",
+        "rollingDice": "Just rolling the dice here! 🎰"
       },
       "caughtBluff": {
-        "caughtAccident": "Caught you! By accident... but still! 😄",
-        "brokenClock": "Even a broken clock is right twice!",
-        "randomGuess": "My random guess paid off!",
-        "chaosWins": "Chaos wins again!",
-        "didntSeeComing": "Didn't see that coming, did you?",
-        "neitherDidI": "Neither did I! 🤪",
-        "pureIntuition": "Pure intuition!",
-        "randomWorks": "Sometimes random works!"
+        "caughtAccident": "Ha! Caught you! Total accident... but I'll take it! 😄",
+        "brokenClock": "Even a broken clock is right twice a day!",
+        "randomGuess": "My random guess actually paid off!",
+        "chaosWins": "Chaos wins yet again!",
+        "didntSeeComing": "Bet you didn't see THAT coming!",
+        "neitherDidI": "To be honest, neither did I! 🤪",
+        "pureIntuition": "Pure intuition right there!",
+        "randomWorks": "See? Sometimes being random works!"
       },
       "bigPlay": {
-        "letChaos": "Let chaos decide! 🌪️",
-        "whyNot": "Why not?",
+        "letChaos": "Let's let chaos decide! 🌪️",
+        "whyNot": "Why not? Life's too short!",
         "yolo": "YOLO! 💫",
-        "noRhyme": "No rhyme or reason!",
-        "goingGut": "Going with my gut!",
-        "throwingCaution": "Throwing caution to the wind!",
-        "whoKnows": "Who knows what'll happen!"
+        "noRhyme": "No rhyme or reason to this!",
+        "goingGut": "Just going with my gut feeling!",
+        "throwingCaution": "Throwing all caution to the wind!",
+        "whoKnows": "Who knows what's gonna happen!"
       },
       "random": {
-        "interesting": "Interesting... 🤔",
-        "hmmMaybe": "Hmm... or maybe not?",
-        "oneWayFind": "One way to find out!",
+        "interesting": "Interesting move... 🤔",
+        "hmmMaybe": "Hmm... maybe? Or maybe not?",
+        "oneWayFind": "Only one way to find out!",
         "letsSeeHappens": "Let's see what happens!",
-        "whyNotTry": "Why not try this?",
-        "keepGuessing": "Keeping you guessing! 😉",
-        "expectUnexpected": "Expect the unexpected!"
+        "whyNotTry": "Why not give this a shot?",
+        "keepGuessing": "Keeping you all guessing! 😉",
+        "expectUnexpected": "Always expect the unexpected with me!"
+      }
+    },
+    "strategic": {
+      "successfulBluff": {
+        "calculated": "Precisely calculated, as expected 🎯",
+        "accordingToPlan": "Everything's going according to plan",
+        "oddsInFavor": "The odds were clearly in my favor",
+        "expectedOutcome": "Expected outcome achieved",
+        "probabilityWorked": "Probability theory at work here 📊",
+        "analyzedCorrectly": "Analyzed the situation correctly",
+        "riskPaidOff": "Calculated risk, perfect reward",
+        "foresaw": "I foresaw this outcome",
+        "strategySolid": "My strategy remains solid 💎",
+        "playedOdds": "Played the odds perfectly"
+      },
+      "caughtBluff": {
+        "didMath": "I did the math, and you didn't add up 🧮",
+        "probabilitiesAligned": "The probabilities aligned perfectly",
+        "statisticallyUnlikely": "Your claim was statistically unlikely",
+        "dataSupported": "The data supported my challenge",
+        "expectedDeceit": "I expected deception based on your pattern",
+        "calculatedRisk": "Calculated risk, successful outcome",
+        "analysisCorrect": "My analysis was spot on 🎯",
+        "patternRecognized": "Pattern recognized and exploited",
+        "predictedMove": "I predicted that exact move",
+        "logicalConclusion": "Reached the only logical conclusion"
+      },
+      "bigPlay": {
+        "optimalMove": "This is the optimal move 📈",
+        "calculatedPlay": "Perfectly calculated play",
+        "maximizeValue": "Maximizing value here",
+        "strategicAdvantage": "Securing strategic advantage 🏆",
+        "bestOption": "This is objectively the best option",
+        "thoughtThrough": "Thought this through carefully",
+        "consideredAlternatives": "Considered all alternatives first",
+        "weighedOdds": "Weighed the odds thoroughly"
+      },
+      "random": {
+        "analyzingProbabilities": "Analyzing the probabilities... 🤔",
+        "consideringOptions": "Considering my options carefully",
+        "interestingPattern": "Interesting pattern emerging here",
+        "notingBehavior": "Noting your behavioral patterns",
+        "evaluatingSituation": "Evaluating the current situation 📊",
+        "observingPlay": "Observing the play styles...",
+        "gatheringData": "Gathering more data points"
       }
     }
   }
