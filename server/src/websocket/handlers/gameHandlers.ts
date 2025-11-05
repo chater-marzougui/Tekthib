@@ -3,6 +3,15 @@ import { WSMessage, PlayCardsPayload, ChallengePayload } from 'shared';
 import { roomManager } from '../../utils/roomManager';
 import { sendToClient, broadcastToRoom } from '../index';
 import { GameEngine } from '../../game/GameEngine';
+import { serializeRoom } from '../../utils/serialization';
+import { buildErrorPayload } from '../../utils/messageBuilder';
+import { validateRoomExists } from '../../utils/validation';
+import {
+  broadcastGameStateUpdate,
+  checkAndBroadcastGameEnd,
+} from './helpers/gameStateHelper';
+import { processChallengeWithSuspense } from './helpers/challengeHelper';
+import { processBotTurn, processBotChallenge } from './helpers/botTurnHelper';
 
 interface ClientInfo {
   id: string;
@@ -46,7 +55,7 @@ export function triggerBotTurn(
   if (gameEngine) {
     setTimeout(() => {
       processBotTurn(clients, roomId, gameEngine);
-    }, 3500); // Give players time to see the initial state
+    }, 3500);
   }
 }
 
@@ -74,39 +83,20 @@ export function setupGameEngineCallbacks(
           cardCount: cardIds.length,
           claimedRank: claimedRank,
           gameState: publicGameState,
-          wasAutoPlayed: true, // Flag to indicate this was an auto-play
+          wasAutoPlayed: true,
         },
       });
 
       // Send updated hands to all players
-      for (const [clientWs, client] of clients) {
-        if (client.roomId === roomId) {
-          sendToClient(clientWs, {
-            type: 'GAME_STATE_UPDATE',
-            payload: {
-              hand: gameEngine.getPlayerHand(client.id),
-              gameState: publicGameState,
-            },
-          });
-        }
-      }
+      broadcastGameStateUpdate(clients, roomId, gameEngine);
 
       // Check if game ended
-      if (publicGameState.phase === 'ended') {
-        gameEngine.stopTurnTimer();
-        broadcastToRoom(clients, roomId, {
-          type: 'GAME_ENDED',
-          payload: {
-            winners: publicGameState.winners,
-            loser: publicGameState.loser,
-            gameState: publicGameState,
-          },
-        });
+      if (checkAndBroadcastGameEnd(clients, roomId, gameEngine)) {
         return;
       }
 
       // Start timer for next turn
-      startTimerForRoom(clients, roomId, gameEngine);
+      gameEngine.startTurnTimer();
 
       // After auto-play, check if any bot wants to challenge
       setTimeout(() => {
@@ -116,115 +106,69 @@ export function setupGameEngineCallbacks(
   );
 }
 
-/**
- * Start timer for the current turn (simpler version - callbacks already set)
- */
-function startTimerForRoom(
-  clients: Map<WebSocket, ClientInfo>,
-  roomId: string,
-  gameEngine: GameEngine,
-): void {
-  // Just start the timer - callbacks are already configured
-  gameEngine.startTurnTimer();
-}
-
 function handleGetGameState(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
   payload: GetGameStatePayload,
 ): void {
   const { roomCode, playerId } = payload;
-
   const room = roomManager.getRoomByCode(roomCode);
-  if (!room) {
+
+  const roomValidation = validateRoomExists(room);
+  if (!roomValidation.valid) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Room not found' },
+      payload: buildErrorPayload(roomValidation.error!),
     });
     return;
   }
 
+  // At this point room is validated
+  const validatedRoom = room!;
+
   // Check if player is in the room
-  const player = room.players.get(playerId);
+  const player = validatedRoom.players.get(playerId);
   if (!player) {
-    sendToClient(
-      ws,
-      {
-        type: 'ERROR',
-        payload: { message: 'Player not in room' },
-      },
-      room.id,
-    );
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: buildErrorPayload('Player not in room'),
+    });
     return;
   }
 
   // Update client info to reconnect to room
   const clientInfo = clients.get(ws);
   if (clientInfo) {
-    clientInfo.roomId = room.id;
+    clientInfo.roomId = validatedRoom.id;
     clientInfo.name = player.name;
   }
 
-  const gameEngine = roomManager.getGameEngine(room.id);
+  const gameEngine = roomManager.getGameEngine(validatedRoom.id);
+  
   if (!gameEngine) {
     // Game not started yet, send room info
-    sendToClient(
-      ws,
-      {
-        type: 'ROOM_JOINED',
-        payload: {
-          room: {
-            id: room.id,
-            code: room.code,
-            hostId: room.hostId,
-            maxPlayers: room.maxPlayers,
-            autoPlayTimeout: room.autoPlayTimeout,
-            challengeSuspenseEnabled: room.challengeSuspenseEnabled,
-            players: Array.from(room.players.values()).map((p) => ({
-              id: p.id,
-              name: p.name,
-              isReady: p.isReady,
-              isConnected: p.isConnected,
-              isBot: p.isBot,
-            })),
-          },
-          playerId,
-        },
+    sendToClient(ws, {
+      type: 'ROOM_JOINED',
+      payload: {
+        room: serializeRoom(validatedRoom),
+        playerId,
       },
-      room.id,
-    );
+    });
     return;
   }
 
   // Game is started, send game state and hand
   const publicGameState = gameEngine.getPublicGameState();
   const playerHand = gameEngine.getPlayerHand(playerId);
-  sendToClient(
-    ws,
-    {
-      type: 'INITIAL_GAME_STATE',
-      payload: {
-        hand: playerHand,
-        gameState: publicGameState,
-        room: {
-          id: room.id,
-          code: room.code,
-          hostId: room.hostId,
-          maxPlayers: room.maxPlayers,
-          autoPlayTimeout: room.autoPlayTimeout,
-          challengeSuspenseEnabled: room.challengeSuspenseEnabled,
-          players: Array.from(room.players.values()).map((p) => ({
-            id: p.id,
-            name: p.name,
-            isReady: p.isReady,
-            isConnected: p.isConnected,
-            isBot: p.isBot,
-          })),
-        },
-      },
+  
+  sendToClient(ws, {
+    type: 'INITIAL_GAME_STATE',
+    payload: {
+      hand: playerHand,
+      gameState: publicGameState,
+      room: serializeRoom(validatedRoom),
     },
-    room.id,
-  );
+  });
 }
 
 function handlePlayCards(
@@ -237,21 +181,17 @@ function handlePlayCards(
   if (!clientInfo.roomId) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Not in a room' },
+      payload: buildErrorPayload('Not in a room'),
     });
     return;
   }
 
   const gameEngine = roomManager.getGameEngine(clientInfo.roomId);
   if (!gameEngine) {
-    sendToClient(
-      ws,
-      {
-        type: 'ERROR',
-        payload: { message: 'Game not started' },
-      },
-      clientInfo.roomId,
-    );
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: buildErrorPayload('Game not started'),
+    });
     return;
   }
 
@@ -261,34 +201,15 @@ function handlePlayCards(
     payload.claimedRank,
   );
 
-  const publicGameState = gameEngine.getPublicGameState();
-
-  // Handle invalid plays - Commented out special case for 'Invalid cards'
-  // if (!result.success && result.error === 'Invalid cards') {
-  //   sendToClient(
-  //     ws,
-  //     {
-  //       type: 'GAME_STATE_UPDATE',
-  //       payload: {
-  //         hand: gameEngine.getPlayerHand(clientInfo.id),
-  //         gameState: publicGameState,
-  //       },
-  //     },
-  //     clientInfo.roomId,
-  //   );
-  // }
-
   if (!result.success) {
-    sendToClient(
-      ws,
-      {
-        type: 'ERROR',
-        payload: { message: result.error },
-      },
-      clientInfo.roomId,
-    );
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: buildErrorPayload(result.error!),
+    });
     return;
   }
+
+  const publicGameState = gameEngine.getPublicGameState();
 
   // Broadcast to all players in room
   broadcastToRoom(clients, clientInfo.roomId, {
@@ -303,39 +224,26 @@ function handlePlayCards(
   });
 
   // Send updated hand to the player who just played
-  sendToClient(
-    ws,
-    {
-      type: 'GAME_STATE_UPDATE',
-      payload: {
-        hand: gameEngine.getPlayerHand(clientInfo.id),
-        gameState: publicGameState,
-      },
+  sendToClient(ws, {
+    type: 'GAME_STATE_UPDATE',
+    payload: {
+      hand: gameEngine.getPlayerHand(clientInfo.id),
+      gameState: publicGameState,
     },
-    clientInfo.roomId,
-  );
+  });
 
   // Check if game ended
-  if (publicGameState.phase === 'ended') {
-    gameEngine.stopTurnTimer();
-    broadcastToRoom(clients, clientInfo.roomId, {
-      type: 'GAME_ENDED',
-      payload: {
-        winners: publicGameState.winners,
-        loser: publicGameState.loser,
-        gameState: publicGameState,
-      },
-    });
+  if (checkAndBroadcastGameEnd(clients, clientInfo.roomId, gameEngine)) {
     return;
   }
 
   // Start timer for next turn
-  startTimerForRoom(clients, clientInfo.roomId, gameEngine);
+  gameEngine.startTurnTimer();
 
   // After a human plays, check if any bot wants to challenge
   setTimeout(() => {
     processBotChallenge(clients, clientInfo.roomId!, gameEngine);
-  }, 3000); // 3 second delay for realism
+  }, 3000);
 }
 
 function handleChallenge(
@@ -348,21 +256,17 @@ function handleChallenge(
   if (!clientInfo.roomId) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Not in a room' },
+      payload: buildErrorPayload('Not in a room'),
     });
     return;
   }
 
   const gameEngine = roomManager.getGameEngine(clientInfo.roomId);
   if (!gameEngine) {
-    sendToClient(
-      ws,
-      {
-        type: 'ERROR',
-        payload: { message: 'Game not started' },
-      },
-      clientInfo.roomId,
-    );
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: buildErrorPayload('Game not started'),
+    });
     return;
   }
 
@@ -376,307 +280,26 @@ function handleChallenge(
     if (result.mismatch) {
       return;
     }
-    sendToClient(
-      ws,
-      {
-        type: 'ERROR',
-        payload: { message: result.error },
-      },
-      clientInfo.roomId,
-    );
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: buildErrorPayload(result.error!),
+    });
     return;
   }
 
-  // Store roomId for use in setTimeout
-  const roomId = clientInfo.roomId;
-  const room = roomManager.getRoom(roomId);
-
-  // Immediately broadcast that a challenge has been submitted
-  // This allows clients to play suspense sound if enabled
-  const challengeSuspenseEnabled = room?.challengeSuspenseEnabled;
-  if (challengeSuspenseEnabled) {
-    // Set processing challenge flag to block plays during suspense
-    gameEngine.setProcessingChallenge(true);
-
-    broadcastToRoom(clients, roomId, {
-      type: 'CHALLENGE_SUBMITTED',
-      payload: {
-        challengerId: payload.challengerId,
-      },
-    });
-  }
-
-  // Add 3-second delay before revealing challenge result for tension
-  setTimeout(
+  // Process the challenge with optional suspense delay
+  processChallengeWithSuspense(
+    clients,
+    clientInfo.roomId,
+    gameEngine,
+    payload.challengerId,
+    result,
     () => {
-      // Clear the processing challenge flag after revealing result
-      if (challengeSuspenseEnabled) {
-        gameEngine.setProcessingChallenge(false);
-      }
-      const publicGameState = gameEngine.getPublicGameState();
-
-      // Get challenger and liar names
-      let challengerName = '';
-      let playerName = '';
-
-      for (const p of publicGameState.players) {
-        if (p.id === payload.challengerId) {
-          challengerName = p.name || 'Unknown';
-        }
-        if (p.id === result.playerId) {
-          playerName = p.name || 'Unknown';
-        }
-      }
-
-      // Broadcast challenge result to all players
-      broadcastToRoom(clients, roomId, {
-        type: 'CHALLENGE_RESULT',
-        payload: {
-          challengerId: payload.challengerId,
-          challengerName,
-          wasLying: result.wasLying,
-          playerId: result.playerId,
-          playerName,
-          revealedCards: result.revealedCards
-        },
-      });
-
-      // Send updated hands to affected players
-      for (const [clientWs, client] of clients) {
-        if (client.roomId === roomId) {
-          sendToClient(clientWs, {
-            type: 'GAME_STATE_UPDATE',
-            payload: {
-              hand: gameEngine.getPlayerHand(client.id),
-              gameState: publicGameState,
-            },
-          });
-        }
-      }
-
-      // Start timer for next turn
-      startTimerForRoom(clients, roomId, gameEngine);
-
       // After human challenges, trigger bot turn if needed
       setTimeout(() => {
-        processBotTurn(clients, roomId, gameEngine);
+        processBotTurn(clients, clientInfo.roomId!, gameEngine);
       }, 2000);
     },
-    challengeSuspenseEnabled ? 3000 : 0,
-  ); // 3-second delay for challenge result reveal
-}
-
-/**
- * Process bot challenge after a play
- */
-function processBotChallenge(
-  clients: Map<WebSocket, ClientInfo>,
-  roomId: string,
-  gameEngine: GameEngine,
-): void {
-  if (!gameEngine) return;
-
-  // Get current play info for validation
-  const publicGameState = gameEngine.getPublicGameState();
-  const lastPlayInfo =
-    publicGameState.lastPlayerId && publicGameState.currentRank
-      ? {
-          playerId: publicGameState.lastPlayerId,
-          claimedRank: publicGameState.currentRank,
-        }
-      : undefined;
-
-  const botChallengerId = gameEngine.getBotChallenger();
-
-  if (botChallengerId) {
-    // Bot challenges!
-    const result = gameEngine.challenge(botChallengerId, lastPlayInfo);
-
-    if (result.success) {
-      const room = roomManager.getRoom(roomId);
-
-      // Immediately broadcast that a challenge has been submitted
-      // This allows clients to play suspense sound if enabled
-      const challengeSuspenseEnabled = room?.challengeSuspenseEnabled;
-      if (challengeSuspenseEnabled) {
-        // Set processing challenge flag to block plays during suspense
-        gameEngine.setProcessingChallenge(true);
-
-        broadcastToRoom(clients, roomId, {
-          type: 'CHALLENGE_SUBMITTED',
-          payload: {
-            challengerId: botChallengerId,
-          },
-        });
-      }
-
-      // Add 3-second delay before revealing challenge result for tension
-      setTimeout(
-        () => {
-          // Clear the processing challenge flag after revealing result
-          if (challengeSuspenseEnabled) {
-            gameEngine.setProcessingChallenge(false);
-          }
-          const publicGameState = gameEngine.getPublicGameState();
-
-          // Get challenger and player names
-          const challengerPlayer = room?.players.get(botChallengerId);
-          const lastPlayer = room?.players.get(result.playerId);
-
-          // Broadcast challenge result
-          broadcastToRoom(clients, roomId, {
-            type: 'CHALLENGE_RESULT',
-            payload: {
-              challengerId: botChallengerId,
-              challengerName: challengerPlayer?.name || 'Bot',
-              wasLying: result.wasLying,
-              playerId: result.playerId,
-              playerName: lastPlayer?.name || 'Unknown',
-              revealedCards: result.revealedCards,
-              gameState: publicGameState,
-            },
-          });
-
-          // Send updated hands
-          for (const [clientWs, client] of clients) {
-            if (client.roomId === roomId) {
-              sendToClient(clientWs, {
-                type: 'GAME_STATE_UPDATE',
-                payload: {
-                  hand: gameEngine.getPlayerHand(client.id),
-                  gameState: publicGameState,
-                },
-              });
-            }
-          }
-
-          // Check if game ended after challenge
-          if (publicGameState.phase === 'ended') {
-            gameEngine.stopTurnTimer();
-            broadcastToRoom(clients, roomId, {
-              type: 'GAME_ENDED',
-              payload: {
-                winners: publicGameState.winners,
-                loser: publicGameState.loser,
-                gameState: publicGameState,
-              },
-            });
-            return;
-          }
-
-          // Start timer for next turn after challenge
-          startTimerForRoom(clients, roomId, gameEngine);
-
-          // After challenge, trigger next bot turn if needed
-          setTimeout(() => {
-            processBotTurn(clients, roomId, gameEngine);
-          }, 3000);
-        },
-        challengeSuspenseEnabled ? 3000 : 0,
-      ); // 3-second delay for challenge result reveal
-    }
-  } else {
-    // No bot challenged, proceed to next turn (might be a bot)
-    setTimeout(() => {
-      processBotTurn(clients, roomId, gameEngine);
-    }, 1500);
-  }
-}
-
-/**
- * Process bot turn if current player is a bot
- */
-function processBotTurn(
-  clients: Map<WebSocket, ClientInfo>,
-  roomId: string,
-  gameEngine: GameEngine,
-): void {
-  if (!gameEngine) return;
-
-  const publicGameState = gameEngine.getPublicGameState();
-
-  // Check if game ended
-  if (publicGameState.phase === 'ended') {
-    broadcastToRoom(clients, roomId, {
-      type: 'GAME_ENDED',
-      payload: {
-        winners: publicGameState.winners,
-        loser: publicGameState.loser,
-        gameState: publicGameState,
-      },
-    });
-    return;
-  }
-
-  if (!gameEngine.isCurrentPlayerBot()) {
-    // Current player is human, trigger random bot chat and start timer
-    gameEngine.triggerRandomBotChat();
-    startTimerForRoom(clients, roomId, gameEngine);
-    return;
-  }
-
-  const currentPlayerId = publicGameState.currentPlayerId;
-  const botPlay = gameEngine.getBotPlay(currentPlayerId);
-
-  if (!botPlay) return;
-
-  // Execute bot play
-  const result = gameEngine.playCards(
-    currentPlayerId,
-    botPlay.cardIds,
-    botPlay.claimedRank,
   );
-
-  if (result.success) {
-    const updatedGameState = gameEngine.getPublicGameState();
-    const room = roomManager.getRoom(roomId);
-    const botPlayer = room?.players.get(currentPlayerId);
-
-    // Broadcast bot's play
-    broadcastToRoom(clients, roomId, {
-      type: 'CARDS_PLAYED',
-      payload: {
-        playerId: currentPlayerId,
-        playerName: botPlayer?.name || 'Bot',
-        cardCount: botPlay.cardIds.length,
-        claimedRank: botPlay.claimedRank,
-        gameState: updatedGameState,
-      },
-    });
-
-    // Send updated hands
-    for (const [clientWs, client] of clients) {
-      if (client.roomId === roomId) {
-        sendToClient(clientWs, {
-          type: 'GAME_STATE_UPDATE',
-          payload: {
-            hand: gameEngine.getPlayerHand(client.id),
-            gameState: updatedGameState,
-          },
-        });
-      }
-    }
-
-    // Check if game ended
-    if (updatedGameState.phase === 'ended') {
-      gameEngine.stopTurnTimer();
-      broadcastToRoom(clients, roomId, {
-        type: 'GAME_ENDED',
-        payload: {
-          winners: updatedGameState.winners,
-          loser: updatedGameState.loser,
-          gameState: updatedGameState,
-        },
-      });
-      return;
-    }
-
-    // Start timer for next turn after bot plays
-    startTimerForRoom(clients, roomId, gameEngine);
-
-    // After bot plays, check if any bot wants to challenge
-    setTimeout(() => {
-      processBotChallenge(clients, roomId, gameEngine);
-    }, 3000);
-  }
 }
+

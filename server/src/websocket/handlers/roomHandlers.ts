@@ -13,6 +13,23 @@ import {
 import { roomManager } from '../../utils/roomManager';
 import { sendToClient, broadcastToRoom, sendToPlayer } from '../index';
 import { triggerBotTurn, setupGameEngineCallbacks } from './gameHandlers';
+import {
+  validateRoomExists,
+  validateIsHost,
+  validatePlayerInRoom,
+  validateNotBot,
+  validateNotSelf,
+  validateRoomHasSpace,
+} from '../../utils/validation';
+import { serializeRoom } from '../../utils/serialization';
+import {
+  buildRoomCreatedPayload,
+  buildRoomJoinedPayload,
+  buildPlayerJoinedPayload,
+  buildPlayerLeftPayload,
+  buildErrorPayload,
+  buildGameResetPayload,
+} from '../../utils/messageBuilder';
 
 interface ClientInfo {
   id: string;
@@ -90,30 +107,15 @@ function handleCreateRoom(
 
   clientInfo.roomId = room.id;
   clientInfo.name = payload.playerName;
+  
+  // Set the host as ready
   for (const p of room.players.values()) {
     p.isReady = true;
   }
 
   sendToClient(ws, {
     type: 'ROOM_CREATED',
-    payload: {
-      room: {
-        id: room.id,
-        code: room.code,
-        hostId: room.hostId,
-        maxPlayers: room.maxPlayers,
-        autoPlayTimeout: room.autoPlayTimeout,
-        challengeSuspenseEnabled: room.challengeSuspenseEnabled,
-        players: Array.from(room.players.values()).map((p) => ({
-          id: p.id,
-          name: p.name,
-          isReady: p.isReady,
-          isConnected: p.isConnected,
-          isBot: p.isBot,
-        })),
-      },
-      playerId: clientInfo.id,
-    },
+    payload: buildRoomCreatedPayload(serializeRoom(room), clientInfo.id),
   });
 }
 
@@ -123,58 +125,54 @@ function handleJoinRoom(
   payload: JoinRoomPayload,
 ): void {
   const clientInfo = clients.get(ws)!;
-
   const room = roomManager.getRoomByCode(payload.roomCode);
 
-  if (!room) {
+  // Validate room exists
+  const roomValidation = validateRoomExists(room);
+  if (!roomValidation.valid) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Room not found', code: 'ROOM_NOT_FOUND' },
+      payload: buildErrorPayload('Room not found', 'ROOM_NOT_FOUND'),
     });
     return;
   }
 
+  // At this point room is validated, so we can safely use it
+  const validatedRoom = room!;
+
   // Check if game has already started
-  const gameEngine = roomManager.getGameEngine(room.id);
-  const wasPlayerInGame = room.players.has(clientInfo.id);
+  const gameEngine = roomManager.getGameEngine(validatedRoom.id);
+  const wasPlayerInGame = validatedRoom.players.has(clientInfo.id);
 
   // If game is in progress and player was not in it originally, deny joining
   if (gameEngine && !wasPlayerInGame) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: {
-        message: 'Game already in progress',
-        code: 'GAME_IN_PROGRESS',
-        roomCode: payload.roomCode,
-      },
+      payload: buildErrorPayload('Game already in progress', 'GAME_IN_PROGRESS'),
     });
     return;
   }
 
   // If game is in progress and player was in it, redirect to game page
   if (gameEngine && wasPlayerInGame) {
-    clientInfo.roomId = room.id;
-    clientInfo.name =
-      room.players.get(clientInfo.id)?.name || payload.playerName;
+    clientInfo.roomId = validatedRoom.id;
+    clientInfo.name = validatedRoom.players.get(clientInfo.id)?.name || payload.playerName;
 
     // Update player connection status
-    const player = room.players.get(clientInfo.id);
+    const player = validatedRoom.players.get(clientInfo.id);
     if (player) {
       player.isConnected = true;
     }
 
-    // Send them to game page with GAME_STARTED message
     sendToClient(ws, {
       type: 'GAME_STARTED',
-      payload: {
-        roomCode: payload.roomCode,
-      },
+      payload: { roomCode: payload.roomCode },
     });
     return;
   }
 
   const result = roomManager.addPlayerToRoom(
-    room.id,
+    validatedRoom.id,
     clientInfo.id,
     payload.playerName,
   );
@@ -182,52 +180,27 @@ function handleJoinRoom(
   if (!result.success) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: result.error },
+      payload: buildErrorPayload(result.error!),
     });
     return;
   }
 
-  clientInfo.roomId = room.id;
+  clientInfo.roomId = validatedRoom.id;
   clientInfo.name = payload.playerName;
 
   // Notify the joining player
   sendToClient(ws, {
     type: 'ROOM_JOINED',
-    payload: {
-      room: {
-        id: room.id,
-        code: room.code,
-        hostId: room.hostId,
-        maxPlayers: room.maxPlayers,
-        autoPlayTimeout: room.autoPlayTimeout,
-        challengeSuspenseEnabled: room.challengeSuspenseEnabled,
-        players: Array.from(room.players.values()).map((p) => ({
-          id: p.id,
-          name: p.name,
-          isReady: p.isReady,
-          isConnected: p.isConnected,
-          isBot: p.isBot,
-        })),
-      },
-      playerId: clientInfo.id,
-    },
+    payload: buildRoomJoinedPayload(serializeRoom(validatedRoom), clientInfo.id),
   });
 
   // Notify other players in room
   broadcastToRoom(
     clients,
-    room.id,
+    validatedRoom.id,
     {
       type: 'PLAYER_JOINED',
-      payload: {
-        player: {
-          id: clientInfo.id,
-          name: payload.playerName,
-          isReady: false,
-          isConnected: true,
-          isBot: false,
-        },
-      },
+      payload: buildPlayerJoinedPayload(clientInfo.id, payload.playerName),
     },
     clientInfo.id,
   );
@@ -251,14 +224,18 @@ function handleLeaveRoom(
 
   // Notify others that player left
   if (!result.roomDeleted) {
-    broadcastToRoom(clients, clientInfo.roomId, {
-      type: 'PLAYER_LEFT',
-      payload: {
-        playerId: clientInfo.id,
-        playerName: clientInfo.name,
-        newHostId: room.hostId,
+    broadcastToRoom(
+      clients,
+      clientInfo.roomId,
+      {
+        type: 'PLAYER_LEFT',
+        payload: buildPlayerLeftPayload(
+          clientInfo.id,
+          clientInfo.name,
+          room.hostId,
+        ),
       },
-    });
+    );
   }
 
   sendToClient(ws, {
@@ -280,7 +257,7 @@ function handlePlayerReady(
   if (!clientInfo.roomId) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Not in a room' },
+      payload: buildErrorPayload('Not in a room'),
     });
     return;
   }
@@ -312,23 +289,34 @@ function handleAddBots(
   if (!clientInfo.roomId) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Not in a room' },
+      payload: buildErrorPayload('Not in a room'),
     });
     return;
   }
 
   const room = roomManager.getRoom(clientInfo.roomId);
-  if (!room || room.hostId !== clientInfo.id) {
+  
+  const roomValidation = validateRoomExists(room);
+  if (!roomValidation.valid) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Only host can add bots' },
+      payload: buildErrorPayload(roomValidation.error!),
+    });
+    return;
+  }
+
+  const hostValidation = validateIsHost(room!, clientInfo.id);
+  if (!hostValidation.valid) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: buildErrorPayload(hostValidation.error!),
     });
     return;
   }
 
   const botsCount =
-    room.players.size + payload.count > room.maxPlayers
-      ? room.maxPlayers - room.players.size
+    room!.players.size + payload.count > room!.maxPlayers
+      ? room!.maxPlayers - room!.players.size
       : payload.count;
 
   const result = roomManager.addBotsToRoom(clientInfo.roomId, botsCount);
@@ -336,7 +324,7 @@ function handleAddBots(
   if (!result.success) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: result.error },
+      payload: buildErrorPayload(result.error!),
     });
     return;
   }
@@ -347,13 +335,7 @@ function handleAddBots(
     broadcastToRoom(clients, clientInfo.roomId, {
       type: 'BOTS_ADDED',
       payload: {
-        players: Array.from(updatedRoom.players.values()).map((p) => ({
-          id: p.id,
-          name: p.name,
-          isReady: p.isReady,
-          isConnected: p.isConnected,
-          isBot: p.isBot,
-        })),
+        players: serializeRoom(updatedRoom).players,
       },
     });
   }
@@ -369,16 +351,27 @@ function handleRemoveBot(
   if (!clientInfo.roomId) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Not in a room' },
+      payload: buildErrorPayload('Not in a room'),
     });
     return;
   }
 
   const room = roomManager.getRoom(clientInfo.roomId);
-  if (!room || room.hostId !== clientInfo.id) {
+  
+  const roomValidation = validateRoomExists(room);
+  if (!roomValidation.valid) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Only host can remove bots' },
+      payload: buildErrorPayload(roomValidation.error!),
+    });
+    return;
+  }
+
+  const hostValidation = validateIsHost(room!, clientInfo.id);
+  if (!hostValidation.valid) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: buildErrorPayload(hostValidation.error!),
     });
     return;
   }
@@ -391,24 +384,18 @@ function handleRemoveBot(
   if (!result.success) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: result.error },
+      payload: buildErrorPayload(result.error!),
     });
     return;
   }
 
-  // Notify all players about the new bots
+  // Notify all players about bot removal
   const updatedRoom = roomManager.getRoom(clientInfo.roomId);
   if (updatedRoom) {
     broadcastToRoom(clients, clientInfo.roomId, {
       type: 'BOT_REMOVED',
       payload: {
-        players: Array.from(updatedRoom.players.values()).map((p) => ({
-          id: p.id,
-          name: p.name,
-          isReady: p.isReady,
-          isConnected: p.isConnected,
-          isBot: p.isBot,
-        })),
+        players: serializeRoom(updatedRoom).players,
       },
     });
   }
@@ -424,16 +411,27 @@ function handleStartGame(
   if (!clientInfo.roomId) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Not in a room' },
+      payload: buildErrorPayload('Not in a room'),
     });
     return;
   }
 
   const room = roomManager.getRoom(clientInfo.roomId);
-  if (!room || room.hostId !== clientInfo.id) {
+  
+  const roomValidation = validateRoomExists(room);
+  if (!roomValidation.valid) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Only host can start game' },
+      payload: buildErrorPayload(roomValidation.error!),
+    });
+    return;
+  }
+
+  const hostValidation = validateIsHost(room!, clientInfo.id);
+  if (!hostValidation.valid) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: buildErrorPayload(hostValidation.error!),
     });
     return;
   }
@@ -442,7 +440,7 @@ function handleStartGame(
   if (!canStart.canStart) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: canStart.reason },
+      payload: buildErrorPayload(canStart.reason!),
     });
     return;
   }
@@ -455,7 +453,7 @@ function handleStartGame(
 
   // Create bot chat callback
   const botChatCallback = (botId: string, message: string) => {
-    const botPlayer = room.players.get(botId);
+    const botPlayer = room!.players.get(botId);
     if (botPlayer) {
       broadcastToRoom(clients, clientInfo.roomId!, {
         type: 'CHAT_MESSAGE',
@@ -463,7 +461,7 @@ function handleStartGame(
           playerId: botId,
           playerName: botPlayer.name,
           message: message,
-          isBotMessage: true, // Flag to indicate this is a bot message with i18n key
+          isBotMessage: true,
           timestamp: Date.now(),
         },
       });
@@ -474,10 +472,11 @@ function handleStartGame(
     clientInfo.roomId,
     botChatCallback,
   );
+  
   if (!gameEngine) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Failed to start game' },
+      payload: buildErrorPayload('Failed to start game'),
     });
     return;
   }
@@ -490,6 +489,8 @@ function handleStartGame(
 
   // Send game started event to all players
   const publicGameState = gameEngine.getPublicGameState();
+  const serializedRoom = serializeRoom(room!);
+  
   broadcastToRoom(clients, clientInfo.roomId, {
     type: 'GAME_STARTED',
     payload: { gameState: publicGameState },
@@ -499,27 +500,12 @@ function handleStartGame(
   for (const [clientWs, client] of clients.entries()) {
     if (client.roomId === clientInfo.roomId) {
       const hand = gameEngine.getPlayerHand(client.id);
-      // Send INITIAL_GAME_STATE to ensure all players (especially host) get the full state
       sendToClient(clientWs, {
         type: 'INITIAL_GAME_STATE',
         payload: {
           hand,
           gameState: publicGameState,
-          room: {
-            id: room.id,
-            code: room.code,
-            hostId: room.hostId,
-            maxPlayers: room.maxPlayers,
-            autoPlayTimeout: room.autoPlayTimeout,
-            challengeSuspenseEnabled: room.challengeSuspenseEnabled,
-            players: Array.from(room.players.values()).map((p) => ({
-              id: p.id,
-              name: p.name,
-              isReady: p.isReady,
-              isConnected: p.isConnected,
-              isBot: p.isBot,
-            })),
-          },
+          room: serializedRoom,
         },
       });
     }
@@ -539,43 +525,55 @@ function handleKickPlayer(
   if (!clientInfo.roomId) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Not in a room' },
+      payload: buildErrorPayload('Not in a room'),
     });
     return;
   }
 
   const room = roomManager.getRoom(clientInfo.roomId);
-  if (!room || room.hostId !== clientInfo.id) {
+  
+  const roomValidation = validateRoomExists(room);
+  if (!roomValidation.valid) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Only host can kick players' },
+      payload: buildErrorPayload(roomValidation.error!),
     });
     return;
   }
 
-  // Don't allow kicking yourself
-  if (payload.playerId === clientInfo.id) {
+  const hostValidation = validateIsHost(room!, clientInfo.id);
+  if (!hostValidation.valid) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Cannot kick yourself' },
+      payload: buildErrorPayload(hostValidation.error!),
     });
     return;
   }
 
-  // Don't allow kicking bots (they can be removed differently if needed)
-  const playerToKick = room.players.get(payload.playerId);
-  if (!playerToKick) {
+  const selfValidation = validateNotSelf(clientInfo.id, payload.playerId);
+  if (!selfValidation.valid) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Player not found' },
+      payload: buildErrorPayload(selfValidation.error!),
     });
     return;
   }
 
-  if (playerToKick.isBot) {
+  const playerToKick = room!.players.get(payload.playerId);
+  const playerValidation = validatePlayerInRoom(room!, payload.playerId);
+  if (!playerValidation.valid) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Cannot kick bots' },
+      payload: buildErrorPayload(playerValidation.error!),
+    });
+    return;
+  }
+
+  const botValidation = validateNotBot(playerToKick!);
+  if (!botValidation.valid) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: buildErrorPayload('Cannot kick bots'),
     });
     return;
   }
@@ -599,11 +597,12 @@ function handleKickPlayer(
   if (!result.roomDeleted) {
     broadcastToRoom(clients, clientInfo.roomId, {
       type: 'PLAYER_LEFT',
-      payload: {
-        playerId: payload.playerId,
-        playerName: playerToKick.name,
-        kicked: true,
-      },
+      payload: buildPlayerLeftPayload(
+        payload.playerId,
+        playerToKick!.name,
+        undefined,
+        true,
+      ),
     });
   }
 
@@ -626,42 +625,54 @@ function handleMutePlayer(
   if (!clientInfo.roomId) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Not in a room' },
+      payload: buildErrorPayload('Not in a room'),
     });
     return;
   }
 
   const room = roomManager.getRoom(clientInfo.roomId);
-  if (!room || room.hostId !== clientInfo.id) {
+  
+  const roomValidation = validateRoomExists(room);
+  if (!roomValidation.valid) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Only host can mute players' },
+      payload: buildErrorPayload(roomValidation.error!),
     });
     return;
   }
 
-  // Don't allow muting yourself
-  if (payload.playerId === clientInfo.id) {
+  const hostValidation = validateIsHost(room!, clientInfo.id);
+  if (!hostValidation.valid) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Cannot mute yourself' },
+      payload: buildErrorPayload(hostValidation.error!),
     });
     return;
   }
 
-  const playerToMute = room.players.get(payload.playerId);
-  if (!playerToMute) {
+  const selfValidation = validateNotSelf(clientInfo.id, payload.playerId);
+  if (!selfValidation.valid) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Player not found' },
+      payload: buildErrorPayload(selfValidation.error!),
     });
     return;
   }
 
-  if (playerToMute.isBot) {
+  const playerToMute = room!.players.get(payload.playerId);
+  const playerValidation = validatePlayerInRoom(room!, payload.playerId);
+  if (!playerValidation.valid) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Bots have no microphone' },
+      payload: buildErrorPayload(playerValidation.error!),
+    });
+    return;
+  }
+
+  if (playerToMute!.isBot) {
+    sendToClient(ws, {
+      type: 'ERROR',
+      payload: buildErrorPayload('Bots have no microphone'),
     });
     return;
   }
@@ -681,7 +692,7 @@ function handleMutePlayer(
     type: 'PLAYER_MIC_SWITCHED',
     payload: {
       playerId: payload.playerId,
-      playerName: playerToMute.name,
+      playerName: playerToMute!.name,
       mute: payload.mute,
     },
   });
@@ -691,98 +702,59 @@ function handlePlayAgain(
   clients: Map<WebSocket, ClientInfo>,
   payload: PlayAgainPayload,
 ): void {
-  // Get room by code instead of clientInfo.roomId since they might have left
   const room = roomManager.getRoomByCode(payload.roomCode);
 
-  if (!room) {
+  const roomValidation = validateRoomExists(room);
+  if (!roomValidation.valid) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Room not found', code: 'ROOM_NOT_FOUND' },
+      payload: buildErrorPayload('Room not found', 'ROOM_NOT_FOUND'),
     });
     return;
   }
 
   // Check if player is already in the room
-  const existingPlayer = room.players.get(payload.playerId);
+  const existingPlayer = room!.players.get(payload.playerId);
 
   if (!existingPlayer) {
-    // Player needs to rejoin the room
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Please rejoin the room first' },
+      payload: buildErrorPayload('Please rejoin the room first'),
     });
     return;
   }
 
-  // Check if game is still in progress (not ended)
-  // if (room.gameState && room.gameState.phase === 'playing') {
-  //   sendToClient(ws, {
-  //     type: 'ERROR',
-  //     payload: { message: 'Game still in progress' },
-  //   });
-  //   return;
-  // }
-
   // Check if game has already been reset (no gameState means it's reset)
-  if (!room.gameState) {
-    // Game already reset, just send current room state
+  if (!room!.gameState) {
     sendToClient(ws, {
       type: 'GAME_RESET',
-      payload: {
-        room: {
-          id: room.id,
-          code: room.code,
-          hostId: room.hostId,
-          maxPlayers: room.maxPlayers,
-          players: Array.from(room.players.values()).map((p) => ({
-            id: p.id,
-            name: p.name,
-            isReady: p.isReady,
-            isConnected: p.isConnected,
-            isBot: p.isBot,
-          })),
-        },
-      },
+      payload: buildGameResetPayload(serializeRoom(room!)),
     });
     return;
   }
 
   // Game is ended, first player to click resets it and becomes host
-  const result = roomManager.resetGame(room.id, payload.playerId);
+  const result = roomManager.resetGame(room!.id, payload.playerId);
 
   if (!result.success) {
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: result.error || 'Failed to reset game' },
+      payload: buildErrorPayload(result.error || 'Failed to reset game'),
     });
     return;
   }
 
   // Set this player as the new host
-  room.hostId = payload.playerId;
+  room!.hostId = payload.playerId;
 
   // Reset all players' ready status
-  for (const player of room.players.values()) {
+  for (const player of room!.players.values()) {
     player.isReady = player.id === payload.playerId;
   }
 
   // Broadcast to all players that game has been reset
-  broadcastToRoom(clients, room.id, {
+  broadcastToRoom(clients, room!.id, {
     type: 'GAME_RESET',
-    payload: {
-      room: {
-        id: room.id,
-        code: room.code,
-        hostId: room.hostId,
-        maxPlayers: room.maxPlayers,
-        players: Array.from(room.players.values()).map((p) => ({
-          id: p.id,
-          name: p.name,
-          isReady: p.isReady,
-          isConnected: p.isConnected,
-          isBot: p.isBot,
-        })),
-      },
-    },
+    payload: buildGameResetPayload(serializeRoom(room!)),
   });
 }
