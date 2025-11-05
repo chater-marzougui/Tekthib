@@ -2,128 +2,173 @@
   "bot": {
     "aggressive": {
       "successfulBluff": {
-        "thinkLyingAgain": "تفكرني نكذب ثاني؟ 😏",
+        "thinkLyingAgain": "تفكرني نكذب مرة أخرى؟ جرّب 😏",
         "callMeDare": "تحدّاني لو عندك الجرأة!",
-        "tooScaredChallenge": "خايف تتحداني؟ 😤",
+        "tooScaredChallenge": "شنوّا؟ خايف تتحداني؟",
         "couldDoAllDay": "نقدر نعملها طول اليوم 💪",
-        "notBraveEnough": "وين الشجاعة؟",
-        "thatsWhatThought": "بالضبط هكا كنت مفكر 😎",
-        "easyMoney": "فلوس سهلة! 💸",
-        "yallTooPredictable": "كلكم تتصرفوا نفس الشي 😂",
-        "whosNext": "منو الجاي؟ 👀",
-        "watchAndLearn": "تفرج و تعلم كيف يتلعب 😌",
-        "iRunThisTable": "أنا الملك هنا 👑",
-        "sittingPretty": "قاعد مرتاح و الوراق تخدمني 🔥"
+        "notBraveEnough": "مش كافي شجاع، صحيح؟",
+        "thatsWhatThought": "إيه... هذا اللي كنت متوقعو",
+        "easyMoney": "فلوس سهلة! شكراً على اللعب 💸",
+        "yallTooPredictable": "كلكم متوقعين برشا 😎",
+        "whosNext": "منو الجاي؟ يالله!",
+        "watchAndLearn": "تفرجوا وتعلموا يا ناس!",
+        "iRunThisTable": "أنا اللي نسيّر هالطاولة! 🔥",
+        "sittingPretty": "قاعد مرتاح مع الجماليات هذي!"
       },
       "caughtBluff": {
-        "gotcha": "هاك! مسكتك متلبّس 😏",
-        "calledIt": "قلتلك من الأول تكذب 🎯",
-        "tooObvious": "كذبتك بانة من المريخ 😂",
-        "smellLiar": "شمّيت ريحة الكذب من بعيد 👃",
-        "readLikeBook": "قريتك صفحة صفحة 📖",
-        "notOnWatch": "مش وأنا موجود 😤",
-        "thatsHowDone": "هاك شوف الاحتراف 😉",
-        "cantFoolTwice": "مرّة تعدّت، الثانية لا 😎",
-        "justiceServed": "العدالة خدت مجراها ⚖️",
-        "sawThroughImmediately": "كشفتك قبل ما تكمل حتى الجملة 😏"
+        "gotcha": "مسكتك! عرفت إنك تكذب! 🎯",
+        "calledIt": "قلتلك! توّا خذ الوراق هاذي!",
+        "tooObvious": "واضحة برشا، يا صاحبي!",
+        "smellLiar": "نشمّ ريحة الكذّاب من بعيد!",
+        "readLikeBook": "قريتك كيما الكتاب المفتوح! 📖",
+        "notOnWatch": "موش وأنا موجود يا صاحبي!",
+        "thatsHowDone": "هاكا تتعمل الحاجة!",
+        "cantFoolTwice": "ما تنجّمش تخدعني مرتين، محاولة باهية!",
+        "justiceServed": "العدل اتحقق! ⚖️",
+        "sawThroughImmediately": "شفت فيها من أول نظرة!"
       },
       "bigPlay": {
-        "bigMovesOnly": "اللعب الكبير فقط 💥",
-        "goingAllIn": "نلعبها كاملة، ما نخافش 😤",
-        "thisHowYouPlay": "هكا اللعب الصح 👌",
-        "watchThis": "تفرج عليّ 👀",
-        "timeToDominate": "وقتي نسيطر 👑",
-        "makingPowerMoves": "نشعلها 🔥",
-        "shakeThingsUp": "نبدّل القواعد 😏",
-        "noFear": "الخوف موش قاموسي 😎"
+        "bigMovesOnly": "حركات كبيرة برك! 💥",
+        "goingAllIn": "نلعبها كاملة! بلا تردّد!",
+        "thisHowYouPlay": "هاكا تتلعب اللعبة!",
+        "watchThis": "تفرج على الحركة هذي!",
+        "timeToDominate": "وقت السيطرة! 👑",
+        "makingPowerMoves": "نعمل حركات قوية هوني!",
+        "shakeThingsUp": "وقت نبدّل الأمور!",
+        "noFear": "بلا خوف! يالله!"
       },
       "random": {
-        "feelingConfident": "حاسّ روحي قوي اليوم 😤",
-        "moveWontSave": "الحركة هذي مش باش تنقذك 😂",
-        "cardsOnMySide": "الوراق معايا 💪",
-        "speedThisUp": "يلا أسرع شوية، زهقت 😴",
-        "anyoneElse": "شكون يحب يتورّط معايا؟ 😈"
+        "feelingConfident": "حاسس بروحي واثق اليوم!",
+        "moveWontSave": "الحركة هاذيكا مش باش تنقذك...",
+        "cardsOnMySide": "الوراق في صفي اليوم!",
+        "speedThisUp": "ننجّمو نسرّعو شوية؟",
+        "anyoneElse": "شكون يحب قطعة من هذا؟ 😤"
       }
     },
     "truthful": {
       "successfulBluff": {
-        "honestyNotBest": "أحيانًا الكذب ينفع أكثر من الصدق 🤫",
-        "neverLie": "أنا ما نكذبش... ولا؟ 😅",
-        "wasUnexpected": "حتى أنا تفاجأت بيها 😂",
-        "surpriseMyself": "فاجأت روحي والله 😳",
-        "rareMoment": "لحظة نادرة، كذبة نظيفة 😂",
-        "dontGetUsed": "ما تتعودوش، مش دايمًا نعملها 😇",
-        "conscienceHurts": "ضميري توجع شوية 😅",
-        "feelsWrong": "حاسسها غلط... بس ربحت 🤭"
+        "honestyNotBest": "أحياناً الصدق موش أحسن سياسة... 🤫",
+        "neverLie": "أنا ما نكذبش أبداً... ولا نكذب؟ حاجة غريبة",
+        "wasUnexpected": "كانت... غير متوقعة بالمرّة بالنسبة لي",
+        "surpriseMyself": "حتى أنا نفاجئ روحي أحياناً!",
+        "rareMoment": "لحظة نادرة من الخداع من طرفي",
+        "dontGetUsed": "ما تتعودوش على هذا، بجد!",
+        "conscienceHurts": "ضميري يوجعني شويّة 😅",
+        "feelsWrong": "هذا غالط برشا بس... خدمت بالفعل!"
       },
       "caughtBluff": {
-        "justicePrevails": "الحق يربح ديما ⚖️",
-        "cardsSpeakTruth": "الوراق ما تكذبش 😌",
-        "honestyBest": "الصدق أقوى سلاح ✊",
-        "truthComesOut": "الحقيقة ديما تطلع 😎",
-        "couldTellStart": "عرفتك من أول نظرة 😏",
-        "liarsNever": "الكذاب دايمًا يخسر 💀",
-        "thatsKarma": "كارما يا حبيبي 😂",
-        "truthWins": "الصدق فاز مرّة أخرى ✨",
-        "knewSomethingOff": "كان عندي إحساس إنك مش مظبوط 😬",
-        "instinctsRight": "الحدس متاعي ما يخيبش 🔮"
+        "justicePrevails": "العدل ينتصر! ⚖️",
+        "cardsSpeakTruth": "الوراق ما تكذبش، على عكسك!",
+        "honestyBest": "الصدق فعلاً أحسن سياسة!",
+        "truthComesOut": "الحقيقة دايماً تطلع في الآخر!",
+        "couldTellStart": "نجمت نقول حاجة غلط من البداية!",
+        "liarsNever": "الكذّابة ما ينجحوش في اللعبة هذي!",
+        "thatsKarma": "هاذي الكارما على روحها!",
+        "truthWins": "الصدق يربح مرة أخرى! ✨",
+        "knewSomethingOff": "عرفت حاجة ماشية غلط!",
+        "instinctsRight": "غريزتي كانت صحيحة بالضبط!"
       },
       "bigPlay": {
-        "allLegitimate": "كل شيء قانوني هنا 😎",
-        "noTricks": "ما فيها لا خدع لا لف 😌",
-        "honestPays": "الصدق دايمًا يجيب نتيجة 👏",
-        "theseAllReal": "الوراق هذي كلها حقيقية 💯",
-        "playingByRules": "ألعب بالقانون يا خويا 📜",
-        "cleanPlayOnly": "اللعب النظيف هو الفن 🎨"
+        "allLegitimate": "كل الوراق قانونية هوني، نوعدك!",
+        "noTricks": "بلا حيل، مهارة صافية برك!",
+        "honestPays": "تشوف؟ اللعب الصادق يدفع فعلاً!",
+        "theseAllReal": "هاذوما الكل حقيقيين، صدّقني!",
+        "playingByRules": "نلعب بالقوانين! 📜",
+        "cleanPlayOnly": "اللعب النظيف هو الطريقة الوحيدة!"
       },
       "random": {
-        "believeFairPlay": "نؤمن باللعب النظيف ✋",
-        "letCardsDecide": "خلي القدر يقرر 🎲",
-        "playingSafe": "نلعبها بأمان المرة هذي 😅",
-        "noNonsense": "ما نحبش الهرج، نلعب ونربح 💪",
-        "justHonest": "صادق ومرتاح 😇"
+        "believeFairPlay": "نؤمن باللعب العادل والصريح",
+        "letCardsDecide": "خلّي الوراق يقررو مصيرنا",
+        "playingSafe": "نلعبها بأمان هالدورة...",
+        "noNonsense": "بلا هزار منّي!",
+        "justHonest": "صادق برك هوني 😊"
       }
     },
     "unpredictable": {
       "successfulBluff": {
-        "feelingLucky": "حاسس بالحظ اليوم 🎲",
-        "dontKnow": "حتى أنا مش فاهم شنو نعمل 😂",
-        "chaosStrategy": "الفوضى هي الخطة 💥",
-        "randomWinning": "عشوائية = فوز؟ يمكن 😎",
-        "actuallyWorked": "واو... مشت؟ 😂",
-        "pureInstinct": "غريزة وبارك 😏",
-        "noPlanVibes": "ما فيش خطة، بس إحساس 🎭",
-        "spontaneityWin": "العفوية تكسب 💫",
-        "calculated": "محسوبة؟ لا. حظ؟ أكيد 😅",
-        "rollingDice": "نرمي النرد ونشوف 🎰"
+        "feelingLucky": "حاسس بالحظ اليوم؟ 🎲",
+        "dontKnow": "حتى أنا ما نعرفش شنوّا نعمل نصف الوقت!",
+        "chaosStrategy": "الفوضى حرفياً هي استراتيجيتي!",
+        "randomWinning": "استنى... العشوائية فعلاً تساوي ربح؟",
+        "actuallyWorked": "دقيقة... هذا خدم فعلاً؟ 😂",
+        "pureInstinct": "غريزة صافية، يا حبيبي!",
+        "noPlanVibes": "بلا خطة، أحاسيس برك!",
+        "spontaneityWin": "العفوية للفوز!",
+        "calculated": "محسوبة؟ لا. حظ؟ يمكن!",
+        "rollingDice": "نرمي النرد برك هوني! 🎰"
       },
       "caughtBluff": {
-        "caughtAccident": "مسكتك بالغلط، بس فزت 😂",
-        "brokenClock": "حتى الساعة المكسورة تصيب مرتين 😂",
-        "randomGuess": "تخمينة طاحت صح 😎",
-        "chaosWins": "الفوضى تفوز مرّة أخرى 🔥",
-        "didntSeeComing": "ما توقعتش هذا 😅",
-        "neitherDidI": "ولا أنا والله 🤪",
-        "pureIntuition": "حدس مجنون 🤯",
-        "randomWorks": "العشوائية ما تخيبش أحيانًا 😉"
+        "caughtAccident": "ها! مسكتك! بالغلط تماماً... بس ناخذها! 😄",
+        "brokenClock": "حتى الساعة المكسورة صحيحة مرتين في اليوم!",
+        "randomGuess": "تخميني العشوائي دفع فعلاً!",
+        "chaosWins": "الفوضى تربح مرة أخرى!",
+        "didntSeeComing": "رهان ما توقعتش هاذا!",
+        "neitherDidI": "بصراحة، أنا زادة لا! 🤪",
+        "pureIntuition": "حدس صافي هناك!",
+        "randomWorks": "تشوف؟ أحياناً العشوائية تخدم!"
       },
       "bigPlay": {
-        "letChaos": "خلي الفوضى تتحكم 🌪️",
-        "whyNot": "علاش لا؟ 😏",
-        "yolo": "نعيشها مرّة واحدة 💫",
-        "noRhyme": "ما عندها لا منطق لا معنى 😂",
-        "goingGut": "نمشي بالإحساس 💭",
-        "throwingCaution": "نرمي الحذر ورا ضهري 😤",
-        "whoKnows": "من يعرف شنو يصير 😎"
+        "letChaos": "خلّي الفوضى تقرّر! 🌪️",
+        "whyNot": "علاش لا؟ الحياة قصيرة!",
+        "yolo": "نعيشو مرة وحدة! 💫",
+        "noRhyme": "لا قافية ولا منطق في هذا!",
+        "goingGut": "نمشي مع إحساسي برك!",
+        "throwingCaution": "نرمي كل الحذر للريح!",
+        "whoKnows": "منو يعرف شنوّا باش يصير!"
       },
       "random": {
-        "interesting": "مثير هالشي... 🤔",
-        "hmmMaybe": "ولا يمكن لا؟ 😂",
-        "oneWayFind": "ما نعرفش إلا بالتجربة 😅",
-        "letsSeeHappens": "نشوف وين توصل 😂",
-        "whyNotTry": "خلينا نجرب حاجة مجنونة 🤪",
-        "keepGuessing": "خليكم تحزروا 😏",
-        "expectUnexpected": "توقعوا اللامتوقع 💥"
+        "interesting": "حركة مثيرة... 🤔",
+        "hmmMaybe": "هممم... يمكن؟ ولا يمكن لا؟",
+        "oneWayFind": "طريقة وحدة برك باش نعرفو!",
+        "letsSeeHappens": "نشوفو شنوّا باش يصير!",
+        "whyNotTry": "علاش ما نجربوش هذا؟",
+        "keepGuessing": "نخلّيكم الكل تحزرو! 😉",
+        "expectUnexpected": "توقعو دايماً اللامتوقع معايا!"
+      }
+    },
+    "strategic": {
+      "successfulBluff": {
+        "calculated": "محسوبة بدقة، كيما متوقع 🎯",
+        "accordingToPlan": "كل شيء ماشي حسب الخطة",
+        "oddsInFavor": "الاحتمالات كانت واضحة في صالحي",
+        "expectedOutcome": "النتيجة المتوقعة تحققت",
+        "probabilityWorked": "نظرية الاحتمالات في العمل هوني 📊",
+        "analyzedCorrectly": "حللت الوضع بشكل صحيح",
+        "riskPaidOff": "مخاطرة محسوبة، مكافأة مثالية",
+        "foresaw": "توقعت هالنتيجة",
+        "strategySolid": "استراتيجيتي باقية قوية 💎",
+        "playedOdds": "لعبت الاحتمالات بشكل مثالي"
+      },
+      "caughtBluff": {
+        "didMath": "عملت الحسابات، وانت ما خرجتش صحيحة 🧮",
+        "probabilitiesAligned": "الاحتمالات اتصفّت بشكل مثالي",
+        "statisticallyUnlikely": "ادعاءك كان غير محتمل إحصائياً",
+        "dataSupported": "البيانات دعمت تحدّيي",
+        "expectedDeceit": "توقعت الخداع بناءً على نمطك",
+        "calculatedRisk": "مخاطرة محسوبة، نتيجة ناجحة",
+        "analysisCorrect": "تحليلي كان دقيق 🎯",
+        "patternRecognized": "النمط اتعرف عليه واستُغل",
+        "predictedMove": "توقعت هالحركة بالضبط",
+        "logicalConclusion": "وصلت للاستنتاج المنطقي الوحيد"
+      },
+      "bigPlay": {
+        "optimalMove": "هذي الحركة المثلى 📈",
+        "calculatedPlay": "لعب محسوب بشكل مثالي",
+        "maximizeValue": "نعظّم القيمة هوني",
+        "strategicAdvantage": "نأمّن الميزة الاستراتيجية 🏆",
+        "bestOption": "هذي موضوعياً أحسن خيار",
+        "thoughtThrough": "فكرت في هذا بعناية",
+        "consideredAlternatives": "درست كل البدائل الأول",
+        "weighedOdds": "وزنت الاحتمالات بشكل شامل"
+      },
+      "random": {
+        "analyzingProbabilities": "نحلّل الاحتمالات... 🤔",
+        "consideringOptions": "ندرس خياراتي بعناية",
+        "interestingPattern": "نمط مثير يظهر هوني",
+        "notingBehavior": "نسجّل أنماطكم السلوكية",
+        "evaluatingSituation": "نقيّم الوضع الحالي 📊",
+        "observingPlay": "نراقب أساليب اللعب...",
+        "gatheringData": "نجمع نقاط بيانات أكثر"
       }
     }
   }
