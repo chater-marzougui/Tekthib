@@ -16,7 +16,11 @@ import PlayerNameDialog from "@/components/room/PlayerNameDialog";
 import RoomGameInfo from "@/components/room/GameInfo";
 import RoomHeader from "@/components/room/RoomHeader";
 import { useSound } from "@/hooks/useSound";
-import { LOBBY_SOUNDS, PLAYER_JOIN_SOUNDS, GAME_START_SOUNDS } from "@/lib/sounds";
+import {
+  LOBBY_SOUNDS,
+  PLAYER_JOIN_SOUNDS,
+  GAME_START_SOUNDS,
+} from "@/lib/sounds";
 
 function isDuplicatePlayer(players: Player[], newPlayer: Player): boolean {
   return players.some((p) => p.id === newPlayer.id);
@@ -40,7 +44,8 @@ export default function RoomPage() {
   const [nameInput, setNameInput] = useState("");
   const [timerSlideEnabled, setTimerSlideEnabled] = useState(true);
   const [autoPlayTimeout, setAutoPlayTimeout] = useState(45);
-  const [challengeSuspenseEnabled, setChallengeSuspenseEnabled] = useState(true);
+  const [challengeSuspenseEnabled, setChallengeSuspenseEnabled] =
+    useState(true);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const direction = useTextDirection();
 
@@ -66,11 +71,11 @@ export default function RoomPage() {
   // Play lobby background music when room is loaded (100% probability)
   useEffect(() => {
     let lobbyAudio: HTMLAudioElement | undefined;
-    
+
     if (roomCode) {
       lobbyAudio = playRandomSound(LOBBY_SOUNDS, { loop: true, volume: 0.3 });
     }
-    
+
     // Cleanup: stop lobby music when leaving the room
     return () => {
       if (lobbyAudio) {
@@ -100,7 +105,11 @@ export default function RoomPage() {
         );
         // Update URL to reflect actual room code
         const basePath = globalThis.location.pathname.split("/room")[0];
-        globalThis.history.replaceState(null, "", `${basePath}/room/${room.code}`);
+        globalThis.history.replaceState(
+          null,
+          "",
+          `${basePath}/room/${room.code}`
+        );
       }
     });
 
@@ -124,10 +133,10 @@ export default function RoomPage() {
       (message) => {
         if (message.type === "PLAYER_JOINED") {
           const { player } = message.payload;
-          
+
           // Play player join sound (70% probability)
           playRandomSound(PLAYER_JOIN_SOUNDS, { probability: 0.7 });
-          
+
           setPlayers((prev) => {
             if (!isDuplicatePlayer(prev, player)) {
               return [...prev, player];
@@ -171,7 +180,7 @@ export default function RoomPage() {
       if (message.type === "GAME_STARTED") {
         // Play game start sound (100% probability)
         playRandomSound(GAME_START_SOUNDS);
-        
+
         const currentRoomCode = roomCodeRef.current || roomId;
         setTimeout(() => {
           navigate(`/game/${currentRoomCode}`);
@@ -183,7 +192,7 @@ export default function RoomPage() {
       if (message.type === "ERROR") {
         const errorCode = message.payload.code;
         const errorMessage = message.payload.message;
-        
+
         // If game is in progress and player was in it, redirect to game page
         if (errorCode === "GAME_IN_PROGRESS") {
           toast.info(t("room.gameInProgress"));
@@ -195,7 +204,7 @@ export default function RoomPage() {
           }
           return;
         }
-        
+
         setError(errorMessage);
         toast.error(`Error: ${errorMessage}`);
       }
@@ -235,21 +244,25 @@ export default function RoomPage() {
 
     // Create or join room based on roomId parameter
     if (roomId === "create") {
-      sendMessage({
-        type: "CREATE_ROOM",
-        payload: {
-          playerName,
-          maxPlayers: 10,
-          isPublic,
-          autoPlayTimeout,
-          challengeSuspenseEnabled,
-        },
-      });
+      setTimeout(() => {
+        sendMessage({
+          type: "CREATE_ROOM",
+          payload: {
+            playerName,
+            maxPlayers: 10,
+            isPublic,
+            autoPlayTimeout,
+            challengeSuspenseEnabled,
+          },
+        });
+      }, 1000);
     } else if (roomId !== "create") {
-      sendMessage({
-        type: "JOIN_ROOM",
-        payload: { roomCode: roomId || "", playerName },
-      });
+      setTimeout(() => {
+        sendMessage({
+          type: "JOIN_ROOM",
+          payload: { roomCode: roomId || "", playerName },
+        });
+      }, 1000);
     }
 
     return () => {

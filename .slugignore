@@ -1,0 +1,13 @@
+client/
+models/
+docs/
+playground/
+data_collector/
+*.md
+README.md
+.git/
+.gitignore
+.vscode/
+.idea/
+*.log
+architecture.log

@@ -2,8 +2,15 @@
   "name": "tekthib",
   "version": "1.0.0",
   "description": "Tunisian Online Card Game - A real-time multiplayer bluffing card game",
+  "engines": {
+    "node": "22.19.0",
+    "npm": "10.9.3"
+  },
   "scripts": {
     "start": "cd server && npm run start",
+    "install:shared": "cd shared && npm ci --prefer-offline",
+    "install:client": "cd client && npm ci --prefer-offline",
+    "install:server": "cd server && npm ci --prefer-offline",
     "install:all": "npm install && cd client && npm install && cd ../server && npm install",
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev",
@@ -18,9 +25,13 @@
     "format": "cd server && npm run format && cd ../client && npm run format",
     "format:server": "cd server && npm run format",
     "format:client": "cd client && npm run format",
-    "heroku-postbuild": "cd shared && npm install && cd ../server && npm install && npm run build"
-
+    "heroku-postbuild": "npm run install:shared && npm run install:server && npm run build:server"
   },
+  "cacheDirectories": [
+    "node_modules",
+    "shared/node_modules",
+    "server/node_modules"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/chater-marzougui/Tekthib.git"
