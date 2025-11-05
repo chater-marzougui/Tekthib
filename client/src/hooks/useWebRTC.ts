@@ -130,7 +130,6 @@ export function useWebRTC({
 
       localStreamRef.current = stream;
       setAudioError(null);
-      console.log("Local audio stream initialized");
       return stream;
     } catch (error) {
       const errorMessage =
@@ -190,8 +189,6 @@ export function useWebRTC({
   const setupDataChannelListeners = useCallback(
     (dataChannel: RTCDataChannel, remotePlayerId: string) => {
       dataChannel.onopen = () => {
-        console.log(`[DataChannel] Opened with ${remotePlayerId}`);
-        
         // Request chat history from this peer
         try {
           const historyRequest: DataChannelMessage = {
@@ -200,7 +197,6 @@ export function useWebRTC({
             timestamp: Date.now(),
           };
           dataChannel.send(JSON.stringify(historyRequest));
-          console.log(`[DataChannel] Requested chat history from ${remotePlayerId}`);
         } catch (error) {
           console.error(`[DataChannel] Failed to request chat history:`, error);
         }
@@ -209,7 +205,6 @@ export function useWebRTC({
       dataChannel.onmessage = (event) => {
         try {
           const message: DataChannelMessage = JSON.parse(event.data);
-          console.log(`[DataChannel] Message from ${remotePlayerId}:`, message);
           
           switch (message.type) {
             case "CHAT_MESSAGE": {
@@ -238,9 +233,6 @@ export function useWebRTC({
               
             case "REQUEST_CHAT_HISTORY": {
               // Send our chat history to the requester
-              const historyPayload = message.payload as ChatHistoryRequestPayload;
-              console.log(`[DataChannel] Received chat history request from ${historyPayload.requesterId}`);
-              
               const response: DataChannelMessage = {
                 type: "CHAT_HISTORY_RESPONSE",
                 payload: {
@@ -256,7 +248,6 @@ export function useWebRTC({
             case "CHAT_HISTORY_RESPONSE": {
               // Merge received chat history
               const historyResponse = message.payload as ChatHistoryResponsePayload;
-              console.log(`[DataChannel] Received chat history from ${historyResponse.responderId}:`, historyResponse.messages.length, "messages");
               
               setChatMessages((prev) => {
                 // Merge and deduplicate
@@ -302,9 +293,6 @@ export function useWebRTC({
     (remotePlayerId: string): RTCPeerConnection => {
       // Determine if this peer should be polite
       const polite = isPolite(localPlayerId, remotePlayerId);
-      console.log(
-        `Creating peer connection with ${remotePlayerId} (${polite ? "polite" : "impolite"})`
-      );
 
       const pc = new RTCPeerConnection(ICE_SERVERS);
       const peerConn: PeerConnection = {
@@ -326,14 +314,12 @@ export function useWebRTC({
       // Create data channel only if we're the impolite peer (to avoid duplicates)
       if (!polite) {
         const dataChannel = pc.createDataChannel("game-data");
-        console.log(`[DataChannel] Created for peer: ${remotePlayerId}`);
         setupDataChannelListeners(dataChannel, remotePlayerId);
         peerConn.dataChannel = dataChannel;
       }
 
       // Handle incoming data channel (polite peer)
       pc.ondatachannel = (event) => {
-        console.log(`[DataChannel] Received from peer: ${remotePlayerId}`);
         peerConn.dataChannel = event.channel;
         setupDataChannelListeners(event.channel, remotePlayerId);
       };
@@ -773,19 +759,16 @@ export function useWebRTC({
       let sentCount = 0;
       for (const peerConn of peerConnectionsRef.current.values()) {
         if (
-          peerConn.dataChannel &&
-          peerConn.dataChannel.readyState === "open"
+          peerConn.dataChannel?.readyState === "open"
         ) {
           try {
-            peerConn.dataChannel.send(messageStr);
+            peerConn.dataChannel?.send(messageStr);
             sentCount++;
           } catch (error) {
             console.error("[DataChannel] Failed to send chat message:", error);
           }
         }
       }
-
-      console.log(`[Chat] Sent message to ${sentCount} peers`);
     },
     [localPlayerId]
   );
@@ -894,9 +877,6 @@ export function useWebRTC({
   useEffect(() => {
     return () => {
       if (isVoiceEnabled) {
-        console.log(
-          "useWebRTC hook unmounting - cleaning up voice connections"
-        );
         disableVoiceChat();
       }
     };

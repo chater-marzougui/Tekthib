@@ -17,6 +17,7 @@ export function WebRTCWrapper({ children }: Readonly<WebRTCWrapperProps>) {
 
   const [players, setPlayers] = useState<Player[]>([]);
   const [isHost, setIsHost] = useState(false);
+  const [roomId, setRoomId] = useState<string>("");
 
   const localPlayerId = localStorage.getItem("clientId") || "";
 
@@ -25,11 +26,6 @@ export function WebRTCWrapper({ children }: Readonly<WebRTCWrapperProps>) {
     location.pathname.includes("/room/") ||
     location.pathname.includes("/game/");
 
-  // Extract roomId from pathname since useParams doesn't work outside Routes
-  const pathSegments = location.pathname.split("/").filter(Boolean);
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const roomId = (isInRoomOrGame && pathSegments[pathSegments.length - 1]) || "";
-
   useEffect(() => {
     if (!isInRoomOrGame) return;
 
@@ -37,24 +33,18 @@ export function WebRTCWrapper({ children }: Readonly<WebRTCWrapperProps>) {
     const unregisterRoomCreated = registerHandler("room-created", (message) => {
       if (message.type === "ROOM_CREATED") {
         const { room } = message.payload;
+        if (room.code !== roomId) setRoomId(room.code);
         setPlayers(room.players || []);
-        setIsHost(room.hostId === localPlayerId);
-        console.log(
-          "[WebRTC] Room created, players:",
-          room.players?.length || 0
-        );
+        setIsHost(true);
       }
     });
 
     const unregisterRoomJoined = registerHandler("room-joined", (message) => {
       if (message.type === "ROOM_JOINED") {
         const { room } = message.payload;
+        if (room.code !== roomId) setRoomId(room.code);
         setPlayers(room.players || []);
         setIsHost(room.hostId === localPlayerId);
-        console.log(
-          "[WebRTC] Room joined, players:",
-          room.players?.length || 0
-        );
       }
     });
 
@@ -64,17 +54,12 @@ export function WebRTCWrapper({ children }: Readonly<WebRTCWrapperProps>) {
         if (message.type === "PLAYER_JOINED") {
           const { player } = message.payload;
           setPlayers((prev) => {
-            // Avoid duplicates
-            if (prev.some((p) => p.id === player.id)) {
+            // Use prev (current state) instead of stale closure variable
+            const exists = prev.some((p) => p.id === player.id);
+            if (exists) {
               return prev;
             }
             const updated = [...prev, player];
-            console.log(
-              "[WebRTC] Player joined:",
-              player.name,
-              "Total:",
-              updated.length
-            );
             return updated;
           });
         }
@@ -86,12 +71,6 @@ export function WebRTCWrapper({ children }: Readonly<WebRTCWrapperProps>) {
         const { playerId, newHostId } = message.payload;
         setPlayers((prev) => {
           const updated = prev.filter((p) => p.id !== playerId);
-          console.log(
-            "[WebRTC] Player left:",
-            playerId,
-            "Remaining:",
-            updated.length
-          );
           return updated;
         });
         if (newHostId === localPlayerId) {
@@ -133,10 +112,6 @@ export function WebRTCWrapper({ children }: Readonly<WebRTCWrapperProps>) {
           const { gameState } = message.payload;
           if (gameState?.players) {
             setPlayers(gameState.players);
-            console.log(
-              "[WebRTC] Initial game state, players:",
-              gameState.players.length
-            );
           }
         }
       }
@@ -147,7 +122,6 @@ export function WebRTCWrapper({ children }: Readonly<WebRTCWrapperProps>) {
         const { room } = message.payload;
         setPlayers(room.players || []);
         setIsHost(room.hostId === localPlayerId);
-        console.log("[WebRTC] Game reset, players:", room.players?.length || 0);
       }
     });
 
@@ -160,16 +134,12 @@ export function WebRTCWrapper({ children }: Readonly<WebRTCWrapperProps>) {
       unregisterInitialGameState();
       unregisterGameReset();
     };
-  }, [isInRoomOrGame, registerHandler, localPlayerId]);
+  }, [isInRoomOrGame, registerHandler, localPlayerId, roomId]);
 
-  // Don't provide WebRTC context on home page or other routes
-  if (!isInRoomOrGame || !roomId || !localPlayerId) {
-    return <>{children}</>;
-  }
-
+  // Always provide the WebRTCProvider on room/game pages
   return (
     <WebRTCProvider
-      roomId={roomId}
+      roomId={roomId || ""}
       localPlayerId={localPlayerId}
       players={players}
       isHost={isHost}

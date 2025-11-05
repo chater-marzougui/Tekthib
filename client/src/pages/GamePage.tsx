@@ -143,7 +143,7 @@ export default function GamePage() {
           if ((initialGameState || hand) && isLoading) setIsLoading(false);
 
           // Set challenge suspense enabled from room settings
-          if (room && room.challengeSuspenseEnabled !== undefined) {
+          if (room?.challengeSuspenseEnabled) {
             setChallengeSuspenseEnabled(room.challengeSuspenseEnabled);
           } else {
             setChallengeSuspenseEnabled(true);

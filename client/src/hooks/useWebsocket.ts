@@ -7,12 +7,13 @@ export function useWebSocket() {
   const [lastMessage, setLastMessage] = useState<WSMessage | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
-  const messageHandlersRef = useRef<Map<string, (message: WSMessage) => void>>(
-    new Map(),
-  );
-  // Use ref to avoid stale closure issues
+  // Change to Map of arrays to support multiple handlers per event
+  const messageHandlersRef = useRef<
+    Map<string, Array<(message: WSMessage) => void>>
+  >(new Map());
+
   const storedIdRef = useRef<string | null>(
-    localStorage.getItem("clientId") || null,
+    localStorage.getItem("clientId") || null
   );
   const isConnectedRef = useRef<boolean>(false);
 
@@ -26,12 +27,11 @@ export function useWebSocket() {
     ws.onopen = () => {
       const currentStoredId = storedIdRef.current;
       if (currentStoredId) {
-        // Tell server "hey, it's me again"
         ws.send(
           JSON.stringify({
             type: "CONNECT",
             payload: { clientId: currentStoredId },
-          }),
+          })
         );
       }
     };
@@ -51,9 +51,11 @@ export function useWebSocket() {
         }
         isConnectedRef.current = true;
 
-        // Call registered handlers
-        for (const handler of messageHandlersRef.current.values()) {
-          handler(message);
+        // Call ALL registered handlers for each event type
+        for (const handlers of messageHandlersRef.current.values()) {
+          for (const handler of handlers) {
+            handler(message);
+          }
         }
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
@@ -64,7 +66,6 @@ export function useWebSocket() {
       isConnectedRef.current = false;
       if (reconnectTimeoutRef.current) return;
 
-      // Attempt to reconnect after 3 seconds
       reconnectTimeoutRef.current = globalThis.setTimeout(() => {
         if (isConnectedRef.current) {
           return;
@@ -104,13 +105,24 @@ export function useWebSocket() {
 
   const registerHandler = useCallback(
     (id: string, handler: (message: WSMessage) => void) => {
-      messageHandlersRef.current.set(id, handler);
+      // Get existing handlers for this ID or create new array
+      const existingHandlers = messageHandlersRef.current.get(id) || [];
+      messageHandlersRef.current.set(id, [...existingHandlers, handler]);
 
+      // Return unregister function that removes only THIS handler
       return () => {
-        messageHandlersRef.current.delete(id);
+        const handlers = messageHandlersRef.current.get(id);
+        if (handlers) {
+          const filtered = handlers.filter((h) => h !== handler);
+          if (filtered.length > 0) {
+            messageHandlersRef.current.set(id, filtered);
+          } else {
+            messageHandlersRef.current.delete(id);
+          }
+        }
       };
     },
-    [],
+    []
   );
 
   useEffect(() => {

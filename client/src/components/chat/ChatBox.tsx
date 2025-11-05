@@ -122,7 +122,7 @@ export default function ChatBox({
       }
       return merged;
     });
-  }, [chatMessages]);
+  }, [chatMessages.length]);
 
   // Filter messages based on settings
   const filteredMessages = [...messages, ...systemMessages]
@@ -193,18 +193,11 @@ export default function ChatBox({
     }
   };
 
-  // Scroll to bottom only when user is already at bottom (or on first render)
+  // Scroll to bottom using scrollTop instead of scrollIntoView
   useEffect(() => {
     if (messagesContainerRef.current) {
-      const container = messagesContainerRef.current;
-      const SCROLL_THRESHOLD_PX = 50; // Distance from bottom to consider "at bottom"
-      const isScrolledToBottom = 
-        container.scrollHeight - container.scrollTop <= container.clientHeight + SCROLL_THRESHOLD_PX;
-      
-      // Auto-scroll if user is at the bottom or if there are very few messages (initial load)
-      if (isScrolledToBottom || allMessages.length <= 1) {
-        container.scrollTop = container.scrollHeight;
-      }
+      messagesContainerRef.current.scrollTop =
+        messagesContainerRef.current.scrollHeight;
     }
   }, [allMessages]);
 
