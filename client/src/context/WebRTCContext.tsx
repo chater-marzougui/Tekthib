@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 import type { ReactNode } from "react";
-import type { Player } from "shared";
+import type { Player, DataChannelChatPayload } from "shared";
 import { useWebRTC } from "@/hooks/useWebRTC";
 
 interface WebRTCContextType {
@@ -18,6 +18,9 @@ interface WebRTCContextType {
   togglePlayerMute: (playerId: string) => void;
   kickPlayer: (playerId: string) => void;
   mutePlayerMic: (playerId: string, mute: boolean) => void;
+  sendChatMessage: (message: string, playerName: string) => void;
+  registerChatCallback: (callback: (message: DataChannelChatPayload) => void) => () => void;
+  chatMessages: DataChannelChatPayload[];
 }
 
 const WebRTCContext = createContext<WebRTCContextType | null>(null);
@@ -71,6 +74,9 @@ export function useWebRTCContext() {
       togglePlayerMute: () => {},
       kickPlayer: () => {},
       mutePlayerMic: () => {},
+      sendChatMessage: () => {},
+      registerChatCallback: () => () => {},
+      chatMessages: [],
     };
   }
   return context;

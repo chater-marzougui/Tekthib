@@ -1,6 +1,6 @@
 import { WebSocket } from 'ws';
-import { WSMessage, ChatMessagePayload } from 'shared';
-import { broadcastToRoom, sendToClient } from '../index';
+import { WSMessage } from 'shared';
+import { sendToClient } from '../index';
 
 interface ClientInfo {
   id: string;
@@ -8,6 +8,18 @@ interface ClientInfo {
   name?: string;
 }
 
+/**
+ * Handle chat messages via WebSocket
+ * 
+ * Important: Player-to-player chat messages now go through WebRTC data channels (P2P).
+ * This handler should NOT receive any player-initiated chat messages.
+ * 
+ * Bot messages are sent by the server itself via broadcastToRoom() in roomHandlers.ts
+ * (see botChatCallback), not through this handler. Bot messages never pass through
+ * this handler - they are broadcast directly by the server.
+ * 
+ * Any CHAT_MESSAGE received here from a client indicates incorrect usage and will be rejected.
+ */
 export function handleChatMessages(
   ws: WebSocket,
   clients: Map<WebSocket, ClientInfo>,
@@ -17,43 +29,15 @@ export function handleChatMessages(
   if (!clientInfo) return;
 
   if (message.type === 'CHAT_MESSAGE') {
-    handleChatMessage(ws, clients, message.payload as ChatMessagePayload);
-  }
-}
-
-function handleChatMessage(
-  ws: WebSocket,
-  clients: Map<WebSocket, ClientInfo>,
-  payload: ChatMessagePayload,
-): void {
-  const clientInfo = clients.get(ws)!;
-
-  if (!clientInfo.roomId) {
+    // Reject all player-initiated messages - they should go through WebRTC
     sendToClient(ws, {
       type: 'ERROR',
-      payload: { message: 'Not in a room' },
+      payload: { 
+        message: 'Player chat messages must be sent via WebRTC data channels, not WebSocket'
+      },
     });
-    return;
+    console.warn(
+      `Player ${clientInfo.id} attempted to send chat via WebSocket. This is no longer supported.`
+    );
   }
-
-  // Sanitize message (basic XSS prevention)
-  const sanitizedMessage = payload.message
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .trim();
-
-  if (!sanitizedMessage) {
-    return;
-  }
-
-  // Broadcast to all players in room including sender
-  broadcastToRoom(clients, clientInfo.roomId, {
-    type: 'CHAT_MESSAGE',
-    payload: {
-      playerId: clientInfo.id,
-      playerName: clientInfo.name || 'Unknown',
-      message: sanitizedMessage,
-      timestamp: Date.now(),
-    },
-  });
 }

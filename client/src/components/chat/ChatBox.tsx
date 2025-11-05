@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useWebSocketContext } from "@/context/WebSocketContext";
+import { useWebRTCContext } from "@/context/WebRTCContext";
 import type { WSMessage } from "shared";
 import { Icon } from "@iconify/react";
 import { useTextDirection } from "@/hooks/useTextDirection";
@@ -84,7 +85,8 @@ export default function ChatBox({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const { sendMessage, registerHandler } = useWebSocketContext();
+  const { registerHandler } = useWebSocketContext();
+  const { sendChatMessage, chatMessages } = useWebRTCContext();
   const direction = useTextDirection();
 
   // Get user settings from localStorage
@@ -96,6 +98,31 @@ export default function ChatBox({
   const isPlayerBot = (messagePlayerId: string) => {
     return players.some((p) => p.id === messagePlayerId && p.isBot);
   };
+
+  // Merge WebRTC chat messages with bot messages
+  useEffect(() => {
+    // Convert WebRTC chat messages to ChatMessage format
+    const webrtcMessages: ChatMessage[] = chatMessages.map((msg) => ({
+      id: `${msg.timestamp}-${msg.playerId}`,
+      playerId: msg.playerId,
+      playerName: msg.playerName,
+      message: msg.message,
+      timestamp: msg.timestamp,
+      isBotMessage: false,
+    }));
+
+    setMessages((prev) => {
+      // Merge with existing messages (bot messages)
+      const merged = [...prev];
+      for (const msg of webrtcMessages) {
+        const exists = merged.some((m) => m.id === msg.id);
+        if (!exists) {
+          merged.push(msg);
+        }
+      }
+      return merged;
+    });
+  }, [chatMessages]);
 
   // Filter messages based on settings
   const filteredMessages = [...messages, ...systemMessages]
@@ -116,25 +143,29 @@ export default function ChatBox({
 
   const messageHandlerRef = useRef<(message: WSMessage) => void>(null);
 
+  // Handle bot messages from WebSocket
   useEffect(() => {
     messageHandlerRef.current = (message) => {
       if (message.type === "CHAT_MESSAGE") {
-        const chatMessage: ChatMessage = {
-          id: `${message.timestamp}-${message.payload.playerId}`,
-          playerId: message.payload.playerId,
-          playerName: message.payload.playerName,
-          message: message.payload.message,
-          timestamp: message.timestamp || Date.now(),
-          isBotMessage: message.payload.isBotMessage, // Preserve bot message flag
-        };
+        // Only handle bot messages via WebSocket
+        if (message.payload.isBotMessage) {
+          const chatMessage: ChatMessage = {
+            id: `${message.timestamp}-${message.payload.playerId}`,
+            playerId: message.payload.playerId,
+            playerName: message.payload.playerName,
+            message: message.payload.message,
+            timestamp: message.timestamp || Date.now(),
+            isBotMessage: true,
+          };
 
-        setMessages((prev) => {
-          const isDuplicate = isDuplicateMessage(prev, chatMessage);
-          if (isDuplicate) {
-            return prev;
-          }
-          return [...prev, chatMessage];
-        });
+          setMessages((prev) => {
+            const isDuplicate = isDuplicateMessage(prev, chatMessage);
+            if (isDuplicate) {
+              return prev;
+            }
+            return [...prev, chatMessage];
+          });
+        }
       }
     };
   }, []);
@@ -150,14 +181,8 @@ export default function ChatBox({
   const handleSendMessage = () => {
     if (!inputMessage.trim()) return;
 
-    sendMessage({
-      type: "CHAT_MESSAGE",
-      payload: {
-        message: inputMessage,
-        playerId,
-        playerName,
-      },
-    });
+    // Send message through WebRTC data channels
+    sendChatMessage(inputMessage.trim(), playerName);
 
     setInputMessage("");
   };

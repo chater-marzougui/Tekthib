@@ -1,7 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useWebSocketContext } from "../context/WebSocketContext";
-import type { Player } from "shared";
+import type { 
+  Player, 
+  DataChannelMessage, 
+  DataChannelChatPayload,
+  ChatHistoryRequestPayload,
+  ChatHistoryResponsePayload
+} from "shared";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -71,6 +77,16 @@ export function useWebRTC({
     new Set()
   );
   const [hostMuted, setHostMuted] = useState(false);
+
+  // Chat state
+  const [chatMessages, setChatMessages] = useState<DataChannelChatPayload[]>([]);
+  const chatMessagesRef = useRef<DataChannelChatPayload[]>([]);
+  const chatCallbackRef = useRef<((message: DataChannelChatPayload) => void) | null>(null);
+
+  // Keep chatMessagesRef in sync with chatMessages state
+  useEffect(() => {
+    chatMessagesRef.current = chatMessages;
+  }, [chatMessages]);
 
   // Refs for managing connections
   const audioContextsRef = useRef<Map<string, AudioContext>>(new Map());
@@ -175,23 +191,92 @@ export function useWebRTC({
     (dataChannel: RTCDataChannel, remotePlayerId: string) => {
       dataChannel.onopen = () => {
         console.log(`[DataChannel] Opened with ${remotePlayerId}`);
+        
+        // Request chat history from this peer
         try {
-          dataChannel.send(
-            JSON.stringify({
-              type: "TEST",
-              from: localPlayerId,
-              message: "DataChannel connection established",
-            })
-          );
+          const historyRequest: DataChannelMessage = {
+            type: "REQUEST_CHAT_HISTORY",
+            payload: { requesterId: localPlayerId } as ChatHistoryRequestPayload,
+            timestamp: Date.now(),
+          };
+          dataChannel.send(JSON.stringify(historyRequest));
+          console.log(`[DataChannel] Requested chat history from ${remotePlayerId}`);
         } catch (error) {
-          console.error(`[DataChannel] Failed to send test message:`, error);
+          console.error(`[DataChannel] Failed to request chat history:`, error);
         }
       };
 
       dataChannel.onmessage = (event) => {
         try {
-          const data = JSON.parse(event.data);
-          console.log(`[DataChannel] Message from ${remotePlayerId}:`, data);
+          const message: DataChannelMessage = JSON.parse(event.data);
+          console.log(`[DataChannel] Message from ${remotePlayerId}:`, message);
+          
+          switch (message.type) {
+            case "CHAT_MESSAGE": {
+              // Handle incoming chat message
+              const chatPayload = message.payload as DataChannelChatPayload;
+              setChatMessages((prev) => {
+                // Check for duplicates
+                const exists = prev.some(
+                  (m) =>
+                    m.playerId === chatPayload.playerId &&
+                    m.timestamp === chatPayload.timestamp
+                );
+                if (exists) return prev;
+                
+                // Add and sort by timestamp
+                const updated = [...prev, chatPayload].sort((a, b) => a.timestamp - b.timestamp);
+                return updated;
+              });
+              
+              // Call the chat callback if registered
+              if (chatCallbackRef.current) {
+                chatCallbackRef.current(chatPayload);
+              }
+              break;
+            }
+              
+            case "REQUEST_CHAT_HISTORY": {
+              // Send our chat history to the requester
+              const historyPayload = message.payload as ChatHistoryRequestPayload;
+              console.log(`[DataChannel] Received chat history request from ${historyPayload.requesterId}`);
+              
+              const response: DataChannelMessage = {
+                type: "CHAT_HISTORY_RESPONSE",
+                payload: {
+                  messages: chatMessagesRef.current,
+                  responderId: localPlayerId,
+                } as ChatHistoryResponsePayload,
+                timestamp: Date.now(),
+              };
+              dataChannel.send(JSON.stringify(response));
+              break;
+            }
+              
+            case "CHAT_HISTORY_RESPONSE": {
+              // Merge received chat history
+              const historyResponse = message.payload as ChatHistoryResponsePayload;
+              console.log(`[DataChannel] Received chat history from ${historyResponse.responderId}:`, historyResponse.messages.length, "messages");
+              
+              setChatMessages((prev) => {
+                // Merge and deduplicate
+                const merged = [...prev];
+                for (const msg of historyResponse.messages) {
+                  const exists = merged.some(
+                    (m) =>
+                      m.playerId === msg.playerId &&
+                      m.timestamp === msg.timestamp
+                  );
+                  if (!exists) {
+                    merged.push(msg);
+                  }
+                }
+                // Sort by timestamp
+                return merged.sort((a, b) => a.timestamp - b.timestamp);
+              });
+              break;
+            }
+          }
         } catch (error) {
           console.error(`[DataChannel] Failed to parse message:`, error);
         }
@@ -211,14 +296,10 @@ export function useWebRTC({
   /**
    * Create and setup a RTCPeerConnection for a remote player
    * Uses "perfect negotiation" pattern to avoid glare
+   * Can create connections for data channels only (without audio)
    */
   const createPeerConnection = useCallback(
     (remotePlayerId: string): RTCPeerConnection => {
-      if (!localStreamRef.current) {
-        console.error("Cannot create peer connection - no local stream");
-        throw new Error("Local stream not initialized");
-      }
-
       // Determine if this peer should be polite
       const polite = isPolite(localPlayerId, remotePlayerId);
       console.log(
@@ -234,10 +315,12 @@ export function useWebRTC({
       };
       peerConnectionsRef.current.set(remotePlayerId, peerConn);
 
-      // Add local audio tracks
-      for (const track of localStreamRef.current.getTracks()) {
-        console.log(`Adding ${track.kind} track to peer: ${remotePlayerId}`);
-        pc.addTrack(track, localStreamRef.current);
+      // Add local audio tracks if available (voice chat enabled)
+      if (localStreamRef.current) {
+        for (const track of localStreamRef.current.getTracks()) {
+          console.log(`Adding ${track.kind} track to peer: ${remotePlayerId}`);
+          pc.addTrack(track, localStreamRef.current);
+        }
       }
 
       // Create data channel only if we're the impolite peer (to avoid duplicates)
@@ -372,11 +455,7 @@ export function useWebRTC({
    */
   const handleOffer = useCallback(
     async (fromPlayerId: string, offer: RTCSessionDescriptionInit) => {
-      if (!isVoiceEnabled || !localStreamRef.current) {
-        console.log("Ignoring offer - voice chat not enabled");
-        return;
-      }
-
+      // Accept offers for both voice and data channel connections
       let peerConn = peerConnectionsRef.current.get(fromPlayerId);
       if (!peerConn) {
         createPeerConnection(fromPlayerId);
@@ -434,7 +513,7 @@ export function useWebRTC({
         console.error("Error handling offer:", error);
       }
     },
-    [localPlayerId, isVoiceEnabled, createPeerConnection, sendMessage]
+    [localPlayerId, createPeerConnection, sendMessage]
   );
 
   /**
@@ -541,6 +620,29 @@ export function useWebRTC({
     localPlayerId,
     createPeerConnection,
   ]);
+
+  /**
+   * Initialize data channels for chat (without voice)
+   * This allows chat to work even when voice is disabled
+   */
+  const initializeChatChannels = useCallback(() => {
+    console.log("Initializing data channels for chat");
+
+    // Get other players (not self, not bots, connected only)
+    const otherPlayers = players.filter(
+      (p) => p.id !== localPlayerId && !p.isBot && p.isConnected
+    );
+
+    console.log(`Creating data channels for ${otherPlayers.length} players`);
+
+    // Create peer connections for all other players (data channels only)
+    for (const player of otherPlayers) {
+      if (!peerConnectionsRef.current.has(player.id)) {
+        console.log("Creating peer connection for chat:", player.id);
+        createPeerConnection(player.id);
+      }
+    }
+  }, [players, localPlayerId, createPeerConnection]);
 
   /**
    * Disable voice chat - cleanup all connections
@@ -659,6 +761,71 @@ export function useWebRTC({
       });
     },
     [isHost, sendMessage]
+  );
+
+  /**
+   * Send a chat message through WebRTC data channels to all connected peers
+   */
+  const sendChatMessage = useCallback(
+    (message: string, playerName: string) => {
+      const chatPayload: DataChannelChatPayload = {
+        message,
+        playerId: localPlayerId,
+        playerName,
+        timestamp: Date.now(),
+      };
+
+      const dataChannelMessage: DataChannelMessage = {
+        type: "CHAT_MESSAGE",
+        payload: chatPayload,
+        timestamp: chatPayload.timestamp,
+      };
+
+      const messageStr = JSON.stringify(dataChannelMessage);
+
+      // Add to local chat history
+      setChatMessages((prev) => {
+        const exists = prev.some(
+          (m) => m.playerId === chatPayload.playerId && m.timestamp === chatPayload.timestamp
+        );
+        if (exists) return prev;
+        return [...prev, chatPayload].sort((a, b) => a.timestamp - b.timestamp);
+      });
+
+      // Send to all connected peers
+      let sentCount = 0;
+      for (const peerConn of peerConnectionsRef.current.values()) {
+        if (
+          peerConn.dataChannel &&
+          peerConn.dataChannel.readyState === "open"
+        ) {
+          try {
+            peerConn.dataChannel.send(messageStr);
+            sentCount++;
+          } catch (error) {
+            console.error("[DataChannel] Failed to send chat message:", error);
+          }
+        }
+      }
+
+      console.log(`[Chat] Sent message to ${sentCount} peers`);
+    },
+    [localPlayerId]
+  );
+
+  /**
+   * Register a callback to receive chat messages
+   */
+  const registerChatCallback = useCallback(
+    (callback: (message: DataChannelChatPayload) => void) => {
+      chatCallbackRef.current = callback;
+      
+      // Return unregister function
+      return () => {
+        chatCallbackRef.current = null;
+      };
+    },
+    []
   );
 
   // Register WebSocket handlers for WebRTC signaling
@@ -819,6 +986,14 @@ export function useWebRTC({
     }
   }, [players, localPlayerId, isVoiceEnabled, createPeerConnection]);
 
+  // Initialize chat data channels on mount (independent of voice)
+  useEffect(() => {
+    // Only initialize if voice is not enabled (voice chat handles its own connections)
+    if (!isVoiceEnabled && players.length > 0) {
+      initializeChatChannels();
+    }
+  }, [players, isVoiceEnabled, initializeChatChannels]);
+
   return {
     // Voice state
     isVoiceEnabled,
@@ -837,5 +1012,9 @@ export function useWebRTC({
     togglePlayerMute,
     kickPlayer,
     mutePlayerMic,
+    // Chat methods
+    sendChatMessage,
+    registerChatCallback,
+    chatMessages,
   };
 }

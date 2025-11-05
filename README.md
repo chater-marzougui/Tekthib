@@ -28,12 +28,12 @@ A real-time multiplayer card game platform that brings the classic Tunisian bluf
 ### ✅ Fully Implemented
 - **Game Engine**: Complete server-authoritative game logic with turn-based gameplay
 - **Room System**: Create/join rooms with 6-character codes, QR code sharing
-- **Real-time Communication**: WebSocket for game state, WebRTC for voice chat
+- **Real-time Communication**: WebSocket for game state and bot messages, WebRTC P2P for player chat and voice
 - **AI Bots**: Three personalities (aggressive, truthful, unpredictable) with learning capabilities
 - **Timer System**: Configurable auto-play timer (10-120 seconds) with real-time updates
 - **Challenge Suspense**: Optional 3-second dramatic reveal with play blocking during challenge processing
 - **i18n**: Multi-language support (English, French, Arabic) with RTL for Arabic
-- **Voice Chat**: P2P WebRTC audio with host controls (kick, mute) and personal mute
+- **Voice & Chat**: P2P WebRTC audio and text chat with host controls (kick, mute) and chat history sync on rejoin
 - **Admin Dashboard**: Real-time monitoring of rooms, players, and game states
 - **Responsive UI**: Dark/light themes, custom animations, mobile-friendly
 - **Database Backend**: Supabase integration for user authentication and game history
@@ -54,7 +54,7 @@ A real-time multiplayer card game platform that brings the classic Tunisian bluf
 - **Styling**: Tailwind CSS + Shadcn UI components
 - **Icons**: Iconify
 - **i18n**: i18next with multi-language support
-- **Real-time**: WebSocket client + WebRTC for voice
+- **Real-time**: WebSocket client + WebRTC for voice and P2P chat
 
 ### Backend
 - **Runtime**: Node.js + Express + TypeScript
@@ -74,10 +74,11 @@ A real-time multiplayer card game platform that brings the classic Tunisian bluf
        │                         │
 WebRTC │ Signaling via WS        │ In-memory
  Audio │────────────────────────►│ Room State
+  Chat │   (P2P after setup)     │
        │                         │
        ▼                         ▼
-  P2P Voice Chat            Server validates
-  (Direct connection)        all game actions
+P2P Audio & Text Chat      Server validates
+(Direct connection)        all game actions
 ```
 
 ## 📁 Project Structure
@@ -319,11 +320,19 @@ See [SYSTEM_OPTIMIZATION.md](./SYSTEM_OPTIMIZATION.md) for:
 
 ## 🔄 WebRTC Migration Plan
 
+**Status**: ✅ Chat migration complete!
+
+### Completed
+- ✅ **Chat System**: Player-to-player chat now uses P2P WebRTC data channels
+  - Automatic chat history synchronization on rejoin
+  - Bot messages continue via WebSocket
+  - Reduced server load and improved scalability
+
+### Future Plans
 See [MIGRATION_PLAN.md](./MIGRATION_PLAN.md) for:
-- Chat system migration to P2P (with server fallback)
 - Player status indicators via WebRTC data channels
 - Safe vs unsafe components for migration
-- Phased implementation strategy (8-week plan)
+- Phased implementation strategy
 
 ## 🤖 Bot AI System
 

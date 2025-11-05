@@ -162,6 +162,34 @@ export interface ChatMessagePayload {
   isBotMessage?: boolean; // Flag to indicate this is a bot message with i18n key
 }
 
+// Data channel message types for WebRTC P2P communication
+export type DataChannelMessageType = 
+  | 'CHAT_MESSAGE'
+  | 'REQUEST_CHAT_HISTORY'
+  | 'CHAT_HISTORY_RESPONSE';
+
+export interface DataChannelMessage {
+  type: DataChannelMessageType;
+  payload: DataChannelChatPayload | ChatHistoryRequestPayload | ChatHistoryResponsePayload;
+  timestamp?: number;
+}
+
+export interface DataChannelChatPayload {
+  message: string;
+  playerId: string;
+  playerName: string;
+  timestamp: number;
+}
+
+export interface ChatHistoryRequestPayload {
+  requesterId: string;
+}
+
+export interface ChatHistoryResponsePayload {
+  messages: DataChannelChatPayload[];
+  responderId: string;
+}
+
 export interface AddBotsPayload {
   count: number;
 }
