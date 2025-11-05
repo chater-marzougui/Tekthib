@@ -3,6 +3,12 @@ import { PlayerWithHand, BotPersonality } from 'shared';
 import { GameEngine } from '../game/GameEngine';
 import { gameHistoryService } from '../services/gameHistoryService';
 import config from '../config/config';
+import { generateUniqueId, reassignHostIfNeeded } from './idUtils';
+import {
+  calculatePlayerGameStats,
+  calculateFinalPosition,
+  calculateTotalChallenges,
+} from './gameStatsUtils';
 
 class RoomManager {
   private readonly rooms: Map<string, Room> = new Map();
@@ -79,7 +85,7 @@ class RoomManager {
     isPublic: boolean = true,
     testMode: boolean = false,
   ): Room {
-    const roomId = `room_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const roomId = generateUniqueId('room');
     const code = this.generateRoomCode();
 
     const host: PlayerWithHand = {
@@ -185,10 +191,8 @@ class RoomManager {
     const botIds: string[] = [];
 
     for (let i = 0; i < count; i++) {
-      const botId = `bot_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-      const personality = personalities[i % personalities.length]; // Distribute personalities evenly
-
-      // Get an available bot name (doesn't reveal personality)
+      const botId = generateUniqueId('bot');
+      const personality = personalities[i % personalities.length];
       const botName = this.getAvailableBotName(room);
 
       const bot: PlayerWithHand = {
@@ -231,17 +235,15 @@ class RoomManager {
       return { success: false, error: 'Player is not a bot' };
     }
 
-    // Check if game is in progress
     if (room.gameState?.phase === 'playing') {
       return { success: false, error: 'Cannot remove bot during active game' };
     }
 
-    // Remove the bot from the room
     room.players.delete(botId);
 
-    // If the bot was the host, assign new host
-    if (botId === room.hostId) {
-      const newHostId = Array.from(room.players.keys())[0];
+    // Reassign host if the bot was the host
+    const newHostId = reassignHostIfNeeded(room.players, botId);
+    if (newHostId) {
       room.hostId = newHostId;
     }
 
@@ -270,9 +272,9 @@ class RoomManager {
       return { success: true, roomDeleted: true };
     }
 
-    // If host left, assign new host
-    if (playerId === room.hostId) {
-      const newHostId = Array.from(room.players.keys())[0];
+    // Reassign host if player leaving was the host
+    const newHostId = reassignHostIfNeeded(room.players, playerId);
+    if (newHostId) {
       room.hostId = newHostId;
     }
 
@@ -501,7 +503,6 @@ class RoomManager {
    * Only saves if Supabase is configured
    */
   async saveGameHistory(roomId: string): Promise<void> {
-    // Check if Supabase is configured
     if (!config.supabase.url || !config.supabase.serviceKey) {
       console.log('Supabase not configured, skipping game history save');
       return;
@@ -533,18 +534,8 @@ class RoomManager {
           const isFirstPlace = gameState.winners[0] === playerId;
           const isLoser = gameState.loser === playerId;
 
-          // Calculate stats from PlayerStats interface
-          const bluffsMade =
-            (stats?.timesBluffedSuccessfully || 0) +
-            (stats?.timesCaughtBluffing || 0);
-          const successfulBluffs = stats?.timesBluffedSuccessfully || 0;
-          const challengesMade =
-            (stats?.timesCaughtBluffing || 0) +
-            (stats?.timesFalselyAccused || 0);
-          const successfulChallenges = stats?.timesCaughtBluffing || 0;
-          const failedChallenges = stats?.timesFalselyAccused || 0;
-          const cardsPlayed = (stats?.timesToldTruth || 0) + bluffsMade;
-          const finalPos = this.calculateFinalPosition(
+          const gameStats = calculatePlayerGameStats(stats);
+          const finalPos = calculateFinalPosition(
             isWinner,
             isLoser,
             gameState.winners,
@@ -557,12 +548,12 @@ class RoomManager {
             userId: playerId,
             playerName: player.name,
             finalPosition: finalPos,
-            cardsPlayed,
-            bluffsMade,
-            successfulBluffs,
-            challengesMade,
-            successfulChallenges,
-            failedChallenges,
+            cardsPlayed: gameStats.cardsPlayed,
+            bluffsMade: gameStats.bluffsMade,
+            successfulBluffs: gameStats.successfulBluffs,
+            challengesMade: gameStats.challengesMade,
+            successfulChallenges: gameStats.successfulChallenges,
+            failedChallenges: gameStats.failedChallenges,
             isWinner: isFirstPlace,
             isLoser,
             isBot: player.isBot || false,
@@ -570,14 +561,7 @@ class RoomManager {
         },
       );
 
-      // Calculate total challenges from player stats
-      const totalChallenges = Array.from(gameState.playerStats.values()).reduce(
-        (sum, stats) =>
-          sum +
-          ((stats?.timesCaughtBluffing || 0) +
-            (stats?.timesFalselyAccused || 0)),
-        0,
-      );
+      const totalChallenges = calculateTotalChallenges(gameState.playerStats);
 
       // Get game events from the game engine
       const gameEvents = gameEngine.getGameEvents().map((event) => ({
@@ -625,25 +609,6 @@ class RoomManager {
       if (error instanceof Error) {
         console.error('Stack trace:', error.stack);
       }
-    }
-  }
-
-  private calculateFinalPosition(
-    isWinner: boolean,
-    isLoser: boolean,
-    winnersList: string[],
-    playerId: string,
-    roomSize: number,
-    index: number,
-  ) {
-    if (isWinner) {
-      return winnersList.indexOf(playerId) + 1;
-    }
-
-    if (isLoser) {
-      return roomSize;
-    } else {
-      return index + 1;
     }
   }
 }
